@@ -1,14 +1,15 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
+import { DynamoDBAdapter } from "@auth/dynamodb-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { clientPromise } from "@/server/config/database";
+import { dynamo, AUTH_TABLE } from "@/server/config/dynamodb";
+import { findUserByEmail } from "@/lib/db/users";
 import { authConfig } from "@/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: MongoDBAdapter(clientPromise, { databaseName: process.env.DB_NAME || "decision-copilot" }),
+  adapter: DynamoDBAdapter(dynamo, { tableName: AUTH_TABLE }),
   session: { strategy: "jwt" },
   providers: [
     Google({
@@ -23,13 +24,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const client = await clientPromise;
-        const db = client.db(process.env.DB_NAME || "decision-copilot");
-        const user = await db.collection("users").findOne({ email: String(credentials.email).toLowerCase() });
+        const user = await findUserByEmail(String(credentials.email));
         if (!user || !user.passwordHash) return null;
         const valid = await bcrypt.compare(String(credentials.password), user.passwordHash);
         if (!valid) return null;
-        return { id: String(user._id), email: user.email, name: user.name ?? null, is_admin: user.is_admin ?? false };
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          is_admin: user.is_admin ?? false,
+        };
       },
     }),
   ],

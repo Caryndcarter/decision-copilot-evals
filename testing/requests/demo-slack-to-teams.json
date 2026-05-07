@@ -1,0 +1,11 @@
+{
+  "type": "intake",
+  "intake": {
+    "situation": "We are considering replacing Slack with Microsoft Teams to consolidate tooling. We already pay for Microsoft 365 and Teams is included. Slack costs us 15k per year. The engineering team strongly prefers Slack; everyone else is indifferent.",
+    "constraints": "IT wants to decide by end of quarter. 85 employees. No budget for running both tools long-term.",
+    "posture": "explore",
+    "knowns_assumptions": "Teams has feature parity for most use cases. Engineers use Slack integrations heavily (GitHub, PagerDuty, CI alerts). Migration would take 2-3 weeks.",
+    "unknowns": "How much productivity we would lose during transition. Whether the Slack integrations have Teams equivalents."
+  },
+  "demo_scenario_id": "slack-to-teams"
+}

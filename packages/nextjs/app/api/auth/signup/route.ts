@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { clientPromise } from "@/server/config/database";
+import { createUserWithPassword, UserAlreadyExistsError } from "@/lib/db/users";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,28 +17,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    const client = await clientPromise;
-    const db = client.db(process.env.DB_NAME || "decision-copilot");
-
-    const existing = await db.collection("users").findOne({ email: normalizedEmail });
-    if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
-    }
-
     const passwordHash = await bcrypt.hash(password, 12);
-
-    await db.collection("users").insertOne({
-      email: normalizedEmail,
-      passwordHash,
-      name: name.trim(),
-      is_admin: false,
-      created_at: new Date(),
-    });
+    await createUserWithPassword({ email, name, passwordHash });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    if (err instanceof UserAlreadyExistsError) {
+      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    }
     console.error("[signup] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

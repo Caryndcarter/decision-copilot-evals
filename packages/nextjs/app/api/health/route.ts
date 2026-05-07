@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
-import database from "../../../server/config/database.js";
+import { DescribeTableCommand } from "@aws-sdk/client-dynamodb";
+import { dynamo, RUNS_TABLE } from "@/server/config/dynamodb";
 
 /**
  * Health check endpoint
- * GET /api/health
+ * GET /api/health — verifies the DynamoDB runs table is reachable.
  */
 export async function GET() {
   try {
-    await database.connect();
-
-    if (!database.db) {
-      return NextResponse.json(
-        { status: "error", message: "Database not connected" },
-        { status: 503 }
-      );
-    }
-
-    // Simple ping to verify connection
-    await database.db.command({ ping: 1 });
+    await dynamo.send(new DescribeTableCommand({ TableName: RUNS_TABLE }));
 
     return NextResponse.json({
       status: "ok",

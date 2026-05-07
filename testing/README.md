@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-- **MongoDB** running (e.g. `npm run mongo:start` from repo root).
-- **`.env`** in repo root with `MONGODB_URI` (e.g. `mongodb://localadmin:localpassword@localhost:27447`).
-- **Next.js** dev server: `npm run dev` from repo root (or `npm run dev` in `packages/nextjs`).
+- **DynamoDB Local** running: `npm run dynamo:init` from repo root (one-time per machine; afterwards `npm run dynamo:start`).
+- **`.env`** in repo root with `DYNAMODB_ENDPOINT`, `AWS_REGION`, dummy AWS keys, etc. (see top-level `README.md`).
+- **Next.js** dev server: `npm run dev` from repo root.
 
-## 1. Test intake (persists to MongoDB)
+## 1. Test intake (persists to DynamoDB)
 
 From repo root:
 
@@ -23,21 +23,23 @@ Or with an explicit request file:
 - The response is printed and saved under `testing/responses/`.
 - Copy `run_id` and `decision_id` from the response if you want to test clarification or check the DB.
 
-## 2. Verify the run is in MongoDB
+## 2. Verify the run is in DynamoDB
 
-**Option A – mongosh**
+**Option A – Admin UI**
+
+Open [http://127.0.0.1:8011](http://127.0.0.1:8011), pick the `decision-copilot-local-runs` table, and you should see your run by `run_id`.
+
+**Option B – AWS CLI**
 
 ```bash
-mongosh "mongodb://localadmin:localpassword@localhost:27447" --eval 'db.getSiblingDB("decision-copilot").runs.find().pretty()'
+AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local \
+  aws dynamodb scan \
+  --table-name decision-copilot-local-runs \
+  --endpoint-url http://127.0.0.1:8010 \
+  --region us-east-1
 ```
 
-**Option B – MongoDB Compass**
-
-- Connect to `mongodb://localadmin:localpassword@localhost:27447`.
-- Open database `decision-copilot`, collection `runs`.
-- You should see one document per run (intake + lens output, etc.).
-
-## 3. Test clarification (reads/updates from MongoDB)
+## 3. Test clarification (reads/updates from DynamoDB)
 
 1. From a previous intake response, note `decision_id` and `run_id`.
 2. Create a request file (e.g. `testing/requests/clarification.json`) with:
@@ -58,7 +60,7 @@ mongosh "mongodb://localadmin:localpassword@localhost:27447" --eval 'db.getSibli
 }
 ```
 
-Replace `question_id` values with the ones from your intake response’s `clarification_questions`, and set answers to match the types.
+Replace `question_id` values with the ones from your intake response's `clarification_questions`, and set answers to match the types.
 
 3. Run:
 
@@ -74,4 +76,4 @@ You should get back the updated run with `status: "complete"` and a new `decisio
 2. Stop the Next.js dev server (Ctrl+C), then start it again (`npm run dev`).
 3. Call the clarification endpoint with that same `run_id` (step 3 above).
 
-If the run is found and updated, runs are persisting in MongoDB across restarts.
+If the run is found and updated, runs are persisting in DynamoDB across restarts. (Container restarts also preserve the run because data lives on the `dynamodb-data` Docker volume; `npm run dynamo:remove` is what wipes it.)

@@ -21,7 +21,7 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 
 if [ -z "$BODY" ]; then
   echo "Empty response (HTTP $HTTP_CODE). Is the dev server running? (npm run dev)"
-  echo "If the server is running, check the terminal for errors (e.g. MongoDB connection)."
+  echo "If the server is running, check the terminal for errors (e.g. DynamoDB connection)."
   exit 1
 fi
 

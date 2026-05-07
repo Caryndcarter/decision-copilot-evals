@@ -3,7 +3,7 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { clientPromise } from "@/server/config/database";
+import { listRunsForUser } from "@/lib/db/runs";
 import { SessionNav } from "@/app/components/session-nav";
 import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
@@ -70,16 +70,8 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
 
 async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMeta[]> {
   try {
-    const client = await clientPromise;
-    const db = client.db(process.env.DB_NAME || "decision-copilot");
-    const query = isAdmin ? {} : { user_id: userId };
-    const docs = await db
-      .collection("runs")
-      .find(query)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .toArray();
-    return docs as unknown as RunWithMeta[];
+    const runs = await listRunsForUser(userId, { asAdmin: isAdmin, limit: 200 });
+    return runs as RunWithMeta[];
   } catch (err) {
     console.error("[runs page] Error fetching runs:", err);
     return [];
