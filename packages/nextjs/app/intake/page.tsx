@@ -1,0 +1,620 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { LogoLockup } from "@/app/components/logo-icon";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import type { DemoScenarioId } from "@/types/decision";
+import { SessionNav } from "@/app/components/session-nav";
+
+const RUN_RESULT_KEY = "decisionRunResult";
+
+const SUBMITTING_STEPS = [
+  "Analyzing risks…",
+  "Checking reversibility…",
+  "Considering stakeholders…",
+  "Preparing your brief…",
+];
+
+const FREEFORM_STEPS = [
+  "Analyzing your decision…",
+  "Choosing a schema…",
+  "Structuring the analysis…",
+  "Almost there…",
+];
+
+const FREEFORM_STEPS_ALL = [
+  "Running all three providers…",
+  "Each model is choosing its own JSON shape…",
+  "Structuring analyses…",
+  "Almost there…",
+];
+
+const SUBMITTING_STEPS_ALL = [
+  "Running all three providers simultaneously…",
+  "Analyzing risks across providers…",
+  "Checking reversibility…",
+  "Considering stakeholders…",
+  "Preparing briefs…",
+  "Almost there…",
+];
+
+const POSTURES = [
+  { value: "explore", label: "Explore" },
+  { value: "pressure_test", label: "Pressure test" },
+  { value: "surface_risks", label: "Surface risks" },
+  { value: "generate_alternatives", label: "Generate alternatives" },
+] as const;
+
+const LLM_PROVIDERS = [
+  { value: "openai", label: "OpenAI" },
+  { value: "anthropic", label: "Anthropic" },
+  { value: "gemini", label: "Google Gemini" },
+  { value: "all", label: "All providers (simultaneous)" },
+] as const;
+
+const DEMO_SCENARIOS = [
+  {
+    id: "slack-to-teams",
+    label: "Slack → Teams migration",
+    situation:
+      "We're considering replacing Slack with Microsoft Teams to consolidate our tooling. We already pay for Microsoft 365 and Teams is included. Slack costs us $15k/year. The engineering team strongly prefers Slack; everyone else is indifferent.",
+    constraints:
+      "IT wants to decide by end of quarter. 85 employees. No budget for running both tools long-term.",
+    posture: "explore" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "Teams has feature parity for most use cases. Engineers use Slack integrations heavily (GitHub, PagerDuty, CI alerts). Migration would take 2-3 weeks. I assume people will adapt after initial grumbling.",
+    unknowns:
+      "How much productivity we'd lose during transition. Whether the Slack integrations have Teams equivalents. If engineers would see this as a signal that leadership doesn't value their preferences.",
+  },
+  {
+    id: "vp-sales-underperforming",
+    label: "Underperforming VP Sales",
+    situation:
+      "Our VP of Sales of 2 years is underperforming. Pipeline is down 30% year-over-year despite adding two reps. She's well-liked, has deep customer relationships, and was critical to landing our three largest accounts. The board is asking why we're missing targets.",
+    constraints:
+      "Q4 planning starts in 6 weeks. Sales team is already anxious about potential changes. We can't afford a long leadership gap.",
+    posture: "pressure_test" as const,
+    leaning_direction:
+      "Keeping her but adding a sales ops lead to handle process and accountability, letting her focus on strategic deals",
+    knowns_assumptions:
+      "She's great at relationships but weak on process and pipeline management. The two new reps aren't ramping well due to lack of structure. I assume adding ops support will fix the gap without losing her customer relationships.",
+    unknowns:
+      "Whether she'll accept an ops hire as support vs. see it as undermining her. If the real problem is her or the reps she hired. How the board will react to anything short of replacement.",
+  },
+  {
+    id: "vercel-to-aws",
+    label: "Vercel → AWS migration",
+    situation:
+      "We're evaluating whether to migrate our Next.js app from Vercel to self-hosted on AWS (ECS + CloudFront). Vercel costs are growing fast — we're at $1,800/month and projected to hit $5k/month in 6 months as traffic scales. Self-hosted would cost roughly $600/month at current traffic but requires setup and maintenance.",
+    constraints:
+      "Two engineers can dedicate 2 weeks to migration. Need zero-downtime cutover. Currently using Vercel's edge functions, image optimization, and analytics. Page load times must stay under 200ms.",
+    posture: "surface_risks" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "Our app doesn't use Vercel-specific features that can't be replicated (ISR works with standard Next.js, edge functions can move to Lambda@Edge). We have AWS experience from other projects. I assume CloudFront + ECS can match Vercel's performance. Our CI/CD is already GitHub Actions so deployment changes are manageable.",
+    unknowns:
+      "Hidden complexity in replicating Vercel's build pipeline. Whether Lambda@Edge cold starts will hurt performance. True ongoing maintenance burden for ECS (patching, scaling configs, debugging). If the cost projections account for CloudFront bandwidth costs accurately. How we'd handle preview deployments for PRs (Vercel does this automatically). Rollback strategy if a deploy goes bad. Who's on-call when infrastructure breaks at 3am. Whether the $4k/month savings is offset by slower developer velocity.",
+  },
+  {
+    id: "gen-ai-product-compliance",
+    label: "Gen-AI features + compliance",
+    situation:
+      "We're a B2B analytics SaaS (~200 employees, US HQ) shipping assistant-style features: summarization over customer-uploaded reports, suggested chart titles, and optional 'ask your data' Q&A. Sales is hearing that enterprise RFPs now ask about AI governance, training data, and EU compliance. Legal is nervous; security wants everything on our VPC with no third-party inference if possible; product wants to ship in one quarter using a hosted model API to move fast.",
+    constraints:
+      "We sell to US mid-market and a growing EU segment (Germany and France first). Two anchor customers are in regulated industries (healthcare and financial services) but we are not their processor for clinical or core banking data—still, their security reviews are brutal. No dedicated AI governance hire yet. Engineering capacity is one senior ML engineer and two backend engineers part-time.",
+    posture: "surface_risks" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "Current product is SOC 2 Type II. We assume most EU customers can accept standard DPA + SCCs. We believe we can add opt-out of model improvement/training in vendor contracts. I assume 'EU AI Act' obligations depend heavily on how we classify the system (high-risk or not) and I'm not sure we've done that analysis rigorously.",
+    unknowns:
+      "Whether our use cases count as high-risk under the EU AI Act or UK/EU national implementations. What large-enterprise RFPs actually require vs what is negotiable. If on-prem or VPC-only inference is feasible on our timeline and budget. How much we must disclose about prompts, logging, and retention. Whether we need human-in-the-loop for certain workflows. Cross-border transfer implications if we use US-hosted APIs. What breaks if a customer demands zero subprocessors for AI.",
+  },
+  {
+    id: "healthcare-pe-acquisition",
+    label: "Hospital PE / second-site deal",
+    situation:
+      "Our PE-backed regional health system (3 hospitals, unionized nursing at two sites) is evaluating acquiring a fourth hospital in an adjacent county. The target is financially distressed but has the only cath lab and Level II trauma within 40 miles, so strategically attractive. Local politicians and a community advocacy group have already signaled concern about 'corporate medicine' and service cuts. The target's medical staff is split: some want stability, others distrust private equity.",
+    constraints:
+      "Outside antitrust counsel says the deal might draw FTC/DOJ attention depending on how we define the service area. State AG has been vocal on healthcare consolidation. We need a financing path within 9 months. Integration playbook from our last acquisition was messy—union contracts and EHR cutover overran costs. Board wants a clear narrative for the community and for regulators.",
+    posture: "pressure_test" as const,
+    leaning_direction:
+      "Proceed with acquisition if we can secure labor agreements that avoid strike risk during integration and a credible regulatory/stakeholder path; otherwise walk or restructure as a partnership instead of outright purchase",
+    knowns_assumptions:
+      "We assume the target's quality metrics are fixable with our standard ops playbook. We believe we can retain key physicians with retention packages. I assume a partnership or JV is legally simpler politically than a full buy, but I'm not sure that's true for lenders or for pension obligations.",
+    unknowns:
+      "True post-close capital needs and hidden liabilities (pensions, malpractice tail, IT debt). Whether regulators will require divestitures or behavioral remedies. How hard unions will fight and what precedents say about timing. If the community campaign could block certificate-of-need or other approvals. Whether our clinical leadership will support the deal publicly. If 'partnership instead of purchase' is realistic with the seller and creditors.",
+  },
+  {
+    id: "hybrid-office-lease",
+    label: "Hybrid policy + lease crunch",
+    situation:
+      "We're ~140 people across product, engineering, GTM, and corporate. Our downtown lease ends in 7 months; current space fits ~90 desks and we use hoteling, but attendance is all over the place—sales and CS want more in-person for customers, engineers are vocal about remote-first, and new hires are in four states we didn't have before COVID. Leadership keeps saying 'hybrid' without a consistent definition. Finance is pushing to cut square footage to save ~$400k/year.",
+    constraints:
+      "Must decide on renewal vs sublease vs smaller office vs flex space in the next 90 days to avoid holdover penalties. Hiring plan adds ~25 heads next year, mostly eng and design, distributed. We have no formal relocation policy; some managers are enforcing 'three days in office' informally, others aren't. IT says security for fully remote is fine; HR worries about equity and promotion visibility.",
+    posture: "generate_alternatives" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "Engagement survey shows satisfaction is mixed—remote folks love flexibility, junior staff feel disconnected. I assume we won't mandate five days in office without losing senior engineers. We think the landlord will negotiate if we commit early.",
+    unknowns:
+      "Actual utilization of space by team and by week—we have badge data but it's noisy. Whether 'core collaboration days' would help or backfire. Legal exposure if policies differ by manager. Cost of flex providers vs traditional lease in our market. How relocation stipends would affect budget. What competitors we lose candidates to and why. Whether we need registered business addresses in each state for compliance.",
+  },
+  {
+    id: "legacy-core-modernization",
+    label: "Core banking modernization",
+    situation:
+      "We're a regional bank (~$18B assets) on a 20-year-old core with heavy customization. Mobile and digital teams want real-time balances, better product bundling, and faster feature shipping; core batch windows and rigid APIs are the bottleneck. The board approved a 'strategic modernization' budget but not a specific vendor or greenfield vs incremental approach. Two large vendors are courting us with different models: rip-and-replace over 3+ years vs incremental 'sidecar' services with phased migration.",
+    constraints:
+      "Regulators expect a credible program plan, testing evidence, and rollback—we've been told informally that a big-bang weekend cutover would face scrutiny. Internal IT is stretched; we'd need SI partners. Cyber and fraud teams worry about expanded attack surface. CFO wants predictable opex and clear break-even vs status quo within five years.",
+    posture: "surface_risks" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "We assume some degree of vendor lock-in is inevitable. We believe our risk and audit teams can absorb additional control work if the roadmap is phased. I assume cloud for non-core workloads is acceptable to regulators if we document resilience—I'm less sure about core ledger in cloud within three years.",
+    unknowns:
+      "Which vendor references are comparable to our size and charter complexity. Hidden integration cost with mortgage, treasury, and card systems. True regulatory posture on cloud core vs on-prem in our district. Whether incremental approaches actually reduce risk or just spread it over longer timelines. Talent market for mainframe and core skills during transition. What we'd do if a phase fails mid-program—contractual exits, data repatriation, customer communication.",
+  },
+] as const;
+
+type ProviderValue = (typeof LLM_PROVIDERS)[number]["value"];
+
+export default function IntakePage() {
+  const [situation, setSituation] = useState("");
+  const [constraints, setConstraints] = useState("");
+  const [posture, setPosture] = useState<(typeof POSTURES)[number]["value"]>("explore");
+  const [llmProvider, setLlmProvider] = useState<ProviderValue>("openai");
+  const [availableProviders, setAvailableProviders] = useState<ProviderValue[]>([]);
+  const [leaningDirection, setLeaningDirection] = useState("");
+  const [knownsAssumptions, setKnownsAssumptions] = useState("");
+  const [unknowns, setUnknowns] = useState("");
+  /** Set when user clicks a Demo scenario button; sent with intake so chat can show matching research starters. */
+  const [demoScenarioId, setDemoScenarioId] = useState<DemoScenarioId | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submittingStep, setSubmittingStep] = useState(0);
+  const [freeformSubmitting, setFreeformSubmitting] = useState(false);
+  const [freeformStep, setFreeformStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const showLeaningDirection = posture === "pressure_test";
+
+  // Only show AI providers that have API keys configured; add "all" when 2+ are available
+  useEffect(() => {
+    fetch("/api/decision/providers")
+      .then((res) => res.json())
+      .then((data: { providers?: string[] }) => {
+        const list = Array.isArray(data?.providers) ? data.providers : [];
+        const singleProviderValues = LLM_PROVIDERS.filter((p) => p.value !== "all").map((p) => p.value) as string[];
+        const valid = list.filter((p): p is ProviderValue => singleProviderValues.includes(p));
+        const withAll: ProviderValue[] = valid.length >= 2 ? [...valid, "all"] : valid;
+        setAvailableProviders(withAll.length > 0 ? withAll : ["openai"]);
+        setLlmProvider((prev) => (withAll.includes(prev) ? prev : (withAll[0] ?? "openai")));
+      })
+      .catch(() => setAvailableProviders(["openai"]));
+  }, []);
+
+  function loadDemo(demoId: string) {
+    const demo = DEMO_SCENARIOS.find((d) => d.id === demoId);
+    if (!demo) return;
+    setDemoScenarioId(demo.id as DemoScenarioId);
+    setSituation(demo.situation);
+    setConstraints(demo.constraints);
+    setPosture(demo.posture);
+    setLeaningDirection(demo.leaning_direction);
+    setKnownsAssumptions(demo.knowns_assumptions);
+    setUnknowns(demo.unknowns);
+  }
+
+  // Cycle through progress steps every 3s while submitting (gives sense of progress during 5–15s API call)
+  useEffect(() => {
+    if (!submitting) return;
+    const interval = setInterval(() => {
+      const steps = llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS;
+      setSubmittingStep((prev) => (prev + 1) % steps.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [submitting]);
+
+  useEffect(() => {
+    if (!freeformSubmitting) return;
+    const steps = llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS;
+    const interval = setInterval(() => {
+      setFreeformStep((prev) => (prev + 1) % steps.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [freeformSubmitting, llmProvider]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmittingStep(0);
+    setSubmitting(true);
+
+    const intake = {
+      situation: situation.trim(),
+      constraints: constraints.trim(),
+      posture,
+      ...(showLeaningDirection && leaningDirection.trim() ? { leaning_direction: leaningDirection.trim() } : {}),
+      ...(knownsAssumptions.trim() ? { knowns_assumptions: knownsAssumptions.trim() } : {}),
+      ...(unknowns.trim() ? { unknowns: unknowns.trim() } : {}),
+    };
+
+    try {
+      const res = await fetch("/api/decision/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "intake",
+          intake,
+          llm_provider: llmProvider,
+          ...(demoScenarioId ? { demo_scenario_id: demoScenarioId } : {}),
+        }),
+      });
+      const text = await res.text();
+      let data: { error?: string; run_id?: string; decision_id?: string; runs?: { run_id: string; decision_id?: string }[]; primary_run_id?: string };
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        setError(res.ok ? "Server returned an invalid response. Please try again." : `Request failed (${res.status}). Please try again.`);
+        return;
+      }
+
+      if (!res.ok) {
+        setError(data.error || `Request failed (${res.status})`);
+        return;
+      }
+
+      // "all providers" response: { runs: [...], primary_run_id: string }
+      if (data.runs && data.primary_run_id) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(data.runs[0]));
+        }
+        const decisionId = data.runs[0]?.decision_id;
+        router.push(decisionId ? `/runs?new=${decisionId}` : "/runs");
+        return;
+      }
+
+      if (!data.run_id) {
+        setError("Server returned an invalid response. Please try again.");
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(data));
+      }
+      const decisionId = data.decision_id;
+      router.push(decisionId ? `/runs?new=${decisionId}` : "/runs");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleFreeformSubmit() {
+    if (!situation.trim() || !constraints.trim()) {
+      setError("Situation and constraints are required.");
+      return;
+    }
+    setError(null);
+    setFreeformStep(0);
+    setFreeformSubmitting(true);
+    try {
+      const intake = {
+        situation: situation.trim(),
+        constraints: constraints.trim(),
+        posture,
+        ...(showLeaningDirection && leaningDirection.trim() ? { leaning_direction: leaningDirection.trim() } : {}),
+        ...(knownsAssumptions.trim() ? { knowns_assumptions: knownsAssumptions.trim() } : {}),
+        ...(unknowns.trim() ? { unknowns: unknowns.trim() } : {}),
+      };
+      const res = await fetch("/api/decision/run/freeform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intake,
+          llm_provider: llmProvider,
+          ...(demoScenarioId ? { demo_scenario_id: demoScenarioId } : {}),
+        }),
+      });
+      const data = await res.json() as
+        | {
+            error?: string;
+            runs?: Array<{
+              run_id: string;
+              decision_id: string;
+              intake: (typeof intake) & { decision_id: string };
+              freeform_output?: Record<string, unknown>;
+              freeform_model?: string;
+              freeform_generated_at?: string;
+              llm_provider?: string;
+            }>;
+            primary_run_id?: string;
+            decision_id?: string;
+          }
+        | {
+            error?: string;
+            run_id?: string;
+            decision_id?: string;
+            output?: Record<string, unknown>;
+            model?: string;
+            generated_at?: string;
+            intake?: typeof intake & { decision_id: string };
+            llm_provider?: string;
+          };
+      if (!res.ok) {
+        setError(data.error || `Request failed (${res.status})`);
+        return;
+      }
+
+      if ("runs" in data && Array.isArray(data.runs) && data.runs.length > 0 && data.decision_id) {
+        const primary =
+          data.primary_run_id != null
+            ? data.runs.find((r) => r.run_id === data.primary_run_id) ?? data.runs[0]
+            : data.runs[0];
+        if (primary?.freeform_output && primary.intake) {
+          sessionStorage.setItem(
+            "freeformResult",
+            JSON.stringify({
+              output: primary.freeform_output,
+              intake: primary.intake,
+              model: primary.freeform_model,
+              generated_at: primary.freeform_generated_at,
+              llm_provider: primary.llm_provider,
+              run_id: primary.run_id,
+              decision_id: primary.decision_id,
+            })
+          );
+        }
+        router.push(`/runs?new=${data.decision_id}`);
+        return;
+      }
+
+      if ("run_id" in data && data.run_id && data.output && data.intake) {
+        sessionStorage.setItem(
+          "freeformResult",
+          JSON.stringify({
+            output: data.output,
+            intake: data.intake,
+            model: data.model,
+            generated_at: data.generated_at,
+            llm_provider: data.llm_provider,
+            run_id: data.run_id,
+            decision_id: data.decision_id,
+          })
+        );
+        router.push(data.decision_id ? `/runs?new=${data.decision_id}` : "/runs");
+        return;
+      }
+
+      setError("Server returned an unexpected response. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setFreeformSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-zinc-50">
+      {/* Nav — matches landing page */}
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
+        <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <LogoLockup />
+          </Link>
+          <SessionNav />
+        </div>
+      </nav>
+
+      {/* Page header */}
+      <div className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-3xl px-6 py-8">
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">New decision</h1>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Describe your situation and how you'd like the AI to approach it.
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-6 py-8">
+        {/* Demo scenarios */}
+        <div className="mb-8 rounded-xl border border-indigo-200 bg-indigo-50/60 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700">
+              Demo
+            </span>
+            <p className="text-sm text-indigo-700 font-medium">Load a sample scenario to try it out</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {DEMO_SCENARIOS.map((demo) => (
+              <button
+                key={demo.id}
+                type="button"
+                onClick={() => loadDemo(demo.id)}
+                className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors"
+              >
+                {demo.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-7">
+          <div>
+            <label htmlFor="situation" className="block text-sm font-medium text-zinc-700">
+              Situation <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="situation"
+              required
+              rows={4}
+              value={situation}
+              onChange={(e) => setSituation(e.target.value)}
+              placeholder="e.g. Switching from MongoDB to PostgreSQL"
+              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="constraints" className="block text-sm font-medium text-zinc-700">
+              Constraints <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="constraints"
+              required
+              rows={2}
+              value={constraints}
+              onChange={(e) => setConstraints(e.target.value)}
+              placeholder="e.g. 3 months, 2 developers"
+              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="posture" className="block text-sm font-medium text-zinc-700">
+              Posture <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="posture"
+              required
+              value={posture}
+              onChange={(e) => setPosture(e.target.value as (typeof POSTURES)[number]["value"])}
+              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {POSTURES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {showLeaningDirection && (
+            <div>
+              <label htmlFor="leaning_direction" className="block text-sm font-medium text-zinc-700">
+                Leaning toward <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="leaning_direction"
+                value={leaningDirection}
+                onChange={(e) => setLeaningDirection(e.target.value)}
+                placeholder="e.g. Migrating to PostgreSQL"
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+          )}
+
+          {availableProviders.length > 1 && (
+            <div>
+              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-700">
+                AI provider
+              </label>
+              <select
+                id="llm_provider"
+                value={llmProvider}
+                onChange={(e) => setLlmProvider(e.target.value as ProviderValue)}
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {LLM_PROVIDERS.filter((p) => availableProviders.includes(p.value)).map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="knowns_assumptions" className="block text-sm font-medium text-zinc-700">
+              What I know / am assuming
+            </label>
+            <textarea
+              id="knowns_assumptions"
+              rows={2}
+              value={knownsAssumptions}
+              onChange={(e) => setKnownsAssumptions(e.target.value)}
+              placeholder="Optional"
+              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="unknowns" className="block text-sm font-medium text-zinc-700">
+              What I don’t know
+            </label>
+            <textarea
+              id="unknowns"
+              rows={2}
+              value={unknowns}
+              onChange={(e) => setUnknowns(e.target.value)}
+              placeholder="Optional"
+              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
+            </div>
+          )}
+
+          {submitting && (
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+              <p className="font-medium">{(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}</p>
+              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running 3 providers simultaneously — this may take 30–45 seconds." : "This usually takes 5–15 seconds."}</p>
+            </div>
+          )}
+
+          {freeformSubmitting && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
+              <p className="font-medium">
+                {(llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
+              </p>
+              <p className="mt-1 text-violet-600">
+                {llmProvider === "all"
+                  ? "OpenAI, Anthropic, and Gemini each pick their own JSON structure — this may take 20–45 seconds."
+                  : "The model chooses its own structure — this usually takes 5–20 seconds."}
+              </p>
+            </div>
+          )}
+
+          <div className="pt-2 space-y-2">
+            <button
+              type="submit"
+              disabled={submitting || freeformSubmitting}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                    aria-hidden
+                  />
+                  {(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}
+                </>
+              ) : (
+                "Run structured analysis"
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleFreeformSubmit}
+              disabled={submitting || freeformSubmitting}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors ${freeformSubmitting ? "border-violet-600 bg-violet-600 text-white" : "border-violet-300 bg-violet-50 text-violet-700 hover:bg-violet-100"}`}
+            >
+              {freeformSubmitting ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden />
+                  {FREEFORM_STEPS[freeformStep]}
+                </>
+              ) : (
+                "Free-form analysis (model-chosen schema) →"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}

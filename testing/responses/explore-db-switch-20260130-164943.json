@@ -1,0 +1,106 @@
+{
+  "decision_id": "37ddc47d-0d08-4ad5-a5c4-087d680227f6",
+  "run_id": "14ada06f-d659-4829-9511-8d5d97c74a06",
+  "status": "awaiting_clarification",
+  "intake": {
+    "situation": "Switching from MongoDB to PostgreSQL",
+    "constraints": "3 months, 2 developers",
+    "posture": "explore",
+    "decision_id": "37ddc47d-0d08-4ad5-a5c4-087d680227f6"
+  },
+  "clarification_questions": [
+    {
+      "question_id": "q1",
+      "lens": "risk",
+      "question_text": "What is the current level of expertise the developers have with PostgreSQL?",
+      "answer_type": "short_text",
+      "required": true
+    },
+    {
+      "question_id": "q2",
+      "lens": "risk",
+      "question_text": "How complex is the current MongoDB schema and data model?",
+      "answer_type": "short_text",
+      "required": true
+    },
+    {
+      "question_id": "q3",
+      "lens": "risk",
+      "question_text": "Are there MongoDB features currently in use that do not have direct equivalents in PostgreSQL?",
+      "answer_type": "boolean",
+      "required": true
+    }
+  ],
+  "clarification_needed": true,
+  "clarifications": [],
+  "lens_outputs": [
+    {
+      "lens": "risk",
+      "confidence": "medium",
+      "top_risks": [
+        "Time constraint may lead to incomplete migration or insufficient testing, increasing the risk of data integrity issues.",
+        "The developers' unfamiliarity with PostgreSQL could lead to inefficient use of time and potential errors in database schema design or querying.",
+        "Potential downtime or performance issues during migration could affect business operations, especially if MongoDB is currently in production use.",
+        "Data loss or corruption during the migration process if proper data validation and backup procedures are not implemented.",
+        "Incompatibility issues could arise if the application heavily relies on MongoDB-specific features that do not translate well to PostgreSQL.",
+        "Limited resources (only 2 developers) may cause project delays, especially if unexpected technical challenges arise.",
+        "Potential underestimation of the complexity involved in converting MongoDB-specific data models to SQL-based relational models."
+      ],
+      "assumptions_detected": [
+        "Developers have some experience with PostgreSQL or can quickly become proficient.",
+        "Three months is a sufficient timeframe for the migration, assuming no major issues arise.",
+        "The current MongoDB setup does not use highly specialized features that are difficult to replicate in PostgreSQL."
+      ],
+      "blind_spots": [
+        {
+          "area": "Scalability",
+          "description": "The assumption that PostgreSQL will meet future scalability needs without significant re-engineering."
+        },
+        {
+          "area": "Cost",
+          "description": "Potential hidden costs, such as those associated with training or additional tools needed for migration."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "option": "Switching to PostgreSQL",
+          "upside": "Improved consistency and reliability of data transactions due to PostgreSQL's ACID compliance.",
+          "downside": "Potential downtime and performance issues during migration."
+        },
+        {
+          "option": "Staying with MongoDB",
+          "upside": "Avoids migration-related risks and leverages existing developer expertise.",
+          "downside": "Continued reliance on a less structured data model, which may not meet future needs for complex transactions."
+        }
+      ],
+      "remaining_uncertainty": [
+        "The current level of expertise the developers have with PostgreSQL.",
+        "The complexity and size of the current MongoDB database.",
+        "Specific features of MongoDB in use that might not have direct equivalents in PostgreSQL."
+      ],
+      "questions_to_answer_next": [
+        {
+          "question_id": "q1",
+          "lens": "risk",
+          "question_text": "What is the current level of expertise the developers have with PostgreSQL?",
+          "answer_type": "short_text",
+          "required": true
+        },
+        {
+          "question_id": "q2",
+          "lens": "risk",
+          "question_text": "How complex is the current MongoDB schema and data model?",
+          "answer_type": "short_text",
+          "required": true
+        },
+        {
+          "question_id": "q3",
+          "lens": "risk",
+          "question_text": "Are there MongoDB features currently in use that do not have direct equivalents in PostgreSQL?",
+          "answer_type": "boolean",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

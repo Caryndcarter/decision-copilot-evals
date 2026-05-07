@@ -1,0 +1,110 @@
+{
+  "decision_id": "0fcc9b72-2ddf-486d-81ff-54f29de40e09",
+  "run_id": "d587853a-4e39-410f-bfa0-56bb6f4e823b",
+  "status": "awaiting_clarification",
+  "intake": {
+    "situation": "Switching from MongoDB to PostgreSQL",
+    "constraints": "3 months, 2 developers",
+    "posture": "explore",
+    "decision_id": "0fcc9b72-2ddf-486d-81ff-54f29de40e09"
+  },
+  "clarification_questions": [
+    {
+      "question_id": "q1",
+      "lens": "risk",
+      "question_text": "What are the developers' current levels of experience with PostgreSQL versus MongoDB?",
+      "answer_type": "short_text",
+      "required": true
+    },
+    {
+      "question_id": "q2",
+      "lens": "risk",
+      "question_text": "What specific features or limitations of MongoDB are driving the switch to PostgreSQL?",
+      "answer_type": "short_text",
+      "required": true
+    },
+    {
+      "question_id": "q3",
+      "lens": "risk",
+      "question_text": "Are there any MongoDB-specific features currently in use that might require significant rework when moving to PostgreSQL?",
+      "answer_type": "short_text",
+      "required": true
+    }
+  ],
+  "clarification_needed": true,
+  "clarifications": [],
+  "lens_outputs": [
+    {
+      "lens": "risk",
+      "confidence": "medium",
+      "top_risks": [
+        "Time Overrun: The 3-month time constraint may not be sufficient to complete the migration, especially with only two developers, leading to project delays.",
+        "Data Loss or Corruption: During the migration process, there is a risk of data loss or corruption if not properly managed.",
+        "Performance Issues: PostgreSQL may not handle certain types of queries or workloads as efficiently as MongoDB, impacting application performance.",
+        "Compatibility Issues: Existing applications and services may rely on MongoDB-specific features, which could necessitate significant code changes.",
+        "Skill Gap: If the developers are more familiar with MongoDB than PostgreSQL, the learning curve could slow down the migration process.",
+        "Testing Overhead: Comprehensive testing is required to ensure data integrity and application functionality post-migration, which could be resource-intensive.",
+        "Unexpected Costs: Technical debt or unforeseen challenges could lead to increased costs beyond initial estimates."
+      ],
+      "assumptions_detected": [
+        "The developers have the necessary skills to perform the migration effectively within the given timeframe.",
+        "PostgreSQL will meet all the functional and performance needs currently satisfied by MongoDB.",
+        "The existing infrastructure can support PostgreSQL without significant modifications."
+      ],
+      "blind_spots": [
+        {
+          "area": "Developer Experience",
+          "description": "The current skill level and experience of the developers with PostgreSQL is not specified, which could affect the migration timeline and success."
+        },
+        {
+          "area": "Infrastructure Compatibility",
+          "description": "Potential infrastructure changes required to support PostgreSQL are not considered, which could introduce additional complexity."
+        },
+        {
+          "area": "Data Migration Strategy",
+          "description": "The plan for handling discrepancies between MongoDB and PostgreSQL data models is unclear, which could impact data integrity."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "option": "Switching to PostgreSQL",
+          "upside": "Potential for improved data integrity and SQL capabilities.",
+          "downside": "Significant time investment and risk of migration-related issues."
+        },
+        {
+          "option": "Staying with MongoDB",
+          "upside": "Avoids the risks and costs associated with migration.",
+          "downside": "Potential limitations with MongoDB that prompted the consideration for switching."
+        }
+      ],
+      "remaining_uncertainty": [
+        "Extent of the current MongoDB-specific features in use.",
+        "Developers' proficiency with PostgreSQL compared to MongoDB.",
+        "Specific performance requirements that PostgreSQL needs to meet."
+      ],
+      "questions_to_answer_next": [
+        {
+          "question_id": "q1",
+          "lens": "risk",
+          "question_text": "What are the developers' current levels of experience with PostgreSQL versus MongoDB?",
+          "answer_type": "short_text",
+          "required": true
+        },
+        {
+          "question_id": "q2",
+          "lens": "risk",
+          "question_text": "What specific features or limitations of MongoDB are driving the switch to PostgreSQL?",
+          "answer_type": "short_text",
+          "required": true
+        },
+        {
+          "question_id": "q3",
+          "lens": "risk",
+          "question_text": "Are there any MongoDB-specific features currently in use that might require significant rework when moving to PostgreSQL?",
+          "answer_type": "short_text",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

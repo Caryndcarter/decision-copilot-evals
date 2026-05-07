@@ -1,0 +1,9 @@
+.DS_Store
+.env
+*.tsbuildinfo
+dist
+node_modules
+.next
+
+# Session summaries — do not commit
+docs/SESSION_SUMMARY.md
