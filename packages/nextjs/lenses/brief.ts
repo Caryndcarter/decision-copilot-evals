@@ -700,15 +700,54 @@ export async function runBriefSynthesis(
     (clarifications.length > 0 && !formatInstruction?.trim()) ||
     Boolean(promptOpts?.priorPublishedBrief);
 
-  const response = await getClient(provider).run(messages, {
+  const requestOpts = {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.5,
     // Variant briefs and post-clarification briefs (optional appendices) need room for structured JSON.
     maxTokens: largeBriefPayload ? 8192 : 1024,
-  });
+  };
+
+  const client = getClient(provider);
+  let response = await client.run(messages, requestOpts);
+
+  // Providers occasionally return text that isn't valid JSON or that gets truncated mid-object,
+  // even with a responseSchema set (Gemini in particular). One retry with an explicit JSON-only
+  // reminder, lower temperature, and even more headroom catches the vast majority of these.
+  if (!response.parsed) {
+    console.warn("[Brief] First attempt did not return parseable JSON; retrying once.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 300),
+    });
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous reply was not valid JSON for the required schema. " +
+          "Reply NOW with one JSON object that matches the schema exactly. " +
+          "No prose, no markdown, no code fences — only the JSON object. " +
+          "Make sure every required property is present and the object is fully closed.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      temperature: 0.2,
+      maxTokens: Math.max(requestOpts.maxTokens, 8192),
+    });
+  }
 
   if (!response.parsed) {
-    throw new Error("Brief synthesis did not return valid structured output");
+    console.error("[Brief] Brief synthesis failed to produce parseable JSON after retry.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Brief synthesis did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
   }
 
   const generated_at = new Date().toISOString();
