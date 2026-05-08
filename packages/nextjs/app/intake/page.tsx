@@ -472,11 +472,11 @@ export default function IntakePage() {
             <textarea
               id="situation"
               required
-              rows={4}
+              rows={8}
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
               placeholder="e.g. Switching from MongoDB to PostgreSQL"
-              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
@@ -487,11 +487,11 @@ export default function IntakePage() {
             <textarea
               id="constraints"
               required
-              rows={2}
+              rows={5}
               value={constraints}
               onChange={(e) => setConstraints(e.target.value)}
               placeholder="e.g. 3 months, 2 developers"
-              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
@@ -556,11 +556,11 @@ export default function IntakePage() {
             </label>
             <textarea
               id="knowns_assumptions"
-              rows={2}
+              rows={5}
               value={knownsAssumptions}
               onChange={(e) => setKnownsAssumptions(e.target.value)}
               placeholder="Optional"
-              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
@@ -570,11 +570,11 @@ export default function IntakePage() {
             </label>
             <textarea
               id="unknowns"
-              rows={2}
+              rows={5}
               value={unknowns}
               onChange={(e) => setUnknowns(e.target.value)}
               placeholder="Optional"
-              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
