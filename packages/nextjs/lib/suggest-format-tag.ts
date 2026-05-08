@@ -136,6 +136,26 @@ export function isLikelyTruncated(text: string): boolean {
   return TRAILING_STOP_WORDS.has(tail[1]);
 }
 
+/**
+ * Strip residual SUGGEST_FORMAT scaffolding that the bracket parser sometimes leaves behind
+ * when the model's output uses unusual whitespace, mixed brackets, or repeated tags. The UI
+ * displays this string verbatim, so we have to guarantee it never starts with the literal
+ * `[SUGGEST_FORMAT:` token (or ends with a stray closing `]`).
+ */
+function stripResidualTagWrapper(text: string): string {
+  let out = text.trim();
+  for (let i = 0; i < 3; i++) {
+    const next = out
+      .replace(/^[\s*_`"'\[]+/, "")
+      .replace(/^SUGGEST_FORMAT\s*:\s*/i, "")
+      .replace(/[\s*_`"'\]]+$/u, "")
+      .trim();
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 /** For reflect API: null means [NO_SUGGESTION] or empty. */
 export function parseReflectionSuggestion(raw: string): string | null {
   const s = normalizeSuggestFormatSource(raw);
@@ -143,12 +163,18 @@ export function parseReflectionSuggestion(raw: string): string | null {
   if (/\[NO_SUGGESTION\]/i.test(s) || /^\s*NO_SUGGESTION\s*$/i.test(s)) {
     return null;
   }
+  let result: string | null = null;
   const span = extractSuggestFormatSpan(s);
   if (span?.inner) {
     const text = span.inner.replace(/\s+/g, " ").trim();
-    if (text.length > 0) return text;
+    if (text.length > 0) result = text;
   }
-  return extractUnbracketedSuggestFormat(s);
+  if (!result) {
+    result = extractUnbracketedSuggestFormat(s);
+  }
+  if (!result) return null;
+  const cleaned = stripResidualTagWrapper(result);
+  return cleaned.length > 1 ? cleaned : null;
 }
 
 /** Short line for the amber “suggested format” card; full string is still used for variant creation. */

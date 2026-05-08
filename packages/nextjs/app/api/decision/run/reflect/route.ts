@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRun } from "@/lib/db/runs";
 import { getClient } from "@/llm";
-import { isLikelyTruncated, parseReflectionSuggestion } from "@/lib/suggest-format-tag";
+import { parseReflectionSuggestion } from "@/lib/suggest-format-tag";
 import type { DecisionRunResult } from "@/types/decision";
 
 /**
@@ -167,21 +167,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const content = response.content.trim();
     const finishReason = response.meta?.finishReason ?? "";
     const hitTokenCap = /^(MAX_TOKENS|max_tokens|length)$/i.test(finishReason);
-    const hasClosingBracket = /\[SUGGEST_FORMAT:[^\]]*\]/i.test(content);
+    const hasBalancedTag = /\[SUGGEST_FORMAT:[^\]]*\]/i.test(content);
+
+    // Truly truncated: model ran out of tokens AND never closed the tag. Anything else
+    // (natural STOP, or a balanced tag somewhere in the response) is worth showing.
+    if (hitTokenCap && !hasBalancedTag) {
+      console.warn("Reflect endpoint: suggestion truncated by token limit", {
+        finishReason,
+        content: content.slice(0, 500),
+      });
+      return NextResponse.json({ suggestion: null });
+    }
 
     const suggestion = parseReflectionSuggestion(content);
 
     if (suggestion) {
-      // Defensive: never surface a suggestion that still embeds the literal tag (parser leak)
-      // or that obviously got cut off mid-thought (model ran out of token budget).
-      const looksRaw = /\[?SUGGEST_FORMAT\s*:/i.test(suggestion);
-      const looksTruncated =
-        (hitTokenCap && !hasClosingBracket) || isLikelyTruncated(suggestion);
-      if (looksRaw || looksTruncated) {
-        console.warn(
-          "Reflect endpoint: dropping incomplete suggestion",
-          { finishReason, hasClosingBracket, suggestion: suggestion.slice(0, 200) },
-        );
+      // Belt-and-suspenders: parser cleanup should already strip this, but if anything
+      // ever leaks the literal tag prefix into the user-facing string, drop it.
+      if (/SUGGEST_FORMAT\s*:/i.test(suggestion)) {
+        console.warn("Reflect endpoint: parser leaked tag", {
+          finishReason,
+          suggestion: suggestion.slice(0, 200),
+          content: content.slice(0, 500),
+        });
         return NextResponse.json({ suggestion: null });
       }
       return NextResponse.json({ suggestion });
