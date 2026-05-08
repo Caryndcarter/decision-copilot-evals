@@ -30,6 +30,10 @@ export function extractBalancedSuggestFormat(normalized: string): { inner: strin
   const m = re.exec(normalized);
   if (!m || m.index === undefined) return null;
   const openIdx = m.index;
+  // NOTE: do NOT use re.lastIndex here. Without the /g flag, exec leaves lastIndex at 0,
+  // which made the slice below include the entire prose lead-in plus the `[SUGGEST_FORMAT:`
+  // literal — so the "inner" was actually the whole content. Use the explicit match length.
+  const contentStart = openIdx + m[0].length;
   let depth = 0;
   for (let j = openIdx; j < normalized.length; j++) {
     const c = normalized[j];
@@ -37,7 +41,7 @@ export function extractBalancedSuggestFormat(normalized: string): { inner: strin
     else if (c === "]") {
       depth--;
       if (depth === 0) {
-        const inner = stripSuggestInnerJunk(normalized.slice(re.lastIndex, j));
+        const inner = stripSuggestInnerJunk(normalized.slice(contentStart, j));
         if (inner.length === 0) return null;
         return { inner, start: openIdx, end: j + 1 };
       }
@@ -70,7 +74,9 @@ export function extractSuggestFormatSpan(normalized: string): { inner: string; s
   const m = re.exec(normalized);
   if (!m || m.index === undefined) return null;
   const start = m.index;
-  const contentStart = re.lastIndex;
+  // Same lastIndex caveat as in extractBalancedSuggestFormat above — derive the post-tag
+  // offset from the match length, not re.lastIndex.
+  const contentStart = start + m[0].length;
   const after = normalized.slice(contentStart);
   if (after.indexOf("]") !== -1) {
     return null;
