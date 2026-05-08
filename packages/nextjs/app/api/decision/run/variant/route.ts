@@ -166,28 +166,45 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
     console.log("[Variant] Brief custom_sections:", brief.custom_sections);
 
-    // User asked for one thing—keep only one section so we don't show an unwanted timeline etc.
-    if (brief.custom_sections && brief.custom_sections.length > 1) {
-      brief = { ...brief, custom_sections: [brief.custom_sections[0]] };
-    }
+    // The brief synthesis prompt restricts the model to ONE custom section matching the
+    // format instruction; the section we want to keep from the new brief is that requested
+    // one (the first non-empty entry).
+    const requestedSection =
+      brief.custom_sections?.find((s) => s.heading?.trim() && s.content?.trim()) ??
+      brief.custom_sections?.[0] ??
+      null;
 
-    // Ensure at least one custom section so the variant tab never appears empty
-    if (!brief.custom_sections?.length) {
-      brief = {
-        ...brief,
-        custom_sections: [
-          {
+    // Ensure we always have a requested section even if the model returned nothing usable —
+    // otherwise the variant tab would appear empty.
+    const safeRequestedSection =
+      requestedSection?.heading?.trim() && requestedSection?.content?.trim()
+        ? requestedSection
+        : {
             heading:
               formatInstructionResolved.length > 60
                 ? formatInstructionResolved.slice(0, 60) + "…"
                 : formatInstructionResolved,
-            content: "This section is based on your request. The content could not be generated automatically—consider editing the brief to add the details.",
-          },
-        ],
-      };
-    }
+            content:
+              "This section is based on your request. The content could not be generated automatically—consider editing the brief to add the details.",
+          };
 
-    const firstSectionHeading = brief.custom_sections?.[0]?.heading?.trim();
+    // Preserve any custom sections from the source run's published brief so a variant feels
+    // additive instead of destructive — earlier behavior dropped the source's appendices,
+    // which surprised users who had taken time to read them on the original brief.
+    const sourceSections = (run.decision_brief?.custom_sections ?? []).filter(
+      (s) => s.heading?.trim() && s.content?.trim()
+    );
+    const requestedHeadingKey = safeRequestedSection.heading.trim().toLowerCase();
+    const dedupedSourceSections = sourceSections.filter(
+      (s) => s.heading.trim().toLowerCase() !== requestedHeadingKey
+    );
+
+    brief = {
+      ...brief,
+      custom_sections: [...dedupedSourceSections, safeRequestedSection],
+    };
+
+    const firstSectionHeading = safeRequestedSection.heading.trim();
 
     // Create the variant (explicit copy so custom_sections serializes reliably)
     const variant: RunVariant = {
