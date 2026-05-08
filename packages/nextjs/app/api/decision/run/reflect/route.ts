@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRun } from "@/lib/db/runs";
 import { getClient } from "@/llm";
-import { parseReflectionSuggestion } from "@/lib/suggest-format-tag";
+import { isLikelyTruncated, parseReflectionSuggestion } from "@/lib/suggest-format-tag";
 import type { DecisionRunResult } from "@/types/decision";
 
 /**
@@ -122,7 +122,11 @@ If you want to suggest an addition, your reply MUST include this tag on its own 
 If the current format is clearly sufficient, reply MUST include:
 [NO_SUGGESTION]
 
-You may add one short sentence before the tag if needed, but the line with [SUGGEST_FORMAT:...] or [NO_SUGGESTION] must appear exactly as shown (square brackets, uppercase tag). The [SUGGEST_FORMAT:...] line must end with ] immediately after your phrase—no stray quote or text after the closing bracket.`;
+Hard requirements for the [SUGGEST_FORMAT: ...] line:
+- Keep the phrase under 25 words. Be concrete and complete — not a fragment that ends in "of", "the", "for", etc.
+- The line MUST end with the closing ] right after your phrase. Do not let the response cut off before the ].
+- Do NOT wrap the tag in quotes, backticks, bold, or italics.
+- Do not put any text after the closing ]. The whole reply should be the tag (optionally preceded by one short prose sentence).`;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -155,16 +159,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ];
 
     const client = getClient(run.llm_provider ?? "openai");
-    const response = await client.run(messages, { temperature: 0.3, maxTokens: 512 });
+    // 2048 tokens is plenty for one short suggestion line; the larger budget is mainly for
+    // Gemini 2.5 Flash where "thinking" tokens are charged against the same maxOutputTokens
+    // budget — at 512 the visible output was getting truncated mid-sentence.
+    const response = await client.run(messages, { temperature: 0.3, maxTokens: 2048 });
 
     const content = response.content.trim();
+    const finishReason = response.meta?.finishReason ?? "";
+    const hitTokenCap = /^(MAX_TOKENS|max_tokens|length)$/i.test(finishReason);
+    const hasClosingBracket = /\[SUGGEST_FORMAT:[^\]]*\]/i.test(content);
+
     const suggestion = parseReflectionSuggestion(content);
 
     if (suggestion) {
+      // Defensive: never surface a suggestion that still embeds the literal tag (parser leak)
+      // or that obviously got cut off mid-thought (model ran out of token budget).
+      const looksRaw = /\[?SUGGEST_FORMAT\s*:/i.test(suggestion);
+      const looksTruncated =
+        (hitTokenCap && !hasClosingBracket) || isLikelyTruncated(suggestion);
+      if (looksRaw || looksTruncated) {
+        console.warn(
+          "Reflect endpoint: dropping incomplete suggestion",
+          { finishReason, hasClosingBracket, suggestion: suggestion.slice(0, 200) },
+        );
+        return NextResponse.json({ suggestion: null });
+      }
       return NextResponse.json({ suggestion });
     }
 
-    console.warn("Reflect endpoint: could not parse suggestion", content.slice(0, 500));
+    console.warn("Reflect endpoint: could not parse suggestion", {
+      finishReason,
+      content: content.slice(0, 500),
+    });
     return NextResponse.json({ suggestion: null });
 
   } catch (error) {

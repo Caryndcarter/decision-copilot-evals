@@ -106,6 +106,36 @@ export function resolveVariantFormatInstruction(raw: string): string {
   return (raw ?? "").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Heuristic check for "the model ran out of tokens mid-sentence" so the reflect endpoint
+ * can drop garbage before it reaches the user. Triggers when the text:
+ *   - has no sentence-terminating punctuation, AND
+ *   - ends with a stop word a sentence shouldn't end on (preposition, conjunction, article,
+ *     auxiliary verb, etc).
+ * Designed to be cheap and language-specific to English; false negatives are fine — the
+ * goal is to catch the obvious truncations like "...financial implications of each".
+ */
+const TRAILING_STOP_WORDS = new Set([
+  "a", "an", "the",
+  "and", "or", "but", "nor", "so", "yet",
+  "of", "to", "in", "on", "at", "by", "for", "from", "with", "without",
+  "into", "onto", "over", "under", "as", "than", "then", "vs", "vs.",
+  "is", "are", "was", "were", "be", "been", "being",
+  "which", "that", "who", "whom", "whose",
+  "if", "while", "when", "where", "because",
+  "their", "his", "her", "our", "your", "my", "its",
+]);
+
+export function isLikelyTruncated(text: string): boolean {
+  const t = text.trim();
+  if (t.length === 0) return true;
+  const lastChar = t[t.length - 1];
+  if (/[.!?:\])"]/.test(lastChar)) return false;
+  const tail = t.toLowerCase().match(/([a-z][a-z.'-]*)$/);
+  if (!tail) return false;
+  return TRAILING_STOP_WORDS.has(tail[1]);
+}
+
 /** For reflect API: null means [NO_SUGGESTION] or empty. */
 export function parseReflectionSuggestion(raw: string): string | null {
   const s = normalizeSuggestFormatSource(raw);
