@@ -17,7 +17,33 @@ type PageFreeformData = FreeformResult & {
   run_id?: string;
   decision_id?: string;
   llm_provider?: LLMProviderName;
+  decision_title?: string;
 };
+
+/**
+ * Pick the first plausible title-ish string out of the freeform model's free-form JSON.
+ * The freeform schema is intentionally unconstrained, so we scan for common shapes the
+ * models produce: top-level `title` / `headline` / `name` / `decision_title`, then nested
+ * one level deep under `summary` or `decision`. Empty/whitespace-only strings are skipped.
+ */
+function freeformOutputTitle(output: Record<string, unknown> | null | undefined): string | null {
+  if (!output) return null;
+  const keys = ["title", "headline", "name", "decision_title", "decision"];
+  for (const k of keys) {
+    const v = output[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  for (const containerKey of ["summary", "decision", "context", "overview"]) {
+    const c = output[containerKey];
+    if (c && typeof c === "object" && !Array.isArray(c)) {
+      for (const k of keys) {
+        const v = (c as Record<string, unknown>)[k];
+        if (typeof v === "string" && v.trim()) return v.trim();
+      }
+    }
+  }
+  return null;
+}
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -333,6 +359,7 @@ function FreeformContent() {
             freeform_model?: string;
             freeform_generated_at?: string;
             llm_provider?: LLMProviderName;
+            decision_title?: string;
           }) => {
             if (row.error || !row.freeform_output || !row.intake) {
               setMissing(true);
@@ -346,6 +373,7 @@ function FreeformContent() {
               run_id: runIdFromUrl,
               decision_id: row.decision_id,
               llm_provider: row.llm_provider,
+              decision_title: row.decision_title,
             });
           }
         )
@@ -372,6 +400,7 @@ function FreeformContent() {
         run_id: parsed.run_id,
         decision_id: parsed.decision_id,
         llm_provider: parsed.llm_provider,
+        decision_title: parsed.decision_title,
       });
     } catch {
       setMissing(true);
@@ -471,10 +500,21 @@ function FreeformContent() {
     );
   }
 
-  // Match the title shown on My Decisions: prefer the persisted decision_title, then a real
-  // brief title, then the brief summary, then a word-boundary-truncated situation line — never
-  // a raw substring like "We're a B2B…" cut mid-word.
-  const headline = data ? runHeadline(data) : null;
+  // Match the title shown on My Decisions: prefer the persisted decision_title (which the
+  // freeform creation flow generates via runFreeformCardTitle), then probe the model's own
+  // freeform JSON for a title-ish field (legacy runs that pre-date decision_title still get
+  // something readable), and only as a last resort fall through to runHeadline (intake
+  // situation, word-boundary truncated). Never a raw "We're a B2B…" mid-word slice.
+  const headline = (() => {
+    if (!data) return null;
+    const stored = data.decision_title?.trim();
+    if (stored) return stored;
+    const fromOutput = freeformOutputTitle(data.output);
+    if (fromOutput) return fromOutput;
+    // runHeadline only reads demo_scenario_id, decision_brief, decision_title, intake.situation —
+    // PageFreeformData is a strict subset of DecisionRunResult for those fields, so this cast is safe.
+    return runHeadline(data as unknown as DecisionRunResult);
+  })();
 
   const persistedRunId = runIdFromUrl ?? data?.run_id ?? null;
   const legacyChatProvider = persistedRunId ? undefined : data?.llm_provider;
