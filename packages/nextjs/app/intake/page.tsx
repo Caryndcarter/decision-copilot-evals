@@ -174,6 +174,7 @@ export default function IntakePage() {
   const [freeformSubmitting, setFreeformSubmitting] = useState(false);
   const [freeformStep, setFreeformStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [partialWarning, setPartialWarning] = useState<string | null>(null);
   const router = useRouter();
   const showLeaningDirection = posture === "pressure_test";
 
@@ -226,6 +227,7 @@ export default function IntakePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setPartialWarning(null);
     setSubmittingStep(0);
     setSubmitting(true);
 
@@ -250,7 +252,14 @@ export default function IntakePage() {
         }),
       });
       const text = await res.text();
-      let data: { error?: string; run_id?: string; decision_id?: string; runs?: { run_id: string; decision_id?: string }[]; primary_run_id?: string };
+      let data: {
+        error?: string;
+        run_id?: string;
+        decision_id?: string;
+        runs?: { run_id: string; decision_id?: string }[];
+        primary_run_id?: string;
+        failed_providers?: { provider: string; message: string }[];
+      };
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
@@ -263,13 +272,29 @@ export default function IntakePage() {
         return;
       }
 
-      // "all providers" response: { runs: [...], primary_run_id: string }
+      // "all providers" response: { runs: [...], primary_run_id: string, failed_providers?: [...] }
       if (data.runs && data.primary_run_id) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(data.runs[0]));
         }
         const decisionId = data.runs[0]?.decision_id;
-        router.push(decisionId ? `/runs?new=${decisionId}` : "/runs");
+        const target = decisionId ? `/runs?new=${decisionId}` : "/runs";
+
+        // Partial-failure path: show which provider(s) failed before navigating
+        // so the user knows their runs were created and which to expect.
+        const failed = data.failed_providers ?? [];
+        if (failed.length > 0) {
+          const ok = data.runs.length;
+          setPartialWarning(
+            `${ok} run${ok === 1 ? "" : "s"} created. ${failed.length} provider${failed.length === 1 ? "" : "s"} failed: ` +
+              failed.map((f) => `${f.provider} (${f.message})`).join("; ") +
+              ". Continuing to your runs in 5s…"
+          );
+          setTimeout(() => router.push(target), 5000);
+          return;
+        }
+
+        router.push(target);
         return;
       }
 
@@ -556,6 +581,12 @@ export default function IntakePage() {
           {error && (
             <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
+            </div>
+          )}
+
+          {partialWarning && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {partialWarning}
             </div>
           )}
 
