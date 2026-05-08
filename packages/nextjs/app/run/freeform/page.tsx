@@ -8,7 +8,7 @@ import { SessionNav } from "@/app/components/session-nav";
 import type { FreeformResult } from "@/lenses/freeform";
 import type { DecisionRunResult, LLMProviderName, Posture } from "@/types/decision";
 import { CollapsibleBlock } from "../collapsible-block";
-import { runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
+import { runHeadline, runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
 
 const STORAGE_KEY = "freeformResult";
 const CHAT_STORAGE_PREFIX = "freeformChat_";
@@ -471,9 +471,10 @@ function FreeformContent() {
     );
   }
 
-  const headline = data
-    ? data.intake.situation.slice(0, 80) + (data.intake.situation.length > 80 ? "…" : "")
-    : null;
+  // Match the title shown on My Decisions: prefer the persisted decision_title, then a real
+  // brief title, then the brief summary, then a word-boundary-truncated situation line — never
+  // a raw substring like "We're a B2B…" cut mid-word.
+  const headline = data ? runHeadline(data) : null;
 
   const persistedRunId = runIdFromUrl ?? data?.run_id ?? null;
   const legacyChatProvider = persistedRunId ? undefined : data?.llm_provider;
