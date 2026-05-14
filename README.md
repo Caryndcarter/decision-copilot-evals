@@ -107,6 +107,7 @@ Create a `.env` at the repo root. Relevant variables:
 - `npm run dynamo:start` / `dynamo:stop` — Start/stop the containers (data persists).
 - `npm run dynamo:remove` — Stop and delete the data volume.
 - `npm run dynamo:create-table` — Just (re)run the create-table script; safe to re-run, idempotent.
+- `npm run dynamo:snapshot` — Clone the live `runs` and `auth` tables into `…-runs-archive` and `…-auth-archive` (same schema + full item copy). **Does not change** the originals; re-run to refresh the archive from current data. Override destination names with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME` in `.env` if you want multiple named snapshots.
 
 ## API
 
