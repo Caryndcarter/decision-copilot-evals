@@ -5,8 +5,17 @@ import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 const PROJECT_KEY = process.env.PROJECT_KEY || "decision-copilot";
 const PROJECT_ENV = process.env.PROJECT_ENV || "local";
 
-export const RUNS_TABLE = process.env.RUNS_TABLE_NAME || `${PROJECT_KEY}-${PROJECT_ENV}-runs`;
-export const AUTH_TABLE = process.env.AUTH_TABLE_NAME || `${PROJECT_KEY}-${PROJECT_ENV}-auth`;
+/**
+ * Single-table layout (`one-table` branch): one physical table for NextAuth
+ * (USER#/SESSION#/… items) and decision runs (`RUN#` + `run_id` body).
+ *
+ * Override with `APP_TABLE_NAME`. `RUNS_TABLE` / `AUTH_TABLE` are kept as
+ * aliases so `lib/db/runs.ts` and `lib/db/users.ts` both target the same table.
+ */
+export const APP_TABLE =
+  process.env.APP_TABLE_NAME || `${PROJECT_KEY}-${PROJECT_ENV}-app`;
+export const RUNS_TABLE = APP_TABLE;
+export const AUTH_TABLE = APP_TABLE;
 
 export const RUNS_GSI_BY_DECISION = "by-decision";
 export const RUNS_GSI_BY_USER = "by-user";

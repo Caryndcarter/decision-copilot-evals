@@ -5,8 +5,8 @@
   "scripts": {
     "build": "NODE_ENV=production next build",
     "clean": "rimraf .next out build node_modules package-lock.json",
-    "dev": "next dev -p 3000",
-    "start": "next start -p 3000",
+    "dev": "next dev -p 3001",
+    "start": "next start -p 3001",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

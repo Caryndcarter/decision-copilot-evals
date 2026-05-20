@@ -1,21 +1,15 @@
 #!/usr/bin/env bash
-# Create local DynamoDB tables for Decision Copilot.
+# Create the single DynamoDB table used on the `one-table` branch.
 #
-# Tables:
-#   - {PROJECT_KEY}-{PROJECT_ENV}-runs
-#       PK: run_id (S)
-#       GSI by-decision: decision_id HASH, createdAt RANGE (projection ALL)
-#       GSI by-user:     user_id     HASH, createdAt RANGE (projection ALL)
+# One physical table holds:
+#   - NextAuth adapter items (pk/sk + GSI1, TTL on `expires`)
+#   - Decision runs (pk = RUN#<run_id>, sk = RUN#<run_id>; GSIs by-decision / by-user
+#     sort by updatedAt so “recent” lists reflect last activity; run items omit GSI1PK/GSI1SK)
 #
-#   - {PROJECT_KEY}-{PROJECT_ENV}-auth
-#       PK: pk (S), SK: sk (S)
-#       GSI1: GSI1PK HASH, GSI1SK RANGE (projection ALL)
-#       (Schema required by @auth/dynamodb-adapter. TTL on `expires` is
-#       enabled below so expired sessions / verification tokens are cleaned
-#       up automatically.)
+# Legacy two-table layout (`…-runs` + `…-auth`) lives on `main`; migrate data with
+#   `npm run dynamo:migrate-legacy` after this table exists.
 #
-# Idempotent: "ResourceInUseException" (table already exists) is treated
-# as success. Any other AWS CLI error is printed and the script exits.
+# Idempotent: ResourceInUseException is treated as success.
 
 set -euo pipefail
 
@@ -25,17 +19,11 @@ PROJECT_ENV="${PROJECT_ENV:-local}"
 ENDPOINT="${DYNAMODB_ENDPOINT:-http://127.0.0.1:${DYNAMODB_PORT:-8000}}"
 REGION="${AWS_REGION:-us-east-1}"
 
-RUNS_TABLE="${RUNS_TABLE_NAME:-${PROJECT_KEY}-${PROJECT_ENV}-runs}"
-AUTH_TABLE="${AUTH_TABLE_NAME:-${PROJECT_KEY}-${PROJECT_ENV}-auth}"
+APP_TABLE="${APP_TABLE_NAME:-${PROJECT_KEY}-${PROJECT_ENV}-app}"
 
-# DynamoDB Local ignores credentials but the AWS CLI requires *something*.
-# Set them inline so we never accidentally use a real ~/.aws profile.
 export AWS_ACCESS_KEY_ID=local
 export AWS_SECRET_ACCESS_KEY=local
 
-# Run an aws-cli command; succeed if the command exits 0 OR if its stderr
-# matches "ResourceInUseException" (idempotent re-run). Print the real
-# error and exit on anything else.
 run_idempotent() {
   local label="$1"
   shift
@@ -53,49 +41,19 @@ run_idempotent() {
   return 1
 }
 
-echo "→ Creating table: $RUNS_TABLE"
-run_idempotent "$RUNS_TABLE" \
+echo "→ Creating single app table: $APP_TABLE"
+run_idempotent "$APP_TABLE" \
   aws dynamodb create-table \
-    --table-name "$RUNS_TABLE" \
-    --attribute-definitions \
-      AttributeName=run_id,AttributeType=S \
-      AttributeName=decision_id,AttributeType=S \
-      AttributeName=user_id,AttributeType=S \
-      AttributeName=createdAt,AttributeType=S \
-    --key-schema \
-      AttributeName=run_id,KeyType=HASH \
-    --global-secondary-indexes \
-      "[
-         {
-           \"IndexName\": \"by-decision\",
-           \"KeySchema\": [
-             {\"AttributeName\": \"decision_id\", \"KeyType\": \"HASH\"},
-             {\"AttributeName\": \"createdAt\",   \"KeyType\": \"RANGE\"}
-           ],
-           \"Projection\": {\"ProjectionType\": \"ALL\"}
-         },
-         {
-           \"IndexName\": \"by-user\",
-           \"KeySchema\": [
-             {\"AttributeName\": \"user_id\",   \"KeyType\": \"HASH\"},
-             {\"AttributeName\": \"createdAt\", \"KeyType\": \"RANGE\"}
-           ],
-           \"Projection\": {\"ProjectionType\": \"ALL\"}
-         }
-       ]" \
-    --billing-mode PAY_PER_REQUEST \
-    --endpoint-url "$ENDPOINT" \
-    --region "$REGION"
-
-echo "→ Creating table: $AUTH_TABLE"
-run_idempotent "$AUTH_TABLE" \
-  aws dynamodb create-table \
-    --table-name "$AUTH_TABLE" \
+    --table-name "$APP_TABLE" \
     --attribute-definitions \
       AttributeName=pk,AttributeType=S \
       AttributeName=sk,AttributeType=S \
       AttributeName=GSI1PK,AttributeType=S \
       AttributeName=GSI1SK,AttributeType=S \
+      AttributeName=decision_id,AttributeType=S \
+      AttributeName=user_id,AttributeType=S \
+      AttributeName=createdAt,AttributeType=S \
+      AttributeName=updatedAt,AttributeType=S \
     --key-schema \
       AttributeName=pk,KeyType=HASH \
       AttributeName=sk,KeyType=RANGE \
@@ -108,20 +66,37 @@ run_idempotent "$AUTH_TABLE" \
              {\"AttributeName\": \"GSI1SK\", \"KeyType\": \"RANGE\"}
            ],
            \"Projection\": {\"ProjectionType\": \"ALL\"}
+         },
+         {
+           \"IndexName\": \"by-decision\",
+           \"KeySchema\": [
+             {\"AttributeName\": \"decision_id\", \"KeyType\": \"HASH\"},
+             {\"AttributeName\": \"updatedAt\",   \"KeyType\": \"RANGE\"}
+           ],
+           \"Projection\": {\"ProjectionType\": \"ALL\"}
+         },
+         {
+           \"IndexName\": \"by-user\",
+           \"KeySchema\": [
+             {\"AttributeName\": \"user_id\",   \"KeyType\": \"HASH\"},
+             {\"AttributeName\": \"updatedAt\", \"KeyType\": \"RANGE\"}
+           ],
+           \"Projection\": {\"ProjectionType\": \"ALL\"}
          }
        ]" \
     --billing-mode PAY_PER_REQUEST \
     --endpoint-url "$ENDPOINT" \
     --region "$REGION"
 
-echo "→ Enabling TTL on $AUTH_TABLE.expires"
-run_idempotent "TTL on $AUTH_TABLE" \
+echo "→ Enabling TTL on $APP_TABLE.expires (sessions / verification tokens)"
+run_idempotent "TTL on $APP_TABLE" \
   aws dynamodb update-time-to-live \
-    --table-name "$AUTH_TABLE" \
+    --table-name "$APP_TABLE" \
     --time-to-live-specification "Enabled=true,AttributeName=expires" \
     --endpoint-url "$ENDPOINT" \
     --region "$REGION"
 
 echo
-echo "DynamoDB ready at $ENDPOINT"
-echo "Admin UI:        http://127.0.0.1:${DYNAMODB_ADMIN_PORT:-8001}"
+echo "DynamoDB app table ready at $ENDPOINT — $APP_TABLE"
+echo "Admin UI: http://127.0.0.1:${DYNAMODB_ADMIN_PORT:-8001}"
+echo "If you have legacy …-runs / …-auth from branch main, run: npm run dynamo:migrate-legacy"

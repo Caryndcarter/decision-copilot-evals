@@ -28,6 +28,7 @@ import {
   DynamoDBClient,
   type AttributeDefinition,
   type GlobalSecondaryIndex,
+  type GlobalSecondaryIndexDescription,
   type KeySchemaElement,
   UpdateTimeToLiveCommand,
 } from "@aws-sdk/client-dynamodb";
@@ -64,7 +65,7 @@ function buildClient(): DynamoDBClient {
 }
 
 function gsiForCreate(
-  gsis: GlobalSecondaryIndex[] | undefined
+  gsis: GlobalSecondaryIndexDescription[] | undefined
 ): GlobalSecondaryIndex[] | undefined {
   if (!gsis?.length) return undefined;
   return gsis.map((g) => ({

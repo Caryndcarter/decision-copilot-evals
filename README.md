@@ -21,24 +21,22 @@ Runs are stored in DynamoDB (a local Docker container in dev, real AWS in prod).
 
 - **App:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS.
 - **LLM:** OpenAI (structured outputs for lenses and brief). Server-only.
-- **Data:** DynamoDB for run persistence and NextAuth (separate tables). Local dev uses `amazon/dynamodb-local` in Docker.
+- **Data:** DynamoDB — on branch **`one-table`**, one physical table (`…-app`) holds NextAuth and runs (`RUN#…` keys). On branch **`main`**, two tables (`…-runs` and `…-auth`). Local dev uses `amazon/dynamodb-local` in Docker.
 - **Monorepo:** npm workspaces (`packages/nextjs`, `packages/local/docker-dynamodb`).
 
 ## DynamoDB persistence layer
 
-We added a persistence layer so every decision run is stored and can be loaded later.
+**This branch (`one-table`):** one table **`${PROJECT_KEY}-${PROJECT_ENV}-app`**. NextAuth rows keep the adapter shape (`pk`/`sk`/`GSI1PK`/`GSI1SK`, TTL on `expires`). Decision runs use **`pk`/`sk` = `RUN#<run_id>`** with **`by-decision`** / **`by-user`** GSIs (hash on `decision_id` / `user_id`, range on **`updatedAt`** so lists reflect last activity). Code: `lib/db/runs.ts`, `lib/db/users.ts`, `lib/db/run-keys.ts`, `server/config/dynamodb.ts`. Table definition: `packages/local/docker-dynamodb/dynamo-create-table.sh`. Changing GSI key schema requires recreating the app table (for example `npm run dynamo:remove` then `npm run dynamo:create-table` in local dev).
 
-- **Where:** `packages/nextjs/lib/db/runs.ts` — server-only; used by the decision run API route. The DynamoDB client singleton lives in `packages/nextjs/server/config/dynamodb.ts`.
-- **What it does:**
-  - **insertRun(result)** — Persists a new run (after initial intake or when creating a run).
-  - **getRun(run_id)** — Fetches a run by ID (used when submitting clarification and for GET `/api/decision/run?run_id=xxx`).
-  - **replaceRun(run_id, result)** — Updates an existing run (e.g. after clarification re-run).
-  - **getRunsByDecisionId(decision_id)** — Lists every run for a decision (multiple postures), most-recent first via the `by-decision` GSI.
-  - **listRunsForUser(userId)** — Powers the dashboard via the `by-user` GSI.
-- **Tables:**
-  - `${PROJECT_KEY}-${PROJECT_ENV}-runs` — PK `run_id`, plus GSIs `by-decision` (decision_id + createdAt) and `by-user` (user_id + createdAt).
-  - `${PROJECT_KEY}-${PROJECT_ENV}-auth` — single-table layout for `@auth/dynamodb-adapter` (PK `pk`, SK `sk`, GSI `GSI1` on `GSI1PK`/`GSI1SK`, TTL on `expires`). Credentials login stores `passwordHash` alongside the user item.
-- **Why:** Persisting runs lets users return to a result (e.g. via `/run/result?run_id=xxx`), submit clarification for an existing run, and keeps a history of runs in the database.
+**Coming from `main` with existing data?** Legacy **`…-runs`** and **`…-auth`** are unchanged on disk. Run **`npm run dynamo:migrate-legacy`** once after creating `…-app` to copy all runs and auth rows into the app table. New reads/writes use **`…-app`** only.
+
+**Branch `main`:** two tables (`…-runs` with PK `run_id`, and `…-auth`). Use `main`’s `dynamo-create-table.sh` there.
+
+### DAO surface (`lib/db/runs.ts`)
+
+- **insertRun** / **getRun** / **replaceRun** / **getRunsByDecisionId** / **listRunsForUser** — same API as before; list queries return runs ordered by **`updatedAt`** (last activity). The physical table name and run primary key shape differ on this branch.
+
+**Why:** Persisting runs lets users return to a result, submit clarification for an existing run, and keep history.
 
 ## Project structure
 
@@ -76,7 +74,7 @@ decision-copilot/
 
 ```bash
 npm install
-npm run dynamo:init   # start DynamoDB Local + create tables (one-time per machine)
+npm run dynamo:init   # start DynamoDB Local + create …-app table (one-time per machine)
 npm run dev
 ```
 
@@ -94,6 +92,7 @@ Create a `.env` at the repo root. Relevant variables:
 | `ANTHROPIC_API_KEY` | Optional. When set, you can choose Anthropic as the AI provider. |
 | `GEMINI_API_KEY` | Optional. Same as above for Google Gemini. |
 | `PROJECT_KEY` / `PROJECT_ENV` | Used in container and table names (default `decision-copilot` / `local`). |
+| `APP_TABLE_NAME` | Optional. Single-table name on **`one-table`** (default `${PROJECT_KEY}-${PROJECT_ENV}-app`). |
 | `DYNAMODB_ENDPOINT` | DynamoDB endpoint URL. Set for local Docker (`http://127.0.0.1:8010`); leave unset in prod to use real AWS. |
 | `DYNAMODB_PORT` / `DYNAMODB_ADMIN_PORT` | Host ports for the DynamoDB and admin UI containers (defaults `8000` / `8001`; the repo ships with `8010` / `8011` to avoid clashing with other local DynamoDB stacks). |
 | `AWS_REGION` | AWS region (default `us-east-1`). |
@@ -103,11 +102,12 @@ Create a `.env` at the repo root. Relevant variables:
 
 - `npm run build` — Build all workspaces.
 - `npm run typecheck` — Type-check all workspaces.
-- `npm run dynamo:init` — Bring up DynamoDB Local + create both tables.
+- `npm run dynamo:init` — Bring up DynamoDB Local + create the **`…-app`** table (this branch).
+- `npm run dynamo:migrate-legacy` — Copy rows from legacy **`…-runs`** and **`…-auth`** into **`…-app`** (optional; use after switching from `main` with existing data). Idempotent; does not delete legacy tables.
+- `npm run dynamo:snapshot` — Clone live `…-runs` / `…-auth` into `…-archive` tables (frozen copy; originals unchanged). Override with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME`.
 - `npm run dynamo:start` / `dynamo:stop` — Start/stop the containers (data persists).
 - `npm run dynamo:remove` — Stop and delete the data volume.
-- `npm run dynamo:create-table` — Just (re)run the create-table script; safe to re-run, idempotent.
-- `npm run dynamo:snapshot` — Clone the live `runs` and `auth` tables into `…-runs-archive` and `…-auth-archive` (same schema + full item copy). **Does not change** the originals; re-run to refresh the archive from current data. Override destination names with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME` in `.env` if you want multiple named snapshots.
+- `npm run dynamo:create-table` — Just (re)run the create-table script for **`…-app`**; safe to re-run, idempotent.
 
 ## API
 

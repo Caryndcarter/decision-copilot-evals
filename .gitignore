@@ -6,7 +6,8 @@ dist
 node_modules
 .next
 
-# Session summaries and one-off ops scripts — do not commit
+# Session summaries, local ops notes, one-off scripts — do not commit
 docs/SESSION_SUMMARY.md
 docs/MIGRATION_SUMMARY.md
+docs/DYNAMODB_SINGLE_TABLE.md
 packages/nextjs/scripts/backfill-orphan-runs.ts

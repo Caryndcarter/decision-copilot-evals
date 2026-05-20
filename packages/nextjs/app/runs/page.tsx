@@ -10,7 +10,15 @@ import type { DecisionRunResult } from "@/types/decision";
 import type { DecisionGroup } from "./runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 
-type RunWithMeta = DecisionRunResult & { createdAt?: Date | string };
+type RunWithMeta = DecisionRunResult & { createdAt?: Date | string; updatedAt?: Date | string };
+
+/** Latest activity for ordering (matches GSI sort on `updatedAt`). */
+function activityDate(run: RunWithMeta): Date {
+  const c = run.createdAt ? new Date(run.createdAt as string | Date).getTime() : 0;
+  const u = run.updatedAt ? new Date(run.updatedAt as string | Date).getTime() : 0;
+  const ms = Math.max(c, u);
+  return ms > 0 ? new Date(ms) : new Date(0);
+}
 
 function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
   const map = new Map<string, DecisionGroup>();
@@ -22,14 +30,14 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         decision_id: id,
         title: "",
         situation: "",
-        latestAt: run.createdAt ? new Date(run.createdAt) : new Date(0),
+        latestAt: activityDate(run),
         runs: [],
         hasUnifiedBrief: false,
         unifiedBriefRunId: undefined,
       });
     }
     const group = map.get(id)!;
-    const runDate = run.createdAt ? new Date(run.createdAt) : new Date(0);
+    const runDate = activityDate(run);
     if (runDate > group.latestAt) group.latestAt = runDate;
     // Track unified brief: prefer the run that already has one
     if (run.decision_brief_best_of_worlds) {
@@ -45,6 +53,7 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       llm_provider: run.llm_provider,
       intake: run.intake ? { posture: run.intake.posture } : undefined,
       createdAt: run.createdAt,
+      updatedAt: run.updatedAt,
       is_freeform: !!run.freeform_output,
     });
   }
@@ -53,15 +62,15 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
     group.runs.sort((a, b) => {
       const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return db - da;
+      const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return Math.max(db, ub) - Math.max(da, ua);
     });
     const decisionRuns = runs.filter((r) => r.decision_id === group.decision_id);
     group.title = decisionGroupTitleFromRuns(decisionRuns);
-    const sortedByNewest = [...decisionRuns].sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta;
-    });
+    const sortedByNewest = [...decisionRuns].sort(
+      (a, b) => activityDate(b).getTime() - activityDate(a).getTime()
+    );
     group.situation = sortedByNewest[0]?.intake?.situation ?? "";
   }
 

@@ -4,7 +4,7 @@ import { dynamo, RUNS_TABLE } from "@/server/config/dynamodb";
 
 /**
  * Health check endpoint
- * GET /api/health — verifies the DynamoDB runs table is reachable.
+ * GET /api/health — verifies the DynamoDB app table (runs + auth) is reachable.
  */
 export async function GET() {
   try {

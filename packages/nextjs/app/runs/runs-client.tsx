@@ -119,6 +119,7 @@ export interface RunRow {
   llm_provider?: string;
   intake?: { posture?: string };
   createdAt?: Date | string;
+  updatedAt?: Date | string;
   is_freeform?: boolean;
 }
 

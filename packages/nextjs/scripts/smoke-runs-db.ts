@@ -18,14 +18,14 @@ import {
   insertRun,
   listRunsForUser,
   replaceRun,
-} from "../lib/db/runs.ts";
+} from "../lib/db/runs";
 import {
   createUserWithPassword,
   findUserByEmail,
   findUserById,
   UserAlreadyExistsError,
-} from "../lib/db/users.ts";
-import type { DecisionRunResult } from "../types/decision.ts";
+} from "../lib/db/users";
+import type { DecisionRunResult } from "../types/decision";
 
 let failed = 0;
 function check(label: string, ok: boolean, detail?: unknown): void {
@@ -76,14 +76,15 @@ async function runRunsTests(): Promise<{ insertedRunIds: string[] }> {
   const fetched1 = await getRun(run1.run_id);
   check("insertRun + getRun round-trip", fetched1?.run_id === run1.run_id);
   check("getRun preserves status", fetched1?.status === "awaiting_clarification");
-  check("getRun stamps createdAt", typeof (fetched1 as { createdAt?: string } | null)?.createdAt === "string");
+  check("getRun stamps createdAt", typeof (fetched1 as unknown as { createdAt?: string } | null)?.createdAt === "string");
+  check("getRun stamps updatedAt on insert", typeof (fetched1 as unknown as { updatedAt?: string } | null)?.updatedAt === "string");
 
   // 2. getRun on missing id returns null
   const missing = await getRun("does-not-exist-" + randomUUID());
   check("getRun returns null for missing id", missing === null);
 
   // 3. replaceRun preserves createdAt and bumps updatedAt
-  const createdAtBefore = (fetched1 as { createdAt: string }).createdAt;
+  const createdAtBefore = (fetched1 as unknown as { createdAt: string }).createdAt;
   await sleep(20); // ensure updatedAt > createdAt
   await replaceRun(run1.run_id, { ...run1, status: "complete" });
   const fetched1b = (await getRun(run1.run_id)) as DecisionRunResult & {
@@ -94,7 +95,9 @@ async function runRunsTests(): Promise<{ insertedRunIds: string[] }> {
   check("replaceRun preserves createdAt", fetched1b?.createdAt === createdAtBefore);
   check("replaceRun stamps updatedAt", !!fetched1b?.updatedAt);
 
-  // 4. by-decision GSI: two runs same decision, different times
+  await sleep(20);
+
+  // 4. by-decision GSI: two runs same decision, different times (sorted by updatedAt)
   const run2 = makeRun({ user_id: userId, decision_id: decisionA });
   await insertRun(run2);
   await sleep(20);
@@ -102,7 +105,7 @@ async function runRunsTests(): Promise<{ insertedRunIds: string[] }> {
   await insertRun(run3);
   const decARuns = await getRunsByDecisionId(decisionA);
   check("getRunsByDecisionId returns all 3", decARuns.length === 3, `got ${decARuns.length}`);
-  const ts = decARuns.map((r) => (r as { createdAt: string }).createdAt);
+  const ts = decARuns.map((r) => (r as unknown as { updatedAt: string }).updatedAt);
   const sortedDesc = [...ts].sort().reverse();
   check("getRunsByDecisionId sorted newest-first", JSON.stringify(ts) === JSON.stringify(sortedDesc));
 
@@ -111,7 +114,7 @@ async function runRunsTests(): Promise<{ insertedRunIds: string[] }> {
   await insertRun(run4);
   const userRuns = await listRunsForUser(userId);
   check("listRunsForUser returns all 4 for this user", userRuns.length === 4, `got ${userRuns.length}`);
-  const userTs = userRuns.map((r) => (r as { createdAt: string }).createdAt);
+  const userTs = userRuns.map((r) => (r as unknown as { updatedAt: string }).updatedAt);
   const userSortedDesc = [...userTs].sort().reverse();
   check("listRunsForUser sorted newest-first", JSON.stringify(userTs) === JSON.stringify(userSortedDesc));
 
@@ -192,7 +195,7 @@ async function main() {
       }
       console.log(`  ✓ deleted ${cleaned}/${cleanupRunIds.length} smoke runs`);
       // Users are kept simple: delete via raw doc client to avoid widening users.ts surface.
-      const { dynamo, AUTH_TABLE } = await import("../server/config/dynamodb.ts");
+        const { dynamo, AUTH_TABLE } = await import("../server/config/dynamodb");
       const { DeleteCommand } = await import("@aws-sdk/lib-dynamodb");
       let userCleaned = 0;
       for (const id of cleanupUserIds) {
