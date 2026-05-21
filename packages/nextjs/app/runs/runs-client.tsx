@@ -46,6 +46,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   gemini: "Gemini",
+  xai: "xAI",
 };
 
 function PostureBadge({ posture }: { posture: string }) {
@@ -75,6 +76,7 @@ function ProviderBadge({ provider }: { provider: string }) {
     openai: "bg-emerald-50 text-emerald-700",
     anthropic: "bg-orange-50 text-orange-700",
     gemini: "bg-blue-50 text-blue-700",
+    xai: "bg-zinc-100 text-zinc-800",
   };
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[provider] ?? "bg-zinc-100 text-zinc-600"}`}>

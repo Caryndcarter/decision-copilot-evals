@@ -27,7 +27,7 @@ export type DecisionRunStatus =
   | "complete";
 
 /** Which LLM provider was used for this run (lenses, brief, chat). */
-export type LLMProviderName = "openai" | "anthropic" | "gemini";
+export type LLMProviderName = "openai" | "anthropic" | "gemini" | "xai";
 
 /** Intake demo buttons on `/intake`; stored on the run for UI such as chat research starters. */
 export const DEMO_SCENARIO_IDS = [

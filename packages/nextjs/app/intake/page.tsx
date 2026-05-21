@@ -50,6 +50,7 @@ const LLM_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
   { value: "anthropic", label: "Anthropic" },
   { value: "gemini", label: "Google Gemini" },
+  { value: "xai", label: "xAI" },
   { value: "all", label: "All providers (simultaneous)" },
 ] as const;
 

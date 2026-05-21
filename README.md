@@ -88,9 +88,11 @@ Create a `.env` at the repo root. Relevant variables:
 
 | Variable | Purpose |
 |----------|---------|
-| `OPENAI_API_KEY` | Required for lenses and decision brief when using OpenAI. At least one of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` must be set. |
+| `OPENAI_API_KEY` | Required for lenses and decision brief when using OpenAI. At least one LLM API key must be set. |
 | `ANTHROPIC_API_KEY` | Optional. When set, you can choose Anthropic as the AI provider. |
 | `GEMINI_API_KEY` | Optional. Same as above for Google Gemini. |
+| `XAI_API_KEY` | Optional. When set, you can choose xAI (Grok) as the AI provider. |
+| `XAI_MODEL` | Optional. xAI chat model (default `grok-4.3`). |
 | `PROJECT_KEY` / `PROJECT_ENV` | Used in container and table names (default `decision-copilot` / `local`). |
 | `APP_TABLE_NAME` | Optional. Single-table name on **`one-table`** (default `${PROJECT_KEY}-${PROJECT_ENV}-app`). |
 | `DYNAMODB_ENDPOINT` | DynamoDB endpoint URL. Set for local Docker (`http://127.0.0.1:8010`); leave unset in prod to use real AWS. |

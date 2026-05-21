@@ -5,7 +5,7 @@
  * Do not import from client/UI code.
  */
 
-export type LLMProvider = "openai" | "anthropic" | "gemini";
+export type LLMProvider = "openai" | "anthropic" | "gemini" | "xai";
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";

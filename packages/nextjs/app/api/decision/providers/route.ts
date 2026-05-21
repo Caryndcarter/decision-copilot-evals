@@ -17,5 +17,8 @@ export async function GET(): Promise<NextResponse<{ providers: LLMProviderName[]
   if (process.env.GEMINI_API_KEY?.trim()) {
     providers.push("gemini");
   }
+  if (process.env.XAI_API_KEY?.trim()) {
+    providers.push("xai");
+  }
   return NextResponse.json({ providers });
 }

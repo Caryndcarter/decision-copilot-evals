@@ -26,6 +26,7 @@ export function runPostureLabel(posture: string): string {
 export function runProviderLabel(provider: string | undefined): string {
   if (provider === "anthropic") return "Anthropic";
   if (provider === "gemini") return "Google Gemini";
+  if (provider === "xai") return "xAI";
   return "OpenAI";
 }
 
@@ -36,12 +37,13 @@ export function runProviderLabel(provider: string | undefined): string {
 export function normalizeSynthesisProviderLabel(raw: string): string | undefined {
   const t = raw.trim();
   if (!t) return undefined;
-  if (t === "OpenAI" || t === "Anthropic" || t === "Google Gemini") return t;
+  if (t === "OpenAI" || t === "Anthropic" || t === "Google Gemini" || t === "xAI") return t;
 
   const s = t.toLowerCase().replace(/\s+/g, " ");
   if (s === "openai" || s === "oai" || s.startsWith("gpt-") || s.includes("chatgpt")) return "OpenAI";
   if (s === "anthropic" || s === "claude" || s.includes("claude")) return "Anthropic";
   if (s === "gemini" || s.includes("gemini") || s === "google" || s.startsWith("google ")) return "Google Gemini";
+  if (s === "xai" || s.includes("grok")) return "xAI";
 
   return undefined;
 }
@@ -67,7 +69,7 @@ export function resolveSynthesisProviderRunId(
   }
 
   const sl = trimmed.toLowerCase();
-  if (sl === "openai" || sl === "anthropic" || sl === "gemini") {
+  if (sl === "openai" || sl === "anthropic" || sl === "gemini" || sl === "xai") {
     const label = runProviderLabel(sl as LLMProviderName);
     const id = providerRunIds[label];
     return { displayLabel: label, runId: id };

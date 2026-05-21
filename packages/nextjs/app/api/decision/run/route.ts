@@ -294,7 +294,7 @@ async function finishLensesPhase(
 // "All providers" helper
 // ============================================
 
-const ALL_PROVIDERS: LLMProviderName[] = ["openai", "anthropic", "gemini"];
+const ALL_PROVIDERS: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
 
 interface FailedProvider {
   provider: LLMProviderName;
@@ -400,7 +400,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "The selected AI provider is not configured. Add the required API key to your .env (e.g. ANTHROPIC_API_KEY for Anthropic, OPENAI_API_KEY for OpenAI).",
+            "The selected AI provider is not configured. Add the required API key to your .env (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, XAI_API_KEY).",
         },
         { status: 503 }
       );
@@ -926,7 +926,7 @@ async function handleRerunFreeform(req: RerunFreeformRequest): Promise<NextRespo
     });
   }
 
-  const validSingle: LLMProviderName[] = ["openai", "anthropic", "gemini"];
+  const validSingle: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
   const requested = req.llm_provider;
   const provider: LLMProviderName =
     requested && validSingle.includes(requested as LLMProviderName)
@@ -980,7 +980,7 @@ async function handleRerunPosture(req: RerunPostureRequest): Promise<NextRespons
     return NextResponse.json({ runs, primary_run_id: runs[0].run_id, failed_providers });
   }
 
-  const validSingle: LLMProviderName[] = ["openai", "anthropic", "gemini"];
+  const validSingle: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
   const requested = req.llm_provider;
   const provider: LLMProviderName =
     requested && validSingle.includes(requested as LLMProviderName)
@@ -995,7 +995,7 @@ async function handleRerunProvider(req: RerunProviderRequest): Promise<NextRespo
   if (!req.run_id?.trim()) {
     return NextResponse.json({ error: "run_id is required" }, { status: 400 });
   }
-  const validProviders: LLMProviderName[] = ["openai", "anthropic", "gemini"];
+  const validProviders: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
   if (!validProviders.includes(req.llm_provider)) {
     return NextResponse.json(
       { error: `llm_provider must be one of: ${validProviders.join(", ")}` },
