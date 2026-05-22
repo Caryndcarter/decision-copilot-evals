@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
+import { runProviderLabel } from "@/lib/run-display-name";
 import { ResearchMarkdown } from "./research-markdown";
 
 export type UnifiedBriefChatMessage = { role: "user" | "assistant"; content: string };
@@ -11,7 +12,7 @@ export type UnifiedBriefChatPersistPatch = Pick<
   "unified_brief_chat_by_provider" | "unified_brief_chat_messages"
 >;
 
-const CHAT_PROVIDERS: LLMProviderName[] = ["anthropic", "openai", "gemini"];
+const CHAT_PROVIDERS: LLMProviderName[] = ["anthropic", "openai", "gemini", "xai"];
 
 function messagesForProvider(
   provider: LLMProviderName,
@@ -24,15 +25,10 @@ function messagesForProvider(
   return [];
 }
 
-function providerLabel(p: LLMProviderName): string {
-  if (p === "anthropic") return "Anthropic";
-  if (p === "openai") return "OpenAI";
-  return "Gemini";
-}
-
 function thinkingLabel(p: LLMProviderName): string {
   if (p === "anthropic") return "Claude is thinking…";
   if (p === "openai") return "ChatGPT is thinking…";
+  if (p === "xai") return "Grok is thinking…";
   return "Gemini is thinking…";
 }
 
@@ -177,7 +173,7 @@ export function UnifiedBriefChat({
                   : "border border-zinc-200 bg-white text-zinc-700 hover:border-indigo-200 hover:bg-indigo-50/80"
               } disabled:opacity-50`}
             >
-              {providerLabel(p)}
+              {runProviderLabel(p)}
             </button>
           ))}
         </div>
@@ -191,7 +187,7 @@ export function UnifiedBriefChat({
         {messages.length === 0 && !loading && !disabled && (
           <p className="text-sm text-zinc-500">
             Ask for a shorter summary, challenge an assumption, or explore tradeoffs and next steps—with{" "}
-            {providerLabel(chatProvider)}.
+            {runProviderLabel(chatProvider)}.
           </p>
         )}
         {messages.map((m, i) => (
@@ -235,7 +231,7 @@ export function UnifiedBriefChat({
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? "Generate a Unified Brief first…" : `Ask ${providerLabel(chatProvider)} about this Unified Brief…`}
+          placeholder={disabled ? "Generate a Unified Brief first…" : `Ask ${runProviderLabel(chatProvider)} about this Unified Brief…`}
           disabled={loading || disabled}
           rows={3}
           className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60"

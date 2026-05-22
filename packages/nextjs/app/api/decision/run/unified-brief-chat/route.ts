@@ -5,6 +5,7 @@ import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import { buildBestOfWorldsSourceUserContent } from "@/lenses/brief";
 import { getClient } from "@/llm";
 import type { LLMMessage } from "@/llm/types";
+import { runProviderLabel } from "@/lib/run-display-name";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
 
 export const maxDuration = 60;
@@ -40,7 +41,7 @@ function formatUnifiedBriefForPrompt(b: DecisionBrief): string {
   return lines.join("\n");
 }
 
-const UNIFIED_BRIEF_CHAT_PROVIDERS: LLMProviderName[] = ["anthropic", "openai", "gemini"];
+const UNIFIED_BRIEF_CHAT_PROVIDERS: LLMProviderName[] = ["anthropic", "openai", "gemini", "xai"];
 
 function isUnifiedBriefChatProvider(s: string): s is LLMProviderName {
   return UNIFIED_BRIEF_CHAT_PROVIDERS.includes(s as LLMProviderName);
@@ -80,7 +81,7 @@ async function buildUnifiedBriefChatSystemPrompt(
   const sharedLayers = `You have two layers of context:
 
 1. **Unified Brief** — the executive synthesis. This is the primary “what we recommend” view.
-2. **Raw synthesis inputs** — the **same merged payload** used to generate that brief: decision intake/clarifications (from the storage run), each **Run: {Provider} · {Posture}** block with lens extracts and that run’s brief excerpts, plus merged research and variants. When the user asks what **Gemini**, **OpenAI**, or **Anthropic** contributed specifically, or wants wording / framing from a given model, **quote or paraphrase from the matching run block** and name the provider · posture from the heading. If something only appears in a run block and not in the Unified Brief, say so explicitly.
+2. **Raw synthesis inputs** — the **same merged payload** used to generate that brief: intake/clarifications, each **Run: {Provider} · {Posture}** block (lenses, brief appendices, per-run research, integrated brief when present), merged research and variants, and any **cross-provider comparison** sections saved on runs. When the user asks what a specific provider contributed, **quote or paraphrase from the matching run block** (or comparison section) and name the provider · posture from the heading. If something only appears in raw inputs and not in the Unified Brief, say so explicitly.
 
 Rules:
 - Prefer the **raw run blocks** for provider-specific nuance; use the **Unified Brief** for the consolidated recommendation unless the question is about synthesis choices or omissions.
@@ -106,7 +107,9 @@ ${sharedLayers}`;
   const youAre =
     chatProvider === "openai"
       ? "You are ChatGPT (OpenAI)."
-      : "You are Gemini (Google).";
+      : chatProvider === "xai"
+        ? "You are Grok (xAI)."
+        : "You are Gemini (Google).";
 
   return `${youAre} The user is discussing a **Unified Brief** shown below.
 
@@ -121,8 +124,10 @@ function providerConfigError(provider: LLMProviderName): { status: number; body:
       ? "ANTHROPIC_API_KEY"
       : provider === "openai"
         ? "OPENAI_API_KEY"
-        : "GEMINI_API_KEY";
-  const label = provider === "anthropic" ? "Anthropic" : provider === "openai" ? "OpenAI" : "Google Gemini";
+        : provider === "xai"
+          ? "XAI_API_KEY"
+          : "GEMINI_API_KEY";
+  const label = runProviderLabel(provider);
   return {
     status: 503,
     body: `${label} is not configured. Add ${env} to your .env to chat about the Unified Brief with this model.`,
@@ -131,7 +136,7 @@ function providerConfigError(provider: LLMProviderName): { status: number; body:
 
 /**
  * POST /api/decision/run/unified-brief-chat
- * Body: { run_id, llm_provider?: "anthropic"|"openai"|"gemini", messages?, newMessage }
+ * Body: { run_id, llm_provider?: LLMProviderName, messages?, newMessage }
  * Persists turns on unified_brief_chat_by_provider (and mirrors anthropic to unified_brief_chat_messages for legacy readers).
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -235,7 +240,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (message.includes("API_KEY") && message.includes("not set")) {
       const provider = errObj.provider;
       const p =
-        provider === "openai" || provider === "gemini" || provider === "anthropic"
+        provider === "openai" ||
+        provider === "gemini" ||
+        provider === "anthropic" ||
+        provider === "xai"
           ? (provider as LLMProviderName)
           : activeChatProvider;
       const { status, body } = providerConfigError(p);

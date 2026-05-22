@@ -17,6 +17,7 @@ import type {
   Clarification,
   ResearchCompletion,
   RunVariant,
+  ProviderSynthesis,
 } from "@/types/decision";
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
 import { runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
@@ -822,6 +823,57 @@ function flattenVariantsFromAllRuns(runs: DecisionRunResult[]): RunVariant[] {
   return out;
 }
 
+/** Distinct cross-provider syntheses stored on runs (one per compared run-id set). */
+function collectCrossProviderSyntheses(runs: DecisionRunResult[]): ProviderSynthesis[] {
+  const seen = new Set<string>();
+  const out: ProviderSynthesis[] = [];
+  for (const run of runs) {
+    const syn = run.synthesis;
+    if (!syn?.run_ids?.length || !syn.overall_summary?.trim()) continue;
+    const key = [...syn.run_ids].sort().join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(syn);
+  }
+  return out.sort((a, b) => (a.generated_at < b.generated_at ? -1 : 1));
+}
+
+/** Same shape as cross-provider comparison / run chat context. */
+export function formatProviderSynthesisForBrief(synthesis: ProviderSynthesis): string {
+  const labels = synthesis.providers.map((p) => runProviderLabel(p)).join(", ");
+  const lines: string[] = [
+    `### Cross-provider comparison (${labels})`,
+    `Compared run_ids: ${synthesis.run_ids.join(", ")}`,
+    `Generated: ${synthesis.generated_at}`,
+    synthesis.has_drafts ? "*(includes pre-clarification drafts)*" : "",
+    "",
+    synthesis.overall_summary,
+  ].filter(Boolean);
+  if (synthesis.consensus.length) {
+    lines.push("", "**Consensus (all providers agree):**");
+    for (const p of synthesis.consensus) {
+      lines.push(`- **${p.area}:** ${truncateForPrompt(p.description, 1200)}`);
+    }
+  }
+  if (synthesis.majority_view.length) {
+    lines.push("", "**Majority view:**");
+    for (const p of synthesis.majority_view) {
+      lines.push(
+        `- **${p.area}** [${p.providers.map((x) => runProviderLabel(x)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
+      );
+    }
+  }
+  if (synthesis.minority_opinions.length) {
+    lines.push("", "**Minority opinions (one provider only):**");
+    for (const p of synthesis.minority_opinions) {
+      lines.push(
+        `- **${p.area}** [${p.providers.map((x) => runProviderLabel(x)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
 function formatOneRunForBestOfWorlds(run: DecisionRunResult, maxChars: number): string {
   const lenses = pickLensOutputsForConsolidatedRun(run);
   const brief = pickBriefForConsolidatedRun(run);
@@ -860,6 +912,42 @@ function formatOneRunForBestOfWorlds(run: DecisionRunResult, maxChars: number): 
       }
     }
   }
+
+  const comprehensive = run.decision_brief_comprehensive;
+  if (comprehensive) {
+    lines.push("\n### Integrated brief on this run (research + variants woven in)");
+    if (comprehensive.summary?.trim()) {
+      lines.push("Summary: " + truncateForPrompt(comprehensive.summary, 900));
+    }
+    if (comprehensive.recommendation?.trim()) {
+      lines.push("Recommendation: " + truncateForPrompt(comprehensive.recommendation, 400));
+    }
+    const compExtras = comprehensive.custom_sections?.filter(
+      (s) => s.heading?.trim() && s.content?.trim()
+    );
+    for (const s of compExtras ?? []) {
+      lines.push(`#### ${s.heading.trim()}\n${truncateForPrompt(s.content, 1800)}`);
+    }
+  }
+
+  const rcs = run.research_completions ?? [];
+  if (rcs.length > 0) {
+    lines.push("\n### Research on this run");
+    for (const rc of rcs.slice(0, 8)) {
+      const head = rc.title?.trim() || rc.label || "Research";
+      const chunk: string[] = [`#### ${head}`, `[research_id:${rc.research_id}]`];
+      if (rc.summary) chunk.push(`Finding: ${truncateForPrompt(rc.summary, 200)}`);
+      if (rc.main_answer) {
+        chunk.push(truncateForPrompt(rc.main_answer, 450));
+      } else if (rc.sections?.length) {
+        for (const s of rc.sections.slice(0, 2)) {
+          chunk.push(`**${s.heading}:** ${truncateForPrompt(s.body, 280)}`);
+        }
+      }
+      lines.push(chunk.join("\n"));
+    }
+  }
+
   let body = lines.join("\n");
   if (body.length > maxChars) {
     body = body.slice(0, maxChars - 1).replace(/\s+\S*$/, "") + "…";
@@ -898,6 +986,17 @@ export function buildBestOfWorldsSourceUserContent(anchorRun: DecisionRunResult,
   userParts.push(`## All provider / posture runs (mine for best ideas)\n\n${runBlocks}`);
   if (researchBlock) userParts.push(`## All research (merged across runs)\n\n${researchBlock}`);
   if (variantsBlock) userParts.push(`## All saved variants (merged across runs)\n\n${variantsBlock}`);
+
+  const syntheses = collectCrossProviderSyntheses(allRuns);
+  if (syntheses.length > 0) {
+    const synBlocks = syntheses.map(formatProviderSynthesisForBrief).join("\n\n---\n\n");
+    userParts.push(
+      `## Cross-provider comparisons (same inputs as the result-page comparison feature)\n\n` +
+        "Use these meta-analyses when merging the Unified Brief—they summarize agreement, majority views, and provider-only angles per posture.\n\n" +
+        synBlocks
+    );
+  }
+
   return userParts.join("\n\n---\n\n");
 }
 
@@ -906,12 +1005,13 @@ function buildBestOfWorldsBriefMessages(anchorRun: DecisionRunResult, allRuns: D
 
 **What you receive**
 1) Shared **decision context** (intake + clarifications from the storage run for this decision’s unified brief).
-2) **Every AI run** on this decision (different providers and/or postures). Each run has **three-lens analysis** and/or a **standard brief**, or **free-form JSON** (one structured object per provider with model-chosen sections). Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.
-3) **All research** the user ran (merged from every run).
-4) **All saved variants** (alternate brief formats) from every run.
+2) **Every AI run** on this decision (any configured provider—OpenAI, Anthropic, Google Gemini, xAI, etc.—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.
+3) **All research** and **all saved variants** (also merged globally below the per-run blocks).
+4) When present, **cross-provider comparison** sections (consensus / majority / minority per posture)—the same meta-analysis shown on individual run pages.
 
 **What you must do**
-- **Synthesize**: merge consensus, surface the strongest unique angles from any model, and fold in research and variant insights. Do not paste full runs verbatim.
+- **Synthesize**: merge consensus, surface the strongest unique angles from any model, and fold in research, variant, and cross-provider comparison insights. Do not paste full runs verbatim.
+- When a **cross-provider comparison** notes provider-only minority or majority themes, reflect them in the Unified Brief (summary, key_considerations, or a custom_section)—do not drop them because lens summaries look similar.
 - When models **disagree**, name the tension and suggest how to decide or de-risk.
 - **title**: short topic style (not a recommendation sentence).
 - **custom_sections**: prefer [] unless 1–3 appendices add clear new structure (e.g. cross-model comparison table).
