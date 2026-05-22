@@ -172,9 +172,50 @@ function formatRunForPrompt(entry: RunEntry): string {
   ];
 
   if (entry.brief) {
+    if (entry.brief.summary?.trim()) {
+      lines.push(`**Brief summary:** ${truncateSynthesis(entry.brief.summary, 400)}`);
+    }
     lines.push(`**Recommendation:** ${entry.brief.recommendation}`);
     if (entry.brief.key_considerations?.length) {
       lines.push(`**Key considerations:**\n${entry.brief.key_considerations.map((c) => `- ${c}`).join("\n")}`);
+    }
+    if (entry.brief.next_steps?.length) {
+      lines.push(`**Next steps:**\n${entry.brief.next_steps.map((s) => `- ${s}`).join("\n")}`);
+    }
+    const briefExtras = entry.brief.custom_sections?.filter(
+      (s) => s.heading?.trim() && s.content?.trim()
+    );
+    if (briefExtras?.length) {
+      lines.push(
+        "**Additional brief sections (model-chosen appendices on this run):**\n" +
+          briefExtras
+            .map(
+              (s) =>
+                `- **${truncateSynthesis(s.heading.trim(), 80)}**: ${truncateSynthesis(s.content, 500)}`
+            )
+            .join("\n")
+      );
+    }
+  }
+
+  const comprehensive = entry.run.decision_brief_comprehensive;
+  if (comprehensive) {
+    lines.push("**Integrated brief (research + variants woven in):**");
+    if (comprehensive.summary?.trim()) {
+      lines.push(`Summary: ${truncateSynthesis(comprehensive.summary, 350)}`);
+    }
+    if (comprehensive.recommendation?.trim()) {
+      lines.push(`Recommendation: ${truncateSynthesis(comprehensive.recommendation, 280)}`);
+    }
+    const compExtras = comprehensive.custom_sections?.filter(
+      (s) => s.heading?.trim() && s.content?.trim()
+    );
+    if (compExtras?.length) {
+      for (const s of compExtras) {
+        lines.push(
+          `- **${truncateSynthesis(s.heading.trim(), 80)}**: ${truncateSynthesis(s.content, 400)}`
+        );
+      }
     }
   }
 
@@ -209,10 +250,12 @@ function formatRunForPrompt(entry: RunEntry): string {
           .map((v) => {
             const bits = [`- [variant_id:${v.variant_id}] **${v.label}** — ${truncateSynthesis(v.format_instruction, 140)}`];
             if (v.decision_brief?.summary) bits.push(`  Brief summary: ${truncateSynthesis(v.decision_brief.summary, 220)}`);
-            const cs = v.decision_brief?.custom_sections?.[0];
-            if (cs?.heading && cs.content?.trim()) {
+            const vSections = v.decision_brief?.custom_sections?.filter(
+              (s) => s.heading?.trim() && s.content?.trim()
+            );
+            for (const cs of vSections ?? []) {
               bits.push(
-                `  Custom section “${truncateSynthesis(cs.heading, 60)}”: ${truncateSynthesis(cs.content, 320)}`
+                `  Custom section “${truncateSynthesis(cs.heading.trim(), 60)}”: ${truncateSynthesis(cs.content, 320)}`
               );
             }
             return bits.join("\n");
@@ -265,6 +308,8 @@ Your job is to identify:
 - **Majority view**: what most but not all models say — worth noting
 - **Minority opinions**: what only one model raised — potentially the most valuable, as it may catch something the others missed
 
+If research findings, saved format variants, or **additional brief sections** appear under only one provider's block, treat those as first-class evidence: they often belong in **minority_opinions** (if unique to that model) or **majority_view** (if most but not all), not only in broad **consensus**. Do not ignore provider-only appendices or research because the three lenses look similar.
+
 If research findings or saved format variants are provided under a provider, incorporate them into your synthesis — reference them when they support, challenge, or add nuance to the lens/brief comparison. Attribute observations to the correct provider section.
 
 When you can tie a consensus, majority, or minority point to a **specific subsection** (a lens, the brief, a research task, a variant, or intake context), populate **source_refs** on that JSON item so the product can show deep links into each provider's run.
@@ -307,6 +352,14 @@ When you can identify **where** the evidence lives, add \`source_refs\`: an arra
 Compare these ${entries.length} analyses. Identify consensus, majority views, and minority opinions across the models.${
     hasAnyResearch || hasAnyVariants
       ? " Use per-provider research and variant sections where present—they may surface angles not visible in the base lens summaries alone."
+      : ""
+  }${
+    entries.some(
+      (e) =>
+        (e.brief?.custom_sections?.length ?? 0) > 0 ||
+        (e.run.decision_brief_comprehensive?.custom_sections?.length ?? 0) > 0
+    )
+      ? " When only one provider has additional brief sections, research, or variants on a theme, call that out explicitly (usually minority_opinions or majority_view)."
       : ""
   }`;
 
