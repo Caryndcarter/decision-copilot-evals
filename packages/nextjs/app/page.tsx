@@ -203,7 +203,7 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300 mb-6">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                Powered by OpenAI · Anthropic · Google Gemini
+                Powered by OpenAI · Anthropic · Google Gemini · xAI
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                 Make better<br />
@@ -361,7 +361,7 @@ export default function Home() {
           </div>
           <div className="space-y-8">
             <Step n="1" title="Describe your decision" desc="Paste in your situation, constraints, and what you know. Choose a posture: explore, pressure test, surface risks, or generate alternatives." />
-            <Step n="2" title="Choose your analysis lens" desc="Select which AI provider to use — or run all three simultaneously and compare outputs." />
+            <Step n="2" title="Choose your analysis lens" desc="Select which AI provider to use — or run all four simultaneously and compare outputs." />
             <Step n="3" title="Answer clarifying questions" desc="The model asks what it needs to know: missing context, unstated assumptions, key unknowns. Your answers sharpen the analysis." />
             <Step n="4" title="Get a structured brief" desc="A decision brief with risks, tradeoffs, stakeholder impacts, recommendation, and next steps — ready to export as a PDF." />
           </div>
@@ -396,7 +396,7 @@ export default function Home() {
       <footer className="bg-zinc-950 border-t border-white/5 py-6">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between flex-wrap gap-4">
           <span className="text-sm text-zinc-600">Decision Copilot</span>
-          <span className="text-sm text-zinc-600">Powered by OpenAI · Anthropic · Google Gemini</span>
+          <span className="text-sm text-zinc-600">Powered by OpenAI · Anthropic · Google Gemini · xAI</span>
         </div>
       </footer>
 

@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const rawProvider = runForProvider?.llm_provider ?? bodyLlmProvider ?? "anthropic";
-    const provider: LLMProvider = ["openai", "anthropic", "gemini"].includes(rawProvider)
+    const provider: LLMProvider = ["openai", "anthropic", "gemini", "xai"].includes(rawProvider)
       ? (rawProvider as LLMProvider)
       : "anthropic";
 

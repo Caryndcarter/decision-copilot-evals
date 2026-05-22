@@ -482,7 +482,7 @@ function RunResultContent() {
                   <span>
                     <span className="font-medium">All providers (simultaneous)</span>
                     <span className="mt-0.5 block text-xs font-normal text-zinc-500">
-                      Run OpenAI, Anthropic, and Google Gemini in parallel for this posture—same as on the intake form.
+                      Run OpenAI, Anthropic, Google Gemini, and xAI in parallel for this posture—same as on the intake form.
                     </span>
                   </span>
                 </label>

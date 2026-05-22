@@ -5,6 +5,7 @@
  */
 
 import "server-only";
+import { extractFirstBalancedJsonObject } from "@/lib/extract-json-object";
 import type {
   LLMClient,
   LLMMessage,
@@ -109,8 +110,13 @@ function processAssistantBlocks(
 
     if (type === "text" && typeof b.text === "string") {
       text += b.text;
-      if (!parsed && options.schema && b.text.trim().startsWith("{")) {
-        const obj = safeJsonParse(b.text.trim());
+      if (!parsed && (options.schema || options.preferJsonObject) && b.text.includes("{")) {
+        const trimmed = b.text.trim();
+        let obj = safeJsonParse(trimmed);
+        if (!obj) {
+          const balanced = extractFirstBalancedJsonObject(trimmed);
+          if (balanced) obj = safeJsonParse(balanced);
+        }
         if (obj && typeof obj === "object" && !Array.isArray(obj)) {
           parsed = obj;
         }
@@ -269,6 +275,18 @@ export async function run(
     }
 
     workingMessages = [...baseMessages, { role: "assistant", content: [...mergedAssistantBlocks] }];
+  }
+
+  if (!parsed && options.preferJsonObject && content.includes("{")) {
+    const trimmed = content.trim();
+    let obj = safeJsonParse(trimmed);
+    if (!obj) {
+      const balanced = extractFirstBalancedJsonObject(trimmed);
+      if (balanced) obj = safeJsonParse(balanced);
+    }
+    if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+      parsed = obj;
+    }
   }
 
   return {

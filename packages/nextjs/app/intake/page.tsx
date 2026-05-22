@@ -24,14 +24,14 @@ const FREEFORM_STEPS = [
 ];
 
 const FREEFORM_STEPS_ALL = [
-  "Running all three providers…",
+  "Running OpenAI, Anthropic, Gemini, and xAI…",
   "Each model is choosing its own JSON shape…",
-  "Structuring analyses…",
+  "Structuring analyses across all four providers…",
   "Almost there…",
 ];
 
 const SUBMITTING_STEPS_ALL = [
-  "Running all three providers simultaneously…",
+  "Running all four providers simultaneously…",
   "Analyzing risks across providers…",
   "Checking reversibility…",
   "Considering stakeholders…",
@@ -322,6 +322,7 @@ export default function IntakePage() {
       return;
     }
     setError(null);
+    setPartialWarning(null);
     setFreeformStep(0);
     setFreeformSubmitting(true);
     try {
@@ -356,6 +357,7 @@ export default function IntakePage() {
             }>;
             primary_run_id?: string;
             decision_id?: string;
+            failed_providers?: { provider: string; message: string }[];
           }
         | {
             error?: string;
@@ -390,6 +392,17 @@ export default function IntakePage() {
               decision_id: primary.decision_id,
             })
           );
+        }
+        const failed = data.failed_providers ?? [];
+        if (failed.length > 0) {
+          const ok = data.runs.length;
+          setPartialWarning(
+            `${ok} freeform run${ok === 1 ? "" : "s"} created. ${failed.length} provider${failed.length === 1 ? "" : "s"} failed: ` +
+              failed.map((f) => `${f.provider} (${f.message})`).join("; ") +
+              ". Continuing to your runs in 5s…"
+          );
+          setTimeout(() => router.push(`/runs?new=${data.decision_id}`), 5000);
+          return;
         }
         router.push(`/runs?new=${data.decision_id}`);
         return;
@@ -594,7 +607,7 @@ export default function IntakePage() {
           {submitting && (
             <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
               <p className="font-medium">{(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}</p>
-              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running 3 providers simultaneously — this may take 30–45 seconds." : "This usually takes 5–15 seconds."}</p>
+              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running OpenAI, Anthropic, Gemini, and xAI simultaneously — this may take 30–60 seconds." : "This usually takes 5–15 seconds."}</p>
             </div>
           )}
 
@@ -605,7 +618,7 @@ export default function IntakePage() {
               </p>
               <p className="mt-1 text-violet-600">
                 {llmProvider === "all"
-                  ? "OpenAI, Anthropic, and Gemini each pick their own JSON structure — this may take 20–45 seconds."
+                  ? "OpenAI, Anthropic, Gemini, and xAI each pick their own JSON structure — this may take 30–90 seconds."
                   : "The model chooses its own structure — this usually takes 5–20 seconds."}
               </p>
             </div>
@@ -638,7 +651,7 @@ export default function IntakePage() {
               {freeformSubmitting ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden />
-                  {FREEFORM_STEPS[freeformStep]}
+                  {(llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
                 </>
               ) : (
                 "Free-form analysis (model-chosen schema) →"

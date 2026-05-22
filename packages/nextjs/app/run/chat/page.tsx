@@ -499,7 +499,7 @@ export function ChatContent() {
   const [rerunLeaningDirection, setRerunLeaningDirection] = useState("");
   const [rerunSubmitting, setRerunSubmitting] = useState(false);
   const [rerunError, setRerunError] = useState<string | null>(null);
-  /** When true, rerun posture with OpenAI + Anthropic + Gemini in parallel (same as intake "all"). */
+  /** When true, rerun posture with OpenAI, Anthropic, Gemini, and xAI in parallel (same as intake "all"). */
   const [rerunAllProviders, setRerunAllProviders] = useState(false);
   const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
   // Variant state
@@ -1397,7 +1397,7 @@ export function ChatContent() {
                   <span>
                     <span className="font-medium">All providers (simultaneous)</span>
                     <span className="mt-0.5 block text-xs font-normal text-slate-500">
-                      Run OpenAI, Anthropic, and Google Gemini in parallel for this posture—same as on the intake form.
+                      Run OpenAI, Anthropic, Google Gemini, and xAI in parallel for this posture—same as on the intake form.
                       You’ll land on the first run; switch others from the Analyses menu.
                     </span>
                   </span>

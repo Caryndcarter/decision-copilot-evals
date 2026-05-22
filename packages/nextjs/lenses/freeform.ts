@@ -42,10 +42,22 @@ export interface FreeformResult {
   intake: DecisionIntake;
 }
 
-export function parseFreeformJsonFromLlm(content: string, parsed?: unknown): Record<string, unknown> {
-  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-    return parsed as Record<string, unknown>;
+function asFreeformObject(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
   }
+  if (Array.isArray(value) && value.length === 1) {
+    const first = value[0];
+    if (first && typeof first === "object" && !Array.isArray(first)) {
+      return first as Record<string, unknown>;
+    }
+  }
+  return null;
+}
+
+export function parseFreeformJsonFromLlm(content: string, parsed?: unknown): Record<string, unknown> {
+  const fromParsed = asFreeformObject(parsed);
+  if (fromParsed) return fromParsed;
 
   const text = content.replace(/^\uFEFF/, "").trim();
   const chunks: string[] = [];
@@ -65,10 +77,8 @@ export function parseFreeformJsonFromLlm(content: string, parsed?: unknown): Rec
     }
     for (const jsonStr of attempts) {
       try {
-        const output = JSON.parse(jsonStr) as unknown;
-        if (output && typeof output === "object" && !Array.isArray(output)) {
-          return output as Record<string, unknown>;
-        }
+        const output = asFreeformObject(JSON.parse(jsonStr) as unknown);
+        if (output) return output;
       } catch {
         // try next
       }
@@ -114,11 +124,13 @@ Analyze this decision. Respond with a single raw JSON object only — no text be
   const client = getClient(provider);
   const options =
     provider === "anthropic"
-      ? { temperature: 0.7, maxTokens: 4096 }
+      ? { temperature: 0.7, maxTokens: 8192, preferJsonObject: true as const }
       : provider === "gemini"
         ? { temperature: 0.45, maxTokens: 8192, preferJsonObject: true as const }
-        : // GPT‑5: reasoning + JSON share max_completion_tokens — give ample headroom for visible JSON.
-          { maxTokens: 16384, preferJsonObject: true as const };
+        : provider === "xai"
+          ? { temperature: 0.7, maxTokens: 8192, preferJsonObject: true as const }
+          : // OpenAI: reasoning + JSON share max_completion_tokens — give ample headroom for visible JSON.
+            { maxTokens: 16384, preferJsonObject: true as const };
 
   const response = await client.run(
     [
@@ -128,7 +140,16 @@ Analyze this decision. Respond with a single raw JSON object only — no text be
     options
   );
 
-  const output = parseFreeformJsonFromLlm(response.content, response.parsed);
+  let output: Record<string, unknown>;
+  try {
+    output = parseFreeformJsonFromLlm(response.content, response.parsed);
+  } catch {
+    const len = response.content.length;
+    const finish = response.meta?.finishReason ?? "unknown";
+    throw new Error(
+      `[${provider}] Model did not return valid JSON (${len} chars, finish_reason=${finish})`
+    );
+  }
 
   return {
     output,
@@ -138,7 +159,9 @@ Analyze this decision. Respond with a single raw JSON object only — no text be
         ? process.env.OPENAI_MODEL?.trim() || "gpt-5.5"
         : provider === "gemini"
           ? "gemini-2.5-flash"
-          : "claude"),
+          : provider === "xai"
+            ? process.env.XAI_MODEL?.trim() || "grok-4.3"
+            : "claude"),
     generated_at: new Date().toISOString(),
     intake,
   };
