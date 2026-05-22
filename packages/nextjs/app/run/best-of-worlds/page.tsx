@@ -431,7 +431,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3">
                   <h2 className="text-base font-semibold text-slate-800">Discuss this Unified Brief</h2>
                   <p className="mt-1 text-sm text-slate-600">
-                    Choose Anthropic, OpenAI, or Gemini below. Each model sees the Unified Brief and the same merged
+                    Choose Anthropic, OpenAI, Gemini, or xAI below. Each model sees the Unified Brief and the same merged
                     inputs used to build it. The brief itself is always Anthropic-authored; other models are prompted to
                     discuss that artifact honestly. Chat is saved per model on this decision.
                   </p>
