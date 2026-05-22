@@ -202,7 +202,7 @@ export interface RunVariant {
 
 /** Deep link into a provider run’s analysis (chat page fragment). */
 export interface SynthesisSourceRef {
-  /** Display label matching synthesis headers: OpenAI, Anthropic, Google Gemini */
+  /** Display label matching synthesis ## headers (e.g. OpenAI, Anthropic, Google Gemini, xAI) */
   provider: string;
   section: "risk" | "reversibility" | "people" | "brief" | "variants" | "context" | "research";
   /** When section is research — copy from [research_id:…] in the synthesis prompt */

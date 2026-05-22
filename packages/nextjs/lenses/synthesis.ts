@@ -7,7 +7,8 @@
  * Works with any combination of complete and pre-clarification (draft) runs.
  * Draft runs use lens_outputs_first_draft; complete runs use final lens_outputs.
  *
- * Always uses Anthropic (claude-sonnet-4-6) — large context window, best reasoning.
+ * Synthesizer is always Anthropic (Claude). Compared runs may include any configured
+ * provider (OpenAI, Anthropic, Gemini, xAI, etc.); prompts and schema use their ## labels.
  *
  * SERVER-ONLY: Do not import from client/UI code.
  */
@@ -40,12 +41,17 @@ interface RunEntry {
   brief: DecisionBrief | undefined;
 }
 
-const sourceRefsItemSchema = {
+function providerLabelExamples(labels: string[]): string {
+  return labels.length > 0 ? labels.join(", ") : "OpenAI, Anthropic, Google Gemini, xAI";
+}
+
+function buildSourceRefsItemSchema(labelExamples: string) {
+  return {
   type: "object",
   properties: {
     provider: {
       type: "string",
-      description: "Exact provider label from ## headers (OpenAI, Anthropic, Google Gemini)",
+      description: `Exact provider label from ## headers (${labelExamples})`,
     },
     section: {
       type: "string",
@@ -69,88 +75,93 @@ const sourceRefsItemSchema = {
   },
   required: ["provider", "section"],
   additionalProperties: false,
-} as const;
+  };
+}
 
-const sourceRefsArraySchema = {
-  type: "array",
-  maxItems: 8,
-  items: sourceRefsItemSchema,
-  description:
-    "Optional: concrete page sections this point draws from (for deep links). Omit or [] if unsure.",
-} as const;
+function buildSynthesisSchema(providerLabels: string[]): Record<string, unknown> {
+  const labelExamples = providerLabelExamples(providerLabels);
+  const sourceRefsItemSchema = buildSourceRefsItemSchema(labelExamples);
+  const sourceRefsArraySchema = {
+    type: "array",
+    maxItems: 8,
+    items: sourceRefsItemSchema,
+    description:
+      "Optional: concrete page sections this point draws from (for deep links). Omit or [] if unsure.",
+  };
 
-const SYNTHESIS_SCHEMA = {
-  type: "object",
-  properties: {
-    overall_summary: {
-      type: "string",
-      description:
-        "2–4 sentence narrative summarising what the AI models collectively found, noting the general level of agreement. If some analyses are pre-clarification drafts, mention that where relevant.",
-    },
-    consensus: {
-      type: "array",
-      description: "Points that ALL providers agree on (providers list must include every provider). Include 2–6 items.",
-      items: {
-        type: "object",
-        properties: {
-          area: { type: "string", description: "Short label for this consensus point (e.g. 'Timeline risk')" },
-          description: { type: "string", description: "What the models agree on and why it matters" },
-          providers: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Provider display names that raised this point — use EXACTLY the same spelling as the ## headers in the prompt (e.g. OpenAI, Anthropic, Google Gemini). For minority_opinions use exactly one provider per item.",
+  return {
+    type: "object",
+    properties: {
+      overall_summary: {
+        type: "string",
+        description:
+          "2–4 sentence narrative summarising what the AI models collectively found, noting the general level of agreement. If some analyses are pre-clarification drafts, mention that where relevant.",
+      },
+      consensus: {
+        type: "array",
+        description:
+          "Points that ALL providers agree on (providers list must include every provider in this comparison). Include 2–6 items.",
+        items: {
+          type: "object",
+          properties: {
+            area: { type: "string", description: "Short label for this consensus point (e.g. 'Timeline risk')" },
+            description: { type: "string", description: "What the models agree on and why it matters" },
+            providers: {
+              type: "array",
+              items: { type: "string" },
+              description: `Provider display names — use EXACTLY the ## header labels (${labelExamples}). For minority_opinions use exactly one provider per item.`,
+            },
+            source_refs: sourceRefsArraySchema,
           },
-          source_refs: sourceRefsArraySchema,
+          required: ["area", "description", "providers"],
+          additionalProperties: false,
         },
-        required: ["area", "description", "providers"],
-        additionalProperties: false,
+      },
+      majority_view: {
+        type: "array",
+        description:
+          "Points raised by more than half but NOT all providers — do not include here if all providers agree (use consensus instead). Include 0–4 items.",
+        items: {
+          type: "object",
+          properties: {
+            area: { type: "string" },
+            description: { type: "string" },
+            providers: {
+              type: "array",
+              items: { type: "string" },
+              description: `Exact provider labels as in section headers (${labelExamples}).`,
+            },
+            source_refs: sourceRefsArraySchema,
+          },
+          required: ["area", "description", "providers"],
+          additionalProperties: false,
+        },
+      },
+      minority_opinions: {
+        type: "array",
+        description:
+          "Points raised by only one provider that the others missed or downplayed. These are often the most valuable. Include 0–4 items.",
+        items: {
+          type: "object",
+          properties: {
+            area: { type: "string" },
+            description: { type: "string" },
+            providers: {
+              type: "array",
+              items: { type: "string" },
+              description: `Exactly one string: which single model raised this minority view — same label as its ## header (${labelExamples}).`,
+            },
+            source_refs: sourceRefsArraySchema,
+          },
+          required: ["area", "description", "providers"],
+          additionalProperties: false,
+        },
       },
     },
-    majority_view: {
-      type: "array",
-      description: "Points raised by more than half but NOT all providers — do not include here if all providers agree (use consensus instead). Include 0–4 items.",
-      items: {
-        type: "object",
-        properties: {
-          area: { type: "string" },
-          description: { type: "string" },
-          providers: {
-            type: "array",
-            items: { type: "string" },
-            description: "Exact provider labels as in section headers (OpenAI, Anthropic, Google Gemini).",
-          },
-          source_refs: sourceRefsArraySchema,
-        },
-        required: ["area", "description", "providers"],
-        additionalProperties: false,
-      },
-    },
-    minority_opinions: {
-      type: "array",
-      description:
-        "Points raised by only one provider that the others missed or downplayed. These are often the most valuable. Include 0–4 items.",
-      items: {
-        type: "object",
-        properties: {
-          area: { type: "string" },
-          description: { type: "string" },
-          providers: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Exactly one string: which single model raised this minority view — same label as its ## header (OpenAI, Anthropic, or Google Gemini).",
-          },
-          source_refs: sourceRefsArraySchema,
-        },
-        required: ["area", "description", "providers"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["overall_summary", "consensus", "majority_view", "minority_opinions"],
-  additionalProperties: false,
-} as const;
+    required: ["overall_summary", "consensus", "majority_view", "minority_opinions"],
+    additionalProperties: false,
+  };
+}
 
 function formatRunForPrompt(entry: RunEntry): string {
   const label = runProviderLabel(entry.run.llm_provider);
@@ -280,7 +291,7 @@ ${entries.map(formatRunForPrompt).join("\n\n---\n\n")}
 ## JSON output rules for provider attribution
 In **every** consensus, majority_view, and minority_opinions item, the \`providers\` array must contain **only** these exact strings (verbatim spelling and capitalization), matching the ## headers above:
 ${entries.map((e) => `- ${runProviderLabel(e.run.llm_provider)}`).join("\n")}
-- For **minority_opinions**, each item must include **exactly one** string: the model that alone raised that point. Do not omit \`providers\` or use aliases like "Google", "Claude", or "GPT" — use the labels listed above.
+- For **minority_opinions**, each item must include **exactly one** string: the model that alone raised that point. Do not omit \`providers\` or use aliases like "Google", "Claude", "GPT", or "Grok" — use the labels listed above.
 
 ### Optional \`source_refs\` (deep links for the UI)
 When you can identify **where** the evidence lives, add \`source_refs\`: an array of up to 8 objects \`{ "provider": "<same label as ## header>", "section": "<one of the enum>", "research_id"?: "<uuid>", "variant_id"?: "<uuid>", "text_quote"?: "<verbatim substring from that section>" }\`.
@@ -410,10 +421,22 @@ function parseSynthesisOutput(parsed: unknown, entries: RunEntry[]): ProviderSyn
       let label = normalizeSynthesisProviderLabel(trimmed);
       if (!label && allowedLabels.has(trimmed)) label = trimmed;
       if (!label) {
+        for (const allowed of allowedLabels) {
+          if (allowed.toLowerCase() === trimmed.toLowerCase()) {
+            label = allowed;
+            break;
+          }
+        }
+      }
+      if (!label) {
         const sl = trimmed.toLowerCase();
-        if (sl === "openai" || sl === "anthropic" || sl === "gemini") {
-          const L = runProviderLabel(sl as LLMProviderName);
-          if (allowedLabels.has(L)) label = L;
+        const slugs: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
+        for (const slug of slugs) {
+          const L = runProviderLabel(slug);
+          if (allowedLabels.has(L) && sl === trimmed.toLowerCase()) {
+            label = L;
+            break;
+          }
         }
       }
       if (label && allowedLabels.has(label) && !out.includes(label)) out.push(label);
@@ -482,9 +505,11 @@ export async function runProviderSynthesis(runs: DecisionRunResult[]): Promise<P
 
   const entries = prepareRunEntries(runs);
   const messages = buildSynthesisPrompt(entries);
+  const providerLabels = entries.map((e) => runProviderLabel(e.run.llm_provider));
+  const schema = buildSynthesisSchema(providerLabels);
 
   const response = await anthropic.run(messages, {
-    schema: SYNTHESIS_SCHEMA,
+    schema,
     temperature: 0.4,
     maxTokens: 3072,
   });
