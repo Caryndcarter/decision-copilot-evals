@@ -3,7 +3,8 @@ import { getRun, getRunsByDecisionId, replaceRun } from "@/lib/db/runs";
 import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incomplete";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import { buildBestOfWorldsSourceUserContent } from "@/lenses/brief";
-import { getClient } from "@/llm";
+import { runStream } from "@/llm";
+import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMMessage } from "@/llm/types";
 import { runProviderLabel } from "@/lib/run-display-name";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
@@ -196,41 +197,50 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { role: "user", content: newMessage },
     ];
 
-    const client = getClient(llm_provider);
-    const response = await client.run(chatMessages, {
-      temperature: 0.45,
-      maxTokens: 3072,
-    });
+    return createChatSseResponse(async (emit) => {
+      const response = await runStream(
+        llm_provider,
+        chatMessages,
+        { temperature: 0.45, maxTokens: 3072 },
+        (text) => emit({ type: "delta", text })
+      );
 
-    const assistantContent = (response.content ?? "").trim() || "I did not get a response—try again in a moment.";
+      const assistantContent =
+        (response.content ?? "").trim() || "I did not get a response—try again in a moment.";
 
-    const prior = priorFromDb;
-    const updatedMessages = [...prior, { role: "user" as const, content: newMessage }, { role: "assistant" as const, content: assistantContent }];
+      const prior = priorFromDb;
+      const updatedMessages = [
+        ...prior,
+        { role: "user" as const, content: newMessage },
+        { role: "assistant" as const, content: assistantContent },
+      ];
 
-    const mergedBase: NonNullable<DecisionRunResult["unified_brief_chat_by_provider"]> = {
-      ...(run.unified_brief_chat_by_provider ?? {}),
-    };
-    if (!mergedBase.anthropic?.length && run.unified_brief_chat_messages?.length) {
-      mergedBase.anthropic = run.unified_brief_chat_messages;
-    }
+      const mergedBase: NonNullable<DecisionRunResult["unified_brief_chat_by_provider"]> = {
+        ...(run.unified_brief_chat_by_provider ?? {}),
+      };
+      if (!mergedBase.anthropic?.length && run.unified_brief_chat_messages?.length) {
+        mergedBase.anthropic = run.unified_brief_chat_messages;
+      }
 
-    const nextByProvider: DecisionRunResult["unified_brief_chat_by_provider"] = {
-      ...mergedBase,
-      [llm_provider]: updatedMessages,
-    };
+      const nextByProvider: DecisionRunResult["unified_brief_chat_by_provider"] = {
+        ...mergedBase,
+        [llm_provider]: updatedMessages,
+      };
 
-    const updated: DecisionRunResult = {
-      ...run,
-      unified_brief_chat_by_provider: nextByProvider,
-      ...(llm_provider === "anthropic" ? { unified_brief_chat_messages: updatedMessages } : {}),
-    };
-    await replaceRun(run_id, updated);
+      const updated: DecisionRunResult = {
+        ...run,
+        unified_brief_chat_by_provider: nextByProvider,
+        ...(llm_provider === "anthropic" ? { unified_brief_chat_messages: updatedMessages } : {}),
+      };
+      await replaceRun(run_id, updated);
 
-    return NextResponse.json({
-      content: assistantContent,
-      llm_provider,
-      unified_brief_chat_by_provider: nextByProvider,
-      unified_brief_chat_messages: nextByProvider.anthropic ?? run.unified_brief_chat_messages,
+      emit({
+        type: "done",
+        content: assistantContent,
+        llm_provider,
+        unified_brief_chat_by_provider: nextByProvider,
+        unified_brief_chat_messages: nextByProvider.anthropic ?? run.unified_brief_chat_messages,
+      });
     });
   } catch (error) {
     console.error("[unified-brief-chat]", error);

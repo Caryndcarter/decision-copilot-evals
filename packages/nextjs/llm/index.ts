@@ -29,3 +29,5 @@ const clients: Record<LLMProvider, LLMClient> = { openai, anthropic, gemini, xai
 export function getClient(provider: LLMProvider): LLMClient {
   return clients[provider];
 }
+
+export { runStream, type StreamDeltaHandler } from "./stream";

@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
 import { runProviderLabel } from "@/lib/run-display-name";
+import { ChatMessageCopyActions } from "@/app/components/chat-copy-button";
 import { ResearchMarkdown } from "./research-markdown";
+import {
+  appendAssistantStreamDelta,
+  consumeChatStream,
+  ensureAssistantStreamPlaceholder,
+} from "@/lib/consume-chat-stream";
 
 export type UnifiedBriefChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -92,12 +98,13 @@ export function UnifiedBriefChat({
     setInput("");
     setError(null);
     const userMessage: UnifiedBriefChatMessage = { role: "user", content: text };
-    setMessages([...prior, userMessage]);
+    const withUser = [...prior, userMessage];
+    setMessages(ensureAssistantStreamPlaceholder(withUser));
     setLoading(true);
     try {
       const res = await fetch("/api/decision/run/unified-brief-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify({
           run_id: runId,
           llm_provider: chatProvider,
@@ -105,33 +112,47 @@ export function UnifiedBriefChat({
           newMessage: text,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || `Request failed (${res.status})`);
-        setMessages(prior);
-        return;
-      }
-      const by = data.unified_brief_chat_by_provider as DecisionRunResult["unified_brief_chat_by_provider"] | undefined;
-      const legacy = data.unified_brief_chat_messages as DecisionRunResult["unified_brief_chat_messages"] | undefined;
-      if (by && typeof by === "object") {
-        const thread = messagesForProvider(chatProvider, by, legacy);
-        setMessages(thread);
-        onMessagesUpdated({
-          unified_brief_chat_by_provider: by,
-          ...(typeof legacy !== "undefined" ? { unified_brief_chat_messages: legacy } : {}),
-        });
-      } else {
-        const assistant: UnifiedBriefChatMessage = { role: "assistant", content: data.content ?? "" };
-        const merged = [...prior, userMessage, assistant];
-        setMessages(merged);
-        onMessagesUpdated({
-          unified_brief_chat_by_provider: {
-            ...(unifiedBriefChatByProvider ?? {}),
-            [chatProvider]: merged,
-          },
-          ...(chatProvider === "anthropic" ? { unified_brief_chat_messages: merged } : {}),
-        });
-      }
+
+      let streamFailed = false;
+      await consumeChatStream(res, {
+        onDelta: (delta) => {
+          setMessages((prev) => appendAssistantStreamDelta(prev, delta));
+        },
+        onDone: (data) => {
+          const by = data.unified_brief_chat_by_provider as
+            | DecisionRunResult["unified_brief_chat_by_provider"]
+            | undefined;
+          const legacy = data.unified_brief_chat_messages as
+            | DecisionRunResult["unified_brief_chat_messages"]
+            | undefined;
+          if (by && typeof by === "object") {
+            const thread = messagesForProvider(chatProvider, by, legacy);
+            setMessages(thread);
+            onMessagesUpdated({
+              unified_brief_chat_by_provider: by,
+              ...(typeof legacy !== "undefined" ? { unified_brief_chat_messages: legacy } : {}),
+            });
+          } else {
+            const content = typeof data.content === "string" ? data.content : "";
+            const assistant: UnifiedBriefChatMessage = { role: "assistant", content };
+            const merged = [...withUser, assistant];
+            setMessages(merged);
+            onMessagesUpdated({
+              unified_brief_chat_by_provider: {
+                ...(unifiedBriefChatByProvider ?? {}),
+                [chatProvider]: merged,
+              },
+              ...(chatProvider === "anthropic" ? { unified_brief_chat_messages: merged } : {}),
+            });
+          }
+        },
+        onError: (message) => {
+          streamFailed = true;
+          setError(message);
+          setMessages(prior);
+        },
+      });
+      if (streamFailed) return;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setMessages(prior);
@@ -199,6 +220,7 @@ export function UnifiedBriefChat({
             >
               {m.role === "assistant" ? (
                 <div className="min-w-0">
+                  <ChatMessageCopyActions text={m.content} className="mb-1" />
                   <ResearchMarkdown source={m.content} />
                 </div>
               ) : (
@@ -207,7 +229,10 @@ export function UnifiedBriefChat({
             </div>
           </div>
         ))}
-        {loading && (
+        {loading &&
+          (messages.length === 0 ||
+            messages[messages.length - 1]?.role !== "assistant" ||
+            !messages[messages.length - 1]?.content) && (
           <div className="flex justify-start">
             <div className="rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-600">
               <span

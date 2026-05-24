@@ -9,7 +9,13 @@ import {
 } from "react";
 import type { LensQuestion, DecisionBrief, ProviderSynthesis, ResearchCompletion } from "@/types/decision";
 import type { ClarificationAnswersMap } from "./clarification-form";
+import { ChatMessageCopyActions } from "@/app/components/chat-copy-button";
 import { ResearchMarkdown } from "./research-markdown";
+import {
+  appendAssistantStreamDelta,
+  consumeChatStream,
+  ensureAssistantStreamPlaceholder,
+} from "@/lib/consume-chat-stream";
 import { parseFormatSuggestion, variantSuggestionChipLine } from "@/lib/suggest-format-tag";
 
 export interface ChatMessage {
@@ -208,34 +214,52 @@ export const ResultChat = forwardRef<ResultChatHandle, ResultChatProps>(function
       if (briefToSend) body.decision_brief_override = briefToSend;
       if (synthesis) body.synthesis = synthesis;
       if (researchStarter) body.research_starter = researchStarter;
+      setMessages((prev) => ensureAssistantStreamPlaceholder([...prev]));
+
       const res = await fetch("/api/decision/run/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || `Request failed (${res.status})`);
-        setMessages((prev) => prev.slice(0, -1));
-        return;
-      }
-
-      if (tag) {
-        onClearResearchStarterTag?.();
-      }
-      if (variantStarterTag) {
-        onClearVariantStarterTag?.();
-      }
-      if (Array.isArray(data.research_completions)) {
-        onResearchCompletionsUpdated?.(data.research_completions as ResearchCompletion[]);
-      }
-
-      const assistantMsg: ChatMessage = { role: "assistant", content: data.content };
-      if (typeof data.research_completion_id === "string" && data.research_completion_id.trim()) {
-        assistantMsg.research_completion_id = data.research_completion_id.trim();
-      }
-      setMessages((prev) => [...prev, assistantMsg]);
+      let streamFailed = false;
+      await consumeChatStream(res, {
+        onDelta: (text) => {
+          setMessages((prev) => appendAssistantStreamDelta(prev, text));
+        },
+        onDone: (data) => {
+          if (tag) {
+            onClearResearchStarterTag?.();
+          }
+          if (variantStarterTag) {
+            onClearVariantStarterTag?.();
+          }
+          if (Array.isArray(data.research_completions)) {
+            onResearchCompletionsUpdated?.(data.research_completions as ResearchCompletion[]);
+          }
+          const content = typeof data.content === "string" ? data.content : "";
+          const assistantMsg: ChatMessage = { role: "assistant", content };
+          if (typeof data.research_completion_id === "string" && data.research_completion_id.trim()) {
+            assistantMsg.research_completion_id = data.research_completion_id.trim();
+          }
+          setMessages((prev) => {
+            const withoutTail = prev[prev.length - 1]?.role === "assistant" ? prev.slice(0, -1) : prev;
+            return [...withoutTail, assistantMsg];
+          });
+        },
+        onError: (message) => {
+          streamFailed = true;
+          setError(message);
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant" && !last.content.trim()) {
+              return prev.slice(0, -2);
+            }
+            return prev.slice(0, -1);
+          });
+        },
+      });
+      if (streamFailed) return;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setMessages((prev) => prev.slice(0, -1));
@@ -299,8 +323,11 @@ export const ResultChat = forwardRef<ResultChatHandle, ResultChatProps>(function
                       }`}
                     >
                       {m.role === "assistant" ? (
-                        <div className="min-w-0 text-zinc-800">
-                          <ResearchMarkdown source={textContent} />
+                        <div className="min-w-0">
+                          <ChatMessageCopyActions text={textContent} className="mb-1" />
+                          <div className="text-zinc-800">
+                            <ResearchMarkdown source={textContent} />
+                          </div>
                         </div>
                       ) : (
                         <p className="whitespace-pre-wrap">{textContent}</p>
@@ -414,7 +441,10 @@ export const ResultChat = forwardRef<ResultChatHandle, ResultChatProps>(function
             );
           })}
         </div>
-        {loading && (
+        {loading &&
+          (messages.length === 0 ||
+            messages[messages.length - 1]?.role !== "assistant" ||
+            !messages[messages.length - 1]?.content) && (
           <div className="mt-4 flex justify-start">
             <div className="rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-500">
               <span

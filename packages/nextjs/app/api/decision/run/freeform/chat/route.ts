@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getClient } from "@/llm";
+import { runStream } from "@/llm";
+import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMProvider } from "@/llm/types";
 import { getRun } from "@/lib/db/runs";
 import type { DecisionIntake, LLMProviderName } from "@/types/decision";
@@ -97,16 +98,22 @@ export async function POST(request: NextRequest) {
       ? (rawProvider as LLMProvider)
       : "anthropic";
 
-    const response = await getClient(provider).run(
-      [
-        { role: "system", content: systemPrompt },
-        ...history,
-        { role: "user", content: newMessage.trim() },
-      ],
-      { temperature: 0.7, maxTokens: 2048 }
-    );
+    const chatMessages = [
+      { role: "system" as const, content: systemPrompt },
+      ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      { role: "user" as const, content: newMessage.trim() },
+    ];
 
-    return NextResponse.json({ content: response.content });
+    return createChatSseResponse(async (emit) => {
+      const response = await runStream(
+        provider,
+        chatMessages,
+        { temperature: 0.7, maxTokens: 2048 },
+        (text) => emit({ type: "delta", text })
+      );
+      const content = (response.content ?? "").trim() || "I did not get a response—try again in a moment.";
+      emit({ type: "done", content });
+    });
   } catch (error) {
     console.error("[freeform/chat]", error);
     return NextResponse.json(

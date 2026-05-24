@@ -7,8 +7,14 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import { SessionNav } from "@/app/components/session-nav";
 import type { FreeformResult } from "@/lenses/freeform";
 import type { DecisionRunResult, LLMProviderName, Posture } from "@/types/decision";
+import { ChatMessageCopyActions } from "@/app/components/chat-copy-button";
 import { CollapsibleBlock } from "../collapsible-block";
 import { runHeadline, runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
+import {
+  appendAssistantStreamDelta,
+  consumeChatStream,
+  ensureAssistantStreamPlaceholder,
+} from "@/lib/consume-chat-stream";
 
 const STORAGE_KEY = "freeformResult";
 const CHAT_STORAGE_PREFIX = "freeformChat_";
@@ -205,7 +211,7 @@ function ChatPanel({
     setError(null);
     const userMsg: ChatMessage = { role: "user", content: text };
     const next = [...messages, userMsg];
-    setMessages(next);
+    setMessages(ensureAssistantStreamPlaceholder(next));
     setLoading(true);
 
     try {
@@ -221,27 +227,40 @@ function ChatPanel({
 
       const res = await fetch("/api/decision/run/freeform/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as { content?: string; error?: string };
-
-      if (!res.ok) {
-        console.error("[freeform/chat] server error", res.status, data);
-        setError(data.error ?? `Error ${res.status}`);
-        return;
-      }
-
-      if (!data.content) {
-        setError("The assistant returned an empty response — please try again.");
-        return;
-      }
-
-      setMessages([...next, { role: "assistant", content: data.content }]);
+      let streamFailed = false;
+      await consumeChatStream(res, {
+        onDelta: (delta) => {
+          setMessages((prev) => appendAssistantStreamDelta(prev, delta));
+        },
+        onDone: (data) => {
+          const content = typeof data.content === "string" ? data.content.trim() : "";
+          if (!content) {
+            streamFailed = true;
+            setError("The assistant returned an empty response — please try again.");
+            setMessages(next);
+            return;
+          }
+          setMessages((prev) => {
+            const withoutTail = prev[prev.length - 1]?.role === "assistant" ? prev.slice(0, -1) : prev;
+            return [...withoutTail, { role: "assistant", content }];
+          });
+        },
+        onError: (message) => {
+          streamFailed = true;
+          console.error("[freeform/chat]", message);
+          setError(message);
+          setMessages(next);
+        },
+      });
+      if (streamFailed) return;
     } catch (err) {
       console.error("[freeform/chat] fetch error", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
+      setMessages(next);
     } finally {
       setLoading(false);
     }
@@ -274,11 +293,21 @@ function ChatPanel({
                   : "max-w-[85%] rounded-2xl rounded-tl-sm bg-zinc-100 px-3.5 py-2.5 text-sm text-zinc-800"
               }
             >
-              {m.content}
+              {m.role === "assistant" && m.content.trim() ? (
+                <>
+                  <ChatMessageCopyActions text={m.content} className="mb-1" />
+                  <p className="whitespace-pre-wrap">{m.content}</p>
+                </>
+              ) : (
+                <p className="whitespace-pre-wrap">{m.content}</p>
+              )}
             </div>
           </div>
         ))}
-        {loading && (
+        {loading &&
+          (messages.length === 0 ||
+            messages[messages.length - 1]?.role !== "assistant" ||
+            !messages[messages.length - 1]?.content) && (
           <div className="flex justify-start">
             <div className="rounded-2xl rounded-tl-sm bg-zinc-100 px-3.5 py-2.5">
               <span className="flex gap-1">

@@ -13,7 +13,8 @@ import {
   splitResearchStructuredResponse,
   summarizeForResearchChat,
 } from "@/lib/research-structured-response";
-import { getClient } from "@/llm";
+import { runStream } from "@/llm";
+import { createChatSseResponse } from "@/lib/chat-stream";
 import type {
   DecisionRunResult,
   LensQuestion,
@@ -342,70 +343,81 @@ Use at most **6** sections in Part 2 when needed. Do not put the delimiter or JS
       { role: "user", content: newMessage.trim() },
     ];
 
-    const client = getClient(run.llm_provider ?? "openai");
-    const response = await client.run(chatMessages, {
-      temperature: 0.5,
-      maxTokens: researchTurn ? (researchWebSearchEnabled ? 4096 : 2048) : 1536,
-      enableWebSearch: researchWebSearchEnabled,
-    });
+    const provider = run.llm_provider ?? "openai";
+    const runId = run_id.trim();
+    const userContent = newMessage.trim();
 
-    const ws = response.webSearch?.sources;
-    const rawForSplit =
-      researchTurn && ws && ws.length > 0
-        ? insertWebSearchSourcesBeforeTrailer(response.content, ws)
-        : response.content;
+    return createChatSseResponse(async (emit) => {
+      const response = await runStream(
+        provider,
+        chatMessages,
+        {
+          temperature: 0.5,
+          maxTokens: researchTurn ? (researchWebSearchEnabled ? 4096 : 2048) : 1536,
+          enableWebSearch: researchWebSearchEnabled,
+        },
+        (text) => emit({ type: "delta", text })
+      );
 
-    const { displayContent, supplementarySections, jsonTrailerOk, title: researchTitle, summary } =
-      splitResearchStructuredResponse(rawForSplit);
-    const fullAnswerText = displayContent.trim() || rawForSplit.trim();
+      const ws = response.webSearch?.sources;
+      const rawForSplit =
+        researchTurn && ws && ws.length > 0
+          ? insertWebSearchSourcesBeforeTrailer(response.content, ws)
+          : response.content;
 
-    let research_completions: ResearchCompletion[] = [...(run.research_completions ?? [])];
-    let assistantMessage: {
-      role: "assistant";
-      content: string;
-      research_completion_id?: string;
-    };
+      const { displayContent, supplementarySections, jsonTrailerOk, title: researchTitle, summary } =
+        splitResearchStructuredResponse(rawForSplit);
+      const fullAnswerText = displayContent.trim() || rawForSplit.trim();
 
-    if (researchTurn && effectiveStarter) {
-      const research_id = randomUUID();
-      const mainProse = displayContent.trim();
-      const sectionsToStore = jsonTrailerOk
-        ? clampResearchSections(supplementarySections ?? [])
-        : clampResearchSections(fallbackResearchSections(fullAnswerText));
-      const summaryLine = summary ?? (mainProse ? deriveSummaryFromText(mainProse) : undefined);
-      const entry: ResearchCompletion = {
-        research_id,
-        label: effectiveStarter.label,
-        ...(effectiveStarter.group_title?.trim() ? { group_title: effectiveStarter.group_title.trim() } : {}),
-        ...(researchTitle ? { title: researchTitle } : {}),
-        ...(summaryLine ? { summary: summaryLine } : {}),
-        completed_at: new Date().toISOString(),
-        ...(sectionsToStore.length > 0 ? { sections: sectionsToStore } : {}),
-        ...(jsonTrailerOk && isMeaningfulResearchText(mainProse) ? { main_answer: mainProse } : {}),
+      let research_completions: ResearchCompletion[] = [...(run.research_completions ?? [])];
+      let assistantMessage: {
+        role: "assistant";
+        content: string;
+        research_completion_id?: string;
       };
-      research_completions = [...research_completions, entry];
-      const chatSummary = summarizeForResearchChat(fullAnswerText, jsonTrailerOk ? supplementarySections : null);
-      assistantMessage = {
-        role: "assistant",
-        content: chatSummary,
-        research_completion_id: research_id,
-      };
-    } else {
-      assistantMessage = { role: "assistant", content: fullAnswerText };
-    }
 
-    const updatedMessages = [
-      ...(run.chat_messages ?? []),
-      { role: "user" as const, content: newMessage.trim() },
-      assistantMessage,
-    ];
+      if (researchTurn && effectiveStarter) {
+        const research_id = randomUUID();
+        const mainProse = displayContent.trim();
+        const sectionsToStore = jsonTrailerOk
+          ? clampResearchSections(supplementarySections ?? [])
+          : clampResearchSections(fallbackResearchSections(fullAnswerText));
+        const summaryLine = summary ?? (mainProse ? deriveSummaryFromText(mainProse) : undefined);
+        const entry: ResearchCompletion = {
+          research_id,
+          label: effectiveStarter.label,
+          ...(effectiveStarter.group_title?.trim() ? { group_title: effectiveStarter.group_title.trim() } : {}),
+          ...(researchTitle ? { title: researchTitle } : {}),
+          ...(summaryLine ? { summary: summaryLine } : {}),
+          completed_at: new Date().toISOString(),
+          ...(sectionsToStore.length > 0 ? { sections: sectionsToStore } : {}),
+          ...(jsonTrailerOk && isMeaningfulResearchText(mainProse) ? { main_answer: mainProse } : {}),
+        };
+        research_completions = [...research_completions, entry];
+        const chatSummary = summarizeForResearchChat(fullAnswerText, jsonTrailerOk ? supplementarySections : null);
+        assistantMessage = {
+          role: "assistant",
+          content: chatSummary,
+          research_completion_id: research_id,
+        };
+      } else {
+        assistantMessage = { role: "assistant", content: fullAnswerText };
+      }
 
-    await replaceRun(run_id.trim(), { ...run, chat_messages: updatedMessages, research_completions });
+      const updatedMessages = [
+        ...(run.chat_messages ?? []),
+        { role: "user" as const, content: userContent },
+        assistantMessage,
+      ];
 
-    return NextResponse.json({
-      content: assistantMessage.content,
-      research_completion_id: assistantMessage.research_completion_id,
-      research_completions,
+      await replaceRun(runId, { ...run, chat_messages: updatedMessages, research_completions });
+
+      emit({
+        type: "done",
+        content: assistantMessage.content,
+        research_completion_id: assistantMessage.research_completion_id,
+        research_completions,
+      });
     });
   } catch (error) {
     console.error("Decision run chat error:", error);
