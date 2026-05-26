@@ -20,6 +20,7 @@ import type {
   ProviderSynthesis,
 } from "@/types/decision";
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
+import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
 import { runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
 
 const BRIEF_OUTPUT_SCHEMA = {
@@ -683,7 +684,7 @@ export async function runComprehensiveBriefSynthesis(
     brief = { ...brief, next_steps: padNextStepsToMinimum(brief.next_steps, intake) };
   }
 
-  return brief;
+  return ensureBriefGeneratedAt(brief);
 }
 
 export async function runBriefSynthesis(
@@ -776,7 +777,7 @@ export async function runBriefSynthesis(
     }
   }
 
-  return brief;
+  return ensureBriefGeneratedAt(brief);
 }
 
 // --- Best of all worlds (Anthropic, all runs for decision + merged research & variants) ---
@@ -1071,5 +1072,5 @@ export async function runBestOfWorldsBriefSynthesis(
   if (brief.next_steps.length < MIN_NEXT_STEPS) {
     brief = { ...brief, next_steps: padNextStepsToMinimum(brief.next_steps, intake) };
   }
-  return brief;
+  return ensureBriefGeneratedAt(brief);
 }

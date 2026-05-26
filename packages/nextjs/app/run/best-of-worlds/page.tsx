@@ -11,6 +11,7 @@ import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { SessionNav } from "@/app/components/session-nav";
+import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
@@ -24,14 +25,6 @@ const UNIFIED_BRIEF_GENERATING_STEPS = [
   "Shaping recommendation and next steps…",
   "Almost there…",
 ];
-
-function formatBriefDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  } catch {
-    return iso;
-  }
-}
 
 /** Reads `decision_id` and/or `run_id` from the URL; remounts when either changes. */
 function UnifiedBriefShell() {
@@ -358,9 +351,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                       Unified decision brief
                     </p>
                     <h2 className="text-xl font-semibold text-zinc-900">{brief.title || "Decision brief"}</h2>
-                    {brief.generated_at && (
-                      <p className="mt-1 text-xs text-zinc-500">Generated {formatBriefDate(brief.generated_at)}</p>
-                    )}
+                    <BriefGeneratedDateLine iso={brief.generated_at} className="mt-1" label="Generated" />
                   </header>
                   <div className="mt-6 space-y-6">
                     <section>

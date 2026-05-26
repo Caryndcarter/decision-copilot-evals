@@ -27,18 +27,8 @@ import {
 import { CollapsibleBlock } from "./collapsible-block";
 import { ResearchMarkdown, ResearchMarkdownInline } from "./research-markdown";
 import { runHeadline } from "@/lib/run-display-name";
-
-function formatBriefDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
+import { formatBriefDate } from "@/lib/format-brief-date";
+import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 
 function Section({
   title,
@@ -781,6 +771,14 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     return raw;
   }, [briefDraft?.title, briefTab, result, isStubBrief]);
 
+  const activeBriefGeneratedAt = useMemo(() => {
+    const brief =
+      briefTab === "comprehensive" && result.decision_brief_comprehensive
+        ? result.decision_brief_comprehensive
+        : result.decision_brief;
+    return brief?.generated_at?.trim() || undefined;
+  }, [briefTab, result.decision_brief, result.decision_brief_comprehensive]);
+
   function persistBrief() {
     if (!briefDraft || !result.decision_brief) return;
     const merged = getCurrentBriefMerged();
@@ -832,6 +830,9 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
         className="scroll-mt-32 sticky top-[4.75rem] z-30 mb-4 border-b border-zinc-200/90 bg-white/95 py-2.5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-white/85 print:static print:top-auto print:z-auto print:border-zinc-200 print:shadow-none sm:top-20"
       >
         <h2 className="text-lg font-semibold leading-snug text-zinc-900 sm:text-xl">{stickyBriefBannerTitle}</h2>
+        {!isStubBrief && activeBriefGeneratedAt ? (
+          <BriefGeneratedDateLine iso={activeBriefGeneratedAt} className="mt-1" />
+        ) : null}
       </div>
       {/* Context — always expanded; includes “updated after clarification” when applicable */}
       <CollapsibleBlock
@@ -1302,13 +1303,13 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
           id="rc-brief"
           title="Decision brief and recommendations"
           subtitle={
-            briefTab === "comprehensive" && result.decision_brief_comprehensive?.generated_at
-              ? `Integrated · ${formatBriefDate(result.decision_brief_comprehensive.generated_at)}`
-              : result.decision_brief.generated_at
-                ? showIntegratedBriefToggle
-                  ? `Standard · ${formatBriefDate(result.decision_brief.generated_at)}`
-                  : `Generated ${formatBriefDate(result.decision_brief.generated_at)}`
-                : undefined
+            activeBriefGeneratedAt
+              ? briefTab === "comprehensive"
+                ? `Integrated · ${formatBriefDate(activeBriefGeneratedAt)}`
+                : showIntegratedBriefToggle
+                  ? `Standard · ${formatBriefDate(activeBriefGeneratedAt)}`
+                  : `Generated ${formatBriefDate(activeBriefGeneratedAt)}`
+              : undefined
           }
           badge={
             analysisChanges.brief ? (
@@ -1384,6 +1385,10 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
                   <h2 className="text-lg font-semibold text-zinc-900">
                     {result.decision_brief_comprehensive.title || "Decision brief"}
                   </h2>
+                  <BriefGeneratedDateLine
+                    iso={result.decision_brief_comprehensive.generated_at}
+                    className="mt-1"
+                  />
                 </div>
                 <div className="mt-3 space-y-3">
                   <div>
@@ -1495,6 +1500,12 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
                     {result.decision_brief.title || "Decision brief"}
                   </h2>
                 )}
+                {!isStubBrief ? (
+                  <BriefGeneratedDateLine
+                    iso={briefDraft?.generated_at ?? result.decision_brief.generated_at}
+                    className="mt-1"
+                  />
+                ) : null}
               </div>
               <div className="mt-3">
                 {isStubBrief ? (

@@ -23,6 +23,7 @@ import { runReversibilityLens } from "@/lenses/reversibility";
 import { runPeopleLens } from "@/lenses/people";
 import { runBriefSynthesis, type BriefSynthesisPromptOptions } from "@/lenses/brief";
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
+import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
 import { runDecisionTitle, runFreeformCardTitle } from "@/lenses/decision-title";
 import { runFreeformAnalysis } from "@/lenses/freeform";
 import { getRun, getRunsByDecisionId, insertRun, replaceRun, deleteRun } from "@/lib/db/runs";
@@ -279,8 +280,10 @@ async function finishLensesPhase(
 
   const mergedBrief =
     decision_brief && decision_title?.trim()
-      ? { ...decision_brief, title: decision_title.trim() }
-      : decision_brief;
+      ? ensureBriefGeneratedAt({ ...decision_brief, title: decision_title.trim() })
+      : decision_brief
+        ? ensureBriefGeneratedAt(decision_brief)
+        : decision_brief;
 
   return {
     clarification_questions,
@@ -530,7 +533,9 @@ async function runLensesAndBriefFromClarifications(existingRun: DecisionRunResul
     const briefWithStableTitle =
       stableTitle && decision_brief ? { ...decision_brief, title: stableTitle } : decision_brief;
     existingRun.lens_outputs = lens_outputs;
-    existingRun.decision_brief = briefWithStableTitle;
+    existingRun.decision_brief = briefWithStableTitle
+      ? ensureBriefGeneratedAt(briefWithStableTitle)
+      : briefWithStableTitle;
     existingRun.status = isStubBrief(briefWithStableTitle) ? "pending_brief" : "complete";
     existingRun.clarification_needed = false;
     existingRun.clarification_questions = existingRun.clarification_questions ?? [];
@@ -675,7 +680,7 @@ async function handleUpdateBrief(req: UpdateBriefRequest): Promise<NextResponse>
     }
     const variant = existingRun.variants[variantIdx];
     const current = variant.decision_brief;
-    variant.decision_brief = {
+    variant.decision_brief = ensureBriefGeneratedAt({
       title: req.decision_brief.title ?? current.title,
       generated_at: req.decision_brief.generated_at ?? current.generated_at,
       summary: req.decision_brief.summary ?? current.summary,
@@ -683,7 +688,7 @@ async function handleUpdateBrief(req: UpdateBriefRequest): Promise<NextResponse>
       key_considerations: req.decision_brief.key_considerations ?? current.key_considerations,
       next_steps: req.decision_brief.next_steps ?? current.next_steps,
       custom_sections: req.decision_brief.custom_sections ?? current.custom_sections,
-    };
+    });
     existingRun.variants[variantIdx] = variant;
     await replaceRun(req.run_id.trim(), existingRun);
     return NextResponse.json(existingRun);
@@ -698,7 +703,7 @@ async function handleUpdateBrief(req: UpdateBriefRequest): Promise<NextResponse>
     );
   }
 
-  existingRun.decision_brief = {
+  existingRun.decision_brief = ensureBriefGeneratedAt({
     title: req.decision_brief.title ?? current.title,
     generated_at: req.decision_brief.generated_at ?? current.generated_at,
     summary: req.decision_brief.summary ?? current.summary,
@@ -706,7 +711,7 @@ async function handleUpdateBrief(req: UpdateBriefRequest): Promise<NextResponse>
     key_considerations: req.decision_brief.key_considerations ?? current.key_considerations,
     next_steps: req.decision_brief.next_steps ?? current.next_steps,
     custom_sections: req.decision_brief.custom_sections ?? current.custom_sections,
-  };
+  });
   await replaceRun(req.run_id.trim(), existingRun);
 
   return NextResponse.json(existingRun);
@@ -813,7 +818,11 @@ async function buildRerunPostureRun(
     ]);
     decision_title = t?.trim() || undefined;
     decision_brief =
-      decision_title && brief ? { ...brief, title: decision_title } : brief;
+      decision_title && brief
+        ? ensureBriefGeneratedAt({ ...brief, title: decision_title })
+        : brief
+          ? ensureBriefGeneratedAt(brief)
+          : brief;
     status = isStubBrief(decision_brief) ? "pending_brief" : "complete";
   }
 
