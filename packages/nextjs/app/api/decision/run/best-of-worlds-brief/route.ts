@@ -61,7 +61,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const incomplete_runs = listIncompleteRunsForBestOfWorlds(allRuns);
 
   try {
-    const decision_brief_best_of_worlds = await runBestOfWorldsBriefSynthesis(persistRun, eligible);
+    const decision_brief_best_of_worlds = await runBestOfWorldsBriefSynthesis(
+      persistRun,
+      eligible,
+      allRuns
+    );
     const updated: DecisionRunResult = {
       ...persistRun,
       decision_brief_best_of_worlds,

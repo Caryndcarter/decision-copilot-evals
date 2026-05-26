@@ -48,7 +48,7 @@ function normProviderKey(r: DecisionRunResult): string {
 }
 
 /** One key per distinct analysis line (same as posture switcher / merge semantics). */
-function unifiedBriefRunDedupeKey(r: DecisionRunResult): string {
+export function unifiedBriefRunDedupeKey(r: DecisionRunResult): string {
   const p = normProviderKey(r);
   const posture = normPostureKey(r);
   const lean = (r.intake?.leaning_direction ?? "").trim();
@@ -75,6 +75,9 @@ export function canonicalRunsForUnifiedBriefDecision(runs: DecisionRunResult[]):
         const sb = readinessScore(best);
         const sc = readinessScore(cur);
         if (sc !== sb) return sc > sb ? cur : best;
+        const rb = best.research_completions?.length ?? 0;
+        const rc = cur.research_completions?.length ?? 0;
+        if (rc !== rb) return rc > rb ? cur : best;
         const tb = runSortTimeMs(best);
         const tc = runSortTimeMs(cur);
         if (tc !== tb) return tc > tb ? cur : best;

@@ -68,7 +68,7 @@ async function buildUnifiedBriefChatSystemPrompt(
 
   let source =
     eligible.length > 0
-      ? buildBestOfWorldsSourceUserContent(storageRun, eligible)
+      ? buildBestOfWorldsSourceUserContent(storageRun, eligible, { allRunsForResearch: allRuns })
       : "(No runs with analysis were found for this decision; raw merge inputs are unavailable.)";
 
   if (source.length > MAX_SOURCE_CHARS) {
@@ -82,7 +82,7 @@ async function buildUnifiedBriefChatSystemPrompt(
   const sharedLayers = `You have two layers of context:
 
 1. **Unified Brief** — the executive synthesis. This is the primary “what we recommend” view.
-2. **Raw synthesis inputs** — the **same merged payload** used to generate that brief: intake/clarifications, each **Run: {Provider} · {Posture}** block (lenses, brief appendices, per-run research, integrated brief when present), merged research and variants, and any **cross-provider comparison** sections saved on runs. When the user asks what a specific provider contributed, **quote or paraphrase from the matching run block** (or comparison section) and name the provider · posture from the heading. If something only appears in raw inputs and not in the Unified Brief, say so explicitly.
+2. **Raw synthesis inputs** — the **same merged payload** used to generate that brief: intake/clarifications, **Research inventory** and **Variant inventory** (counts per provider lane), each **Run: {Provider} · {Posture}** block (**Research on this run** is at the top of each block, then lenses/brief), merged research and variants, and any **cross-provider comparison** sections. For research or variant questions, start from the inventory sections and the matching provider block; do not claim tasks are missing if they appear in an inventory row. If something only appears in raw inputs and not in the Unified Brief, say so explicitly.
 
 Rules:
 - Prefer the **raw run blocks** for provider-specific nuance; use the **Unified Brief** for the consolidated recommendation unless the question is about synthesis choices or omissions.
