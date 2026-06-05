@@ -632,29 +632,6 @@ export default function IntakePage() {
             </div>
           )}
 
-          {availableProviders.length > 1 && (
-            <div>
-              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-800">
-                AI provider
-              </label>
-              <FieldHelp>
-                Pick one model or run all configured providers in parallel for comparison.
-              </FieldHelp>
-              <select
-                id="llm_provider"
-                value={llmProvider}
-                onChange={(e) => setLlmProvider(e.target.value as ProviderValue)}
-                className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {LLM_PROVIDERS.filter((p) => availableProviders.includes(p.value)).map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
           <div>
             <label htmlFor="knowns_assumptions" className="block text-sm font-medium text-zinc-800">
               Facts and assumptions presumed to be true
@@ -689,6 +666,29 @@ export default function IntakePage() {
               className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
+
+          {availableProviders.length > 1 && (
+            <div>
+              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-800">
+                AI provider
+              </label>
+              <FieldHelp>
+                Pick one model or run all configured providers in parallel for comparison.
+              </FieldHelp>
+              <select
+                id="llm_provider"
+                value={llmProvider}
+                onChange={(e) => setLlmProvider(e.target.value as ProviderValue)}
+                className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {LLM_PROVIDERS.filter((p) => availableProviders.includes(p.value)).map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
