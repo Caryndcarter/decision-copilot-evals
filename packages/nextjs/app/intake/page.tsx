@@ -39,11 +39,31 @@ const SUBMITTING_STEPS_ALL = [
   "Almost there…",
 ];
 
-const POSTURES = [
-  { value: "explore", label: "Explore" },
-  { value: "pressure_test", label: "Pressure test" },
-  { value: "surface_risks", label: "Surface risks" },
-  { value: "generate_alternatives", label: "Generate alternatives" },
+const INTAKE_BRIEF_CHAR_HINT = 200;
+
+const POSTURE_OPTIONS = [
+  {
+    value: "explore" as const,
+    title: "Compare options openly",
+    description: "Balanced analysis across paths. No preferred direction assumed.",
+  },
+  {
+    value: "pressure_test" as const,
+    title: "Challenge my leaning",
+    description:
+      "Pressure-testing of the plan you are currently considering to produce a thorough analysis with downsides and blind spots.",
+  },
+  {
+    value: "surface_risks" as const,
+    title: "Risk-first",
+    description: "Thorough downside scan. Risks, blind spots, and hidden assumptions front and center.",
+  },
+  {
+    value: "generate_alternatives" as const,
+    title: "Widen the option set",
+    description:
+      "An evaluation of your described situation, inclusive of alternative paths and adjacent impacting factors.",
+  },
 ] as const;
 
 const LLM_PROVIDERS = [
@@ -159,10 +179,14 @@ const DEMO_SCENARIOS = [
 
 type ProviderValue = (typeof LLM_PROVIDERS)[number]["value"];
 
+function FieldHelp({ children }: { children: React.ReactNode }) {
+  return <p className="mt-1.5 text-sm leading-snug text-zinc-500">{children}</p>;
+}
+
 export default function IntakePage() {
   const [situation, setSituation] = useState("");
   const [constraints, setConstraints] = useState("");
-  const [posture, setPosture] = useState<(typeof POSTURES)[number]["value"]>("explore");
+  const [posture, setPosture] = useState<(typeof POSTURE_OPTIONS)[number]["value"]>("explore");
   const [llmProvider, setLlmProvider] = useState<ProviderValue>("openai");
   const [availableProviders, setAvailableProviders] = useState<ProviderValue[]>([]);
   const [leaningDirection, setLeaningDirection] = useState("");
@@ -178,6 +202,9 @@ export default function IntakePage() {
   const [partialWarning, setPartialWarning] = useState<string | null>(null);
   const router = useRouter();
   const showLeaningDirection = posture === "pressure_test";
+  const intakeCharCount = situation.trim().length + constraints.trim().length;
+  const showBriefInputHint =
+    intakeCharCount > 0 && intakeCharCount < INTAKE_BRIEF_CHAR_HINT && !submitting && !freeformSubmitting;
 
   // Only show AI providers that have API keys configured; add "all" when 2+ are available
   useEffect(() => {
@@ -229,6 +256,14 @@ export default function IntakePage() {
     e.preventDefault();
     setError(null);
     setPartialWarning(null);
+    if (!situation.trim() || !constraints.trim()) {
+      setError("Decision context and constraints are required.");
+      return;
+    }
+    if (showLeaningDirection && !leaningDirection.trim()) {
+      setError("Name the direction you want challenged before running analysis.");
+      return;
+    }
     setSubmittingStep(0);
     setSubmitting(true);
 
@@ -318,7 +353,11 @@ export default function IntakePage() {
 
   async function handleFreeformSubmit() {
     if (!situation.trim() || !constraints.trim()) {
-      setError("Situation and constraints are required.");
+      setError("Decision context and constraints are required.");
+      return;
+    }
+    if (showLeaningDirection && !leaningDirection.trim()) {
+      setError("Name the direction you want challenged before running analysis.");
       return;
     }
     setError(null);
@@ -449,8 +488,12 @@ export default function IntakePage() {
       <div className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-3xl px-6 py-8">
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">New decision</h1>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+            Share enough context for useful guidance: who is involved, what triggered the decision, options on
+            the table, and what success looks like. The more specific you are, the more tailored the results.
+          </p>
           <p className="mt-1.5 text-sm text-zinc-500">
-            Describe your situation and how you'd like the AI to approach it.
+            We may ask a few follow-up questions before presenting recommendations.
           </p>
         </div>
       </div>
@@ -480,80 +523,128 @@ export default function IntakePage() {
 
         <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-7">
           <div>
-            <label htmlFor="situation" className="block text-sm font-medium text-zinc-700">
-              Situation <span className="text-red-500">*</span>
+            <label htmlFor="situation" className="block text-sm font-medium text-zinc-800">
+              What decision are you facing? <span className="text-red-500">*</span>
             </label>
+            <FieldHelp>
+              Include context: org size, stakeholders, what triggered this, options you&apos;re weighing, and what
+              success looks like.
+            </FieldHelp>
+            <details className="mt-2 rounded-lg border border-zinc-200 bg-zinc-50/80 px-3 py-2 text-sm text-zinc-600">
+              <summary className="cursor-pointer font-medium text-zinc-700 select-none">
+                Writing prompts (optional)
+              </summary>
+              <ul className="mt-2 list-inside list-disc space-y-1 pl-0.5">
+                <li>What are you deciding, and why now?</li>
+                <li>What options are on the table?</li>
+                <li>Who cares most about the outcome?</li>
+                <li>What would you regret if you got this wrong?</li>
+              </ul>
+            </details>
             <textarea
               id="situation"
               required
               rows={8}
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
-              placeholder="e.g. Switching from MongoDB to PostgreSQL"
-              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Example: We're ~140 people; our downtown lease ends in 7 months. Leadership wants hybrid but hasn't defined it. Finance wants to cut ~$400k in rent while sales wants more in-person time with customers…"
+              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label htmlFor="constraints" className="block text-sm font-medium text-zinc-700">
-              Constraints <span className="text-red-500">*</span>
+            <label htmlFor="constraints" className="block text-sm font-medium text-zinc-800">
+              What constraints are you facing related to this decision?{" "}
+              <span className="text-red-500">*</span>
             </label>
+            <FieldHelp>
+              Timeline, budget, headcount, legal or regulatory limits, politics, non-negotiables, and cost of delay.
+            </FieldHelp>
             <textarea
               id="constraints"
               required
               rows={5}
               value={constraints}
               onChange={(e) => setConstraints(e.target.value)}
-              placeholder="e.g. 3 months, 2 developers"
-              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Example: Decide in 90 days to avoid holdover penalties. No budget for two collaboration tools long-term. Hiring 25 distributed roles next year…"
+              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
-          <div>
-            <label htmlFor="posture" className="block text-sm font-medium text-zinc-700">
-              Posture <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="posture"
-              required
-              value={posture}
-              onChange={(e) => setPosture(e.target.value as (typeof POSTURES)[number]["value"])}
-              className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            >
-              {POSTURES.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showBriefInputHint ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+              Brief inputs often produce generic analysis. Add timeline, stakeholders, or tradeoffs if you can. The
+              demo scenarios above show the level of detail that works well.
+            </p>
+          ) : null}
+
+          <fieldset>
+            <legend className="block text-sm font-medium text-zinc-800">
+              How should we analyze this? <span className="text-red-500">*</span>
+            </legend>
+            <FieldHelp>Choose the lens that matches how you want the AI to examine your decision.</FieldHelp>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {POSTURE_OPTIONS.map((option) => {
+                const selected = posture === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer rounded-lg border px-3 py-3 transition-colors ${
+                      selected
+                        ? "border-indigo-500 bg-indigo-50/80 ring-1 ring-indigo-500"
+                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="posture"
+                      value={option.value}
+                      checked={selected}
+                      onChange={() => setPosture(option.value)}
+                      className="sr-only"
+                    />
+                    <span className="block text-sm font-semibold text-zinc-900">{option.title}</span>
+                    <span className="mt-1 block text-xs leading-snug text-zinc-600">{option.description}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           {showLeaningDirection && (
             <div>
-              <label htmlFor="leaning_direction" className="block text-sm font-medium text-zinc-700">
-                Leaning toward <span className="text-red-500">*</span>
+              <label htmlFor="leaning_direction" className="block text-sm font-medium text-zinc-800">
+                Direction you want challenged <span className="text-red-500">*</span>
               </label>
+              <FieldHelp>
+                State the plan you&apos;re currently considering. The analysis will focus on downsides and blind
+                spots.
+              </FieldHelp>
               <input
                 type="text"
                 id="leaning_direction"
+                required
                 value={leaningDirection}
                 onChange={(e) => setLeaningDirection(e.target.value)}
-                placeholder="e.g. Migrating to PostgreSQL"
-                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Example: Keep the VP but add a sales ops lead for process while she owns strategic deals"
+                className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           )}
 
           {availableProviders.length > 1 && (
             <div>
-              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-700">
+              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-800">
                 AI provider
               </label>
+              <FieldHelp>
+                Pick one model or run all configured providers in parallel for comparison.
+              </FieldHelp>
               <select
                 id="llm_provider"
                 value={llmProvider}
                 onChange={(e) => setLlmProvider(e.target.value as ProviderValue)}
-                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
                 {LLM_PROVIDERS.filter((p) => availableProviders.includes(p.value)).map((p) => (
                   <option key={p.value} value={p.value}>
@@ -565,30 +656,37 @@ export default function IntakePage() {
           )}
 
           <div>
-            <label htmlFor="knowns_assumptions" className="block text-sm font-medium text-zinc-700">
-              What I know / am assuming
+            <label htmlFor="knowns_assumptions" className="block text-sm font-medium text-zinc-800">
+              Facts and assumptions presumed to be true
             </label>
+            <FieldHelp>
+              Identify what is known and what is assumed. Differentiating between them will help the analysis.
+            </FieldHelp>
             <textarea
               id="knowns_assumptions"
               rows={5}
               value={knownsAssumptions}
               onChange={(e) => setKnownsAssumptions(e.target.value)}
-              placeholder="Optional"
-              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Example: We assume badge data undercounts engineering attendance. We believe the landlord will negotiate if we commit early…"
+              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
           <div>
-            <label htmlFor="unknowns" className="block text-sm font-medium text-zinc-700">
-              What I don’t know
+            <label htmlFor="unknowns" className="block text-sm font-medium text-zinc-800">
+              Open questions whose answers might change the recommendation
             </label>
+            <FieldHelp>
+              What you still don&apos;t know, and would want answered before committing. If the answer could flip
+              which option you choose, list it here.
+            </FieldHelp>
             <textarea
               id="unknowns"
               rows={5}
               value={unknowns}
               onChange={(e) => setUnknowns(e.target.value)}
-              placeholder="Optional"
-              className="mt-1.5 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="Example: Whether core collaboration days help or backfire. Legal exposure if managers enforce different in-office rules…"
+              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
@@ -607,7 +705,7 @@ export default function IntakePage() {
           {submitting && (
             <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
               <p className="font-medium">{(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}</p>
-              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running OpenAI, Anthropic, Gemini, and xAI simultaneously — this may take 30–60 seconds." : "This usually takes 5–15 seconds."}</p>
+              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running OpenAI, Anthropic, Gemini, and xAI simultaneously. This may take 30–60 seconds." : "This usually takes 5–15 seconds."}</p>
             </div>
           )}
 
@@ -618,11 +716,19 @@ export default function IntakePage() {
               </p>
               <p className="mt-1 text-violet-600">
                 {llmProvider === "all"
-                  ? "OpenAI, Anthropic, Gemini, and xAI each pick their own JSON structure — this may take 30–90 seconds."
-                  : "The model chooses its own structure — this usually takes 5–20 seconds."}
+                  ? "OpenAI, Anthropic, Gemini, and xAI each pick their own JSON structure. This may take 30–90 seconds."
+                  : "The model chooses its own structure. This usually takes 5–20 seconds."}
               </p>
             </div>
           )}
+
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+            <p className="font-medium text-zinc-800">What happens next</p>
+            <p className="mt-1 leading-relaxed">
+              Structured analysis runs risk, reversibility, and people lenses, may ask a few targeted follow-up
+              questions, then produces a decision brief you can edit, compare across providers, and discuss.
+            </p>
+          </div>
 
           <div className="pt-2 space-y-2">
             <button
@@ -639,9 +745,12 @@ export default function IntakePage() {
                   {(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}
                 </>
               ) : (
-                "Run structured analysis"
+                "Run decision analysis (recommended)"
               )}
             </button>
+            <p className="text-center text-xs text-zinc-500">
+              Three lenses, follow-up questions when needed, structured decision brief.
+            </p>
             <button
               type="button"
               onClick={handleFreeformSubmit}
@@ -654,9 +763,12 @@ export default function IntakePage() {
                   {(llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
                 </>
               ) : (
-                "Free-form analysis (model-chosen schema) →"
+                "Explore with a flexible format"
               )}
             </button>
+            <p className="text-center text-xs text-zinc-500">
+              The model chooses its own structure. Useful for experiments, not the main brief workflow.
+            </p>
           </div>
         </form>
       </div>
