@@ -15,6 +15,7 @@ import {
 } from "@/lib/merge-clarification-questions";
 import { runProviderLabel } from "@/lib/run-display-name";
 import { persistClarificationSnapshotsForRuns } from "@/lib/clarification-snapshot";
+import { CollapsibleBlock } from "./collapsible-block";
 
 const PROVIDER_BADGE: Record<string, string> = {
   openai: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -215,23 +216,26 @@ export function CombinedClarificationForm({
         }}
         className="mb-2"
       />
-      <div className="space-y-6">
+      <div className="space-y-4">
         {questionsByLens.map((group) => (
-          <section key={group.lens}>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              {LENS_THEME_LABELS[group.lens] ?? group.lens}
-            </h3>
-            <div className="space-y-4">
-              {group.questions.map((q) => (
-                <CombinedQuestionField
-                  key={q.entry_id}
-                  question={q}
-                  value={answers[q.entry_id]}
-                  onChange={(v) => setAnswers((prev) => ({ ...prev, [q.entry_id]: v }))}
-                />
-              ))}
-            </div>
-          </section>
+          <CollapsibleBlock
+            key={group.lens}
+            id={`combined-lens-${group.lens}`}
+            title={LENS_THEME_LABELS[group.lens] ?? group.lens}
+            titleClassName="text-sm font-semibold uppercase tracking-wide text-slate-600"
+            subtitle={`${group.questions.length} question${group.questions.length === 1 ? "" : "s"}`}
+            defaultOpen
+            bodyClassName="space-y-4 px-3 py-4"
+          >
+            {group.questions.map((q) => (
+              <CombinedQuestionField
+                key={q.entry_id}
+                question={q}
+                value={answers[q.entry_id]}
+                onChange={(v) => setAnswers((prev) => ({ ...prev, [q.entry_id]: v }))}
+              />
+            ))}
+          </CollapsibleBlock>
         ))}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
