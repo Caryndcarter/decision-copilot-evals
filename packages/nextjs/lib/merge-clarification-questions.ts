@@ -14,7 +14,13 @@ export interface CombinedClarificationQuestion {
 }
 
 const PROVIDER_ORDER = ["openai", "anthropic", "gemini", "xai"] as const;
-const LENS_ORDER: Record<string, number> = { risk: 0, reversibility: 1, people: 2 };
+export const LENS_THEME_ORDER: Record<string, number> = { risk: 0, people: 1, reversibility: 2 };
+
+export const LENS_THEME_LABELS: Record<string, string> = {
+  risk: "Risk",
+  people: "People",
+  reversibility: "Reversibility",
+};
 
 export function combinedQuestionEntryId(
   run_id: string,
@@ -65,14 +71,13 @@ export function listCombinedClarificationQuestions(
   }
 
   return items.sort((a, b) => {
+    const la = LENS_THEME_ORDER[a.lens] ?? 9;
+    const lb = LENS_THEME_ORDER[b.lens] ?? 9;
+    if (la !== lb) return la - lb;
     const pa = PROVIDER_ORDER.indexOf(a.provider as (typeof PROVIDER_ORDER)[number]);
     const pb = PROVIDER_ORDER.indexOf(b.provider as (typeof PROVIDER_ORDER)[number]);
-    const providerCmp =
-      (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
+    const providerCmp = (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
     if (providerCmp !== 0) return providerCmp;
-    const la = LENS_ORDER[a.lens] ?? 9;
-    const lb = LENS_ORDER[b.lens] ?? 9;
-    if (la !== lb) return la - lb;
     return a.question_text.localeCompare(b.question_text);
   });
 }

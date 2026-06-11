@@ -9,17 +9,12 @@ import {
 } from "./clarification-form";
 import {
   combinedToLensQuestions,
+  LENS_THEME_LABELS,
   listCombinedClarificationQuestions,
   type CombinedClarificationQuestion,
 } from "@/lib/merge-clarification-questions";
 import { runProviderLabel } from "@/lib/run-display-name";
 import { persistClarificationSnapshotsForRuns } from "@/lib/clarification-snapshot";
-
-const LENS_LABELS: Record<string, string> = {
-  risk: "Risk",
-  reversibility: "Reversibility",
-  people: "People",
-};
 
 const PROVIDER_BADGE: Record<string, string> = {
   openai: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -51,12 +46,7 @@ function CombinedQuestionField({
   const id = question.entry_id;
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <ProviderAttribution provider={question.provider} />
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {LENS_LABELS[question.lens] ?? question.lens}
-        </span>
-      </div>
+      <ProviderAttribution provider={question.provider} />
       <label htmlFor={id} className="mt-2 block text-sm font-medium text-slate-700">
         {question.question_text}
         {question.required && <span className="text-red-500"> *</span>}
@@ -149,14 +139,15 @@ export function CombinedClarificationForm({
   const [submittingStep, setSubmittingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const questionsByProvider = useMemo(() => {
-    const groups: { provider: string; questions: CombinedClarificationQuestion[] }[] = [];
+  const questionsByLens = useMemo(() => {
+    const groups: { lens: CombinedClarificationQuestion["lens"]; questions: CombinedClarificationQuestion[] }[] =
+      [];
     for (const q of combined) {
       const last = groups[groups.length - 1];
-      if (last?.provider === q.provider) {
+      if (last?.lens === q.lens) {
         last.questions.push(q);
       } else {
-        groups.push({ provider: q.provider, questions: [q] });
+        groups.push({ lens: q.lens, questions: [q] });
       }
     }
     return groups;
@@ -208,8 +199,8 @@ export function CombinedClarificationForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <p className="text-sm text-slate-600 leading-relaxed">
         {combined.length} follow-up question{combined.length === 1 ? "" : "s"} from {runs.length}{" "}
-        provider run{runs.length === 1 ? "" : "s"}. Each question is labeled with the AI model that
-        asked it. Similar questions from different providers are listed separately.
+        provider run{runs.length === 1 ? "" : "s"}, grouped by lens theme. Each question shows which
+        AI model asked it.
       </p>
       <ClarificationDemoQuickFill
         questions={demoQuestions}
@@ -225,14 +216,11 @@ export function CombinedClarificationForm({
         className="mb-2"
       />
       <div className="space-y-6">
-        {questionsByProvider.map((group) => (
-          <section key={group.provider}>
-            <div className="mb-3 flex items-center gap-2">
-              <ProviderAttribution provider={group.provider} />
-              <h3 className="text-sm font-semibold text-slate-700">
-                {runProviderLabel(group.provider)} questions
-              </h3>
-            </div>
+        {questionsByLens.map((group) => (
+          <section key={group.lens}>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {LENS_THEME_LABELS[group.lens] ?? group.lens}
+            </h3>
             <div className="space-y-4">
               {group.questions.map((q) => (
                 <CombinedQuestionField
