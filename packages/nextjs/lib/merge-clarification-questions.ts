@@ -1,35 +1,26 @@
 import type { DecisionRunResult, LensQuestion } from "@/types/decision";
 
-export interface MergedQuestionBinding {
+export interface CombinedClarificationQuestion {
+  /** Stable id for form state and batch submit: `run_id:lens-question_id` */
+  entry_id: string;
   run_id: string;
+  provider: string;
   lens: LensQuestion["lens"];
   question_id: string;
-  provider?: string;
-}
-
-export interface MergedClarificationQuestion {
-  /** Stable id for form state and batch submit payload */
-  merge_id: string;
-  lens: LensQuestion["lens"];
   question_text: string;
   answer_type: LensQuestion["answer_type"];
   options?: string[];
   required?: boolean;
-  /** Providers that asked this question (or a near-duplicate) */
-  providers: string[];
-  bindings: MergedQuestionBinding[];
 }
 
-export function normalizeQuestionText(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s%$]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+const PROVIDER_ORDER = ["openai", "anthropic", "gemini", "xai"] as const;
+const LENS_ORDER: Record<string, number> = { risk: 0, reversibility: 1, people: 2 };
 
-function mergeKeyForQuestion(q: LensQuestion): string {
-  return `${q.lens}|${q.answer_type}|${normalizeQuestionText(q.question_text)}`;
+export function combinedQuestionEntryId(
+  run_id: string,
+  q: Pick<LensQuestion, "lens" | "question_id">
+): string {
+  return `${run_id}:${q.lens}-${q.question_id}`;
 }
 
 export function getAwaitingClarificationRuns(runs: DecisionRunResult[]): DecisionRunResult[] {
@@ -49,55 +40,52 @@ export function canCombineClarifications(runs: DecisionRunResult[]): boolean {
   return postures.size === 1;
 }
 
-export function mergeClarificationQuestions(runs: DecisionRunResult[]): MergedClarificationQuestion[] {
+/** All clarification questions from every awaiting run, with provider attribution (no deduplication). */
+export function listCombinedClarificationQuestions(
+  runs: DecisionRunResult[]
+): CombinedClarificationQuestion[] {
   const awaiting = getAwaitingClarificationRuns(runs);
-  const byKey = new Map<string, MergedClarificationQuestion>();
+  const items: CombinedClarificationQuestion[] = [];
 
   for (const run of awaiting) {
     const provider = run.llm_provider ?? "openai";
     for (const q of run.clarification_questions ?? []) {
-      const key = mergeKeyForQuestion(q);
-      const binding: MergedQuestionBinding = {
+      items.push({
+        entry_id: combinedQuestionEntryId(run.run_id, q),
         run_id: run.run_id,
+        provider,
         lens: q.lens,
         question_id: q.question_id,
-        provider,
-      };
-      const existing = byKey.get(key);
-      if (existing) {
-        if (!existing.providers.includes(provider)) {
-          existing.providers.push(provider);
-        }
-        existing.bindings.push(binding);
-        if (q.required) existing.required = true;
-      } else {
-        byKey.set(key, {
-          merge_id: key,
-          lens: q.lens,
-          question_text: q.question_text,
-          answer_type: q.answer_type,
-          options: q.options,
-          required: q.required,
-          providers: [provider],
-          bindings: [binding],
-        });
-      }
+        question_text: q.question_text,
+        answer_type: q.answer_type,
+        options: q.options,
+        required: q.required,
+      });
     }
   }
 
-  const lensOrder: Record<string, number> = { risk: 0, reversibility: 1, people: 2 };
-  return Array.from(byKey.values()).sort((a, b) => {
-    const la = lensOrder[a.lens] ?? 9;
-    const lb = lensOrder[b.lens] ?? 9;
+  return items.sort((a, b) => {
+    const pa = PROVIDER_ORDER.indexOf(a.provider as (typeof PROVIDER_ORDER)[number]);
+    const pb = PROVIDER_ORDER.indexOf(b.provider as (typeof PROVIDER_ORDER)[number]);
+    const providerCmp =
+      (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
+    if (providerCmp !== 0) return providerCmp;
+    const la = LENS_ORDER[a.lens] ?? 9;
+    const lb = LENS_ORDER[b.lens] ?? 9;
     if (la !== lb) return la - lb;
     return a.question_text.localeCompare(b.question_text);
   });
 }
 
-/** Convert merged questions to LensQuestion[] for demo quick-fill helpers. */
-export function mergedToLensQuestions(merged: MergedClarificationQuestion[]): LensQuestion[] {
-  return merged.map((m) => ({
-    question_id: m.merge_id,
+/** @deprecated Use listCombinedClarificationQuestions */
+export const mergeClarificationQuestions = listCombinedClarificationQuestions;
+
+/** Convert combined list to LensQuestion[] for demo quick-fill helpers. */
+export function combinedToLensQuestions(
+  questions: CombinedClarificationQuestion[]
+): LensQuestion[] {
+  return questions.map((m) => ({
+    question_id: m.entry_id,
     lens: m.lens,
     question_text: m.question_text,
     answer_type: m.answer_type,
@@ -105,3 +93,6 @@ export function mergedToLensQuestions(merged: MergedClarificationQuestion[]): Le
     required: m.required,
   }));
 }
+
+/** @deprecated Use combinedToLensQuestions */
+export const mergedToLensQuestions = combinedToLensQuestions;

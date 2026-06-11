@@ -126,7 +126,9 @@ function ClarifyAllContent() {
     <div className="mx-auto max-w-2xl px-6 py-8">
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">All providers</p>
-        <h1 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">Answer questions together</h1>
+          <h1 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
+            Answer all provider questions
+          </h1>
         <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{headline}</p>
         <p className="mt-2 text-sm text-zinc-500">
           Or answer per provider from{" "}

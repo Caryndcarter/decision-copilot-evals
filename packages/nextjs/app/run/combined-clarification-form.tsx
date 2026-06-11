@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DecisionRunResult } from "@/types/decision";
 import {
   ClarificationDemoQuickFill,
@@ -8,9 +8,9 @@ import {
   type ClarificationAnswersMap,
 } from "./clarification-form";
 import {
-  mergeClarificationQuestions,
-  mergedToLensQuestions,
-  type MergedClarificationQuestion,
+  combinedToLensQuestions,
+  listCombinedClarificationQuestions,
+  type CombinedClarificationQuestion,
 } from "@/lib/merge-clarification-questions";
 import { runProviderLabel } from "@/lib/run-display-name";
 import { persistClarificationSnapshotsForRuns } from "@/lib/clarification-snapshot";
@@ -21,42 +21,46 @@ const LENS_LABELS: Record<string, string> = {
   people: "People",
 };
 
-function ProviderChips({ providers }: { providers: string[] }) {
-  if (providers.length <= 1) return null;
+const PROVIDER_BADGE: Record<string, string> = {
+  openai: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  anthropic: "bg-orange-50 text-orange-700 border-orange-200",
+  gemini: "bg-blue-50 text-blue-700 border-blue-200",
+  xai: "bg-zinc-100 text-zinc-800 border-zinc-200",
+};
+
+function ProviderAttribution({ provider }: { provider: string }) {
+  const cls = PROVIDER_BADGE[provider] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
-    <span className="mt-1 flex flex-wrap gap-1">
-      {providers.map((p) => (
-        <span
-          key={p}
-          className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600"
-        >
-          {runProviderLabel(p)}
-        </span>
-      ))}
+    <span
+      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}
+    >
+      {runProviderLabel(provider)}
     </span>
   );
 }
 
-function MergedQuestionField({
+function CombinedQuestionField({
   question,
   value,
   onChange,
 }: {
-  question: MergedClarificationQuestion;
+  question: CombinedClarificationQuestion;
   value: string | number | boolean | undefined;
   onChange: (v: string | number | boolean) => void;
 }) {
-  const id = question.merge_id;
+  const id = question.entry_id;
   return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+    <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <ProviderAttribution provider={question.provider} />
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           {LENS_LABELS[question.lens] ?? question.lens}
         </span>
-        <span className="mt-0.5 block">{question.question_text}</span>
+      </div>
+      <label htmlFor={id} className="mt-2 block text-sm font-medium text-slate-700">
+        {question.question_text}
         {question.required && <span className="text-red-500"> *</span>}
       </label>
-      <ProviderChips providers={question.providers} />
       {question.answer_type === "enum" && question.options && question.options.length > 0 ? (
         <select
           id={id}
@@ -139,11 +143,24 @@ export function CombinedClarificationForm({
   decisionId: string;
   onComplete: (updatedRuns: DecisionRunResult[]) => void;
 }) {
-  const merged = mergeClarificationQuestions(runs);
+  const combined = listCombinedClarificationQuestions(runs);
   const [answers, setAnswers] = useState<ClarificationAnswersMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [submittingStep, setSubmittingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  const questionsByProvider = useMemo(() => {
+    const groups: { provider: string; questions: CombinedClarificationQuestion[] }[] = [];
+    for (const q of combined) {
+      const last = groups[groups.length - 1];
+      if (last?.provider === q.provider) {
+        last.questions.push(q);
+      } else {
+        groups.push({ provider: q.provider, questions: [q] });
+      }
+    }
+    return groups;
+  }, [combined]);
 
   useEffect(() => {
     if (!submitting) return;
@@ -153,7 +170,7 @@ export function CombinedClarificationForm({
     return () => clearInterval(interval);
   }, [submitting]);
 
-  if (merged.length === 0) return null;
+  if (combined.length === 0) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,14 +202,14 @@ export function CombinedClarificationForm({
     }
   };
 
-  const demoQuestions = mergedToLensQuestions(merged);
+  const demoQuestions = combinedToLensQuestions(combined);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <p className="text-sm text-slate-600 leading-relaxed">
-        {merged.length} unique question{merged.length === 1 ? "" : "s"} merged from{" "}
-        {runs.length} provider run{runs.length === 1 ? "" : "s"}. Similar questions are shown once;
-        your answers apply to every provider that asked them.
+        {combined.length} follow-up question{combined.length === 1 ? "" : "s"} from {runs.length}{" "}
+        provider run{runs.length === 1 ? "" : "s"}. Each question is labeled with the AI model that
+        asked it. Similar questions from different providers are listed separately.
       </p>
       <ClarificationDemoQuickFill
         questions={demoQuestions}
@@ -207,14 +224,26 @@ export function CombinedClarificationForm({
         }}
         className="mb-2"
       />
-      <div className="space-y-5">
-        {merged.map((q) => (
-          <MergedQuestionField
-            key={q.merge_id}
-            question={q}
-            value={answers[q.merge_id]}
-            onChange={(v) => setAnswers((prev) => ({ ...prev, [q.merge_id]: v }))}
-          />
+      <div className="space-y-6">
+        {questionsByProvider.map((group) => (
+          <section key={group.provider}>
+            <div className="mb-3 flex items-center gap-2">
+              <ProviderAttribution provider={group.provider} />
+              <h3 className="text-sm font-semibold text-slate-700">
+                {runProviderLabel(group.provider)} questions
+              </h3>
+            </div>
+            <div className="space-y-4">
+              {group.questions.map((q) => (
+                <CombinedQuestionField
+                  key={q.entry_id}
+                  question={q}
+                  value={answers[q.entry_id]}
+                  onChange={(v) => setAnswers((prev) => ({ ...prev, [q.entry_id]: v }))}
+                />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}

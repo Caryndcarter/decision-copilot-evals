@@ -1680,13 +1680,13 @@ export function ChatContent() {
                     {showCombinedClarificationLink && hasPendingQuestions && (
                       <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
                         <p>
-                          {awaitingProviderRuns.length} provider runs asked similar follow-up questions. You
-                          can answer here for this provider, or{" "}
+                          {awaitingProviderRuns.length} provider runs have follow-up questions. You can
+                          answer here for this provider, or{" "}
                           <Link
                             href={`/run/clarify-all?decision_id=${encodeURIComponent(result.decision_id)}`}
                             className="font-semibold text-indigo-700 underline hover:text-indigo-800"
                           >
-                            answer merged questions for all providers
+                            answer all provider questions on one screen
                           </Link>
                           .
                         </p>

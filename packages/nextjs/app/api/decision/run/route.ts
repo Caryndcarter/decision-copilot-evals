@@ -30,9 +30,8 @@ import { runFreeformAnalysis } from "@/lenses/freeform";
 import { getRun, getRunsByDecisionId, insertRun, replaceRun, deleteRun } from "@/lib/db/runs";
 import {
   canCombineClarifications,
+  combinedQuestionEntryId,
   getAwaitingClarificationRuns,
-  mergeClarificationQuestions,
-  type MergedClarificationQuestion,
 } from "@/lib/merge-clarification-questions";
 import { buildClarificationAnswersForSubmit } from "@/app/run/clarification-form";
 
@@ -203,23 +202,16 @@ function validateBatchClarificationRequest(req: BatchClarificationRequest): stri
   return null;
 }
 
-function buildRunAnswersFromMerged(
+function buildRunAnswersFromCombined(
   run: DecisionRunResult,
-  merged: MergedClarificationQuestion[],
-  answersByMergeId: Record<string, string | number | boolean>
+  answersByEntryId: Record<string, string | number | boolean>
 ): ClarificationAnswer[] {
-  const mergeIdByBinding = new Map<string, string>();
-  for (const mq of merged) {
-    for (const b of mq.bindings) {
-      mergeIdByBinding.set(`${b.run_id}:${b.lens}-${b.question_id}`, mq.merge_id);
-    }
-  }
   const questions = run.clarification_questions ?? [];
   const clarificationAnswers: Record<string, string | number | boolean> = {};
   for (const q of questions) {
-    const mergeId = mergeIdByBinding.get(`${run.run_id}:${q.lens}-${q.question_id}`);
-    if (mergeId && answersByMergeId[mergeId] !== undefined) {
-      clarificationAnswers[`${q.lens}-${q.question_id}`] = answersByMergeId[mergeId];
+    const entryId = combinedQuestionEntryId(run.run_id, q);
+    if (answersByEntryId[entryId] !== undefined) {
+      clarificationAnswers[`${q.lens}-${q.question_id}`] = answersByEntryId[entryId];
     }
   }
   return buildClarificationAnswersForSubmit(questions, clarificationAnswers);
@@ -666,7 +658,6 @@ async function handleBatchClarification(req: BatchClarificationRequest): Promise
   }
 
   const awaiting = getAwaitingClarificationRuns(allRuns);
-  const merged = mergeClarificationQuestions(allRuns);
 
   const settled = await Promise.allSettled(
     awaiting.map(async (run) => {
@@ -674,7 +665,7 @@ async function handleBatchClarification(req: BatchClarificationRequest): Promise
       if (fresh.status !== "awaiting_clarification") {
         throw new Error(`Run ${fresh.run_id} is no longer awaiting clarification`);
       }
-      const answers = buildRunAnswersFromMerged(fresh, merged, req.answers);
+      const answers = buildRunAnswersFromCombined(fresh, req.answers);
       if (answers.length === 0) {
         throw new Error(`No answers mapped for run ${fresh.run_id}`);
       }

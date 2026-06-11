@@ -288,7 +288,7 @@ export function RunsClient({
               <div className="px-5 py-3 border-b border-amber-100 bg-amber-50/80 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-amber-900">
                   {awaitingClarificationCount} provider runs are waiting for follow-up answers. You can answer
-                  on each run below, or answer merged questions once for all providers.
+                  on each run below, or answer every provider&apos;s questions on one screen.
                 </p>
                 <Link
                   href={`/run/clarify-all?decision_id=${encodeURIComponent(group.decision_id)}`}
