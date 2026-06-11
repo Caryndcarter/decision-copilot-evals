@@ -8,6 +8,7 @@ export const maxDuration = 120; // seconds
 import type {
   DecisionIntake,
   Clarification,
+  ClarificationAnswer,
   DecisionRunResult,
   LensQuestion,
   LensOutput,
@@ -27,6 +28,13 @@ import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
 import { runDecisionTitle, runFreeformCardTitle } from "@/lenses/decision-title";
 import { runFreeformAnalysis } from "@/lenses/freeform";
 import { getRun, getRunsByDecisionId, insertRun, replaceRun, deleteRun } from "@/lib/db/runs";
+import {
+  canCombineClarifications,
+  getAwaitingClarificationRuns,
+  mergeClarificationQuestions,
+  type MergedClarificationQuestion,
+} from "@/lib/merge-clarification-questions";
+import { buildClarificationAnswersForSubmit } from "@/app/run/clarification-form";
 
 // ============================================
 // Request Types
@@ -107,9 +115,17 @@ interface ReapplyClarificationRequest {
   clarification: Pick<Clarification, "answers">;
 }
 
+/** Apply merged answers to every provider run awaiting clarification for one decision. */
+interface BatchClarificationRequest {
+  type: "batch_clarification";
+  decision_id: string;
+  answers: Record<string, string | number | boolean>;
+}
+
 type RunRequest =
   | InitialRunRequest
   | ClarificationRequest
+  | BatchClarificationRequest
   | ReapplyClarificationRequest
   | UpdateLensOutputsRequest
   | UpdateBriefRequest
@@ -175,6 +191,64 @@ function validateClarificationRequest(req: ClarificationRequest): string | null 
     return "clarification.answers is required";
   }
   return null;
+}
+
+function validateBatchClarificationRequest(req: BatchClarificationRequest): string | null {
+  if (!req.decision_id?.trim()) {
+    return "decision_id is required";
+  }
+  if (!req.answers || typeof req.answers !== "object" || Object.keys(req.answers).length === 0) {
+    return "answers is required";
+  }
+  return null;
+}
+
+function buildRunAnswersFromMerged(
+  run: DecisionRunResult,
+  merged: MergedClarificationQuestion[],
+  answersByMergeId: Record<string, string | number | boolean>
+): ClarificationAnswer[] {
+  const mergeIdByBinding = new Map<string, string>();
+  for (const mq of merged) {
+    for (const b of mq.bindings) {
+      mergeIdByBinding.set(`${b.run_id}:${b.lens}-${b.question_id}`, mq.merge_id);
+    }
+  }
+  const questions = run.clarification_questions ?? [];
+  const clarificationAnswers: Record<string, string | number | boolean> = {};
+  for (const q of questions) {
+    const mergeId = mergeIdByBinding.get(`${run.run_id}:${q.lens}-${q.question_id}`);
+    if (mergeId && answersByMergeId[mergeId] !== undefined) {
+      clarificationAnswers[`${q.lens}-${q.question_id}`] = answersByMergeId[mergeId];
+    }
+  }
+  return buildClarificationAnswersForSubmit(questions, clarificationAnswers);
+}
+
+async function applyClarificationToRun(
+  run: DecisionRunResult,
+  answers: ClarificationAnswer[]
+): Promise<DecisionRunResult> {
+  const clarification: Clarification = {
+    decision_id: run.decision_id,
+    run_id: run.run_id,
+    clarification_round: 1,
+    answers,
+  };
+
+  if (!run.lens_outputs_first_draft?.length && run.lens_outputs?.length) {
+    run.lens_outputs_first_draft = run.lens_outputs;
+    if (run.decision_brief) {
+      run.decision_brief_first_draft = run.decision_brief;
+    }
+  }
+
+  run.clarifications.push(clarification);
+  run.status = "processing_clarification";
+
+  await runLensesAndBriefFromClarifications(run);
+  await replaceRun(run.run_id, run);
+  return run;
 }
 
 // ============================================
@@ -371,6 +445,8 @@ export async function POST(request: NextRequest) {
       return handleIntake(body);
     } else if (body.type === "clarification") {
       return handleClarification(body);
+    } else if (body.type === "batch_clarification") {
+      return handleBatchClarification(body);
     } else if (body.type === "reapply_clarification") {
       return handleReapplyClarification(body);
     } else if (body.type === "update_lens_outputs") {
@@ -567,29 +643,65 @@ async function handleClarification(req: ClarificationRequest): Promise<NextRespo
     );
   }
 
-  const clarification: Clarification = {
-    decision_id: req.decision_id,
-    run_id: req.run_id,
-    ...req.clarification,
-  };
+  const updated = await applyClarificationToRun(existingRun, req.clarification.answers);
+  return NextResponse.json(updated);
+}
 
-  // Preserve first-draft analysis if not already set (e.g. run created before we stored it)
-  if (!existingRun.lens_outputs_first_draft?.length && existingRun.lens_outputs?.length) {
-    existingRun.lens_outputs_first_draft = existingRun.lens_outputs;
-    if (existingRun.decision_brief) {
-      existingRun.decision_brief_first_draft = existingRun.decision_brief;
-    }
+async function handleBatchClarification(req: BatchClarificationRequest): Promise<NextResponse> {
+  const validationError = validateBatchClarificationRequest(req);
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  // Update run with clarification
-  existingRun.clarifications.push(clarification);
-  existingRun.status = "processing_clarification";
+  const allRuns = await getRunsByDecisionId(req.decision_id.trim());
+  if (!allRuns.length) {
+    return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
+  }
 
-  await runLensesAndBriefFromClarifications(existingRun);
+  if (!canCombineClarifications(allRuns)) {
+    return NextResponse.json(
+      { error: "This decision does not have multiple runs awaiting clarification for the same posture." },
+      { status: 400 }
+    );
+  }
 
-  await replaceRun(req.run_id, existingRun);
+  const awaiting = getAwaitingClarificationRuns(allRuns);
+  const merged = mergeClarificationQuestions(allRuns);
 
-  return NextResponse.json(existingRun);
+  const settled = await Promise.allSettled(
+    awaiting.map(async (run) => {
+      const fresh = (await getRun(run.run_id)) ?? run;
+      if (fresh.status !== "awaiting_clarification") {
+        throw new Error(`Run ${fresh.run_id} is no longer awaiting clarification`);
+      }
+      const answers = buildRunAnswersFromMerged(fresh, merged, req.answers);
+      if (answers.length === 0) {
+        throw new Error(`No answers mapped for run ${fresh.run_id}`);
+      }
+      return applyClarificationToRun(fresh, answers);
+    })
+  );
+
+  const runs: DecisionRunResult[] = [];
+  const failed_runs: { run_id: string; message: string }[] = [];
+  settled.forEach((res, i) => {
+    const run_id = awaiting[i]!.run_id;
+    if (res.status === "fulfilled") {
+      runs.push(res.value);
+    } else {
+      const message = res.reason instanceof Error ? res.reason.message : String(res.reason);
+      failed_runs.push({ run_id, message });
+    }
+  });
+
+  if (runs.length === 0) {
+    return NextResponse.json(
+      { error: `All runs failed: ${failed_runs.map((f) => `${f.run_id} (${f.message})`).join("; ")}` },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ runs, failed_runs: failed_runs.length ? failed_runs : undefined });
 }
 
 async function handleReapplyClarification(req: ReapplyClarificationRequest): Promise<NextResponse> {

@@ -238,6 +238,10 @@ export function RunsClient({
           ? new Date(group.latestAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
           : null;
         const isDeletingDecision = deletingDecisionId === group.decision_id;
+        const awaitingClarificationCount = group.runs.filter(
+          (r) => r.status === "awaiting_clarification"
+        ).length;
+        const showCombinedClarification = awaitingClarificationCount >= 2;
 
         return (
           <div
@@ -279,6 +283,21 @@ export function RunsClient({
                 </div>
               </div>
             </div>
+
+            {showCombinedClarification && (
+              <div className="px-5 py-3 border-b border-amber-100 bg-amber-50/80 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-amber-900">
+                  {awaitingClarificationCount} provider runs are waiting for follow-up answers. You can answer
+                  on each run below, or answer merged questions once for all providers.
+                </p>
+                <Link
+                  href={`/run/clarify-all?decision_id=${encodeURIComponent(group.decision_id)}`}
+                  className="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors text-center"
+                >
+                  Answer all together
+                </Link>
+              </div>
+            )}
 
             {/* Run rows */}
             <div className="divide-y divide-zinc-100">

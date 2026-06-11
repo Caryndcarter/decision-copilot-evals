@@ -37,9 +37,13 @@ import {
 } from "../clarification-form";
 import { ClarificationAnswerEditor } from "../tiptap-dynamic";
 import { AlertModal, ConfirmModal } from "../confirm-modal";
+import {
+  getClarificationSnapshot,
+  removeClarificationSnapshot,
+  setClarificationSnapshot,
+} from "@/lib/clarification-snapshot";
 
 const RUN_RESULT_KEY = "decisionRunResult";
-const CLARIFICATION_SNAPSHOT_KEY = "decisionRunClarificationSnapshot";
 
 function statusTextColor(status: string): string {
   if (status === "complete" || status === "pending_brief") return "text-emerald-700";
@@ -48,48 +52,6 @@ function statusTextColor(status: string): string {
 }
 
 const POSTURES: Posture[] = ["explore", "pressure_test", "surface_risks", "generate_alternatives"];
-
-function getStoredSnapshot(run_id: string): { questions: LensQuestion[]; answers: ClarificationAnswersMap } | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(CLARIFICATION_SNAPSHOT_KEY);
-    if (!raw) return null;
-    const map = JSON.parse(raw) as Record<string, { questions: LensQuestion[]; answers: ClarificationAnswersMap }>;
-    return map[run_id] ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function setStoredSnapshot(run_id: string, questions: LensQuestion[], answers: ClarificationAnswersMap) {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = sessionStorage.getItem(CLARIFICATION_SNAPSHOT_KEY);
-    const map = raw ? (JSON.parse(raw) as Record<string, { questions: LensQuestion[]; answers: ClarificationAnswersMap }>) : {};
-    map[run_id] = { questions, answers };
-    sessionStorage.setItem(CLARIFICATION_SNAPSHOT_KEY, JSON.stringify(map));
-  } catch {
-    // ignore
-  }
-}
-
-function removeStoredSnapshot(run_id: string) {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = sessionStorage.getItem(CLARIFICATION_SNAPSHOT_KEY);
-    if (!raw) return;
-    const map = JSON.parse(raw) as Record<string, { questions: LensQuestion[]; answers: ClarificationAnswersMap }>;
-    if (!(run_id in map)) return;
-    delete map[run_id];
-    if (Object.keys(map).length === 0) {
-      sessionStorage.removeItem(CLARIFICATION_SNAPSHOT_KEY);
-    } else {
-      sessionStorage.setItem(CLARIFICATION_SNAPSHOT_KEY, JSON.stringify(map));
-    }
-  } catch {
-    // ignore
-  }
-}
 
 function questionKey(q: { lens: string; question_id: string }) {
   return `${q.lens}-${q.question_id}`;
@@ -678,7 +640,7 @@ export function ChatContent() {
     if (questions) {
       setLastClarificationQuestions(questions);
       // Prefer sessionStorage snapshot (has latest edits), fall back to persisted clarifications on the run
-      const snapshot = getStoredSnapshot(result.run_id);
+      const snapshot = getClarificationSnapshot(result.run_id);
       if (snapshot?.answers && Object.keys(snapshot.answers).length > 0) {
         setLastClarificationAnswers(snapshot.answers);
       } else if (result.clarifications?.length) {
@@ -703,7 +665,7 @@ export function ChatContent() {
     if (submitted) {
       setLastClarificationQuestions(submitted.questions);
       setLastClarificationAnswers(submitted.answers);
-      setStoredSnapshot(updated.run_id, submitted.questions, submitted.answers);
+      setClarificationSnapshot(updated.run_id, submitted.questions, submitted.answers);
     }
     if (typeof window !== "undefined") {
       sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(updated));
@@ -748,7 +710,7 @@ export function ChatContent() {
           map[`${a.lens}-${a.question_id}`] = a.answer as string | number | boolean;
         }
         setLastClarificationAnswers(map);
-        setStoredSnapshot(updated.run_id, lastClarificationQuestions, map);
+        setClarificationSnapshot(updated.run_id, lastClarificationQuestions, map);
       }
     } catch (e) {
       setReapplyClarificationError(e instanceof Error ? e.message : "Something went wrong");
@@ -825,6 +787,10 @@ export function ChatContent() {
   const runsForDropdown = result
     ? runsForDropdownBase.map((r) => r.run_id === result.run_id ? result : r)
     : runsForDropdownBase;
+  const awaitingProviderRuns = runsForDropdown.filter(
+    (r) => !r.freeform_output && r.status === "awaiting_clarification"
+  );
+  const showCombinedClarificationLink = awaitingProviderRuns.length >= 2;
   const currentRunLabel = runShortChromeLabel(result);
   const activeVariant = activeVariantId
     ? result.variants?.find((v) => v.variant_id === activeVariantId)
@@ -1007,7 +973,7 @@ export function ChatContent() {
         setDeleteRunError(data.error || "Failed to delete analysis");
         return;
       }
-      removeStoredSnapshot(targetId);
+      removeClarificationSnapshot(targetId);
       setDeleteRunConfirm(null);
 
       const listRes = await fetch(`/api/decision/run?decision_id=${encodeURIComponent(decisionId)}`);
@@ -1711,6 +1677,21 @@ export function ChatContent() {
                     className="border-indigo-200 bg-white"
                     bodyClassName="px-3 py-4"
                   >
+                    {showCombinedClarificationLink && hasPendingQuestions && (
+                      <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+                        <p>
+                          {awaitingProviderRuns.length} provider runs asked similar follow-up questions. You
+                          can answer here for this provider, or{" "}
+                          <Link
+                            href={`/run/clarify-all?decision_id=${encodeURIComponent(result.decision_id)}`}
+                            className="font-semibold text-indigo-700 underline hover:text-indigo-800"
+                          >
+                            answer merged questions for all providers
+                          </Link>
+                          .
+                        </p>
+                      </div>
+                    )}
                     {hasPendingQuestions ? (
                       <ClarificationForm
                         result={result}
@@ -1730,7 +1711,7 @@ export function ChatContent() {
                           onSave={(newAnswers) => {
                             setLastClarificationAnswers(newAnswers);
                             if (lastClarificationQuestions?.length) {
-                              setStoredSnapshot(result.run_id, lastClarificationQuestions, newAnswers);
+                              setClarificationSnapshot(result.run_id, lastClarificationQuestions, newAnswers);
                             }
                           }}
                         />
