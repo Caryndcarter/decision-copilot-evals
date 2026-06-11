@@ -33,7 +33,9 @@ import {
   combinedQuestionEntryId,
   getAwaitingClarificationRuns,
 } from "@/lib/merge-clarification-questions";
-import { buildClarificationAnswersForSubmit } from "@/app/run/clarification-form";
+import { buildClarificationAnswersForSubmit } from "@/lib/clarification-answers";
+import { parseIntakeLlmSelection } from "@/lib/intake-llm-selection";
+import { runForProviders, type FailedProvider } from "@/lib/run-for-providers";
 
 // ============================================
 // Request Types
@@ -44,6 +46,8 @@ interface InitialRunRequest {
   intake: Omit<DecisionIntake, "decision_id"> & { decision_id?: string };
   /** LLM provider for this run (default: openai). Use "all" to run all configured providers simultaneously. */
   llm_provider?: LLMProviderName | "all";
+  /** Run a custom subset of providers in parallel (mutually exclusive with llm_provider "all"). */
+  llm_providers?: LLMProviderName[];
   /** When set, must match a known intake demo scenario id (see `DEMO_SCENARIO_IDS` in types/decision). */
   demo_scenario_id?: string;
 }
@@ -359,44 +363,11 @@ async function finishLensesPhase(
   };
 }
 
-// ============================================
-// "All providers" helper
-// ============================================
-
-const ALL_PROVIDERS: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
-
-interface FailedProvider {
-  provider: LLMProviderName;
-  message: string;
-}
-
-/**
- * Run a builder across all providers in parallel and tolerate partial failure.
- * Previous behavior used `Promise.all`, which rejected on the first failure
- * even when other providers had already persisted runs to the DB — leaving
- * the user with an error and no way to find the runs that did succeed.
- *
- * Now we use `Promise.allSettled` and return both: the runs that succeeded
- * and a `failed_providers` array. The caller decides what to do when every
- * provider fails (typically: surface a 500 error).
- */
-async function runForAllProviders<T>(
+async function runParallelIntakeProviders<T>(
+  providers: LLMProviderName[],
   build: (p: LLMProviderName) => Promise<T>
 ): Promise<{ runs: T[]; failed_providers: FailedProvider[] }> {
-  const settled = await Promise.allSettled(ALL_PROVIDERS.map((p) => build(p)));
-  const runs: T[] = [];
-  const failed_providers: FailedProvider[] = [];
-  settled.forEach((res, i) => {
-    const provider = ALL_PROVIDERS[i];
-    if (res.status === "fulfilled") {
-      runs.push(res.value);
-    } else {
-      const message = res.reason instanceof Error ? res.reason.message : String(res.reason);
-      console.error(`[Run] Provider ${provider} failed:`, message);
-      failed_providers.push({ provider, message });
-    }
-  });
-  return { runs, failed_providers };
+  return runForProviders(providers, build);
 }
 
 // ============================================
@@ -553,29 +524,31 @@ async function handleIntake(req: InitialRunRequest): Promise<NextResponse> {
   const demo_scenario_id = parseDemoScenarioId(req.demo_scenario_id);
   const runOptions = { ...(demo_scenario_id ? { demo_scenario_id } : {}), ...(user_id ? { user_id } : {}) };
 
-  // "all" mode: run all three providers in parallel, same decision_id.
-  // Tolerate partial failure (e.g. one provider over quota) so the user
-  // still gets the runs that succeeded instead of losing everything.
-  if (req.llm_provider === "all") {
-    const { runs, failed_providers } = await runForAllProviders((p) =>
-      buildSingleRun(intake, p, runOptions)
-    );
-    if (runs.length === 0) {
-      return NextResponse.json(
-        {
-          error: `All providers failed: ${failed_providers
-            .map((f) => `${f.provider} (${f.message})`)
-            .join("; ")}`,
-        },
-        { status: 500 }
-      );
-    }
-    return NextResponse.json({ runs, primary_run_id: runs[0].run_id, failed_providers });
+  const selection = parseIntakeLlmSelection(req);
+  if (!selection.ok) {
+    return NextResponse.json({ error: selection.error }, { status: 400 });
   }
 
-  const provider = req.llm_provider ?? "openai";
-  const result = await buildSingleRun(intake, provider, runOptions);
-  return NextResponse.json(result);
+  if (selection.value.mode === "single") {
+    const result = await buildSingleRun(intake, selection.value.providers[0], runOptions);
+    return NextResponse.json(result);
+  }
+
+  // Parallel mode: all providers or a custom multi-select subset, same decision_id.
+  const { runs, failed_providers } = await runParallelIntakeProviders(selection.value.providers, (p) =>
+    buildSingleRun(intake, p, runOptions)
+  );
+  if (runs.length === 0) {
+    return NextResponse.json(
+      {
+        error: `All providers failed: ${failed_providers
+          .map((f) => `${f.provider} (${f.message})`)
+          .join("; ")}`,
+      },
+      { status: 500 }
+    );
+  }
+  return NextResponse.json({ runs, primary_run_id: runs[0].run_id, failed_providers });
 }
 
 /** Re-run all lenses and synthesize brief using current `existingRun.clarifications`. Mutates `existingRun`. */
@@ -1017,8 +990,9 @@ async function handleRerunFreeform(req: RerunFreeformRequest): Promise<NextRespo
   } as DecisionIntake;
 
   if (req.llm_provider === "all") {
-    const { runs, failed_providers } = await runForAllProviders((p) =>
-      buildFreeformSiblingRun(sourceRun, newIntake, p)
+    const { runs, failed_providers } = await runParallelIntakeProviders(
+      ["openai", "anthropic", "gemini", "xai"],
+      (p) => buildFreeformSiblingRun(sourceRun, newIntake, p)
     );
     if (runs.length === 0) {
       return NextResponse.json(
@@ -1076,8 +1050,9 @@ async function handleRerunPosture(req: RerunPostureRequest): Promise<NextRespons
   } as DecisionIntake;
 
   if (req.llm_provider === "all") {
-    const { runs, failed_providers } = await runForAllProviders((p) =>
-      buildRerunPostureRun(sourceRun, newIntake, p)
+    const { runs, failed_providers } = await runParallelIntakeProviders(
+      ["openai", "anthropic", "gemini", "xai"],
+      (p) => buildRerunPostureRun(sourceRun, newIntake, p)
     );
     if (runs.length === 0) {
       return NextResponse.json(

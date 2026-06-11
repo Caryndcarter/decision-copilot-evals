@@ -11,16 +11,14 @@ import {
 import { runFreeformCardTitle } from "@/lenses/decision-title";
 import { runFreeformAnalysis } from "@/lenses/freeform";
 import { insertRun } from "@/lib/db/runs";
+import { parseIntakeLlmSelection } from "@/lib/intake-llm-selection";
+import { runForProviders } from "@/lib/run-for-providers";
 
 /** All four providers run in parallel; wall time ≈ slowest single call, not sum. */
 export const maxDuration = 180;
 
 function isValidPosture(p: string): p is DecisionIntake["posture"] {
   return ["explore", "pressure_test", "surface_risks", "generate_alternatives"].includes(p);
-}
-
-function isSingleProvider(p: string): p is LLMProviderName {
-  return p === "openai" || p === "anthropic" || p === "gemini" || p === "xai";
 }
 
 function buildFreeformRunRecord(params: {
@@ -86,10 +84,10 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       intake: Omit<DecisionIntake, "decision_id">;
       llm_provider?: LLMProviderName | "all";
+      llm_providers?: LLMProviderName[];
       demo_scenario_id?: string;
     };
     const raw = body.intake;
-    const requested = body.llm_provider ?? "anthropic";
     const demo_scenario_id = parseDemoScenarioId(body.demo_scenario_id);
 
     if (!raw?.situation?.trim()) {
@@ -105,64 +103,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "leaning_direction is required when posture is pressure_test" }, { status: 400 });
     }
 
+    const selection = parseIntakeLlmSelection({
+      llm_provider: body.llm_provider ?? "anthropic",
+      llm_providers: body.llm_providers,
+    });
+    if (!selection.ok) {
+      return NextResponse.json({ error: selection.error }, { status: 400 });
+    }
+
     const decision_id = randomUUID();
     const intake: DecisionIntake = { ...raw, decision_id } as DecisionIntake;
     const user_id = session.user.id;
 
-    if (requested === "all") {
-      const providers: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
-      const settled = await Promise.allSettled(
-        providers.map(async (provider) => {
-          const freeformResult = await runFreeformAnalysis(intake, provider);
-          return persistFreeformRun(intake, user_id, provider, freeformResult, demo_scenario_id);
-        })
-      );
-
-      const runs: DecisionRunResult[] = [];
-      const failed_providers: { provider: LLMProviderName; message: string }[] = [];
-      settled.forEach((res, i) => {
-        const provider = providers[i]!;
-        if (res.status === "fulfilled") {
-          runs.push(res.value);
-        } else {
-          const message = res.reason instanceof Error ? res.reason.message : String(res.reason);
-          console.error(`[freeform] Provider ${provider} failed:`, message);
-          failed_providers.push({ provider, message });
-        }
-      });
-
-      if (runs.length === 0) {
-        return NextResponse.json(
-          {
-            error: `All providers failed: ${failed_providers.map((f) => `${f.provider} (${f.message})`).join("; ")}`,
-          },
-          { status: 500 }
-        );
-      }
+    if (selection.value.mode === "single") {
+      const provider = selection.value.providers[0];
+      const freeformResult = await runFreeformAnalysis(intake, provider);
+      const run = await persistFreeformRun(intake, user_id, provider, freeformResult, demo_scenario_id);
 
       return NextResponse.json({
-        runs,
-        primary_run_id: runs[0]!.run_id,
-        decision_id: intake.decision_id,
-        ...(failed_providers.length ? { failed_providers } : {}),
+        run_id: run.run_id,
+        decision_id: run.decision_id,
+        model: freeformResult.model,
+        generated_at: freeformResult.generated_at,
+        output: freeformResult.output,
+        intake,
+        llm_provider: provider,
       });
     }
 
-    if (!isSingleProvider(requested)) {
-      return NextResponse.json({ error: "llm_provider must be openai, anthropic, gemini, xai, or all" }, { status: 400 });
+    const { runs, failed_providers } = await runForProviders(selection.value.providers, async (provider) => {
+      const freeformResult = await runFreeformAnalysis(intake, provider);
+      return persistFreeformRun(intake, user_id, provider, freeformResult, demo_scenario_id);
+    });
+
+    if (runs.length === 0) {
+      return NextResponse.json(
+        {
+          error: `All providers failed: ${failed_providers.map((f) => `${f.provider} (${f.message})`).join("; ")}`,
+        },
+        { status: 500 }
+      );
     }
 
-    const freeformResult = await runFreeformAnalysis(intake, requested);
-    const run = await persistFreeformRun(intake, user_id, requested, freeformResult, demo_scenario_id);
-
     return NextResponse.json({
-      run_id: run.run_id,
-      decision_id: run.decision_id,
-      model: freeformResult.model,
-      generated_at: freeformResult.generated_at,
-      output: freeformResult.output,
-      intake,
-      llm_provider: requested,
+      runs,
+      primary_run_id: runs[0]!.run_id,
+      decision_id: intake.decision_id,
+      ...(failed_providers.length ? { failed_providers } : {}),
     });
   } catch (error) {
     console.error("[freeform]", error);

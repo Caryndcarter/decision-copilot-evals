@@ -1,4 +1,4 @@
-import type { ClarificationAnswersMap } from "@/app/run/clarification-form";
+import type { ClarificationAnswersMap } from "@/lib/clarification-answers";
 import type { DecisionRunResult, LensQuestion } from "@/types/decision";
 
 export const CLARIFICATION_SNAPSHOT_KEY = "decisionRunClarificationSnapshot";

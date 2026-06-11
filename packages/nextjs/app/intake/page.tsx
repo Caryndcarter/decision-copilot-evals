@@ -4,8 +4,14 @@ import { useState, useEffect } from "react";
 import { LogoLockup } from "@/app/components/logo-icon";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { DemoScenarioId } from "@/types/decision";
+import type { DemoScenarioId, LLMProviderName } from "@/types/decision";
 import { SessionNav } from "@/app/components/session-nav";
+import {
+  buildIntakeLlmRequestBody,
+  intakeProvidersProgressLabel,
+  isParallelIntakeRun,
+  isLLMProviderName,
+} from "@/lib/intake-llm-selection";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
@@ -66,13 +72,12 @@ const POSTURE_OPTIONS = [
   },
 ] as const;
 
-const LLM_PROVIDERS = [
+const LLM_PROVIDER_OPTIONS: { value: LLMProviderName; label: string }[] = [
   { value: "openai", label: "OpenAI" },
   { value: "anthropic", label: "Anthropic" },
   { value: "gemini", label: "Google Gemini" },
   { value: "xai", label: "xAI" },
-  { value: "all", label: "All providers (simultaneous)" },
-] as const;
+];
 
 const DEMO_SCENARIOS = [
   {
@@ -177,8 +182,6 @@ const DEMO_SCENARIOS = [
   },
 ] as const;
 
-type ProviderValue = (typeof LLM_PROVIDERS)[number]["value"];
-
 function FieldHelp({ children }: { children: React.ReactNode }) {
   return <p className="mt-1.5 text-sm leading-snug text-zinc-500">{children}</p>;
 }
@@ -187,8 +190,9 @@ export default function IntakePage() {
   const [situation, setSituation] = useState("");
   const [constraints, setConstraints] = useState("");
   const [posture, setPosture] = useState<(typeof POSTURE_OPTIONS)[number]["value"]>("explore");
-  const [llmProvider, setLlmProvider] = useState<ProviderValue>("openai");
-  const [availableProviders, setAvailableProviders] = useState<ProviderValue[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<LLMProviderName[]>(["openai"]);
+  const [runAllProviders, setRunAllProviders] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<LLMProviderName[]>([]);
   const [leaningDirection, setLeaningDirection] = useState("");
   const [knownsAssumptions, setKnownsAssumptions] = useState("");
   const [unknowns, setUnknowns] = useState("");
@@ -205,21 +209,50 @@ export default function IntakePage() {
   const intakeCharCount = situation.trim().length + constraints.trim().length;
   const showBriefInputHint =
     intakeCharCount > 0 && intakeCharCount < INTAKE_BRIEF_CHAR_HINT && !submitting && !freeformSubmitting;
+  const parallelRun = isParallelIntakeRun(runAllProviders, selectedProviders);
+  const providersProgressLabel = intakeProvidersProgressLabel(runAllProviders, selectedProviders);
 
-  // Only show AI providers that have API keys configured; add "all" when 2+ are available
+  // Only show AI providers that have API keys configured.
   useEffect(() => {
     fetch("/api/decision/providers")
       .then((res) => res.json())
       .then((data: { providers?: string[] }) => {
         const list = Array.isArray(data?.providers) ? data.providers : [];
-        const singleProviderValues = LLM_PROVIDERS.filter((p) => p.value !== "all").map((p) => p.value) as string[];
-        const valid = list.filter((p): p is ProviderValue => singleProviderValues.includes(p));
-        const withAll: ProviderValue[] = valid.length >= 2 ? [...valid, "all"] : valid;
-        setAvailableProviders(withAll.length > 0 ? withAll : ["openai"]);
-        setLlmProvider((prev) => (withAll.includes(prev) ? prev : (withAll[0] ?? "openai")));
+        const valid = list.filter((p): p is LLMProviderName => isLLMProviderName(p));
+        const resolved = valid.length > 0 ? valid : (["openai"] as LLMProviderName[]);
+        setAvailableProviders(resolved);
+        setSelectedProviders((prev) => {
+          const kept = prev.filter((p) => resolved.includes(p));
+          return kept.length > 0 ? kept : [resolved[0]!];
+        });
+        setRunAllProviders(false);
       })
       .catch(() => setAvailableProviders(["openai"]));
   }, []);
+
+  function toggleProvider(provider: LLMProviderName) {
+    setRunAllProviders(false);
+    setSelectedProviders((prev) => {
+      if (prev.includes(provider)) {
+        return prev.length > 1 ? prev.filter((p) => p !== provider) : prev;
+      }
+      return [...prev, provider];
+    });
+  }
+
+  function toggleRunAllProviders() {
+    setRunAllProviders((prev) => {
+      const next = !prev;
+      if (next) {
+        setSelectedProviders([]);
+      } else {
+        setSelectedProviders((current) =>
+          current.length > 0 ? current : [availableProviders[0] ?? "openai"]
+        );
+      }
+      return next;
+    });
+  }
 
   function loadDemo(demoId: string) {
     const demo = DEMO_SCENARIOS.find((d) => d.id === demoId);
@@ -237,20 +270,20 @@ export default function IntakePage() {
   useEffect(() => {
     if (!submitting) return;
     const interval = setInterval(() => {
-      const steps = llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS;
+      const steps = parallelRun ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS;
       setSubmittingStep((prev) => (prev + 1) % steps.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [submitting]);
+  }, [submitting, parallelRun]);
 
   useEffect(() => {
     if (!freeformSubmitting) return;
-    const steps = llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS;
+    const steps = parallelRun ? FREEFORM_STEPS_ALL : FREEFORM_STEPS;
     const interval = setInterval(() => {
       setFreeformStep((prev) => (prev + 1) % steps.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [freeformSubmitting, llmProvider]);
+  }, [freeformSubmitting, parallelRun]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -262,6 +295,10 @@ export default function IntakePage() {
     }
     if (showLeaningDirection && !leaningDirection.trim()) {
       setError("Name the direction you want challenged before running analysis.");
+      return;
+    }
+    if (!runAllProviders && selectedProviders.length === 0) {
+      setError("Select at least one AI provider.");
       return;
     }
     setSubmittingStep(0);
@@ -283,7 +320,7 @@ export default function IntakePage() {
         body: JSON.stringify({
           type: "intake",
           intake,
-          llm_provider: llmProvider,
+          ...buildIntakeLlmRequestBody(runAllProviders, selectedProviders),
           ...(demoScenarioId ? { demo_scenario_id: demoScenarioId } : {}),
         }),
       });
@@ -360,6 +397,10 @@ export default function IntakePage() {
       setError("Name the direction you want challenged before running analysis.");
       return;
     }
+    if (!runAllProviders && selectedProviders.length === 0) {
+      setError("Select at least one AI provider.");
+      return;
+    }
     setError(null);
     setPartialWarning(null);
     setFreeformStep(0);
@@ -378,7 +419,7 @@ export default function IntakePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           intake,
-          llm_provider: llmProvider,
+          ...buildIntakeLlmRequestBody(runAllProviders, selectedProviders),
           ...(demoScenarioId ? { demo_scenario_id: demoScenarioId } : {}),
         }),
       });
@@ -668,26 +709,37 @@ export default function IntakePage() {
           </div>
 
           {availableProviders.length > 1 && (
-            <div>
-              <label htmlFor="llm_provider" className="block text-sm font-medium text-zinc-800">
-                AI provider
-              </label>
+            <fieldset>
+              <legend className="block text-sm font-medium text-zinc-800">AI providers</legend>
               <FieldHelp>
-                Pick one model or run all configured providers in parallel for comparison.
+                Pick one or more models to compare, or run all configured providers together. You cannot
+                combine &ldquo;All providers&rdquo; with individual selections.
               </FieldHelp>
-              <select
-                id="llm_provider"
-                value={llmProvider}
-                onChange={(e) => setLlmProvider(e.target.value as ProviderValue)}
-                className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {LLM_PROVIDERS.filter((p) => availableProviders.includes(p.value)).map((p) => (
-                  <option key={p.value} value={p.value}>
+              <div className="mt-2 space-y-2 rounded-lg border border-zinc-200 bg-white px-3 py-3">
+                {LLM_PROVIDER_OPTIONS.filter((p) => availableProviders.includes(p.value)).map((p) => (
+                  <label key={p.value} className="flex items-center gap-2 text-sm text-zinc-800">
+                    <input
+                      type="checkbox"
+                      checked={!runAllProviders && selectedProviders.includes(p.value)}
+                      disabled={runAllProviders || submitting || freeformSubmitting}
+                      onChange={() => toggleProvider(p.value)}
+                      className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                    />
                     {p.label}
-                  </option>
+                  </label>
                 ))}
-              </select>
-            </div>
+                <label className="flex items-center gap-2 border-t border-zinc-200 pt-2 text-sm font-medium text-zinc-800">
+                  <input
+                    type="checkbox"
+                    checked={runAllProviders}
+                    disabled={submitting || freeformSubmitting}
+                    onChange={toggleRunAllProviders}
+                    className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  All providers (simultaneous)
+                </label>
+              </div>
+            </fieldset>
           )}
 
           {error && (
@@ -704,19 +756,23 @@ export default function IntakePage() {
 
           {submitting && (
             <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
-              <p className="font-medium">{(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}</p>
-              <p className="mt-1 text-indigo-600">{llmProvider === "all" ? "Running OpenAI, Anthropic, Gemini, and xAI simultaneously. This may take 30–60 seconds." : "This usually takes 5–15 seconds."}</p>
+              <p className="font-medium">{(parallelRun ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}</p>
+              <p className="mt-1 text-indigo-600">
+                {parallelRun
+                  ? `Running ${providersProgressLabel} simultaneously. This may take 30–60 seconds.`
+                  : "This usually takes 5–15 seconds."}
+              </p>
             </div>
           )}
 
           {freeformSubmitting && (
             <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
               <p className="font-medium">
-                {(llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
+                {(parallelRun ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
               </p>
               <p className="mt-1 text-violet-600">
-                {llmProvider === "all"
-                  ? "OpenAI, Anthropic, Gemini, and xAI each pick their own JSON structure. This may take 30–90 seconds."
+                {parallelRun
+                  ? `${providersProgressLabel} each pick their own JSON structure. This may take 30–90 seconds.`
                   : "The model chooses its own structure. This usually takes 5–20 seconds."}
               </p>
             </div>
@@ -742,7 +798,7 @@ export default function IntakePage() {
                     className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                     aria-hidden
                   />
-                  {(llmProvider === "all" ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}
+                  {(parallelRun ? SUBMITTING_STEPS_ALL : SUBMITTING_STEPS)[submittingStep]}
                 </>
               ) : (
                 "Run decision analysis (recommended)"
@@ -760,7 +816,7 @@ export default function IntakePage() {
               {freeformSubmitting ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden />
-                  {(llmProvider === "all" ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
+                  {(parallelRun ? FREEFORM_STEPS_ALL : FREEFORM_STEPS)[freeformStep]}
                 </>
               ) : (
                 "Explore with a flexible format"

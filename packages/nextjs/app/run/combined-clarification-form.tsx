@@ -208,8 +208,10 @@ export function CombinedClarificationForm({
         onApply={(samples) => {
           const mapped: ClarificationAnswersMap = {};
           for (const q of demoQuestions) {
-            if (samples[q.question_id] !== undefined) {
-              mapped[q.question_id] = samples[q.question_id];
+            // Demo helpers key by `${lens}-${question_id}`; combined form keys by entry_id (question_id here).
+            const sampleKey = `${q.lens}-${q.question_id}`;
+            if (samples[sampleKey] !== undefined) {
+              mapped[q.question_id] = samples[sampleKey];
             }
           }
           setAnswers(mapped);

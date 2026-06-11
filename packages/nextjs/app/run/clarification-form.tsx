@@ -1,41 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { ClarificationAnswer, DecisionRunResult, LensQuestion } from "@/types/decision";
+import type { DecisionRunResult, LensQuestion } from "@/types/decision";
+import {
+  buildClarificationAnswersForSubmit,
+  clarificationQuestionKey as questionKey,
+  type ClarificationAnswersMap,
+} from "@/lib/clarification-answers";
 
-type ClarificationAnswers = Record<string, string | number | boolean>;
-
-function questionKey(q: { lens: string; question_id: string }) {
-  return `${q.lens}-${q.question_id}`;
-}
-
-/** Build API payload for clarification submit / reapply (same shape as initial clarification POST). */
-export function buildClarificationAnswersForSubmit(
-  questions: LensQuestion[],
-  clarificationAnswers: ClarificationAnswersMap
-): ClarificationAnswer[] {
-  return questions.map((q: LensQuestion) => {
-    const raw = clarificationAnswers[questionKey(q)];
-    let answer: string | number | boolean;
-    if (q.answer_type === "boolean") {
-      if (raw === "unknown" || raw === null || raw === undefined) {
-        answer = "unknown";
-      } else {
-        answer = raw === true || raw === "true" || raw === "yes";
-      }
-    } else if (q.answer_type === "numeric" || q.answer_type === "percentage") {
-      answer = typeof raw === "number" ? raw : Number(raw) ?? 0;
-    } else {
-      answer = typeof raw === "string" ? raw : String(raw ?? "");
-    }
-    return {
-      question_id: q.question_id,
-      lens: q.lens,
-      answer,
-      answer_type: q.answer_type,
-    };
-  });
-}
+export { buildClarificationAnswersForSubmit, type ClarificationAnswersMap };
 
 export const CLARIFICATION_REGENERATION_STEPS = [
   "Updating risk analysis…",
@@ -43,8 +16,6 @@ export const CLARIFICATION_REGENERATION_STEPS = [
   "Updating stakeholder impact…",
   "Preparing your recommendation…",
 ];
-
-export type ClarificationAnswersMap = Record<string, string | number | boolean>;
 
 /** Sample answers for demo / testing (same logic as “Fill sample answers” in the form). */
 export function buildDemoClarificationSamples(questions: LensQuestion[]): ClarificationAnswersMap {
