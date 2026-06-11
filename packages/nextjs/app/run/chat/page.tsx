@@ -545,7 +545,7 @@ export function ChatContent() {
   // Load cached synthesis from current run if available; clear if run has none (e.g. switched posture)
   useEffect(() => {
     setSynthesis(result?.synthesis ?? null);
-  }, [result?.run_id]);
+  }, [result?.run_id, result?.synthesis?.generated_at, result?.synthesis?.input_fingerprint]);
 
   useEffect(() => {
     setDeclinedVariantSuggestions([]);
@@ -905,6 +905,7 @@ export function ChatContent() {
       // Update result with new variant
       const updated = data.run as DecisionRunResult;
       setResult(updated);
+      setSynthesis(null);
       if (typeof window !== "undefined") {
         sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(updated));
       }
@@ -938,6 +939,7 @@ export function ChatContent() {
       }
       const updated = data as DecisionRunResult;
       setResult(updated);
+      setSynthesis(null);
       if (typeof window !== "undefined") {
         sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(updated));
       }
@@ -1574,7 +1576,15 @@ export function ChatContent() {
               <CollapsibleBlock
                 id="synthesis-section"
                 title="Cross-provider comparison"
-                subtitle={`${synthesis.providers.map((p) => runProviderLabel(p)).join(", ")} · ${new Date(synthesis.generated_at).toLocaleString()}`}
+                subtitle={[
+                  synthesis.providers.map((p) => runProviderLabel(p)).join(", "),
+                  new Date(synthesis.generated_at).toLocaleString(),
+                  synthesis.input_inventory
+                    ? `${synthesis.input_inventory.compared_run_count} run${synthesis.input_inventory.compared_run_count === 1 ? "" : "s"} · ${synthesis.input_inventory.variant_count} variant${synthesis.input_inventory.variant_count === 1 ? "" : "s"} · ${synthesis.input_inventory.research_count} research`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
                 className="mt-8 border-violet-200 bg-white"
                 open={synthesisOpen}
                 onOpenChange={setSynthesisOpen}
@@ -1617,6 +1627,22 @@ export function ChatContent() {
                 }
                 bodyClassName="space-y-5 px-5 py-5"
               >
+                {synthesis.input_inventory &&
+                  (synthesis.input_inventory.variant_count > 0 ||
+                    synthesis.input_inventory.research_count > 0) && (
+                  <div className="rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
+                    Compared {synthesis.input_inventory.compared_run_count} canonical provider run
+                    {synthesis.input_inventory.compared_run_count === 1 ? "" : "s"} using the same lane
+                    rules as Unified Brief
+                    {synthesis.input_inventory.variant_count > 0
+                      ? `, including ${synthesis.input_inventory.variant_count} saved format variant${synthesis.input_inventory.variant_count === 1 ? "" : "s"}`
+                      : ""}
+                    {synthesis.input_inventory.research_count > 0
+                      ? ` and ${synthesis.input_inventory.research_count} research task${synthesis.input_inventory.research_count === 1 ? "" : "s"}`
+                      : ""}
+                    .
+                  </div>
+                )}
                 {synthesis.has_drafts && (
                   <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                     Some analyses included here are pre-clarification drafts — the model&apos;s first pass before follow-up questions were answered. Consensus points that appear across both draft and final analyses carry stronger signal.

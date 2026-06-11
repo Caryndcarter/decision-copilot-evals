@@ -223,6 +223,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const updatedRun: DecisionRunResult = {
       ...run,
       variants: [...(run.variants ?? []), variant],
+      synthesis: undefined,
     };
 
     await replaceRun(run_id.trim(), updatedRun);

@@ -825,7 +825,7 @@ export function formatResearchInventoryForBrief(
   );
 }
 
-function variantsForLane(canonicalRun: DecisionRunResult, allRuns: DecisionRunResult[]): RunVariant[] {
+export function variantsForLane(canonicalRun: DecisionRunResult, allRuns: DecisionRunResult[]): RunVariant[] {
   const lane = unifiedBriefRunDedupeKey(canonicalRun);
   const seen = new Set<string>();
   const out: RunVariant[] = [];
@@ -970,7 +970,7 @@ export function formatProviderSynthesisForBrief(synthesis: ProviderSynthesis): s
 }
 
 /** Union research on every run in the same provider/posture/leaning lane (canonical pick can omit a sibling with tasks). */
-function researchCompletionsForLane(
+export function researchCompletionsForLane(
   canonicalRun: DecisionRunResult,
   allRuns: DecisionRunResult[]
 ): ResearchCompletion[] {

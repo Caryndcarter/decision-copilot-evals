@@ -26,6 +26,13 @@ import type {
   LLMProviderName,
 } from "@/types/decision";
 import { normalizeSynthesisProviderLabel, runProviderLabel } from "@/lib/run-display-name";
+import type { SynthesisInputInventory } from "@/lib/synthesis-inputs";
+import {
+  formatResearchInventoryForBrief,
+  formatVariantInventoryForBrief,
+  researchCompletionsForLane,
+  variantsForLane,
+} from "@/lenses/brief";
 
 function truncateSynthesis(s: string, max: number): string {
   const t = s.replace(/\s+/g, " ").trim();
@@ -163,7 +170,7 @@ function buildSynthesisSchema(providerLabels: string[]): Record<string, unknown>
   };
 }
 
-function formatRunForPrompt(entry: RunEntry): string {
+function formatRunForPrompt(entry: RunEntry, allRuns: DecisionRunResult[]): string {
   const label = runProviderLabel(entry.run.llm_provider);
   const draftNote = entry.isDraft ? " *(pre-clarification draft — clarification questions not yet answered)*" : "";
   const lines: string[] = [
@@ -242,7 +249,7 @@ function formatRunForPrompt(entry: RunEntry): string {
       lines.push(`**Remaining uncertainty:**\n${out.remaining_uncertainty.map((u) => `- ${u}`).join("\n")}`);
   }
 
-  const variants = entry.run.variants ?? [];
+  const variants = variantsForLane(entry.run, allRuns);
   if (variants.length > 0) {
     lines.push(
       "**Saved format variants (alternate briefs on this run):**\n" +
@@ -264,7 +271,7 @@ function formatRunForPrompt(entry: RunEntry): string {
     );
   }
 
-  const rcs = entry.run.research_completions ?? [];
+  const rcs = researchCompletionsForLane(entry.run, allRuns);
   if (rcs.length > 0) {
     const researchLines: string[] = ["**Research completed on this provider's run:**"];
     for (const rc of rcs.slice(0, 5)) {
@@ -292,14 +299,26 @@ function formatRunForPrompt(entry: RunEntry): string {
   return lines.join("\n\n");
 }
 
-function buildSynthesisPrompt(entries: RunEntry[]): LLMMessage[] {
+function buildSynthesisPrompt(
+  entries: RunEntry[],
+  allRuns: DecisionRunResult[],
+  inventory: SynthesisInputInventory
+): LLMMessage[] {
   const first = entries[0].run;
   const providerNames = entries.map((e) => runProviderLabel(e.run.llm_provider)).join(", ");
   const hasDrafts = entries.some((e) => e.isDraft);
+  const canonicalRuns = entries.map((e) => e.run);
+  const researchInventory = formatResearchInventoryForBrief(canonicalRuns, allRuns);
+  const variantInventory = formatVariantInventoryForBrief(canonicalRuns, allRuns);
 
   const draftWarning = hasDrafts
     ? `\nNote: some analyses below are pre-clarification drafts (marked). They represent the model's first-pass analysis before follow-up questions were answered. Weight final analyses more heavily, but drafts still carry useful signal — especially for consensus points that appear in both draft and final form.\n`
     : "";
+
+  const variantRequirement =
+    inventory.variant_count > 0
+      ? `\n\n**Required when variants exist (${inventory.variant_count} in inventory):** Include at least one **minority_opinion** or **majority_view** item that explicitly names a saved format variant (use its label from the inventory or provider block) and add \`source_refs\` with \`section\`: \`"variants"\` and the matching \`variant_id\`. Do not skip all variant material because lens summaries look similar.`
+      : "";
 
   const systemPrompt = `You are a meta-analyst comparing decision analyses produced by different AI models (${providerNames}).
 ${draftWarning}
@@ -316,10 +335,9 @@ When you can tie a consensus, majority, or minority point to a **specific subsec
 
 When you add a source_ref, also set **text_quote** whenever you can: copy a **short exact substring** (roughly 25–100 characters) from that provider's passage in this prompt for that section — same characters as in the source, not a paraphrase. That substring is used to scroll the reader to the relevant sentence in the UI. If you cannot match verbatim text, omit **text_quote**.
 
-Be specific. Reference the actual content of each analysis. Do not pad with generalities.`;
+Be specific. Reference the actual content of each analysis. Do not pad with generalities.${variantRequirement}`;
 
-  const hasAnyResearch = entries.some((e) => (e.run.research_completions?.length ?? 0) > 0);
-  const hasAnyVariants = entries.some((e) => (e.run.variants?.length ?? 0) > 0);
+  const inventoryBlocks = [researchInventory, variantInventory].filter(Boolean).join("\n\n");
 
   const userContent = `## Decision being analysed
 
@@ -329,7 +347,7 @@ Be specific. Reference the actual content of each analysis. Do not pad with gene
 
 ---
 
-${entries.map(formatRunForPrompt).join("\n\n---\n\n")}
+${inventoryBlocks ? `${inventoryBlocks}\n\n---\n\n` : ""}${entries.map((e) => formatRunForPrompt(e, allRuns)).join("\n\n---\n\n")}
 
 ---
 
@@ -342,16 +360,16 @@ ${entries.map((e) => `- ${runProviderLabel(e.run.llm_provider)}`).join("\n")}
 When you can identify **where** the evidence lives, add \`source_refs\`: an array of up to 8 objects \`{ "provider": "<same label as ## header>", "section": "<one of the enum>", "research_id"?: "<uuid>", "variant_id"?: "<uuid>", "text_quote"?: "<verbatim substring from that section>" }\`.
 - **section** must be one of: \`risk\`, \`reversibility\`, \`people\`, \`brief\`, \`variants\`, \`context\`, \`research\`.
 - For **research**, include \`research_id\` copied from the \`[research_id:…]\` line under that research heading for that provider.
-- For a **specific variant**, use \`section\`: \`variants\` and \`variant_id\` from \`[variant_id:…]\` in that provider's block.
+- For a **specific variant**, use \`section\`: \`variants\` and \`variant_id\` from \`[variant_id:…]\` in that provider's block or the Variant inventory.
 - **context** = intake / situation block (\`#rc-context\`). **risk** / **reversibility** / **people** = those lens panels; **brief** = decision brief; **variants** = extra variant sections on that run.
 - **text_quote**: optional; must be an **exact** contiguous span from that provider's quoted material in this prompt for the cited section (helps the UI highlight the right sentence).
 - Omit \`source_refs\` or use \`[]\` if you are unsure.
 
 ---
 
-Compare these ${entries.length} analyses. Identify consensus, majority views, and minority opinions across the models.${
-    hasAnyResearch || hasAnyVariants
-      ? " Use per-provider research and variant sections where present—they may surface angles not visible in the base lens summaries alone."
+Compare these ${entries.length} canonical provider analyses (${inventory.compared_run_count} runs; ${inventory.variant_count} saved variant${inventory.variant_count === 1 ? "" : "s"}; ${inventory.research_count} research task${inventory.research_count === 1 ? "" : "s"} in inventory). Identify consensus, majority views, and minority opinions across the models.${
+    inventory.research_count > 0 || inventory.variant_count > 0
+      ? " Use the Research and Variant inventory rows plus per-provider sections—they may surface angles not visible in the base lens summaries alone."
       : ""
   }${
     entries.some(
@@ -361,7 +379,7 @@ Compare these ${entries.length} analyses. Identify consensus, majority views, an
     )
       ? " When only one provider has additional brief sections, research, or variants on a theme, call that out explicitly (usually minority_opinions or majority_view)."
       : ""
-  }`;
+  }${inventory.variant_count > 0 ? " You MUST cite at least one saved format variant as described in the system instructions." : ""}`;
 
   return [
     { role: "system", content: systemPrompt },
@@ -461,9 +479,15 @@ function normalizeSourceRefs(
   return out.length > 0 ? out : undefined;
 }
 
-function parseSynthesisOutput(parsed: unknown, entries: RunEntry[]): ProviderSynthesis {
+function parseSynthesisOutput(
+  parsed: unknown,
+  entries: RunEntry[],
+  meta: { input_fingerprint: string; input_inventory: SynthesisInputInventory }
+): ProviderSynthesis {
   const raw = (parsed && typeof parsed === "object" ? parsed : {}) as RawSynthesisOutput;
-  const totalProviders = entries.length;
+  const totalProviders = new Set(
+    entries.map((e) => runProviderLabel(e.run.llm_provider))
+  ).size;
 
   const allowedLabels = new Set(entries.map((e) => runProviderLabel(e.run.llm_provider)));
 
@@ -529,11 +553,35 @@ function parseSynthesisOutput(parsed: unknown, entries: RunEntry[]): ProviderSyn
     run_ids: entries.map((e) => e.run.run_id),
     providers: entries.map((e) => e.run.llm_provider ?? "openai"),
     has_drafts: entries.some((e) => e.isDraft),
+    input_fingerprint: meta.input_fingerprint,
+    input_inventory: meta.input_inventory,
     overall_summary: raw.overall_summary?.trim() ?? "",
     consensus: [...rawConsensus, ...promotedToConsensus],
     majority_view: trueMajority,
     minority_opinions: toPoints(raw.minority_opinions),
   };
+}
+
+function synthesisCitesVariants(synthesis: ProviderSynthesis): boolean {
+  const points = [
+    ...synthesis.consensus,
+    ...synthesis.majority_view,
+    ...synthesis.minority_opinions,
+  ];
+  if (
+    points.some((p) =>
+      p.source_refs?.some((r) => r.section === "variants" && r.variant_id?.trim())
+    )
+  ) {
+    return true;
+  }
+  const text = [
+    synthesis.overall_summary,
+    ...points.map((p) => `${p.area} ${p.description}`),
+  ]
+    .join(" ")
+    .toLowerCase();
+  return /\bvariant\b/.test(text) || /\bformat variant\b/.test(text);
 }
 
 /**
@@ -551,13 +599,17 @@ export function prepareRunEntries(runs: DecisionRunResult[]): RunEntry[] {
   });
 }
 
-export async function runProviderSynthesis(runs: DecisionRunResult[]): Promise<ProviderSynthesis> {
-  if (runs.length < 2) {
+export async function runProviderSynthesis(
+  canonicalRuns: DecisionRunResult[],
+  allRuns: DecisionRunResult[],
+  meta: { input_fingerprint: string; input_inventory: SynthesisInputInventory }
+): Promise<ProviderSynthesis> {
+  if (canonicalRuns.length < 2) {
     throw new Error("At least 2 runs are required for synthesis");
   }
 
-  const entries = prepareRunEntries(runs);
-  const messages = buildSynthesisPrompt(entries);
+  const entries = prepareRunEntries(canonicalRuns);
+  const messages = buildSynthesisPrompt(entries, allRuns, meta.input_inventory);
   const providerLabels = entries.map((e) => runProviderLabel(e.run.llm_provider));
   const schema = buildSynthesisSchema(providerLabels);
 
@@ -571,5 +623,24 @@ export async function runProviderSynthesis(runs: DecisionRunResult[]): Promise<P
     throw new Error("Synthesis did not return valid structured output");
   }
 
-  return parseSynthesisOutput(response.parsed, entries);
+  let synthesis = parseSynthesisOutput(response.parsed, entries, meta);
+
+  if (meta.input_inventory.variant_count > 0 && !synthesisCitesVariants(synthesis)) {
+    const repair = await anthropic.run(
+      [
+        ...messages,
+        {
+          role: "user",
+          content:
+            `Your previous JSON omitted saved format variants entirely. The Variant inventory lists ${meta.input_inventory.variant_count} variant(s). Regenerate the FULL JSON. You MUST add at least one minority_opinion or majority_view item that names a variant by label, summarizes its distinctive angle, and includes source_refs with section "variants" and the correct variant_id from [variant_id:…] tags.`,
+        },
+      ],
+      { schema, temperature: 0.3, maxTokens: 3072 }
+    );
+    if (repair.parsed) {
+      synthesis = parseSynthesisOutput(repair.parsed, entries, meta);
+    }
+  }
+
+  return synthesis;
 }

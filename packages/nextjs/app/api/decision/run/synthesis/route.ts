@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRunsByDecisionId, replaceRun } from "@/lib/db/runs";
 import { runProviderSynthesis } from "@/lenses/synthesis";
+import {
+  buildSynthesisInputFingerprint,
+  countSynthesisInputs,
+  filterEligibleForSynthesis,
+  selectCanonicalRunsForSynthesis,
+} from "@/lib/synthesis-inputs";
 import type { ProviderSynthesis } from "@/types/decision";
 
 /**
  * POST /api/decision/run/synthesis
  *
  * Generates (or returns cached) a cross-provider synthesis for runs sharing
- * a decision_id + posture. Includes both complete and pre-clarification (draft) runs.
- * Stores the result on every participating run.
+ * a decision_id + posture. Uses one canonical run per provider lane (same as Unified Brief).
+ * Stores the result on every eligible run for that posture.
  *
- * Body: { decision_id: string; posture: string }
+ * Body: { decision_id: string; posture: string; force?: boolean }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -24,43 +30,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const allRuns = await getRunsByDecisionId(body.decision_id.trim());
+    const eligible = filterEligibleForSynthesis(allRuns, body.posture!.trim());
+    const { canonical, uniqueProviderCount } = selectCanonicalRunsForSynthesis(eligible);
 
-    // Include any run that has analysis available (draft or final).
-    // Exclude runs still in initial processing with no outputs yet.
-    const eligible = allRuns.filter((r) => {
-      if (r.intake.posture !== body.posture) return false;
-      if (r.status === "awaiting_intake" || r.status === "processing_initial") return false;
-      const hasOutputs =
-        (r.lens_outputs?.length ?? 0) > 0 ||
-        (r.lens_outputs_first_draft?.length ?? 0) > 0;
-      return hasOutputs;
-    });
-
-    if (eligible.length < 2) {
+    if (uniqueProviderCount < 2) {
       return NextResponse.json(
-        { error: "At least 2 runs with analysis available for this posture are needed for synthesis" },
+        {
+          error:
+            "At least 2 different AI providers with analysis available for this posture are needed for synthesis",
+        },
         { status: 400 }
       );
     }
 
-    // Cache hit: if any run already has synthesis covering these exact run_ids, reuse it (unless force=true)
-    const runIdSet = new Set(eligible.map((r) => r.run_id));
+    const input_inventory = countSynthesisInputs(canonical, allRuns);
+    const input_fingerprint = buildSynthesisInputFingerprint(canonical, allRuns);
+
     if (!body.force) {
       const cached = eligible.find(
-        (r) =>
-          r.synthesis &&
-          r.synthesis.run_ids.length === runIdSet.size &&
-          r.synthesis.run_ids.every((id) => runIdSet.has(id))
+        (r) => r.synthesis?.input_fingerprint === input_fingerprint
       );
       if (cached?.synthesis) {
         return NextResponse.json({ synthesis: cached.synthesis });
       }
     }
 
-    // Generate
-    const synthesis: ProviderSynthesis = await runProviderSynthesis(eligible);
+    const synthesis: ProviderSynthesis = await runProviderSynthesis(canonical, allRuns, {
+      input_fingerprint,
+      input_inventory,
+    });
 
-    // Store on every participating run so any of them can surface it
     await Promise.all(
       eligible.map((run) => replaceRun(run.run_id, { ...run, synthesis }))
     );

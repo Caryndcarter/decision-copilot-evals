@@ -813,6 +813,7 @@ async function handleDeleteVariant(req: DeleteVariantRequest): Promise<NextRespo
   }
 
   existingRun.variants = next;
+  existingRun.synthesis = undefined;
   await replaceRun(req.run_id.trim(), existingRun);
 
   return NextResponse.json(existingRun);

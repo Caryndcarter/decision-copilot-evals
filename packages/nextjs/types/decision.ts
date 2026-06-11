@@ -225,6 +225,12 @@ export interface SynthesisPoint {
   source_refs?: SynthesisSourceRef[];
 }
 
+export interface SynthesisInputInventory {
+  compared_run_count: number;
+  variant_count: number;
+  research_count: number;
+}
+
 export interface ProviderSynthesis {
   generated_at: string;
   /** Run IDs that were included */
@@ -233,6 +239,10 @@ export interface ProviderSynthesis {
   providers: LLMProviderName[];
   /** True if any participating run was a pre-clarification draft */
   has_drafts: boolean;
+  /** Fingerprint of canonical runs + lane-merged variants/research (cache invalidation). */
+  input_fingerprint?: string;
+  /** What was fed into the synthesis prompt. */
+  input_inventory?: SynthesisInputInventory;
   /** Overall narrative across all providers */
   overall_summary: string;
   /** Points all (or nearly all) providers agree on */
