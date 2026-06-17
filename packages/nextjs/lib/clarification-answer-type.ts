@@ -115,6 +115,25 @@ function parseBooleanToken(value: string): boolean | "unknown" | null {
   return null;
 }
 
+/** True when a string answer is substantive prose, not a bare yes/no/unknown token. */
+export function isProseAnswer(value: string | number | boolean): boolean {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  return !["yes", "no", "true", "false", "unknown"].includes(lower);
+}
+
+/** Persisted type reflects what was actually stored — prose upgrades boolean/numeric to short_text. */
+export function resolveStoredAnswerType(
+  memberType: AnswerType,
+  answer: string | number | boolean
+): AnswerType {
+  if (memberType === "enum") return "enum";
+  if (isProseAnswer(answer)) return "short_text";
+  return memberType;
+}
+
 /** Coerce one user answer to the shape expected by an underlying question. */
 export function coerceClarificationAnswer(
   value: string | number | boolean,

@@ -8,8 +8,19 @@ import {
   type ClarificationAnswersMap,
 } from "@/lib/clarification-answers";
 import { resolveClarificationUiAnswerType } from "@/lib/clarification-answer-type";
+import {
+  buildDemoClarificationSamples,
+  buildDemoClarificationUnknowns,
+} from "@/lib/clarification-demo-fallback";
+import { buildDemoSampleQuestions } from "@/lib/clarification-demo-request";
+import type { ClarificationDemoSamplesResult } from "@/lib/clarification-demo-samples-types";
 
-export { buildClarificationAnswersForSubmit, type ClarificationAnswersMap };
+export {
+  buildClarificationAnswersForSubmit,
+  buildDemoClarificationSamples,
+  buildDemoClarificationUnknowns,
+  type ClarificationAnswersMap,
+};
 
 export const CLARIFICATION_REGENERATION_STEPS = [
   "Updating risk analysis…",
@@ -18,43 +29,57 @@ export const CLARIFICATION_REGENERATION_STEPS = [
   "Preparing your recommendation…",
 ];
 
-/** Sample answers for demo / testing (same logic as “Fill sample answers” in the form). */
-export function buildDemoClarificationSamples(questions: LensQuestion[]): ClarificationAnswersMap {
-  const samples: ClarificationAnswersMap = {};
-  for (const q of questions) {
-    const key = questionKey(q);
-    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
-    if (uiType === "percentage") samples[key] = 50;
-    else if (uiType === "numeric") samples[key] = 5;
-    else if (uiType === "enum" && q.options?.length) samples[key] = q.options[0];
-    else samples[key] = "Moderate impact expected. Need more data to assess fully.";
-  }
-  return samples;
-}
-
-export function buildDemoClarificationUnknowns(questions: LensQuestion[]): ClarificationAnswersMap {
-  const unknowns: ClarificationAnswersMap = {};
-  for (const q of questions) {
-    const key = questionKey(q);
-    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
-    if (uiType === "percentage" || uiType === "numeric") unknowns[key] = 0;
-    else if (uiType === "enum" && q.options?.length)
-      unknowns[key] = q.options[q.options.length - 1];
-    else unknowns[key] = "Unknown";
-  }
-  return unknowns;
-}
-
 export function ClarificationDemoQuickFill({
   questions,
   onApply,
+  decisionId,
   className = "",
 }: {
   questions: LensQuestion[];
   onApply: (answers: ClarificationAnswersMap) => void;
+  decisionId?: string;
   className?: string;
 }) {
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
   if (questions.length === 0) return null;
+
+  const fillSamples = async () => {
+    setStatus(null);
+    setLoading(true);
+    try {
+      if (decisionId) {
+        const res = await fetch("/api/decision/run/clarification-demo-samples", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            decision_id: decisionId,
+            questions: buildDemoSampleQuestions(questions),
+          }),
+        });
+        const data = (await res.json()) as ClarificationDemoSamplesResult & { error?: string };
+        if (!res.ok) {
+          throw new Error(data.error || `Failed to generate samples (${res.status})`);
+        }
+        onApply(data.answers);
+        setStatus(
+          data.demo_method === "fallback"
+            ? "Used generic fallback — Gemini unavailable."
+            : `Generated with ${data.demo_model.replace("gemini-", "Gemini ").replace(/-/g, " ")}.`
+        );
+        return;
+      }
+      onApply(buildDemoClarificationSamples(questions));
+      setStatus("Used generic samples (no decision context).");
+    } catch (err) {
+      onApply(buildDemoClarificationSamples(questions));
+      setStatus(err instanceof Error ? err.message : "Used generic fallback.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className={`rounded-md border-2 border-dashed border-violet-300 bg-violet-50/50 p-3 ${className}`}
@@ -68,19 +93,22 @@ export function ClarificationDemoQuickFill({
       <div className="mt-2 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => onApply(buildDemoClarificationSamples(questions))}
-          className="rounded-md border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
+          disabled={loading}
+          onClick={() => void fillSamples()}
+          className="rounded-md border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-60"
         >
-          Fill sample answers
+          {loading ? "Generating samples…" : "Fill sample answers"}
         </button>
         <button
           type="button"
+          disabled={loading}
           onClick={() => onApply(buildDemoClarificationUnknowns(questions))}
-          className="rounded-md border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
+          className="rounded-md border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-60"
         >
           Mark all unknown
         </button>
       </div>
+      {status && <p className="mt-2 text-xs text-violet-600">{status}</p>}
     </div>
   );
 }
@@ -300,6 +328,7 @@ export function ClarificationForm({
       </p>
       <ClarificationDemoQuickFill
         questions={questions}
+        decisionId={result.decision_id}
         onApply={setClarificationAnswers}
         className="mb-4"
       />

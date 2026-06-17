@@ -76,6 +76,7 @@ function AnsweredQuestionsSidebar({
   sections = [],
   embedded = false,
   hideOuterTitle = false,
+  decisionId,
   onSave,
 }: {
   questions: LensQuestion[];
@@ -84,6 +85,7 @@ function AnsweredQuestionsSidebar({
   embedded?: boolean;
   /** Omit top “Follow-up questions” heading (parent supplies title, e.g. CollapsibleBlock) */
   hideOuterTitle?: boolean;
+  decisionId?: string;
   onSave?: (answers: ClarificationAnswersMap) => void;
 }) {
   const [draftAnswers, setDraftAnswers] = useState<ClarificationAnswersMap>({ ...answers });
@@ -192,7 +194,12 @@ function AnsweredQuestionsSidebar({
           </p>
         </>
       )}
-      <ClarificationDemoQuickFill questions={questions} onApply={(next) => persist(next)} className="mb-4" />
+      <ClarificationDemoQuickFill
+        questions={questions}
+        decisionId={decisionId}
+        onApply={(next) => persist(next)}
+        className="mb-4"
+      />
       <div className="space-y-3">
         {sections.length > 0
           ? sections.map((section, idx) => {
@@ -1712,6 +1719,7 @@ export function ChatContent() {
                           sections={result.clarification_question_sections ?? []}
                           embedded
                           hideOuterTitle
+                          decisionId={result.decision_id}
                           onSave={(newAnswers) => {
                             setLastClarificationAnswers(newAnswers);
                             if (lastClarificationQuestions?.length) {

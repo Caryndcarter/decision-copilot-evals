@@ -377,6 +377,7 @@ export function CombinedClarificationForm({
         <>
           <ClarificationDemoQuickFill
             questions={demoQuestions}
+            decisionId={decisionId}
             onApply={(samples) => {
               const mapped: ClarificationAnswersMap = {};
               for (const q of demoQuestions) {
