@@ -127,11 +127,12 @@ function ClarifyAllContent() {
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">All providers</p>
           <h1 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
-            Answer all provider questions
+            Answer unique follow-up questions
           </h1>
         <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{headline}</p>
         <p className="mt-2 text-sm text-zinc-500">
-          Or answer per provider from{" "}
+          Gemini combines similar questions from each provider so you answer once; your response is sent to
+          every model that asked it. Or answer per provider from{" "}
           <Link href={`/runs?new=${encodeURIComponent(decisionId)}`} className="text-indigo-600 underline">
             My Decisions
           </Link>

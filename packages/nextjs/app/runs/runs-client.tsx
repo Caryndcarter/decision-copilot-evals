@@ -294,7 +294,7 @@ export function RunsClient({
                   href={`/run/clarify-all?decision_id=${encodeURIComponent(group.decision_id)}`}
                   className="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors text-center"
                 >
-                  Answer all together
+                  Answer unique questions together
                 </Link>
               </div>
             )}

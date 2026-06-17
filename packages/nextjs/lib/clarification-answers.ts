@@ -17,6 +17,12 @@ export function buildClarificationAnswersForSubmit(
     if (q.answer_type === "boolean") {
       if (raw === "unknown" || raw === null || raw === undefined) {
         answer = "unknown";
+      } else if (typeof raw === "string") {
+        const s = raw.trim().toLowerCase();
+        if (s === "yes" || s === "true") answer = true;
+        else if (s === "no" || s === "false") answer = false;
+        else if (s === "unknown") answer = "unknown";
+        else answer = raw.trim();
       } else {
         answer = raw === true || raw === "true" || raw === "yes";
       }

@@ -7,6 +7,7 @@ import {
   clarificationQuestionKey as questionKey,
   type ClarificationAnswersMap,
 } from "@/lib/clarification-answers";
+import { resolveClarificationUiAnswerType } from "@/lib/clarification-answer-type";
 
 export { buildClarificationAnswersForSubmit, type ClarificationAnswersMap };
 
@@ -22,10 +23,10 @@ export function buildDemoClarificationSamples(questions: LensQuestion[]): Clarif
   const samples: ClarificationAnswersMap = {};
   for (const q of questions) {
     const key = questionKey(q);
-    if (q.answer_type === "boolean") samples[key] = true;
-    else if (q.answer_type === "percentage") samples[key] = 50;
-    else if (q.answer_type === "numeric") samples[key] = 5;
-    else if (q.answer_type === "enum" && q.options?.length) samples[key] = q.options[0];
+    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
+    if (uiType === "percentage") samples[key] = 50;
+    else if (uiType === "numeric") samples[key] = 5;
+    else if (uiType === "enum" && q.options?.length) samples[key] = q.options[0];
     else samples[key] = "Moderate impact expected. Need more data to assess fully.";
   }
   return samples;
@@ -35,9 +36,9 @@ export function buildDemoClarificationUnknowns(questions: LensQuestion[]): Clari
   const unknowns: ClarificationAnswersMap = {};
   for (const q of questions) {
     const key = questionKey(q);
-    if (q.answer_type === "boolean") unknowns[key] = "unknown";
-    else if (q.answer_type === "percentage" || q.answer_type === "numeric") unknowns[key] = 0;
-    else if (q.answer_type === "enum" && q.options?.length)
+    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
+    if (uiType === "percentage" || uiType === "numeric") unknowns[key] = 0;
+    else if (uiType === "enum" && q.options?.length)
       unknowns[key] = q.options[q.options.length - 1];
     else unknowns[key] = "Unknown";
   }
@@ -205,13 +206,15 @@ export function ClarificationForm({
   const sections = result.clarification_question_sections ?? [];
   const questionsByKey = new Map(questions.map((q) => [questionKey(q), q]));
 
-  const renderQuestion = (q: LensQuestion) => (
+  const renderQuestion = (q: LensQuestion) => {
+    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
+    return (
             <div>
               <label htmlFor={questionKey(q)} className="block text-sm font-medium text-slate-700">
                 {q.question_text}
                 {q.required && <span className="text-red-500"> *</span>}
               </label>
-              {q.answer_type === "enum" && q.options && q.options.length > 0 ? (
+              {uiType === "enum" && q.options && q.options.length > 0 ? (
                 <select
                   id={questionKey(q)}
                   required={q.required}
@@ -228,35 +231,7 @@ export function ClarificationForm({
                     </option>
                   ))}
                 </select>
-              ) : q.answer_type === "boolean" ? (
-                <select
-                  id={questionKey(q)}
-                  required={q.required}
-                  value={
-                    clarificationAnswers[questionKey(q)] === true
-                      ? "yes"
-                      : clarificationAnswers[questionKey(q)] === false
-                        ? "no"
-                        : clarificationAnswers[questionKey(q)] === "unknown"
-                          ? "unknown"
-                          : ""
-                  }
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setClarificationAnswers((prev) => ({
-                      ...prev,
-                      [questionKey(q)]:
-                        v === "yes" ? true : v === "no" ? false : v === "unknown" ? "unknown" : "",
-                    }));
-                  }}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                >
-                  <option value="">Select…</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unknown">Unknown</option>
-                </select>
-              ) : q.answer_type === "numeric" ? (
+              ) : uiType === "numeric" ? (
                 <input
                   id={questionKey(q)}
                   type="number"
@@ -275,7 +250,7 @@ export function ClarificationForm({
                   }}
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
-              ) : q.answer_type === "percentage" ? (
+              ) : uiType === "percentage" ? (
                 <div className="flex items-center gap-2">
                   <input
                     id={questionKey(q)}
@@ -302,20 +277,21 @@ export function ClarificationForm({
                   <span className="text-slate-500">%</span>
                 </div>
               ) : (
-                <input
+                <textarea
                   id={questionKey(q)}
-                  type="text"
                   required={q.required}
+                  rows={4}
                   value={String(clarificationAnswers[questionKey(q)] ?? "")}
                   onChange={(e) =>
                     setClarificationAnswers((prev) => ({ ...prev, [questionKey(q)]: e.target.value }))
                   }
-                  placeholder="Your answer"
+                  placeholder="Your answer — include context the analysis can use, not just yes or no"
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               )}
             </div>
-  );
+    );
+  };
 
   const clarificationInner = (
     <>

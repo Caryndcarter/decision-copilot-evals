@@ -35,6 +35,7 @@ import {
   buildClarificationAnswersForSubmit,
   CLARIFICATION_REGENERATION_STEPS,
 } from "../clarification-form";
+import { resolveClarificationUiAnswerType } from "@/lib/clarification-answer-type";
 import { ClarificationAnswerEditor } from "../tiptap-dynamic";
 import { AlertModal, ConfirmModal } from "../confirm-modal";
 import {
@@ -59,12 +60,10 @@ function questionKey(q: { lens: string; question_id: string }) {
 
 function formatAnswerDisplay(q: LensQuestion, value: string | number | boolean | undefined): string {
   if (value === undefined || value === null || value === "") return "—";
-  if (q.answer_type === "boolean") {
-    if (value === "unknown") return "Unknown";
-    return value === true || value === "yes" ? "Yes" : "No";
-  }
-  if (q.answer_type === "percentage") return `${value}%`;
+  const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
+  if (uiType === "percentage") return `${value}%`;
   if (typeof value === "number") return String(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }
 
@@ -101,12 +100,14 @@ function AnsweredQuestionsSidebar({
   const wrapperClass = embedded ? "pt-0" : "rounded-lg border border-slate-200 bg-white p-4 shadow-sm border-indigo-200 bg-indigo-50/50";
   const questionsByKey = new Map(questions.map((q) => [questionKey(q), q]));
 
-  const renderOne = (q: LensQuestion) => (
+  const renderOne = (q: LensQuestion) => {
+    const uiType = resolveClarificationUiAnswerType(q.question_text, q.answer_type, q.options);
+    return (
           <div key={questionKey(q)}>
             <label htmlFor={questionKey(q)} className="block text-sm font-medium text-slate-700">
               {q.question_text}
             </label>
-            {q.answer_type === "enum" && q.options && q.options.length > 0 ? (
+            {uiType === "enum" && q.options && q.options.length > 0 ? (
               <select
                 id={questionKey(q)}
                 value={String(draftAnswers[questionKey(q)] ?? "")}
@@ -123,31 +124,7 @@ function AnsweredQuestionsSidebar({
                   </option>
                 ))}
               </select>
-            ) : q.answer_type === "boolean" ? (
-              <select
-                id={questionKey(q)}
-                value={
-                  draftAnswers[questionKey(q)] === true
-                    ? "yes"
-                    : draftAnswers[questionKey(q)] === false
-                      ? "no"
-                      : draftAnswers[questionKey(q)] === "unknown"
-                        ? "unknown"
-                        : ""
-                }
-                onChange={(e) => {
-                  const v = e.target.value;
-                  const val = v === "yes" ? true : v === "no" ? false : v === "unknown" ? "unknown" : "";
-                  persist({ ...draftAnswers, [questionKey(q)]: val });
-                }}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                <option value="">Select…</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-                <option value="unknown">Unknown</option>
-              </select>
-            ) : q.answer_type === "numeric" ? (
+            ) : uiType === "numeric" ? (
               <input
                 id={questionKey(q)}
                 type="number"
@@ -162,7 +139,7 @@ function AnsweredQuestionsSidebar({
                 }}
                 className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-            ) : q.answer_type === "percentage" ? (
+            ) : uiType === "percentage" ? (
               <div className="flex items-center gap-2">
                 <input
                   id={questionKey(q)}
@@ -194,7 +171,8 @@ function AnsweredQuestionsSidebar({
               </div>
             )}
           </div>
-  );
+    );
+  };
 
   return (
     <div className={wrapperClass}>
