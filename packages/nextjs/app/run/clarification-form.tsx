@@ -157,7 +157,7 @@ export function ClarificationForm({
   embedded = false,
   hideOuterTitle = false,
 }: ClarificationFormProps) {
-  const [clarificationAnswers, setClarificationAnswers] = useState<ClarificationAnswers>({});
+  const [clarificationAnswers, setClarificationAnswers] = useState<ClarificationAnswersMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [submittingStep, setSubmittingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -176,7 +176,7 @@ export function ClarificationForm({
   useEffect(() => {
     const lastClar = result.clarifications?.[result.clarifications.length - 1];
     if (!lastClar?.answers?.length || questions.length === 0 || prefillInitializedRef.current) return;
-    const prefilled: ClarificationAnswers = {};
+    const prefilled: ClarificationAnswersMap = {};
     for (const a of lastClar.answers) {
       const key = questionKey({ lens: a.lens, question_id: a.question_id });
       if (questions.some((q) => q.lens === a.lens && q.question_id === a.question_id)) {

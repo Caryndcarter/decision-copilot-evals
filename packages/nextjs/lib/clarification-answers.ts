@@ -22,7 +22,7 @@ function parseAnswerValue(
       if (s === "unknown") return "unknown";
       return raw.trim();
     }
-    return raw === true || raw === "true" || raw === "yes";
+    return raw === true;
   }
 
   if (q.answer_type === "numeric" || q.answer_type === "percentage") {

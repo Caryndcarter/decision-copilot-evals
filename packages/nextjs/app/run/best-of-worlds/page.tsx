@@ -10,6 +10,7 @@ import { listIncompleteRunsForBestOfWorlds } from "@/lib/best-of-worlds-incomple
 import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
+import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 
@@ -55,6 +56,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [genError, setGenError] = useState<string | null>(null);
   /** Shown after successful refresh/load so “Refresh data” visibly did work even when data looks unchanged. */
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  /** Right panel view: discuss (chat) or Anthropic's contribution attribution. */
+  const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
 
@@ -176,7 +179,15 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const showIncomplete = incomplete.length > 0;
   const rows = incomplete;
   const brief = persistRun?.decision_brief_best_of_worlds;
+  const contributions = persistRun?.decision_brief_best_of_worlds_contributions;
   const navRunId = persistRun?.run_id ?? (runId || "");
+
+  const applyPersistRun = useCallback((next: DecisionRunResult) => {
+    setPersistRun(next);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
+    }
+  }, []);
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -419,39 +430,85 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
               className="min-w-0 lg:max-w-[440px] lg:sticky lg:top-6 lg:self-start print:hidden"
             >
               <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3">
-                  <h2 className="text-base font-semibold text-slate-800">Discuss this Unified Brief</h2>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Choose Anthropic, OpenAI, Gemini, or xAI below. Each model sees the Unified Brief and the same merged
-                    inputs used to build it. The brief itself is always Anthropic-authored; other models are prompted to
-                    discuss that artifact honestly. Chat is saved per model on this decision.
-                  </p>
+                <div className="border-b border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                  <div
+                    className="flex gap-1 rounded-lg bg-slate-100 p-1"
+                    role="tablist"
+                    aria-label="Unified brief side panel"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={asideTab === "discuss"}
+                      onClick={() => setAsideTab("discuss")}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        asideTab === "discuss"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Discuss
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={asideTab === "contributions"}
+                      onClick={() => setAsideTab("contributions")}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        asideTab === "contributions"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Contributions
+                    </button>
+                  </div>
                 </div>
-                <UnifiedBriefChat
-                  runId={navRunId}
-                  unifiedBrief={brief}
-                  unifiedBriefChatByProvider={persistRun?.unified_brief_chat_by_provider}
-                  unifiedBriefChatMessagesLegacy={persistRun?.unified_brief_chat_messages}
-                  showChromeHeader={false}
-                  className="rounded-none border-0 shadow-none"
-                  messagesMaxHeightClassName="max-h-[min(380px,45vh)] lg:max-h-[min(560px,calc(100vh-13rem))]"
-                  onMessagesUpdated={(patch) => {
-                    setPersistRun((p) => {
-                      if (!p) return p;
-                      const next: typeof p = { ...p };
-                      if (patch.unified_brief_chat_by_provider !== undefined) {
-                        next.unified_brief_chat_by_provider = patch.unified_brief_chat_by_provider;
-                      }
-                      if (patch.unified_brief_chat_messages !== undefined) {
-                        next.unified_brief_chat_messages = patch.unified_brief_chat_messages;
-                      }
-                      if (typeof window !== "undefined") {
-                        sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
-                      }
-                      return next;
-                    });
-                  }}
-                />
+
+                <div className={asideTab === "discuss" ? "" : "hidden"}>
+                  <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
+                    <p className="text-sm text-slate-600">
+                      Choose Anthropic, OpenAI, Gemini, or xAI below. Each model sees the Unified Brief and the same
+                      merged inputs used to build it. The brief itself is always Anthropic-authored; other models are
+                      prompted to discuss that artifact honestly. Chat is saved per model on this decision.
+                    </p>
+                  </div>
+                  <UnifiedBriefChat
+                    runId={navRunId}
+                    unifiedBrief={brief}
+                    unifiedBriefChatByProvider={persistRun?.unified_brief_chat_by_provider}
+                    unifiedBriefChatMessagesLegacy={persistRun?.unified_brief_chat_messages}
+                    showChromeHeader={false}
+                    className="rounded-none border-0 shadow-none"
+                    messagesMaxHeightClassName="max-h-[min(380px,45vh)] lg:max-h-[min(560px,calc(100vh-13rem))]"
+                    onMessagesUpdated={(patch) => {
+                      setPersistRun((p) => {
+                        if (!p) return p;
+                        const next: typeof p = { ...p };
+                        if (patch.unified_brief_chat_by_provider !== undefined) {
+                          next.unified_brief_chat_by_provider = patch.unified_brief_chat_by_provider;
+                        }
+                        if (patch.unified_brief_chat_messages !== undefined) {
+                          next.unified_brief_chat_messages = patch.unified_brief_chat_messages;
+                        }
+                        if (typeof window !== "undefined") {
+                          sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
+                        }
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className={asideTab === "contributions" ? "" : "hidden"}>
+                  <UnifiedBriefContributionsPanel
+                    runId={navRunId}
+                    decisionId={decisionId || persistRun?.decision_id || ""}
+                    brief={brief}
+                    contributions={contributions}
+                    onUpdated={applyPersistRun}
+                  />
+                </div>
               </div>
             </aside>
           </div>

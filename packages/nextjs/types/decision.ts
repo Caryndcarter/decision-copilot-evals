@@ -181,6 +181,42 @@ export interface DecisionBrief {
   custom_sections?: { heading: string; content: string }[];
 }
 
+/** How much a given model's thinking shaped the final Unified Brief. */
+export type ContributionInfluence = "high" | "medium" | "low" | "minimal";
+
+/** Anthropic's attribution of one model's contribution to the Unified Brief. */
+export interface ProviderContribution {
+  /** Best-effort provider key for UI keying/badge colors. */
+  provider: LLMProviderName;
+  /** Human-friendly label as shown in the brief source (e.g. "Google Gemini"). */
+  provider_label: string;
+  /** How much of this model's thinking made it into the final brief. */
+  influence: ContributionInfluence;
+  /** 1-3 sentence narrative of what this model contributed (or didn't). */
+  summary: string;
+  /** Concrete ideas/angles from this model that appear in the Unified Brief. */
+  adopted_ideas: string[];
+  /** Unique angles only this model raised that survived into the brief. */
+  distinct_contributions: string[];
+  /** Notable ideas this model raised that were deliberately not used. */
+  not_adopted: string[];
+}
+
+/**
+ * Anthropic's explanation of which model's ideas made the cut in the Unified Brief.
+ * Generated on demand from the same merged inputs used to build the brief.
+ */
+export interface UnifiedBriefContributions {
+  /** ISO 8601 when this analysis was generated. */
+  generated_at: string;
+  /** generated_at of the Unified Brief this analysis describes (staleness check). */
+  brief_generated_at?: string;
+  /** 2-4 sentence narrative of how the blend came together and who was most influential. */
+  overall: string;
+  /** One entry per participating provider. */
+  contributions: ProviderContribution[];
+}
+
 /** A format variant of the analysis (same decision, different presentation) */
 export interface RunVariant {
   variant_id: string;
@@ -309,6 +345,11 @@ export interface DecisionRunResult {
    * from every run. Stored on the anchor run used to open the flow.
    */
   decision_brief_best_of_worlds?: DecisionBrief;
+  /**
+   * Anthropic's attribution of which model's ideas made the cut in `decision_brief_best_of_worlds`.
+   * Generated on demand from the same merged inputs; stored alongside the unified brief.
+   */
+  decision_brief_best_of_worlds_contributions?: UnifiedBriefContributions;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).
    * Prefer `unified_brief_chat_by_provider`; readers should treat this as
