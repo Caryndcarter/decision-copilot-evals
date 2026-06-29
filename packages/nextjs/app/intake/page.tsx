@@ -180,6 +180,20 @@ const DEMO_SCENARIOS = [
     unknowns:
       "Which vendor references are comparable to our size and charter complexity. Hidden integration cost with mortgage, treasury, and card systems. True regulatory posture on cloud core vs on-prem in our district. Whether incremental approaches actually reduce risk or just spread it over longer timelines. Talent market for mainframe and core skills during transition. What we'd do if a phase fails mid-program—contractual exits, data repatriation, customer communication.",
   },
+  {
+    id: "hubspot-crm-fintech",
+    label: "HubSpot CRM for white-label fintech",
+    situation:
+      "We are a small startup building white-label AI products for the financial industry. Two major customers are live and a third is in the pipeline. We need to start tracking everything in HubSpot immediately — retroactively capturing in-progress deals and building a structure for future ones.\n\nOur deal structures vary significantly across three platforms:\n1. Platform A pays a fixed monthly fee plus a performance-based fee after a revenue hurdle (e.g., 40% of revenue above a 0% floor on the first 10%). They use our product to service thousands of merchants who are unaware of us.\n2. Platform B sells our product into their customer base on a performance/revenue-share basis. They bill end merchants and remit our portion. Merchants are unaware of us.\n3. Platform C supplies ISO partners. We want to enroll those partners in our program. Partners market to their merchants, who contract directly with us. We collect a performance fee (no hurdle), withdraw monthly, then pay Platform C their split; Platform C pays the ISO partner.\n\nSuccess looks like: HubSpot accurately reflects all relationships and deal economics before we onboard a large merchant cohort, with a foundation for eventual revenue forecasting and sales observability.",
+    constraints:
+      "Timeline is immediate — we must be fully operational before a large merchant onboarding wave. We are on HubSpot Starter and willing to upgrade when it becomes limiting. Our HubSpot admin has zero HubSpot experience but has run relational, data-driven ticketing systems (e.g., ZenDesk) and can handle API integrations with custom data sources. The setup must be intuitive for a seasoned HubSpot pro who joins the company later. No plans to track performance fee calculations inside HubSpot — that logic will live in a billing system we plan to build for ACH payouts.",
+    posture: "explore" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "HubSpot is appropriate for all customer, contact, and deal data except bank/payment information. A separate billing system will handle ACH and performance fee calculations; source of truth for billing is TBD but will likely integrate into HubSpot via API. Anticipated scale: dozens of ISO partners, hundreds to thousands of merchants. For billing, our customers are Platform A (pays us directly), Platform B (bills merchants themselves and remits our share), and ISO partners' merchants under Platform C (who contract with us directly). Eventual goals beyond initial setup: revenue forecasting, sales observability, and partner payout tracking (nice to have, sourced from billing).",
+    unknowns:
+      "Who should be modeled as Customers vs. Prospects in HubSpot — the platform, the ISO partner, or the end merchant? What is the right pipeline and funnel structure given that acquisition happens at different layers per deal type? How should the mix of fixed fees, revenue shares, and performance-based structures be represented? What belongs in HubSpot vs. the billing system vs. elsewhere as the source of truth? What does upgrading from Starter unlock that is relevant to our use case and when does it make sense? What specific object structures, pipelines, and properties are recommended for our situation? What training or onboarding path would bring a ZenDesk-experienced admin up to speed on HubSpot quickly?",
+  },
 ] as const;
 
 function FieldHelp({ children }: { children: React.ReactNode }) {

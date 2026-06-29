@@ -38,6 +38,7 @@ export const DEMO_SCENARIO_IDS = [
   "healthcare-pe-acquisition",
   "hybrid-office-lease",
   "legacy-core-modernization",
+  "hubspot-crm-fintech",
 ] as const;
 export type DemoScenarioId = (typeof DEMO_SCENARIO_IDS)[number];
 
