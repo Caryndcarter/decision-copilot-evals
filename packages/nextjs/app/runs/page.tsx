@@ -3,12 +3,16 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { listRunsForUser } from "@/lib/db/runs";
+import { listRunsForUser, getRunsByDecisionId } from "@/lib/db/runs";
 import { SessionNav } from "@/app/components/session-nav";
 import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
 import type { DecisionGroup } from "./runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
+
+// Per-user dashboard: always render fresh so newly created sibling runs (e.g. a
+// just-added provider) show up immediately rather than from a stale cache.
+export const dynamic = "force-dynamic";
 
 type RunWithMeta = DecisionRunResult & { createdAt?: Date | string; updatedAt?: Date | string };
 
@@ -79,8 +83,32 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
 
 async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMeta[]> {
   try {
-    const runs = await listRunsForUser(userId, { asAdmin: isAdmin, limit: 200 });
-    return runs as RunWithMeta[];
+    // 1) Runs the user owns (by-user GSI) establish which decisions to show.
+    const ownedRuns = (await listRunsForUser(userId, { asAdmin: isAdmin, limit: 200 })) as RunWithMeta[];
+
+    // 2) For each owned decision, pull the COMPLETE run set (by-decision GSI) so the
+    //    dashboard always mirrors the decision view. This guards against sibling runs
+    //    (e.g. a provider re-run) that are missing/mismatched on the by-user index and
+    //    would otherwise silently disappear from the list while still showing in-decision.
+    const decisionIds = [...new Set(ownedRuns.map((r) => r.decision_id).filter(Boolean))];
+    const decisionRunSets = await Promise.all(
+      decisionIds.map(async (decisionId) => {
+        try {
+          return (await getRunsByDecisionId(decisionId)) as RunWithMeta[];
+        } catch (err) {
+          console.error(`[runs page] Error fetching runs for decision ${decisionId}:`, err);
+          return [];
+        }
+      })
+    );
+
+    // 3) Merge + dedupe by run_id (owned runs first as the baseline).
+    const byRunId = new Map<string, RunWithMeta>();
+    for (const run of ownedRuns) byRunId.set(run.run_id, run);
+    for (const set of decisionRunSets) {
+      for (const run of set) byRunId.set(run.run_id, run);
+    }
+    return [...byRunId.values()];
   } catch (err) {
     console.error("[runs page] Error fetching runs:", err);
     return [];
