@@ -1,6 +1,8 @@
 # Decision Copilot
 
-A decision-support app that helps you think through important decisions using three analysis lenses (Risk, Reversibility, People), optional follow-up questions, and an AI-generated decision brief. Run one provider or all four in parallel, compare outputs, extend analysis with research and variants, and discuss results in streaming chat.
+A decision-support app that helps you think through important decisions using three analysis lenses (Risk, Reversibility, People), optional follow-up questions, and an AI-generated decision brief. Run one provider or all four in parallel, compare outputs, see which model's ideas made the cut, extend analysis with research and variants, and discuss results in streaming chat.
+
+> **Just want to run it?** Jump to [Run it locally](#run-it-locally).
 
 ## What it does
 
@@ -11,19 +13,23 @@ A decision-support app that helps you think through important decisions using th
    - **Reversibility** — Irreversible steps, safe-to-try-first options.
    - **People** — Stakeholder impacts (who’s affected, how, positive/negative/neutral), execution risks.
 
-3. **Clarification (optional)** — If a lens needs more information, it can ask follow-up questions. You answer with Yes/No/Unknown, numbers, percentages, short text, or options. The analysis is then re-run with your answers so the model doesn’t repeat the same questions.
+3. **Clarification (optional)** — If a lens needs more information, it can ask follow-up questions. The answer control is inferred from the question wording (a question asking for an explanation renders as text, not a Yes/No dropdown). On all-provider runs, similar follow-ups from different models are **de-duplicated and merged** into one combined form so you answer each distinct question once. The analysis is then re-run with your answers so the model doesn’t repeat the same questions.
 
 4. **Decision brief** — After lenses (and any clarification), an AI synthesis produces a brief: title, summary, recommendation, key considerations, and next steps, with a **generated-at** timestamp shown in the UI.
 
 5. **Multi-provider runs** — Choose **OpenAI**, **Anthropic**, **Google Gemini**, or **xAI (Grok)**, or run **all four simultaneously** on the same intake. Partial failures are surfaced when one provider errors in an all-providers run.
 
-6. **Cross-provider comparison & unified brief** — Compare provider outputs side by side and synthesize a **Unified Brief** that merges research, variants, and lens outputs across lanes. Regenerate synthesis as you add research or variants.
+6. **Cross-provider comparison & unified brief** — Compare provider outputs side by side and synthesize a **Unified Brief** (Anthropic-authored) that merges research, variants, and lens outputs across lanes. Regenerate synthesis as you add research or variants.
 
-7. **Research & variants** — Run targeted web-research tasks and alternative-scenario variants on a completed run; findings feed back into brief synthesis and chat context.
+7. **Contribution attribution** — On the Unified Brief page, toggle the side panel from **Discuss** to **Contributions** to see Anthropic's honest take on *whose ideas made the cut*: per model, how much it influenced the final brief, which ideas were adopted, which unique angles only it raised, and what was deliberately left out.
 
-8. **Streaming chat** — Discuss a run, unified brief, or free-form analysis in chat with **SSE streaming** responses. Copy assistant messages as plain text or markdown.
+8. **Research & variants** — Run targeted web-research tasks and alternative-scenario variants on a completed run; findings feed back into brief synthesis and chat context.
 
-9. **Free-form analysis (optional)** — An alternate intake path where the model chooses its own JSON structure instead of the three-lens + brief workflow. Useful for experiments; the structured path is the recommended default.
+9. **Streaming chat** — Discuss a run, unified brief, or free-form analysis in chat with **SSE streaming** responses. Copy assistant messages as plain text or markdown.
+
+10. **Demo scenarios & quick-fill** — Prebuilt intake scenarios (Slack→Teams, gen-AI compliance, HubSpot CRM for white-label fintech, and more) load realistic decision context with one click. On the clarification step, a demo quick-fill uses Gemini Flash to generate contextual sample answers in place so you can try the full flow fast.
+
+11. **Free-form analysis (optional)** — An alternate intake path where the model chooses its own JSON structure instead of the three-lens + brief workflow. Useful for experiments; the structured path is the recommended default.
 
 Runs are stored in DynamoDB (local Docker in dev, AWS in prod). The result page shows context, lens outputs, clarification when needed, the decision brief, research/variant tools, and chat.
 
@@ -74,30 +80,69 @@ decision-copilot/
 └── package.json                      # Workspace root; dev/build/dynamo scripts
 ```
 
-## Getting started
+## Run it locally
 
 ### Prerequisites
 
-- Node.js ≥ 20
-- npm ≥ 10
-- Docker (for local DynamoDB)
-- AWS CLI (used by the create-table script; credentials can be dummy values for local — see below)
+- **Node.js ≥ 20** and **npm ≥ 10**
+- **Docker** running (for local DynamoDB)
+- **AWS CLI** installed (the create-table script uses it; for local dev the credentials can be dummy values — see step 2)
 
-### Install and run
+### 1. Install dependencies
 
 ```bash
+git clone https://github.com/Caryndcarter/decision-copilot-dynamodb.git
+cd decision-copilot-dynamodb
 npm install
-npm run dynamo:init   # start DynamoDB Local + create …-app table (one-time per machine)
+```
+
+### 2. Create your `.env`
+
+Create a `.env` file at the repo root. The minimum to boot the app locally:
+
+```bash
+# At least one LLM key is required; add the others to enable those providers.
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=        # needed for the Unified Brief + Contributions
+GEMINI_API_KEY=           # needed for demo quick-fill sample answers
+XAI_API_KEY=
+
+# Local DynamoDB (Docker). These values work out of the box.
+DYNAMODB_ENDPOINT=http://127.0.0.1:8010
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=local
+AWS_SECRET_ACCESS_KEY=local
+```
+
+> Only the LLM keys you set become selectable in the UI. OpenAI alone is enough to run the core three-lens + brief flow; add `ANTHROPIC_API_KEY` for the Unified Brief and `GEMINI_API_KEY` for demo answer generation. See the full [Environment](#environment) table for every option.
+
+### 3. Start DynamoDB and create the table
+
+```bash
+npm run dynamo:init   # starts DynamoDB Local in Docker + creates the …-app table (one-time per machine)
+```
+
+### 4. Start the dev server
+
+```bash
 npm run dev
 ```
 
-App runs at [http://localhost:3000](http://localhost:3000). Use "Start a decision intake" to begin.
+- **App:** [http://localhost:3000](http://localhost:3000) — click **Start a decision intake** to begin (or load a demo scenario).
+- **DynamoDB Admin UI:** [http://127.0.0.1:8011](http://127.0.0.1:8011) (port from `DYNAMODB_ADMIN_PORT`).
 
-DynamoDB Admin UI is at [http://127.0.0.1:8011](http://127.0.0.1:8011) (port from `DYNAMODB_ADMIN_PORT`).
+On later sessions you don't need `dynamo:init` again — `npm run dynamo:start` (or just `npm run dev` if the container is already up) is enough; data persists in the Docker volume.
+
+### Troubleshooting
+
+- **Port already in use (8010/8011):** another DynamoDB stack is likely running. Change `DYNAMODB_PORT` / `DYNAMODB_ADMIN_PORT` in `.env` (and update `DYNAMODB_ENDPOINT` to match), then re-run `npm run dynamo:init`.
+- **`ResourceNotFoundException` / table missing:** run `npm run dynamo:create-table` (idempotent).
+- **Provider not listed in the UI:** its API key isn't set in `.env`. Add the key and restart `npm run dev`.
+- **Docker not running:** start Docker Desktop before `npm run dynamo:init`.
 
 ### Environment
 
-Create a `.env` at the repo root. Relevant variables:
+Full list of variables for `.env` at the repo root:
 
 | Variable | Purpose |
 |----------|---------|
