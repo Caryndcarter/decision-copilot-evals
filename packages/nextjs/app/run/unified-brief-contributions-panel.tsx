@@ -35,11 +35,11 @@ const INFLUENCE_STYLE: Record<ContributionInfluence, { label: string; cls: strin
   minimal: { label: "Minimal influence", cls: "bg-zinc-300 text-zinc-700" },
 };
 
-function ContributionCard({ c }: { c: ProviderContribution }) {
+function ContributionCard({ c, id }: { c: ProviderContribution; id?: string }) {
   const influence = INFLUENCE_STYLE[c.influence] ?? INFLUENCE_STYLE.low;
   const badge = PROVIDER_BADGE[c.provider] ?? PROVIDER_BADGE.openai;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm">
+    <div id={id} className="scroll-mt-2 rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${badge}`}>
           {c.provider_label}
@@ -139,6 +139,12 @@ export function UnifiedBriefContributionsPanel({
     }
   }, [disabled, generating, runId, decisionId, onUpdated]);
 
+  const scrollToProvider = useCallback((provider: string) => {
+    document
+      .getElementById(`contribution-${provider}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <div className={`flex flex-col ${className}`.trim()}>
       <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
@@ -178,6 +184,24 @@ export function UnifiedBriefContributionsPanel({
           </p>
         ) : null}
         {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
+
+        {contributions && contributions.contributions.length > 1 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Jump to</span>
+            {contributions.contributions.map((c) => (
+              <button
+                key={c.provider}
+                type="button"
+                onClick={() => scrollToProvider(c.provider)}
+                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80 ${
+                  PROVIDER_BADGE[c.provider] ?? PROVIDER_BADGE.openai
+                }`}
+              >
+                {c.provider_label}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className={`overflow-y-auto px-4 py-4 ${listMaxHeightClassName}`}>
@@ -192,7 +216,7 @@ export function UnifiedBriefContributionsPanel({
               </div>
             ) : null}
             {contributions.contributions.map((c) => (
-              <ContributionCard key={c.provider} c={c} />
+              <ContributionCard key={c.provider} c={c} id={`contribution-${c.provider}`} />
             ))}
           </div>
         ) : (
