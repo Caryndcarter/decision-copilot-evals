@@ -423,6 +423,84 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   every run, all research, and all variants, then write one structured brief.
                 </p>
               )}
+
+              {/* Print-only appendix: which model's ideas made the cut. Visible only in the downloaded PDF. */}
+              {brief && contributions && contributions.contributions.length > 0 && (
+                <section className="mt-8 hidden break-before-page print:block">
+                  <header className="border-b border-zinc-200 pb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Appendix</p>
+                    <h2 className="text-lg font-semibold text-zinc-900">Model contributions to this brief</h2>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Anthropic&apos;s attribution of which model&apos;s ideas shaped the Unified Brief.
+                    </p>
+                  </header>
+
+                  {contributions.overall ? (
+                    <div className="mt-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                        How the blend came together
+                      </h3>
+                      <div className="mt-1 text-sm text-zinc-800">
+                        <ResearchMarkdownInline source={contributions.overall} />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 space-y-4">
+                    {contributions.contributions.map((c) => (
+                      <div key={c.provider} className="break-inside-avoid">
+                        <h3 className="text-sm font-semibold text-zinc-900">
+                          {c.provider_label}{" "}
+                          <span className="font-normal text-zinc-600">
+                            — {c.influence.charAt(0).toUpperCase() + c.influence.slice(1)} influence
+                          </span>
+                        </h3>
+                        {c.summary ? (
+                          <div className="mt-1 text-sm text-zinc-800">
+                            <ResearchMarkdownInline source={c.summary} />
+                          </div>
+                        ) : null}
+                        {c.adopted_ideas.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-semibold text-zinc-700">Made the cut</p>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-zinc-800">
+                              {c.adopted_ideas.map((idea, i) => (
+                                <li key={i}>
+                                  <ResearchMarkdownInline source={idea} />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {c.distinct_contributions.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-semibold text-zinc-700">Only this model raised</p>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-zinc-800">
+                              {c.distinct_contributions.map((idea, i) => (
+                                <li key={i}>
+                                  <ResearchMarkdownInline source={idea} />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {c.not_adopted.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-semibold text-zinc-500">Considered, not used</p>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-zinc-600">
+                              {c.not_adopted.map((idea, i) => (
+                                <li key={i}>
+                                  <ResearchMarkdownInline source={idea} />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             <aside
