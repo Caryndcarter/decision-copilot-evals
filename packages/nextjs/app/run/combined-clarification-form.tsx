@@ -9,12 +9,11 @@ import {
 } from "./clarification-form";
 import {
   LENS_THEME_LABELS,
+  combinedToLensQuestions,
   listCombinedClarificationQuestions,
   type CombinedClarificationQuestion,
 } from "@/lib/merge-clarification-questions";
 import {
-  dedupedToLensQuestions,
-  expandDedupedAnswersToEntryIds,
   type ClarificationDedupeResult,
   type DedupedClarificationQuestion,
 } from "@/lib/clarification-dedupe-types";
@@ -171,14 +170,27 @@ function UniqueQuestionField({
   );
 }
 
-function OriginalQuestionReadOnly({ question }: { question: CombinedClarificationQuestion }) {
+function OriginalQuestionField({
+  question,
+  value,
+  onChange,
+}: {
+  question: CombinedClarificationQuestion;
+  value: string | number | boolean | undefined;
+  onChange: (v: string | number | boolean) => void;
+}) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50/40 p-4">
       <ProviderAttribution provider={question.provider} />
-      <p className="mt-2 text-sm text-slate-700">{question.question_text}</p>
       <p className="mt-1 text-xs text-slate-400">
-        {LENS_THEME_LABELS[question.lens] ?? question.lens} · {question.answer_type}
+        {LENS_THEME_LABELS[question.lens] ?? question.lens}
       </p>
+      <AnswerField
+        id={question.entry_id}
+        question={question}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -197,7 +209,7 @@ export function CombinedClarificationForm({
   const [dedupeLoading, setDedupeLoading] = useState(true);
   const [dedupeError, setDedupeError] = useState<string | null>(null);
   const [tab, setTab] = useState<FormTab>("unique");
-  const [answers, setAnswers] = useState<ClarificationAnswersMap>({});
+  const [answersByEntryId, setAnswersByEntryId] = useState<ClarificationAnswersMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [submittingStep, setSubmittingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -293,7 +305,39 @@ export function CombinedClarificationForm({
     );
   }
 
-  const demoQuestions = dedupedToLensQuestions(dedupe.unique);
+  const demoQuestionsAll = combinedToLensQuestions(dedupe.all);
+
+  const getMergedGroupAnswer = (group: DedupedClarificationQuestion) => {
+    for (const entryId of group.entry_ids) {
+      const val = answersByEntryId[entryId];
+      if (val !== undefined && val !== "") return val;
+    }
+    return undefined;
+  };
+
+  const setMergedGroupAnswer = (
+    group: DedupedClarificationQuestion,
+    value: string | number | boolean
+  ) => {
+    setAnswersByEntryId((prev) => {
+      const next = { ...prev };
+      for (const entryId of group.entry_ids) {
+        next[entryId] = value;
+      }
+      return next;
+    });
+  };
+
+  const applyDemoSamples = (samples: ClarificationAnswersMap) => {
+    const next: ClarificationAnswersMap = {};
+    for (const q of demoQuestionsAll) {
+      const sampleKey = `${q.lens}-${q.question_id}`;
+      if (samples[sampleKey] !== undefined) {
+        next[q.question_id] = samples[sampleKey]!;
+      }
+    }
+    setAnswersByEntryId((prev) => ({ ...prev, ...next }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -301,7 +345,6 @@ export function CombinedClarificationForm({
     setSubmittingStep(0);
     setSubmitting(true);
     try {
-      const answersByEntryId = expandDedupedAnswersToEntryIds(answers, dedupe.unique, dedupe.all);
       const res = await fetch("/api/decision/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -327,7 +370,7 @@ export function CombinedClarificationForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900">
         <p>
           <span className="font-medium">{dedupe.original_count} original questions</span> from{" "}
@@ -344,9 +387,17 @@ export function CombinedClarificationForm({
           ).
         </p>
         <p className="mt-1 text-blue-800/80">
-          Your answers on the unique list are sent to every provider that asked an equivalent question.
+          Answer on either tab — unique questions fan out to equivalent provider questions. Demo
+          quick-fill generates a sample answer for every provider question.
         </p>
       </div>
+
+      <ClarificationDemoQuickFill
+        questions={demoQuestionsAll}
+        decisionId={decisionId}
+        onApply={applyDemoSamples}
+        className="mb-2"
+      />
 
       <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
         <button
@@ -374,50 +425,33 @@ export function CombinedClarificationForm({
       </div>
 
       {tab === "unique" ? (
-        <>
-          <ClarificationDemoQuickFill
-            questions={demoQuestions}
-            decisionId={decisionId}
-            onApply={(samples) => {
-              const mapped: ClarificationAnswersMap = {};
-              for (const q of demoQuestions) {
-                const sampleKey = `${q.lens}-${q.question_id}`;
-                if (samples[sampleKey] !== undefined) {
-                  mapped[q.question_id] = samples[sampleKey];
-                }
-              }
-              setAnswers(mapped);
-            }}
-            className="mb-2"
-          />
-          <div className="space-y-4">
-            {uniqueByLens.map((group) => (
-              <CollapsibleBlock
-                key={group.lens}
-                id={`combined-lens-${group.lens}`}
-                title={LENS_THEME_LABELS[group.lens] ?? group.lens}
-                titleClassName="text-sm font-semibold uppercase tracking-wide text-slate-600"
-                subtitle={`${group.questions.length} unique question${group.questions.length === 1 ? "" : "s"}`}
-                defaultOpen
-                bodyClassName="space-y-4 px-3 py-4"
-              >
-                {group.questions.map((q) => (
-                  <UniqueQuestionField
-                    key={q.merge_id}
-                    question={q}
-                    value={answers[q.merge_id]}
-                    onChange={(v) => setAnswers((prev) => ({ ...prev, [q.merge_id]: v }))}
-                  />
-                ))}
-              </CollapsibleBlock>
-            ))}
-          </div>
-        </>
+        <div className="space-y-4">
+          {uniqueByLens.map((group) => (
+            <CollapsibleBlock
+              key={group.lens}
+              id={`combined-lens-${group.lens}`}
+              title={LENS_THEME_LABELS[group.lens] ?? group.lens}
+              titleClassName="text-sm font-semibold uppercase tracking-wide text-slate-600"
+              subtitle={`${group.questions.length} unique question${group.questions.length === 1 ? "" : "s"}`}
+              defaultOpen
+              bodyClassName="space-y-4 px-3 py-4"
+            >
+              {group.questions.map((q) => (
+                <UniqueQuestionField
+                  key={q.merge_id}
+                  question={q}
+                  value={getMergedGroupAnswer(q)}
+                  onChange={(v) => setMergedGroupAnswer(q, v)}
+                />
+              ))}
+            </CollapsibleBlock>
+          ))}
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            Original wording from each AI model. Answer on the <strong>Unique questions</strong> tab — this
-            view is read-only.
+            Every question from each provider. Edits here apply to that provider&apos;s run; merged
+            equivalents on the <strong>Unique questions</strong> tab share one answer.
           </p>
           {allByProvider.map((group) => (
             <CollapsibleBlock
@@ -430,7 +464,14 @@ export function CombinedClarificationForm({
               bodyClassName="space-y-3 px-3 py-4"
             >
               {group.questions.map((q) => (
-                <OriginalQuestionReadOnly key={q.entry_id} question={q} />
+                <OriginalQuestionField
+                  key={q.entry_id}
+                  question={q}
+                  value={answersByEntryId[q.entry_id]}
+                  onChange={(v) =>
+                    setAnswersByEntryId((prev) => ({ ...prev, [q.entry_id]: v }))
+                  }
+                />
               ))}
             </CollapsibleBlock>
           ))}
@@ -446,7 +487,7 @@ export function CombinedClarificationForm({
           </p>
         </div>
       )}
-      {tab === "unique" && (
+      <form onSubmit={handleSubmit}>
         <button
           type="submit"
           disabled={submitting}
@@ -461,15 +502,10 @@ export function CombinedClarificationForm({
               {CLARIFICATION_REGENERATION_STEPS[submittingStep]}
             </>
           ) : (
-            `Submit ${dedupe.unique_count} answers for all ${runs.length} providers`
+            `Submit answers for all ${runs.length} providers`
           )}
         </button>
-      )}
-      {tab === "all" && (
-        <p className="text-center text-xs text-slate-500">
-          Switch to <button type="button" className="text-indigo-600 underline" onClick={() => setTab("unique")}>Unique questions</button> to submit answers.
-        </p>
-      )}
-    </form>
+      </form>
+    </div>
   );
 }

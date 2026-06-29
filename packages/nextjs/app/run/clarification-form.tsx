@@ -45,7 +45,8 @@ export function ClarificationDemoQuickFill({
 
   if (questions.length === 0) return null;
 
-  const fillSamples = async () => {
+  const fillSamples = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     setStatus(null);
     setLoading(true);
     try {
@@ -94,7 +95,7 @@ export function ClarificationDemoQuickFill({
         <button
           type="button"
           disabled={loading}
-          onClick={() => void fillSamples()}
+          onClick={(e) => void fillSamples(e)}
           className="rounded-md border border-violet-300 bg-white px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-60"
         >
           {loading ? "Generating samples…" : "Fill sample answers"}
