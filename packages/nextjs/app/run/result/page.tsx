@@ -345,7 +345,7 @@ function RunResultContent() {
             {!activeVariantId && runHasAnalysisForUnifiedBrief(result) ? (
               <Link
                 href={`/run/best-of-worlds?decision_id=${encodeURIComponent(result.decision_id)}`}
-                title="One brief merging every provider run, research, and variants (Anthropic)"
+                title="Best-of-all-worlds brief: merges every run, research, and variants (Anthropic)"
                 className="inline-flex items-center rounded-lg border border-sky-600/80 bg-sky-950/40 px-3 py-1.5 text-sm font-medium text-sky-100 hover:bg-sky-900/60 hover:text-white transition-colors"
               >
                 Unified Brief
@@ -384,6 +384,11 @@ function RunResultContent() {
                 <>
                   <div className="fixed inset-0 z-10" aria-hidden onClick={() => setPostureDropdownOpen(false)} />
                   <ul className="absolute left-0 top-full z-40 mt-1 min-w-[200px] rounded-md border border-zinc-200 bg-white py-1 shadow-lg" role="listbox">
+                    {runsForDropdown.length > 1 ? (
+                      <li className="px-3 py-2 text-xs leading-snug text-zinc-500 border-b border-slate-100">
+                        Your think tank on this decision
+                      </li>
+                    ) : null}
                     {runsForDropdown.map((r) => (
                       <li key={r.run_id} className="flex items-stretch border-b border-slate-100 last:border-0">
                         <Link

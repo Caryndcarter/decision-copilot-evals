@@ -18,8 +18,8 @@ const RUN_RESULT_KEY = "decisionRunResult";
 
 /** Rotating status while Anthropic merges all runs (same cadence as intake). */
 const UNIFIED_BRIEF_GENERATING_STEPS = [
-  "Gathering every provider and posture on this decision…",
-  "Merging lens analyses and briefs…",
+  "Gathering analyses from your think tank…",
+  "Merging lens outputs and individual briefs…",
   "Pulling in research and saved variants…",
   "Building the consolidated prompt for Anthropic…",
   "Synthesizing your Unified Brief…",
@@ -230,8 +230,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       <div className="mx-auto max-w-7xl px-6 py-8">
         <h1 className="text-2xl font-semibold text-zinc-900 print:hidden">Unified Brief</h1>
         <p className="mt-2 text-sm text-zinc-600 print:hidden">
-          One Anthropic brief that merges the strongest ideas from every provider and posture on this decision, plus all
-          research and saved variants. Regenerate whenever your inputs change.
+          Best-of-all-worlds synthesis: Anthropic merges the strongest ideas from every model and posture on
+          this decision, plus all research and saved variants. Regenerate whenever your inputs change.
         </p>
 
         {loadError && (
@@ -250,7 +250,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   {decisionGroupTitleFromRuns(allRuns.length > 0 ? allRuns : [persistRun])}
                 </p>
                 <p className="text-xs text-zinc-500 print:hidden">
-                  All provider and posture runs on this decision feed the brief above.
+                  Each think tank member&apos;s analysis on this decision feeds the brief above.
                 </p>
               </div>
 
@@ -285,8 +285,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 >
                   <p className="font-medium">{UNIFIED_BRIEF_GENERATING_STEPS[generatingStep]}</p>
                   <p className="mt-1 text-indigo-600">
-                    Anthropic reads every run, research, and variants in one pass—similar to a full intake. This often
-                    takes 30–60 seconds and can run longer on large decisions.
+                    Anthropic reads every member&apos;s run, research, and variants in one pass—similar to a
+                    full intake. This often takes 30–60 seconds and can run longer on large decisions.
                   </p>
                 </div>
               )}
@@ -419,8 +419,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 </article>
               ) : (
                 <p className="mt-8 text-sm text-zinc-600 print:hidden">
-                  No Unified Brief yet. Choose <span className="font-medium">Generate</span> to have Anthropic read
-                  every run, all research, and all variants, then write one structured brief.
+                  No Unified Brief yet. Choose <span className="font-medium">Generate</span> to synthesize your
+                  think tank&apos;s analyses into one structured brief.
                 </p>
               )}
 
@@ -546,9 +546,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 <div className={asideTab === "discuss" ? "" : "hidden"}>
                   <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
                     <p className="text-sm text-slate-600">
-                      Choose Anthropic, OpenAI, Gemini, or xAI below. Each model sees the Unified Brief and the same
-                      merged inputs used to build it. The brief itself is always Anthropic-authored; other models are
-                      prompted to discuss that artifact honestly. Chat is saved per model on this decision.
+                      Pick any configured model below. Each one sees the Unified Brief and the same merged inputs
+                      from your think tank. The brief itself is always Anthropic-authored; other models discuss
+                      that artifact. Chat is saved per model on this decision.
                     </p>
                   </div>
                   <UnifiedBriefChat

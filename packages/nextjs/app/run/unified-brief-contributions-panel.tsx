@@ -149,9 +149,9 @@ export function UnifiedBriefContributionsPanel({
     <div className={`flex flex-col ${className}`.trim()}>
       <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
         <p className="text-sm text-slate-600">
-          Anthropic — the author of this Unified Brief — explains whose ideas made the cut: what each model
-          contributed, how much it shaped the final brief, and what was left out. Once generated, this is included
-          as an appendix in the downloaded PDF.
+          Anthropic — author of this Unified Brief — explains which think tank members&apos; ideas made the cut:
+          what each model contributed, how much it shaped the final brief, and what was left out. Once generated,
+          this is included as an appendix in the downloaded PDF.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
@@ -223,7 +223,7 @@ export function UnifiedBriefContributionsPanel({
           <p className="text-sm text-slate-500">
             {disabled
               ? "No Unified Brief yet — generate it on the left, then come back to see which model's ideas made the cut."
-              : "No contribution analysis yet. Choose Analyze contributions to have Anthropic attribute each model's ideas."}
+              : "No contribution analysis yet. Choose Analyze contributions to see how each think tank member's ideas shaped the brief."}
           </p>
         )}
       </div>

@@ -171,8 +171,8 @@ export function UnifiedBriefChat({
         <div className="border-b border-indigo-100 bg-indigo-50/80 px-4 py-3">
           <h2 className="text-sm font-semibold text-indigo-950">Chat about this brief</h2>
           <p className="mt-1 text-xs leading-snug text-indigo-950/85">
-            Pick a model below. Each one sees your Unified Brief and the same merged inputs. The Unified Brief itself is
-            always written by Anthropic; other models discuss that artifact.{" "}
+            Pick a model below. Each one sees your Unified Brief and the same merged inputs from your think
+            tank. The Unified Brief itself is always written by Anthropic; other models discuss that artifact.{" "}
             {disabled ? "Generate the Unified Brief on this page first to enable chat." : "History is saved per model."}
           </p>
         </div>

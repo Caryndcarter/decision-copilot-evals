@@ -1054,7 +1054,7 @@ export function ChatContent() {
             {!activeVariantId && runHasAnalysisForUnifiedBrief(result) ? (
               <Link
                 href={`/run/best-of-worlds?decision_id=${encodeURIComponent(result.decision_id)}`}
-                title="One brief merging every provider run, research, and variants (Anthropic)"
+                title="Best-of-all-worlds brief: merges every run, research, and variants (Anthropic)"
                 className="inline-flex items-center rounded-lg border border-sky-600/80 bg-sky-950/40 px-3 py-1.5 text-sm font-medium text-sky-100 hover:bg-sky-900/60 hover:text-white transition-colors"
               >
                 Unified Brief
@@ -1089,7 +1089,7 @@ export function ChatContent() {
                 className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
                 aria-expanded={postureDropdownOpen}
                 aria-haspopup="listbox"
-                aria-label={`Analyses for this decision, ${runsForDropdown.length} total. Current: ${currentRunLabel}`}
+                aria-label={`Think tank analyses for this decision, ${runsForDropdown.length} total. Current: ${currentRunLabel}`}
               >
                 <span>Analyses</span>
                 <span className="rounded-full bg-indigo-100 px-1.5 py-0 text-xs font-semibold tabular-nums text-indigo-800">
@@ -1124,6 +1124,11 @@ export function ChatContent() {
                     <li className="px-3 py-1.5 text-xs font-semibold leading-snug text-slate-600">
                       {runHeadline(result)}
                     </li>
+                    {runsForDropdown.length > 1 ? (
+                      <li className="px-3 pb-2 text-xs leading-snug text-slate-500 border-b border-slate-100">
+                        Your think tank on this decision — switch between each model&apos;s analysis.
+                      </li>
+                    ) : null}
                     {runsForDropdown.map((r) => (
                       <li key={r.run_id} className="flex items-stretch border-b border-slate-100 last:border-0">
                         <Link
