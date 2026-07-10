@@ -17,8 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Decision Copilot",
-  description: "AI-powered decision analysis that maps risks, surfaces blind spots, and stress-tests your thinking.",
+  title: "Decision Copilot — Your AI think tank",
+  description:
+    "For high-stakes decisions with no obvious answer. Describe your situation, get structured analysis from multiple AI models, and receive one brief you can act on.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

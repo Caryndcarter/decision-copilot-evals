@@ -66,21 +66,74 @@ function IconBrief() {
   );
 }
 
-// ── Hero mockup card ──────────────────────────────────────────────────────────
+function IconThinkTank() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <circle cx="5" cy="8" r="2"/>
+      <circle cx="19" cy="8" r="2"/>
+      <circle cx="5" cy="16" r="2"/>
+      <circle cx="19" cy="16" r="2"/>
+      <line x1="9.5" y1="10.2" x2="6.8" y2="9.2"/>
+      <line x1="14.5" y1="10.2" x2="17.2" y2="9.2"/>
+      <line x1="9.5" y1="13.8" x2="6.8" y2="14.8"/>
+      <line x1="14.5" y1="13.8" x2="17.2" y2="14.8"/>
+    </svg>
+  );
+}
 
-function HeroMockup() {
+function IconAttribution() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <polyline points="16 11 18 13 22 9"/>
+    </svg>
+  );
+}
+
+// ── Hero mockup: think tank → unified brief ───────────────────────────────────
+
+const ADVISOR_PILLS = [
+  { label: "OpenAI", color: "text-emerald-300 bg-emerald-950/60 border-emerald-800/50" },
+  { label: "Anthropic", color: "text-orange-300 bg-orange-950/60 border-orange-800/50" },
+  { label: "Gemini", color: "text-blue-300 bg-blue-950/60 border-blue-800/50" },
+  { label: "xAI", color: "text-zinc-300 bg-zinc-800/60 border-zinc-700/50" },
+];
+
+function ThinkTankMockup() {
   return (
     <div className="relative w-full max-w-sm mx-auto lg:mx-0 select-none pointer-events-none">
-      {/* Glow behind cards */}
       <div className="absolute inset-0 rounded-2xl bg-indigo-500/20 blur-3xl scale-90" />
 
-      {/* Main card */}
+      {/* Advisor panel row */}
+      <div className="relative mb-3 flex flex-wrap justify-center gap-1.5">
+        {ADVISOR_PILLS.map((p) => (
+          <span
+            key={p.label}
+            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${p.color}`}
+          >
+            {p.label}
+          </span>
+        ))}
+      </div>
+
+      {/* Convergence hint */}
+      <div className="relative flex justify-center mb-2">
+        <div className="flex items-center gap-1 text-[10px] text-indigo-400/80 uppercase tracking-widest font-semibold">
+          <span className="h-px w-8 bg-indigo-500/40" />
+          synthesize
+          <span className="h-px w-8 bg-indigo-500/40" />
+        </div>
+      </div>
+
+      {/* Unified Brief card */}
       <div className="relative rounded-xl border border-white/10 bg-zinc-900/80 backdrop-blur-sm shadow-2xl overflow-hidden">
         <div className="border-b border-white/10 px-4 py-3 flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-          <span className="ml-2 text-xs text-zinc-500 font-mono">decision brief</span>
+          <span className="ml-2 text-xs text-zinc-500 font-mono">unified brief</span>
         </div>
         <div className="p-4 space-y-3">
           <div>
@@ -101,16 +154,6 @@ function HeroMockup() {
             ))}
           </div>
 
-          <div className="space-y-1.5">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Top risks</div>
-            {["Cold start latency on Lambda@Edge", "Hidden pipeline migration complexity", "On-call burden shift to eng team"].map((r) => (
-              <div key={r} className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-red-500/70 shrink-0" />
-                <span className="text-[11px] text-zinc-400 leading-snug">{r}</span>
-              </div>
-            ))}
-          </div>
-
           <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 px-3 py-2">
             <div className="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold mb-1">Recommendation</div>
             <div className="text-[11px] text-zinc-300 leading-relaxed">Run a 30-day parallel deployment on a single non-critical service before committing to full migration.</div>
@@ -118,14 +161,21 @@ function HeroMockup() {
         </div>
       </div>
 
-      {/* Floating secondary card */}
-      <div className="absolute -bottom-6 -right-6 w-48 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-2">
-        <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Research finding</div>
-        <div className="text-[11px] text-zinc-300 leading-snug">Vercel costs 3–5× more than Fargate at scale; gap widens past ~10M req/month.</div>
-        <div className="flex items-center gap-1">
-          <div className="h-1 w-1 rounded-full bg-green-400" />
-          <span className="text-[10px] text-zinc-500">Live web search</span>
+      {/* Floating contributions card */}
+      <div className="absolute -bottom-6 -left-4 w-44 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-2">
+        <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Contributions</div>
+        <div className="text-[11px] text-zinc-300 leading-snug">Whose ideas made the cut — attribution across every model in your think tank.</div>
+        <div className="flex flex-wrap gap-1">
+          {["Anthropic", "OpenAI", "Gemini"].map((p) => (
+            <span key={p} className="rounded-full bg-zinc-800 px-1.5 py-0.5 text-[9px] text-zinc-400">{p}</span>
+          ))}
         </div>
+      </div>
+
+      {/* Floating research card */}
+      <div className="absolute -top-4 -right-4 w-40 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-1.5">
+        <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Research</div>
+        <div className="text-[11px] text-zinc-300 leading-snug">Live web search feeds back into the panel&apos;s analysis.</div>
       </div>
     </div>
   );
@@ -185,7 +235,6 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-zinc-950 pt-20 pb-28 lg:pt-28 lg:pb-36">
-        {/* Grid texture */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -193,32 +242,38 @@ export default function Home() {
             backgroundSize: "48px 48px",
           }}
         />
-        {/* Gradient blobs */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
-            {/* Left: copy */}
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300 mb-6">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                Powered by OpenAI · Anthropic · Google Gemini · xAI
+                Your AI think tank · OpenAI · Anthropic · Gemini · xAI
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
-                Make better<br />
-                <span className="text-indigo-400">decisions</span>, faster.
+                Turn AI models into<br />
+                <span className="text-indigo-400">your own think tank.</span>
               </h1>
-              <p className="mt-5 text-lg text-zinc-400 leading-relaxed max-w-lg">
-                AI-powered decision analysis that maps risks, surfaces blind spots,
-                stress-tests your thinking, and produces a structured brief — across multiple AI perspectives.
+              <p className="mt-5 text-lg text-zinc-300 leading-relaxed max-w-lg">
+                You&apos;re facing a call with real stakes — stay or migrate, hire or restructure,
+                build or buy. There&apos;s no obvious right answer, and one chatbot reply
+                usually isn&apos;t enough.
+              </p>
+              <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-lg">
+                Decision Copilot is built for that moment. You describe what&apos;s going on:
+                your situation, constraints, what you know and what you don&apos;t. Multiple AI
+                models analyze the same brief independently — and you get structured output you
+                can compare, refine, and act on together with your AI think tank. The
+                best-of-all-worlds thinking for the best outcome.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/intake"
                   className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
                 >
-                  Start a decision →
+                  Describe your decision →
                 </Link>
                 <Link
                   href="/intake"
@@ -228,7 +283,12 @@ export default function Home() {
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500">
-                {["Risk · Reversibility · People lenses", "Clarifying questions", "Research integration", "PDF export"].map((f) => (
+                {[
+                  "Paste in your real situation",
+                  "Choose how to analyze it",
+                  "One model or your full think tank",
+                  "Exportable brief",
+                ].map((f) => (
                   <span key={f} className="flex items-center gap-1.5">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-indigo-500"><polyline points="20 6 9 17 4 12"/></svg>
                     {f}
@@ -237,60 +297,140 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right: mockup */}
-            <div className="mt-14 lg:mt-0">
-              <HeroMockup />
+            <div className="mt-14 lg:mt-0 pt-6">
+              <ThinkTankMockup />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── What it does ── */}
+      {/* ── How it works ── */}
+      <section className="bg-white py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
+            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
+              You bring the decision. Decision Copilot brings structure, follow-up questions, and — if you want —
+              more than one AI perspective on the same problem.
+            </p>
+          </div>
+          <div className="space-y-8">
+            <Step
+              n="1"
+              title="Describe what's on the table"
+              desc="Paste in your situation: what you're deciding, constraints, what you already know, and what's still unclear. Pick an analysis posture — compare options openly, pressure-test a leaning you already have, focus on risks first, or widen the option set."
+            />
+            <Step
+              n="2"
+              title="Convene your think tank"
+              desc="Run a single AI model or several at once. Each one reads the same brief and produces its own structured analysis — so you're not relying on one voice for a complicated call."
+            />
+            <Step
+              n="3"
+              title="Answer what the models need to know"
+              desc="Before finalizing, the models ask follow-up questions: missing context, unstated assumptions, things you'd only know if you were in the room. Your answers sharpen the analysis."
+            />
+            <Step
+              n="4"
+              title="Get a brief you can use"
+              desc="Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why three lenses ── */}
+      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
+              Why Risk, Reversibility, and People?
+            </h2>
+            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
+              Most AI answers focus on whether something is a good idea. Important decisions also need
+              you to ask what could go wrong, how hard it is to undo, and who has to live with the outcome.
+              Every analysis runs through three lenses so you don&apos;t get a technically correct answer
+              that ignores downside, lock-in, or the humans involved.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: <IconRisk />,
+                title: "Risk",
+                question: "What could go wrong?",
+                desc: "Surfaces top risks, hidden assumptions, and blind spots — the things that look fine on paper until they aren't.",
+                color: "text-red-500 bg-red-50",
+              },
+              {
+                icon: <IconReversibility />,
+                title: "Reversibility",
+                question: "Can I undo this?",
+                desc: "Identifies which steps lock you in and what's safe to try first, before you commit fully.",
+                color: "text-amber-500 bg-amber-50",
+              },
+              {
+                icon: <IconPeople />,
+                title: "People",
+                question: "Who does this affect?",
+                desc: "Maps stakeholder impacts, execution risks, and who needs to be brought along for this to actually work.",
+                color: "text-blue-500 bg-blue-50",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-xl border border-zinc-200 bg-white p-6">
+                <div className={`inline-flex p-2.5 rounded-lg mb-4 ${item.color}`}>{item.icon}</div>
+                <h3 className="text-sm font-semibold text-zinc-900">{item.title}</h3>
+                <p className="mt-1 text-xs font-medium text-indigo-600">{item.question}</p>
+                <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Think tank value ── */}
       <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-14">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Structured analysis, not just answers</h2>
-            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Most AI tools give you a response. Decision Copilot gives you a framework — then pushes back on it.
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
+              Your think tank on one decision
+            </h2>
+            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
+              Not a pile of separate chats — independent analyses on the same brief, then synthesis
+              when you&apos;re ready.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                icon: <IconRisk />,
-                title: "Risk lens",
-                desc: "Surfaces top risks, hidden assumptions, and blind spots you may not have considered.",
-                color: "text-red-500 bg-red-50",
-              },
-              {
-                icon: <IconReversibility />,
-                title: "Reversibility lens",
-                desc: "Identifies which steps lock you in, and what's safe to try first without full commitment.",
-                color: "text-amber-500 bg-amber-50",
-              },
-              {
-                icon: <IconPeople />,
-                title: "People lens",
-                desc: "Maps stakeholder impacts, execution risks, and who needs to be brought along.",
-                color: "text-blue-500 bg-blue-50",
-              },
-              {
-                icon: <IconResearch />,
-                title: "Research integration",
-                desc: "Ask follow-up research questions with live web search. Findings feed back into the analysis.",
-                color: "text-violet-500 bg-violet-50",
+                icon: <IconThinkTank />,
+                title: "Independent think tank analysis",
+                desc: "Each model reads your situation and runs the same lenses on its own. Compare where they agree, where they push back, and what only one surfaced.",
+                color: "text-indigo-500 bg-indigo-50",
               },
               {
                 icon: <IconCompare />,
                 title: "Cross-provider comparison",
-                desc: "Run the same decision through multiple AI models and compare where they agree — and diverge.",
-                color: "text-indigo-500 bg-indigo-50",
+                desc: "See divergence side by side — useful when models disagree on risk level, reversibility, or who gets affected.",
+                color: "text-violet-500 bg-violet-50",
+              },
+              {
+                icon: <IconResearch />,
+                title: "Research integration",
+                desc: "Ask follow-up research questions with live web search. Findings feed back into the analysis on that run.",
+                color: "text-violet-500 bg-violet-50",
               },
               {
                 icon: <IconBrief />,
-                title: "Decision Brief",
-                desc: "A clean, exportable summary with recommendation, key considerations, and next steps.",
+                title: "Unified Brief",
+                desc: "When you've run multiple models, merge their output into one synthesized recommendation — exportable as a PDF.",
                 color: "text-emerald-500 bg-emerald-50",
+              },
+              {
+                icon: <IconAttribution />,
+                title: "Contribution attribution",
+                desc: "See whose ideas made the cut in the Unified Brief: what each model contributed, and what didn't survive synthesis.",
+                color: "text-orange-500 bg-orange-50",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 hover:border-zinc-200 transition-colors">
@@ -304,12 +444,12 @@ export default function Home() {
       </section>
 
       {/* ── Use cases ── */}
-      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
+      <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Not hypotheticals. The kind of calls that keep you up at night.
+              Not hypotheticals. The kind of calls that keep you up at night — the ones that deserve more than one opinion.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -353,27 +493,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="bg-white py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
-          </div>
-          <div className="space-y-8">
-            <Step n="1" title="Describe your decision" desc="Paste in your situation, constraints, and what you know. Choose a posture: explore, pressure test, surface risks, or generate alternatives." />
-            <Step n="2" title="Choose your analysis lens" desc="Select which AI provider to use — or run all four simultaneously and compare outputs." />
-            <Step n="3" title="Answer clarifying questions" desc="The model asks what it needs to know: missing context, unstated assumptions, key unknowns. Your answers sharpen the analysis." />
-            <Step n="4" title="Get a structured brief" desc="A decision brief with risks, tradeoffs, stakeholder impacts, recommendation, and next steps — ready to export as a PDF." />
-          </div>
-        </div>
-      </section>
-
       {/* ── CTA ── */}
       <section className="bg-zinc-950 py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Ready to decide better?</h2>
-          <p className="mt-3 text-zinc-400 max-w-md mx-auto">
-            Paste in your situation and get a structured multi-lens analysis in minutes.
+          <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            Have a decision worth thinking through?
+          </h2>
+          <p className="mt-3 text-zinc-400 max-w-lg mx-auto">
+            Describe your situation and get structured analysis back — from one model or your full
+            think tank, synthesized into a brief when you need it.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
             <Link
@@ -395,8 +523,8 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="bg-zinc-950 border-t border-white/5 py-6">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between flex-wrap gap-4">
-          <span className="text-sm text-zinc-600">Decision Copilot</span>
-          <span className="text-sm text-zinc-600">Powered by OpenAI · Anthropic · Google Gemini · xAI</span>
+          <span className="text-sm text-zinc-600">Decision Copilot — your AI think tank</span>
+          <span className="text-sm text-zinc-600">OpenAI · Anthropic · Google Gemini · xAI</span>
         </div>
       </footer>
 
