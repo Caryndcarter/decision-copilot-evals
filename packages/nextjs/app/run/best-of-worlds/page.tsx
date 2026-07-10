@@ -69,10 +69,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   /** Right panel view: discuss (chat) or contribution attribution. */
   const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
-  /** Which synthesizer's brief is on screen (when multiple exist). */
+  /** Which synthesizer's brief is on screen and target for Generate / Regenerate. */
   const [activeSynthesizer, setActiveSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
-  /** Model used for the next Generate / Regenerate action. */
-  const [generateSynthesizer, setGenerateSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
   /** Synthesizers with API keys configured (subset of anthropic + gemini). */
   const [configuredSynthesizers, setConfiguredSynthesizers] = useState<UnifiedBriefSynthesizer[]>([
     "anthropic",
@@ -80,8 +78,11 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   ]);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
-  const availableBriefAuthors = persistRun ? listAvailableUnifiedBriefAuthors(persistRun) : [];
-  const generatingSteps = unifiedBriefGeneratingSteps(generateSynthesizer);
+  const generatingSteps = unifiedBriefGeneratingSteps(activeSynthesizer);
+
+  const selectSynthesizer = useCallback((author: UnifiedBriefSynthesizer) => {
+    setActiveSynthesizer(author);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +107,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   }, [persistRun]);
 
   useEffect(() => {
-    setGenerateSynthesizer((prev) =>
+    setActiveSynthesizer((prev) =>
       configuredSynthesizers.includes(prev) ? prev : configuredSynthesizers[0] ?? "anthropic"
     );
   }, [configuredSynthesizers]);
@@ -205,7 +206,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
-          synthesizer: generateSynthesizer,
+          synthesizer: activeSynthesizer,
         }),
       });
       const data = await res.json();
@@ -216,8 +217,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       }
       const next = data.run as DecisionRunResult;
       const synth =
-        typeof data.synthesizer === "string" && data.synthesizer === "gemini" ? "gemini" : generateSynthesizer;
-      setActiveSynthesizer(synth);
+        typeof data.synthesizer === "string" && data.synthesizer === "gemini" ? "gemini" : activeSynthesizer;
+      selectSynthesizer(synth);
       setPersistRun(next);
       if (typeof window !== "undefined") {
         sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
@@ -238,12 +239,23 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const contributions = persistRun
     ? getUnifiedBriefContributionsForAuthor(persistRun, activeSynthesizer)
     : undefined;
-  const generateTargetBrief = persistRun
-    ? getUnifiedBriefForAuthor(persistRun, generateSynthesizer)
-    : undefined;
   const activeSynthesizerLabel = unifiedBriefSynthesizerLabel(activeSynthesizer);
-  const generateSynthesizerLabel = unifiedBriefSynthesizerLabel(generateSynthesizer);
   const navRunId = persistRun?.run_id ?? (runId || "");
+
+  const handlePrintBrief = useCallback(() => {
+    if (!brief || !persistRun) return;
+    const prev = document.title;
+    const raw = decisionGroupTitleFromRuns(allRuns.length > 0 ? allRuns : [persistRun]);
+    document.title = `Unified Brief – ${raw}`;
+    window.addEventListener(
+      "afterprint",
+      () => {
+        document.title = prev;
+      },
+      { once: true }
+    );
+    window.print();
+  }, [allRuns, brief, persistRun]);
 
   const applyPersistRun = useCallback((next: DecisionRunResult) => {
     setPersistRun(next);
@@ -293,9 +305,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       <div className="mx-auto max-w-7xl px-6 py-8">
         <h1 className="text-2xl font-semibold text-zinc-900 print:hidden">Unified Brief</h1>
         <p className="mt-2 text-sm text-zinc-600 print:hidden">
-          Best-of-all-worlds synthesis: choose Anthropic or Google Gemini to merge the strongest ideas from every
-          model and posture on this decision, plus all research and saved variants. Generate with one model, compare
-          with another, and switch between saved briefs below.
+          Merge the strongest ideas from every model and posture on this decision, plus all research and saved
+          variants. Pick a synthesis model, generate a brief, and compare versions side by side.
         </p>
 
         {loadError && (
@@ -341,140 +352,144 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 </div>
               )}
 
-              {generating && (
-                <div
-                  className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 print:hidden"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <p className="font-medium">{generatingSteps[generatingStep]}</p>
-                  <p className="mt-1 text-indigo-600">
-                    {generateSynthesizerLabel} reads every member&apos;s run, research, and variants in one
-                    pass—similar to a full intake. This often takes 30–60 seconds and can run longer on large
-                    decisions.
-                  </p>
-                </div>
-              )}
+              <div
+                className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm print:hidden"
+                aria-label="Unified brief controls"
+              >
+                <div className="space-y-4 p-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                      Active model
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      View and generate with the same model
+                    </p>
+                  </div>
 
-              {availableBriefAuthors.length > 1 && (
-                <div className="mt-6 print:hidden">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">View brief by</p>
                   <div
-                    className="mt-2 flex flex-wrap gap-2"
+                    className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]"
                     role="tablist"
-                    aria-label="Unified brief synthesizer"
+                    aria-label="Active synthesis model"
                   >
-                    {availableBriefAuthors.map((author) => {
+                    {configuredSynthesizers.map((author) => {
                       const selected = author === activeSynthesizer;
+                      const hasBrief = !!(persistRun && getUnifiedBriefForAuthor(persistRun, author));
                       return (
                         <button
                           key={author}
                           type="button"
                           role="tab"
                           aria-selected={selected}
-                          onClick={() => setActiveSynthesizer(author)}
                           disabled={generating}
-                          className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                          onClick={() => selectSynthesizer(author)}
+                          className={`flex min-w-[9.5rem] shrink-0 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                             selected
-                              ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
-                              : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                              ? "border-indigo-600 bg-indigo-50 text-indigo-950 ring-1 ring-indigo-600/20"
+                              : "border-zinc-200 bg-zinc-50/80 text-zinc-700 hover:border-zinc-300 hover:bg-white"
                           }`}
                         >
-                          {unifiedBriefSynthesizerLabel(author)}
+                          <span className="text-sm font-medium leading-tight">
+                            {unifiedBriefSynthesizerLabel(author)}
+                          </span>
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                              hasBrief
+                                ? selected
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-emerald-50 text-emerald-700"
+                                : selected
+                                  ? "bg-zinc-200/80 text-zinc-600"
+                                  : "bg-zinc-100 text-zinc-500"
+                            }`}
+                          >
+                            {hasBrief ? "Saved" : "New"}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
-                </div>
-              )}
 
-              <div className="mt-6 flex flex-wrap items-center gap-3 print:hidden">
-                {configuredSynthesizers.length > 1 ? (
-                  <label className="flex flex-wrap items-center gap-2 text-sm text-zinc-700">
-                    <span className="font-medium">Synthesize with</span>
-                    <select
-                      value={generateSynthesizer}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === "anthropic" || v === "gemini") setGenerateSynthesizer(v);
-                      }}
+                  <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => void handleRegenerate()}
                       disabled={generating}
-                      className="rounded-md border border-zinc-300 bg-white px-2.5 py-2 text-sm text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      title={
+                        brief
+                          ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
+                          : `Generate a Unified Brief using ${activeSynthesizerLabel}`
+                      }
+                      aria-label={
+                        generating
+                          ? `Generating Unified Brief with ${activeSynthesizerLabel}`
+                          : brief
+                            ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
+                            : `Generate Unified Brief with ${activeSynthesizerLabel}`
+                      }
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
-                      {configuredSynthesizers.map((s) => (
-                        <option key={s} value={s}>
-                          {unifiedBriefSynthesizerLabel(s)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : configuredSynthesizers.length === 1 ? (
-                  <span className="text-sm text-zinc-600">
-                    Synthesizer:{" "}
-                    <span className="font-medium text-zinc-800">
-                      {unifiedBriefSynthesizerLabel(configuredSynthesizers[0])}
-                    </span>
-                  </span>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void handleRegenerate()}
-                  disabled={generating}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {generating ? (
-                    <>
-                      <span
-                        className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
-                        aria-hidden
-                      />
-                      {generatingSteps[generatingStep]}
-                    </>
-                  ) : generateTargetBrief ? (
-                    "Regenerate"
-                  ) : (
-                    "Generate"
-                  )}
-                </button>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void load()}
-                    disabled={generating}
-                    className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Refresh data
-                  </button>
-                  {lastSyncedAt != null ? (
-                    <span className="text-xs text-zinc-500" title="Last successful reload of this decision and its runs">
-                      Updated {new Date(lastSyncedAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
-                    </span>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  disabled={!brief || generating}
-                  onClick={() => {
-                    if (!brief || !persistRun) return;
-                    const prev = document.title;
-                    const raw = decisionGroupTitleFromRuns(allRuns.length > 0 ? allRuns : [persistRun]);
-                    document.title = `Unified Brief – ${raw}`;
-                    window.addEventListener(
-                      "afterprint",
-                      () => {
-                        document.title = prev;
-                      },
-                      { once: true }
-                    );
-                    window.print();
-                  }}
-                  className="inline-flex items-center rounded-md border border-zinc-300 bg-white px-2.5 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Download PDF
-                </button>
-              </div>
+                      {generating ? (
+                        <>
+                          <span
+                            className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                            aria-hidden
+                          />
+                          Generating with {activeSynthesizerLabel}…
+                        </>
+                      ) : brief ? (
+                        <>Regenerate with {activeSynthesizerLabel}</>
+                      ) : (
+                        <>Generate with {activeSynthesizerLabel}</>
+                      )}
+                    </button>
 
-              {genError && <p className="mt-3 text-sm text-red-600 print:hidden">{genError}</p>}
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => void load()}
+                        disabled={generating}
+                        title="Reload decision runs from the server"
+                        className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Refresh
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!brief || generating}
+                        onClick={handlePrintBrief}
+                        title="Download as PDF"
+                        className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        PDF
+                      </button>
+                      {lastSyncedAt != null ? (
+                        <span
+                          className="text-xs text-zinc-400"
+                          title="Last successful reload of this decision and its runs"
+                        >
+                          Refreshed{" "}
+                          {new Date(lastSyncedAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                {(generating || genError) && (
+                  <div className="border-t border-zinc-100 px-4 py-3 text-sm">
+                    {generating ? (
+                      <div className="text-indigo-800" role="status" aria-live="polite">
+                        <p className="font-medium">{generatingSteps[generatingStep]}</p>
+                        <p className="mt-1 text-xs text-indigo-600">
+                          {activeSynthesizerLabel} reads every member&apos;s run, research, and variants in one
+                          pass. This often takes 30–60 seconds and can run longer on large decisions.
+                        </p>
+                      </div>
+                    ) : null}
+                    {genError ? <p className="text-red-600">{genError}</p> : null}
+                  </div>
+                )}
+              </div>
 
               {brief ? (
                 <article
@@ -546,8 +561,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 </article>
               ) : (
                 <p className="mt-8 text-sm text-zinc-600 print:hidden">
-                  No Unified Brief yet. Choose <span className="font-medium">Generate</span> to synthesize your
-                  think tank&apos;s analyses into one structured brief.
+                  No {activeSynthesizerLabel} brief yet. With that model selected above, click{" "}
+                  <span className="font-medium">Generate with {activeSynthesizerLabel}</span>.
                 </p>
               )}
 
