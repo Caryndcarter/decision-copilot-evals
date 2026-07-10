@@ -7,8 +7,11 @@
 
 import "server-only";
 import { getClient } from "@/llm";
-import { anthropic } from "@/llm/anthropic";
 import type { LLMMessage, LLMProvider } from "@/llm/types";
+import {
+  unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 import type {
   DecisionIntake,
   DecisionBrief,
@@ -1124,9 +1127,11 @@ export function buildBestOfWorldsSourceUserContent(
 function buildBestOfWorldsBriefMessages(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
-  allRunsForResearch: DecisionRunResult[]
+  allRunsForResearch: DecisionRunResult[],
+  synthesizer: UnifiedBriefSynthesizer
 ): LLMMessage[] {
-  const systemPrompt = `You are an expert decision coach (Anthropic Claude). Produce ONE structured decision brief that captures the **best ideas across all inputs** below.
+  const coach = unifiedBriefSynthesizerCoachLabel(synthesizer);
+  const systemPrompt = `You are an expert decision coach (${coach}). Produce ONE structured decision brief that captures the **best ideas across all inputs** below.
 
 **What you receive**
 1) Shared **decision context** (intake + clarifications from the storage run for this decision’s unified brief).
@@ -1159,17 +1164,18 @@ Return only structured JSON matching the schema (title, summary, recommendation,
 }
 
 /**
- * One Anthropic-generated brief merging all runs (all providers/postures), all research, and all variants.
- * Caller stores on `decision_brief_best_of_worlds` on the chosen storage run for the decision.
+ * One synthesized brief merging all runs (all providers/postures), all research, and all variants.
+ * Caller stores on `unified_briefs_by_author` (and legacy `decision_brief_best_of_worlds` when author is Anthropic).
  */
 export async function runBestOfWorldsBriefSynthesis(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
-  allRunsForResearch?: DecisionRunResult[]
+  allRunsForResearch?: DecisionRunResult[],
+  synthesizer: UnifiedBriefSynthesizer = "anthropic"
 ): Promise<DecisionBrief> {
   const researchRuns = allRunsForResearch ?? canonicalRuns;
-  const messages = buildBestOfWorldsBriefMessages(anchorRun, canonicalRuns, researchRuns);
-  const response = await anthropic.run(messages, {
+  const messages = buildBestOfWorldsBriefMessages(anchorRun, canonicalRuns, researchRuns, synthesizer);
+  const response = await getClient(synthesizer).run(messages, {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.45,
     maxTokens: 8192,
@@ -1187,7 +1193,7 @@ export async function runBestOfWorldsBriefSynthesis(
   if (stableTitle) {
     brief = { ...brief, title: stableTitle };
   }
-  const provider: LLMProvider = "anthropic";
+  const provider: LLMProvider = synthesizer;
   if (brief.next_steps.length < MIN_NEXT_STEPS) {
     const repaired = await runNextStepsRepair(intake, lensOutputs, clarifications, brief, provider);
     if (repaired?.length) {

@@ -10,12 +10,14 @@ import type {
   ProviderContribution,
   UnifiedBriefContributions,
 } from "@/types/decision";
+import { unifiedBriefSynthesizerLabel, type UnifiedBriefSynthesizer } from "@/lib/unified-briefs";
 
 interface UnifiedBriefContributionsPanelProps {
   runId: string;
   decisionId: string;
   brief: DecisionBrief | undefined;
   contributions: UnifiedBriefContributions | undefined;
+  synthesizer: UnifiedBriefSynthesizer;
   className?: string;
   listMaxHeightClassName?: string;
   onUpdated: (run: DecisionRunResult) => void;
@@ -102,6 +104,7 @@ export function UnifiedBriefContributionsPanel({
   decisionId,
   brief,
   contributions,
+  synthesizer,
   className = "",
   listMaxHeightClassName = "max-h-[min(560px,calc(100vh-13rem))]",
   onUpdated,
@@ -124,7 +127,11 @@ export function UnifiedBriefContributionsPanel({
       const res = await fetch("/api/decision/run/unified-brief-contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(decisionId ? { decision_id: decisionId } : { run_id: runId }),
+        body: JSON.stringify(
+          decisionId
+            ? { decision_id: decisionId, synthesizer }
+            : { run_id: runId, synthesizer }
+        ),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -137,7 +144,7 @@ export function UnifiedBriefContributionsPanel({
     } finally {
       setGenerating(false);
     }
-  }, [disabled, generating, runId, decisionId, onUpdated]);
+  }, [disabled, generating, runId, decisionId, synthesizer, onUpdated]);
 
   const scrollToProvider = useCallback((provider: string) => {
     document
@@ -149,9 +156,10 @@ export function UnifiedBriefContributionsPanel({
     <div className={`flex flex-col ${className}`.trim()}>
       <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
         <p className="text-sm text-slate-600">
-          Anthropic — author of this Unified Brief — explains which think tank members&apos; ideas made the cut:
-          what each model contributed, how much it shaped the final brief, and what was left out. Once generated,
-          this is included as an appendix in the downloaded PDF.
+          {unifiedBriefSynthesizerLabel(synthesizer)} — author of this Unified Brief — explains which think
+          tank members&apos; ideas made the cut: what each model contributed, how much it shaped the final
+          brief, and what was left out. Once generated, this is included as an appendix in the downloaded
+          PDF.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button

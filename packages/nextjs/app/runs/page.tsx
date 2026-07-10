@@ -9,6 +9,7 @@ import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
 import type { DecisionGroup } from "./runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
+import { runHasAnyUnifiedBrief } from "@/lib/unified-briefs";
 
 // Per-user dashboard: always render fresh so newly created sibling runs (e.g. a
 // just-added provider) show up immediately rather than from a stale cache.
@@ -44,7 +45,7 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
     const runDate = activityDate(run);
     if (runDate > group.latestAt) group.latestAt = runDate;
     // Track unified brief: prefer the run that already has one
-    if (run.decision_brief_best_of_worlds) {
+    if (runHasAnyUnifiedBrief(run)) {
       group.hasUnifiedBrief = true;
       group.unifiedBriefRunId = run.run_id;
     } else if (!group.unifiedBriefRunId) {

@@ -1,4 +1,5 @@
 import type { DecisionRunResult } from "@/types/decision";
+import { runHasAnyUnifiedBrief } from "@/lib/unified-briefs";
 
 function runTimeMs(r: DecisionRunResult): number {
   const ext = r as { createdAt?: string | Date; updatedAt?: string | Date };
@@ -11,12 +12,12 @@ function runTimeMs(r: DecisionRunResult): number {
 }
 
 /**
- * Which run document stores `decision_brief_best_of_worlds` and unified-brief chat (`unified_brief_chat_by_provider` / legacy `unified_brief_chat_messages`) for a decision.
+ * Which run document stores unified briefs and unified-brief chat (`unified_brief_chat_by_provider` / legacy `unified_brief_chat_messages`) for a decision.
  * Prefer a row that already holds a unified brief; otherwise the newest run (aligned with My Decisions cards).
  */
 export function pickPersistRunForUnifiedBrief(runs: DecisionRunResult[]): DecisionRunResult | null {
   if (!runs.length) return null;
-  const withUnified = runs.filter((r) => r.decision_brief_best_of_worlds);
+  const withUnified = runs.filter(runHasAnyUnifiedBrief);
   if (withUnified.length) {
     return withUnified.reduce((best, cur) => (runTimeMs(cur) > runTimeMs(best) ? cur : best));
   }

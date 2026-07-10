@@ -13,19 +13,30 @@ import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
+import {
+  getUnifiedBriefContributionsForAuthor,
+  getUnifiedBriefForAuthor,
+  listAvailableUnifiedBriefAuthors,
+  UNIFIED_BRIEF_SYNTHESIZERS,
+  unifiedBriefSynthesizerLabel,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
+import type { LLMProviderName } from "@/types/decision";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
-/** Rotating status while Anthropic merges all runs (same cadence as intake). */
-const UNIFIED_BRIEF_GENERATING_STEPS = [
-  "Gathering analyses from your think tank…",
-  "Merging lens outputs and individual briefs…",
-  "Pulling in research and saved variants…",
-  "Building the consolidated prompt for Anthropic…",
-  "Synthesizing your Unified Brief…",
-  "Shaping recommendation and next steps…",
-  "Almost there…",
-];
+function unifiedBriefGeneratingSteps(synthesizer: UnifiedBriefSynthesizer): string[] {
+  const label = unifiedBriefSynthesizerLabel(synthesizer);
+  return [
+    "Gathering analyses from your think tank…",
+    "Merging lens outputs and individual briefs…",
+    "Pulling in research and saved variants…",
+    `Building the consolidated prompt for ${label}…`,
+    "Synthesizing your Unified Brief…",
+    "Shaping recommendation and next steps…",
+    "Almost there…",
+  ];
+}
 
 /** Reads `decision_id` and/or `run_id` from the URL; remounts when either changes. */
 function UnifiedBriefShell() {
@@ -56,18 +67,57 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [genError, setGenError] = useState<string | null>(null);
   /** Shown after successful refresh/load so “Refresh data” visibly did work even when data looks unchanged. */
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
-  /** Right panel view: discuss (chat) or Anthropic's contribution attribution. */
+  /** Right panel view: discuss (chat) or contribution attribution. */
   const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
+  /** Which synthesizer's brief is on screen (when multiple exist). */
+  const [activeSynthesizer, setActiveSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
+  /** Model used for the next Generate / Regenerate action. */
+  const [generateSynthesizer, setGenerateSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
+  /** Synthesizers with API keys configured (subset of anthropic + gemini). */
+  const [configuredSynthesizers, setConfiguredSynthesizers] = useState<UnifiedBriefSynthesizer[]>([
+    "anthropic",
+    "gemini",
+  ]);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
+  const availableBriefAuthors = persistRun ? listAvailableUnifiedBriefAuthors(persistRun) : [];
+  const generatingSteps = unifiedBriefGeneratingSteps(generateSynthesizer);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/decision/providers", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: { providers?: LLMProviderName[] }) => {
+        if (cancelled || !Array.isArray(data.providers)) return;
+        const configured = UNIFIED_BRIEF_SYNTHESIZERS.filter((s) => data.providers!.includes(s));
+        if (configured.length > 0) setConfiguredSynthesizers(configured);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!persistRun) return;
+    const available = listAvailableUnifiedBriefAuthors(persistRun);
+    if (available.length === 0) return;
+    setActiveSynthesizer((prev) => (available.includes(prev) ? prev : available[0]));
+  }, [persistRun]);
+
+  useEffect(() => {
+    setGenerateSynthesizer((prev) =>
+      configuredSynthesizers.includes(prev) ? prev : configuredSynthesizers[0] ?? "anthropic"
+    );
+  }, [configuredSynthesizers]);
 
   useEffect(() => {
     if (!generating) return;
     const interval = setInterval(() => {
-      setGeneratingStep((prev) => (prev + 1) % UNIFIED_BRIEF_GENERATING_STEPS.length);
+      setGeneratingStep((prev) => (prev + 1) % generatingSteps.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [generating]);
+  }, [generating, generatingSteps.length]);
 
   const load = useCallback(async () => {
     if (!runId && !decisionId) {
@@ -153,7 +203,10 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       const res = await fetch("/api/decision/run/best-of-worlds-brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(decisionId ? { decision_id: decisionId } : { run_id: runId }),
+        body: JSON.stringify({
+          ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
+          synthesizer: generateSynthesizer,
+        }),
       });
       const data = await res.json();
       if (regenSeq !== regenSeqRef.current) return;
@@ -162,6 +215,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
         return;
       }
       const next = data.run as DecisionRunResult;
+      const synth =
+        typeof data.synthesizer === "string" && data.synthesizer === "gemini" ? "gemini" : generateSynthesizer;
+      setActiveSynthesizer(synth);
       setPersistRun(next);
       if (typeof window !== "undefined") {
         sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
@@ -178,8 +234,15 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
   const showIncomplete = incomplete.length > 0;
   const rows = incomplete;
-  const brief = persistRun?.decision_brief_best_of_worlds;
-  const contributions = persistRun?.decision_brief_best_of_worlds_contributions;
+  const brief = persistRun ? getUnifiedBriefForAuthor(persistRun, activeSynthesizer) : undefined;
+  const contributions = persistRun
+    ? getUnifiedBriefContributionsForAuthor(persistRun, activeSynthesizer)
+    : undefined;
+  const generateTargetBrief = persistRun
+    ? getUnifiedBriefForAuthor(persistRun, generateSynthesizer)
+    : undefined;
+  const activeSynthesizerLabel = unifiedBriefSynthesizerLabel(activeSynthesizer);
+  const generateSynthesizerLabel = unifiedBriefSynthesizerLabel(generateSynthesizer);
   const navRunId = persistRun?.run_id ?? (runId || "");
 
   const applyPersistRun = useCallback((next: DecisionRunResult) => {
@@ -230,8 +293,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       <div className="mx-auto max-w-7xl px-6 py-8">
         <h1 className="text-2xl font-semibold text-zinc-900 print:hidden">Unified Brief</h1>
         <p className="mt-2 text-sm text-zinc-600 print:hidden">
-          Best-of-all-worlds synthesis: Anthropic merges the strongest ideas from every model and posture on
-          this decision, plus all research and saved variants. Regenerate whenever your inputs change.
+          Best-of-all-worlds synthesis: choose Anthropic or Google Gemini to merge the strongest ideas from every
+          model and posture on this decision, plus all research and saved variants. Generate with one model, compare
+          with another, and switch between saved briefs below.
         </p>
 
         {loadError && (
@@ -283,15 +347,75 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   role="status"
                   aria-live="polite"
                 >
-                  <p className="font-medium">{UNIFIED_BRIEF_GENERATING_STEPS[generatingStep]}</p>
+                  <p className="font-medium">{generatingSteps[generatingStep]}</p>
                   <p className="mt-1 text-indigo-600">
-                    Anthropic reads every member&apos;s run, research, and variants in one pass—similar to a
-                    full intake. This often takes 30–60 seconds and can run longer on large decisions.
+                    {generateSynthesizerLabel} reads every member&apos;s run, research, and variants in one
+                    pass—similar to a full intake. This often takes 30–60 seconds and can run longer on large
+                    decisions.
                   </p>
                 </div>
               )}
 
+              {availableBriefAuthors.length > 1 && (
+                <div className="mt-6 print:hidden">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">View brief by</p>
+                  <div
+                    className="mt-2 flex flex-wrap gap-2"
+                    role="tablist"
+                    aria-label="Unified brief synthesizer"
+                  >
+                    {availableBriefAuthors.map((author) => {
+                      const selected = author === activeSynthesizer;
+                      return (
+                        <button
+                          key={author}
+                          type="button"
+                          role="tab"
+                          aria-selected={selected}
+                          onClick={() => setActiveSynthesizer(author)}
+                          disabled={generating}
+                          className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                            selected
+                              ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+                              : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                          }`}
+                        >
+                          {unifiedBriefSynthesizerLabel(author)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 flex flex-wrap items-center gap-3 print:hidden">
+                {configuredSynthesizers.length > 1 ? (
+                  <label className="flex flex-wrap items-center gap-2 text-sm text-zinc-700">
+                    <span className="font-medium">Synthesize with</span>
+                    <select
+                      value={generateSynthesizer}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "anthropic" || v === "gemini") setGenerateSynthesizer(v);
+                      }}
+                      disabled={generating}
+                      className="rounded-md border border-zinc-300 bg-white px-2.5 py-2 text-sm text-zinc-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {configuredSynthesizers.map((s) => (
+                        <option key={s} value={s}>
+                          {unifiedBriefSynthesizerLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : configuredSynthesizers.length === 1 ? (
+                  <span className="text-sm text-zinc-600">
+                    Synthesizer:{" "}
+                    <span className="font-medium text-zinc-800">
+                      {unifiedBriefSynthesizerLabel(configuredSynthesizers[0])}
+                    </span>
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => void handleRegenerate()}
@@ -304,9 +428,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                         className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
                         aria-hidden
                       />
-                      {UNIFIED_BRIEF_GENERATING_STEPS[generatingStep]}
+                      {generatingSteps[generatingStep]}
                     </>
-                  ) : brief ? (
+                  ) : generateTargetBrief ? (
                     "Regenerate"
                   ) : (
                     "Generate"
@@ -362,6 +486,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                       Unified decision brief
                     </p>
                     <h2 className="text-xl font-semibold text-zinc-900">{brief.title || "Decision brief"}</h2>
+                    <p className="mt-1 text-xs text-zinc-500 print:hidden">
+                      Synthesized by {activeSynthesizerLabel}
+                    </p>
                     <BriefGeneratedDateLine iso={brief.generated_at} className="mt-1" label="Generated" />
                   </header>
                   <div className="mt-6 space-y-6">
@@ -431,7 +558,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Appendix</p>
                     <h2 className="text-lg font-semibold text-zinc-900">Model contributions to this brief</h2>
                     <p className="mt-1 text-xs text-zinc-500">
-                      Anthropic&apos;s attribution of which model&apos;s ideas shaped the Unified Brief.
+                      {activeSynthesizerLabel}&apos;s attribution of which model&apos;s ideas shaped the Unified
+                      Brief.
                     </p>
                   </header>
 
@@ -546,14 +674,16 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 <div className={asideTab === "discuss" ? "" : "hidden"}>
                   <div className="border-b border-slate-200 bg-slate-50/60 px-4 py-3">
                     <p className="text-sm text-slate-600">
-                      Pick any configured model below. Each one sees the Unified Brief and the same merged inputs
-                      from your think tank. The brief itself is always Anthropic-authored; other models discuss
-                      that artifact. Chat is saved per model on this decision.
+                      Pick any configured model below. Each one sees the Unified Brief you&apos;re viewing and the
+                      same merged inputs from your think tank. The brief itself is authored by{" "}
+                      {activeSynthesizerLabel}; other models discuss that artifact. Chat is saved per model on this
+                      decision.
                     </p>
                   </div>
                   <UnifiedBriefChat
                     runId={navRunId}
                     unifiedBrief={brief}
+                    briefSynthesizer={activeSynthesizer}
                     unifiedBriefChatByProvider={persistRun?.unified_brief_chat_by_provider}
                     unifiedBriefChatMessagesLegacy={persistRun?.unified_brief_chat_messages}
                     showChromeHeader={false}
@@ -584,6 +714,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     decisionId={decisionId || persistRun?.decision_id || ""}
                     brief={brief}
                     contributions={contributions}
+                    synthesizer={activeSynthesizer}
                     onUpdated={applyPersistRun}
                   />
                 </div>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
 import { runProviderLabel } from "@/lib/run-display-name";
+import type { UnifiedBriefSynthesizer } from "@/lib/unified-briefs";
 import { ChatMessageCopyActions } from "@/app/components/chat-copy-button";
 import { ResearchMarkdown } from "./research-markdown";
 import {
@@ -44,6 +45,8 @@ export interface UnifiedBriefChatProps {
   unifiedBriefChatByProvider?: DecisionRunResult["unified_brief_chat_by_provider"];
   /** Pre–per-provider threads: treated as the Anthropic thread when `by_provider.anthropic` is absent. */
   unifiedBriefChatMessagesLegacy?: DecisionRunResult["unified_brief_chat_messages"];
+  /** Which synthesizer authored the Unified Brief being discussed. */
+  briefSynthesizer: UnifiedBriefSynthesizer;
   onMessagesUpdated: (patch: UnifiedBriefChatPersistPatch) => void;
   /** When false, omit the indigo title strip (e.g. parent aside supplies a “Discuss” header). Default true. */
   showChromeHeader?: boolean;
@@ -56,6 +59,7 @@ export interface UnifiedBriefChatProps {
 export function UnifiedBriefChat({
   runId,
   unifiedBrief,
+  briefSynthesizer,
   unifiedBriefChatByProvider,
   unifiedBriefChatMessagesLegacy,
   onMessagesUpdated,
@@ -108,6 +112,7 @@ export function UnifiedBriefChat({
         body: JSON.stringify({
           run_id: runId,
           llm_provider: chatProvider,
+          brief_synthesizer: briefSynthesizer,
           messages: prior,
           newMessage: text,
         }),
@@ -159,7 +164,7 @@ export function UnifiedBriefChat({
     } finally {
       setLoading(false);
     }
-  }, [chatProvider, input, loading, onMessagesUpdated, runId, unifiedBrief, unifiedBriefChatByProvider]);
+  }, [briefSynthesizer, chatProvider, input, loading, onMessagesUpdated, runId, unifiedBrief, unifiedBriefChatByProvider]);
 
   const disabled = !unifiedBrief;
 

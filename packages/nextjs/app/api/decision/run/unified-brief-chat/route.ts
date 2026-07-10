@@ -7,6 +7,12 @@ import { runStream } from "@/llm";
 import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMMessage } from "@/llm/types";
 import { runProviderLabel } from "@/lib/run-display-name";
+import {
+  getUnifiedBriefForAuthor,
+  isUnifiedBriefSynthesizer,
+  unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 import type { DecisionBrief, DecisionRunResult, LLMProviderName } from "@/types/decision";
 
 export const maxDuration = 60;
@@ -60,7 +66,8 @@ function priorMessagesForProvider(run: DecisionRunResult, provider: LLMProviderN
 async function buildUnifiedBriefChatSystemPrompt(
   storageRun: DecisionRunResult,
   brief: DecisionBrief,
-  chatProvider: LLMProviderName
+  chatProvider: LLMProviderName,
+  briefAuthor: UnifiedBriefSynthesizer
 ): Promise<string> {
   const allRuns = await getRunsByDecisionId(storageRun.decision_id);
   const canonical = canonicalRunsForUnifiedBriefDecision(allRuns);
@@ -99,8 +106,19 @@ ${briefBlock}
 
 ${source}`;
 
+  if (chatProvider === briefAuthor) {
+    const coach = unifiedBriefSynthesizerCoachLabel(briefAuthor);
+    return `You are ${coach}. The user is discussing their **Unified Brief** (first section below) that was produced by merging every eligible provider/posture run, research, and variants on this decision, then synthesized with your model as the Unified Brief author.
+
+${sharedLayers}`;
+  }
+
+  const authorLabel = unifiedBriefSynthesizerCoachLabel(briefAuthor);
+
   if (chatProvider === "anthropic") {
-    return `You are Claude (Anthropic). The user is discussing their **Unified Brief** (first section below) that was produced by merging every eligible provider/posture run, research, and variants on this decision, then synthesized with Anthropic’s model as the Unified Brief author.
+    return `You are Claude (Anthropic). The user is discussing a **Unified Brief** shown below.
+
+**Authorship (critical):** That Unified Brief text was **written / synthesized by ${authorLabel}**, not by you. You are a **separate** assistant helping them discuss, critique, and clarify that artifact and the raw inputs. **Do not** claim you wrote the Unified Brief unless the user is viewing your synthesis. If asked who authored this Unified Brief, say clearly that **${authorLabel}** produced it.
 
 ${sharedLayers}`;
   }
@@ -114,7 +132,7 @@ ${sharedLayers}`;
 
   return `${youAre} The user is discussing a **Unified Brief** shown below.
 
-**Authorship (critical):** That Unified Brief text was **written / synthesized by Anthropic’s Claude**, not by you. This product merged every eligible provider/posture run, research, and variants, then had **Anthropic’s model** produce the structured Unified Brief. You are a **separate** assistant helping them discuss, critique, and clarify that artifact and the raw inputs. **Do not** claim you wrote the Unified Brief, chose its recommendations, or speak as if you were the synthesizer. If asked who authored the Unified Brief, say clearly that **Anthropic’s model** produced it and you are reviewing it.
+**Authorship (critical):** That Unified Brief text was **written / synthesized by ${authorLabel}**, not by you. This product merged every eligible provider/posture run, research, and variants, then had **${authorLabel}** produce the structured Unified Brief. You are a **separate** assistant helping them discuss, critique, and clarify that artifact and the raw inputs. **Do not** claim you wrote the Unified Brief, chose its recommendations, or speak as if you were the synthesizer. If asked who authored the Unified Brief, say clearly that **${authorLabel}** produced it and you are reviewing it.
 
 ${sharedLayers}`;
 }
@@ -146,6 +164,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = (await request.json()) as {
       run_id?: string;
       llm_provider?: string;
+      brief_synthesizer?: string;
       messages?: { role: "user" | "assistant"; content: string }[];
       newMessage?: string;
     };
@@ -154,6 +173,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const rawProvider = typeof body.llm_provider === "string" ? body.llm_provider.trim().toLowerCase() : "";
     const llm_provider: LLMProviderName = isUnifiedBriefChatProvider(rawProvider) ? rawProvider : "anthropic";
     activeChatProvider = llm_provider;
+    const rawBriefAuthor =
+      typeof body.brief_synthesizer === "string" ? body.brief_synthesizer.trim().toLowerCase() : "anthropic";
+    const briefAuthor: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(rawBriefAuthor)
+      ? rawBriefAuthor
+      : "anthropic";
     const newMessage = typeof body.newMessage === "string" ? body.newMessage.trim() : "";
     const messages = Array.isArray(body.messages) ? body.messages : [];
 
@@ -172,7 +196,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Run not found" }, { status: 404 });
     }
 
-    const brief = run.decision_brief_best_of_worlds;
+    const brief = getUnifiedBriefForAuthor(run, briefAuthor);
     if (!brief) {
       return NextResponse.json(
         { error: "Generate a Unified Brief on this page before starting chat." },
@@ -180,7 +204,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const systemContent = await buildUnifiedBriefChatSystemPrompt(run, brief, llm_provider);
+    const systemContent = await buildUnifiedBriefChatSystemPrompt(run, brief, llm_provider, briefAuthor);
     const priorFromDb = priorMessagesForProvider(run, llm_provider);
     const historyFromClient: LLMMessage[] = messages
       .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string")

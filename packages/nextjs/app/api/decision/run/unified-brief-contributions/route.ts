@@ -4,18 +4,23 @@ import { runUnifiedBriefContributionsAnalysis } from "@/lenses/unified-brief-con
 import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incomplete";
 import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
+import {
+  getUnifiedBriefForAuthor,
+  isUnifiedBriefSynthesizer,
+  mergeUnifiedBriefContributionsIntoRun,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 import type { DecisionRunResult } from "@/types/decision";
 
 export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
- * Body: `{ decision_id }` or `{ run_id }`.
- * Requires an existing `decision_brief_best_of_worlds`. Asks Anthropic which model's ideas made
- * the cut in that brief and persists the result on `decision_brief_best_of_worlds_contributions`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"gemini"`.
+ * Requires the matching Unified Brief. Persists on `unified_brief_contributions_by_author`.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string };
+  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
   try {
     body = await request.json();
   } catch {
@@ -24,6 +29,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const decision_id = typeof body.decision_id === "string" ? body.decision_id.trim() : "";
   const run_id = typeof body.run_id === "string" ? body.run_id.trim() : "";
+  const synthesizerRaw = typeof body.synthesizer === "string" ? body.synthesizer.trim() : "anthropic";
+  const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
+    ? synthesizerRaw
+    : "anthropic";
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -46,10 +55,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
   }
 
-  const brief = persistRun.decision_brief_best_of_worlds;
+  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer);
   if (!brief) {
     return NextResponse.json(
-      { error: "Generate the Unified Brief first, then analyze contributions." },
+      {
+        error: `Generate the Unified Brief with ${synthesizer === "gemini" ? "Google Gemini" : "Anthropic"} first, then analyze contributions.`,
+      },
       { status: 400 }
     );
   }
@@ -64,18 +75,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const decision_brief_best_of_worlds_contributions = await runUnifiedBriefContributionsAnalysis(
+    const contributions = await runUnifiedBriefContributionsAnalysis(
       persistRun,
       eligible,
       brief,
-      allRuns
+      allRuns,
+      synthesizer
     );
-    const updated: DecisionRunResult = {
-      ...persistRun,
-      decision_brief_best_of_worlds_contributions,
-    };
+    const updated = mergeUnifiedBriefContributionsIntoRun(persistRun, synthesizer, contributions);
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated });
+    return NextResponse.json({ run: updated, synthesizer });
   } catch (err) {
     console.error("[unified-brief-contributions]", err);
     const message = err instanceof Error ? err.message : "Contributions analysis failed";

@@ -342,15 +342,23 @@ export interface DecisionRunResult {
    */
   decision_brief_comprehensive?: DecisionBrief;
   /**
-   * Anthropic “unified brief”: merges all runs for this decision (all providers/postures), plus research and variants
-   * from every run. Stored on the anchor run used to open the flow.
+   * Unified Brief merges all runs for this decision (all providers/postures), plus research and variants
+   * from every run. Legacy field: Anthropic-authored brief; prefer `unified_briefs_by_author`.
    */
   decision_brief_best_of_worlds?: DecisionBrief;
   /**
-   * Anthropic's attribution of which model's ideas made the cut in `decision_brief_best_of_worlds`.
-   * Generated on demand from the same merged inputs; stored alongside the unified brief.
+   * Unified Brief keyed by synthesizing model (Anthropic, Gemini, …). Source of truth when present.
+   */
+  unified_briefs_by_author?: Partial<Record<LLMProviderName, DecisionBrief>>;
+  /**
+   * Attribution of which think-tank model's ideas made the cut in the unified brief.
+   * Legacy field for Anthropic-authored brief; prefer `unified_brief_contributions_by_author`.
    */
   decision_brief_best_of_worlds_contributions?: UnifiedBriefContributions;
+  /** Contributions analysis keyed by Unified Brief synthesizer (matches `unified_briefs_by_author`). */
+  unified_brief_contributions_by_author?: Partial<
+    Record<LLMProviderName, UnifiedBriefContributions>
+  >;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).
    * Prefer `unified_brief_chat_by_provider`; readers should treat this as

@@ -8,10 +8,14 @@
  */
 
 import "server-only";
-import { anthropic } from "@/llm/anthropic";
+import { getClient } from "@/llm";
 import type { LLMMessage } from "@/llm/types";
 import { buildBestOfWorldsSourceUserContent } from "@/lenses/brief";
 import { runProviderLabel } from "@/lib/run-display-name";
+import {
+  unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 import type {
   ContributionInfluence,
   DecisionBrief,
@@ -139,12 +143,14 @@ function buildContributionsMessages(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch: DecisionRunResult[],
-  brief: DecisionBrief
+  brief: DecisionBrief,
+  author: UnifiedBriefSynthesizer
 ): LLMMessage[] {
   const providers = participatingProviders(canonicalRuns);
   const providerList = providers.map((p) => `- ${p.label} (\`${p.provider}\`)`).join("\n");
+  const coach = unifiedBriefSynthesizerCoachLabel(author);
 
-  const systemPrompt = `You are Claude (Anthropic). You are the author of the **Unified Brief** below — you merged every provider/posture run, all research, and all saved variants into that one brief.
+  const systemPrompt = `You are ${coach}. You are the author of the **Unified Brief** below — you merged every provider/posture run, all research, and all saved variants into that one brief.
 
 Your job now is an honest **attribution**: explain which model's ideas made the cut. For every participating provider, say what they contributed to the FINAL Unified Brief, how much influence they had, and what notable ideas of theirs you deliberately left out.
 
@@ -266,19 +272,20 @@ function coerceContributions(
 }
 
 /**
- * Generate Anthropic's attribution of which model's ideas made the cut in the Unified Brief.
- * Caller stores on `decision_brief_best_of_worlds_contributions` of the chosen storage run.
+ * Generate the Unified Brief author's attribution of which model's ideas made the cut.
+ * Caller stores on `unified_brief_contributions_by_author` of the chosen storage run.
  */
 export async function runUnifiedBriefContributionsAnalysis(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   brief: DecisionBrief,
-  allRunsForResearch?: DecisionRunResult[]
+  allRunsForResearch?: DecisionRunResult[],
+  author: UnifiedBriefSynthesizer = "anthropic"
 ): Promise<UnifiedBriefContributions> {
   const researchRuns = allRunsForResearch ?? canonicalRuns;
-  const messages = buildContributionsMessages(anchorRun, canonicalRuns, researchRuns, brief);
+  const messages = buildContributionsMessages(anchorRun, canonicalRuns, researchRuns, brief, author);
 
-  const response = await anthropic.run(messages, {
+  const response = await getClient(author).run(messages, {
     schema: CONTRIBUTIONS_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.3,
     maxTokens: 4096,
