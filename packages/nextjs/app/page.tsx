@@ -257,7 +257,7 @@ export default function Home() {
                 <span className="text-indigo-400">your own think tank.</span>
               </h1>
               <p className="mt-5 text-lg text-zinc-300 leading-relaxed max-w-lg">
-                You&apos;re facing a call with real stakes — stay or migrate, hire or restructure,
+                You&apos;re facing a decision with real stakes — stay or migrate, hire or restructure,
                 build or buy. There&apos;s no obvious right answer, and one chatbot reply
                 usually isn&apos;t enough.
               </p>
