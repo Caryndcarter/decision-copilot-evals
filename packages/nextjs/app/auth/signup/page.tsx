@@ -75,7 +75,7 @@ export default function SignUpPage() {
           <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
             <div className="mb-6 text-center">
               <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Create account</h1>
-              <p className="mt-1.5 text-sm text-zinc-500">Start making better decisions today</p>
+              <p className="mt-1.5 text-sm text-zinc-500">Create your account and brief your first think tank</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">

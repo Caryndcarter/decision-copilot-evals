@@ -156,8 +156,8 @@ export default async function RunsDashboard({
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">My Decisions</h1>
           <p className="mt-1.5 text-sm text-zinc-500">
             {groups.length === 0
-              ? "No decisions yet"
-              : `${groups.length} decision${groups.length === 1 ? "" : "s"}, ${runs.length} run${runs.length === 1 ? "" : "s"}`}
+              ? "No decisions yet — brief your think tank to get started"
+              : `${groups.length} decision${groups.length === 1 ? "" : "s"}, ${runs.length} run${runs.length === 1 ? "" : "s"} across your think tank`}
           </p>
         </div>
       </div>

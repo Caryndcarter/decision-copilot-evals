@@ -71,7 +71,7 @@ function SignInForm() {
           <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
             <div className="mb-6 text-center">
               <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Sign in</h1>
-              <p className="mt-1.5 text-sm text-zinc-500">Welcome back to Decision Copilot</p>
+              <p className="mt-1.5 text-sm text-zinc-500">Welcome back — pick up where you left off</p>
             </div>
 
             {/* Google OAuth */}

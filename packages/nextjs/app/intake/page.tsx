@@ -30,15 +30,15 @@ const FREEFORM_STEPS = [
 ];
 
 const FREEFORM_STEPS_ALL = [
-  "Running OpenAI, Anthropic, Gemini, and xAI…",
+  "Convening your think tank…",
   "Each model is choosing its own JSON shape…",
-  "Structuring analyses across all four providers…",
+  "Structuring analyses across your selected models…",
   "Almost there…",
 ];
 
 const SUBMITTING_STEPS_ALL = [
-  "Running all four providers simultaneously…",
-  "Analyzing risks across providers…",
+  "Running your think tank simultaneously…",
+  "Analyzing risks across models…",
   "Checking reversibility…",
   "Considering stakeholders…",
   "Preparing briefs…",
@@ -542,13 +542,15 @@ export default function IntakePage() {
       {/* Page header */}
       <div className="border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-3xl px-6 py-8">
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">New decision</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Brief your think tank</h1>
           <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-            Share enough context for useful guidance: who is involved, what triggered the decision, options on
-            the table, and what success looks like. The more specific you are, the more tailored the results.
+            Describe the decision you&apos;re facing — what&apos;s on the table, what triggered it, who&apos;s
+            involved, and what success looks like. This is the brief every model in your think tank will
+            analyze.
           </p>
           <p className="mt-1.5 text-sm text-zinc-500">
-            We may ask a few follow-up questions before presenting recommendations.
+            The more specific you are, the sharper the analysis. Models may ask follow-up questions before
+            producing recommendations.
           </p>
         </div>
       </div>
@@ -724,10 +726,11 @@ export default function IntakePage() {
 
           {availableProviders.length > 1 && (
             <fieldset>
-              <legend className="block text-sm font-medium text-zinc-800">AI providers</legend>
+              <legend className="block text-sm font-medium text-zinc-800">Your think tank</legend>
               <FieldHelp>
-                Pick one or more models to compare, or run all configured providers together. You cannot
-                combine &ldquo;All providers&rdquo; with individual selections.
+                Pick one model or several to analyze the same brief from different angles — or run every
+                configured provider at once. You cannot combine &ldquo;Full think tank&rdquo; with individual
+                selections.
               </FieldHelp>
               <div className="mt-2 space-y-2 rounded-lg border border-zinc-200 bg-white px-3 py-3">
                 {LLM_PROVIDER_OPTIONS.filter((p) => availableProviders.includes(p.value)).map((p) => (
@@ -750,7 +753,7 @@ export default function IntakePage() {
                     onChange={toggleRunAllProviders}
                     className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  All providers (simultaneous)
+                  Full think tank (all configured models)
                 </label>
               </div>
             </fieldset>
@@ -795,8 +798,9 @@ export default function IntakePage() {
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
             <p className="font-medium text-zinc-800">What happens next</p>
             <p className="mt-1 leading-relaxed">
-              Structured analysis runs risk, reversibility, and people lenses, may ask a few targeted follow-up
-              questions, then produces a decision brief you can edit, compare across providers, and discuss.
+              Each model runs Risk, Reversibility, and People lenses on your brief, may ask targeted
+              follow-up questions, then produces a structured decision brief. Compare models side by side,
+              merge them into a Unified Brief, or discuss the results.
             </p>
           </div>
 
@@ -819,7 +823,7 @@ export default function IntakePage() {
               )}
             </button>
             <p className="text-center text-xs text-zinc-500">
-              Three lenses, follow-up questions when needed, structured decision brief.
+              Three lenses · follow-up questions when needed · structured brief per model
             </p>
             <button
               type="button"

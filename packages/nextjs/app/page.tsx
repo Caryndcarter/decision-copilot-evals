@@ -175,7 +175,7 @@ function ThinkTankMockup() {
       {/* Floating research card */}
       <div className="absolute -top-4 -right-4 w-40 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-1.5">
         <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Research</div>
-        <div className="text-[11px] text-zinc-300 leading-snug">Live web search feeds back into the panel&apos;s analysis.</div>
+        <div className="text-[11px] text-zinc-300 leading-snug">Live web search feeds back into your think tank&apos;s analysis.</div>
       </div>
     </div>
   );
