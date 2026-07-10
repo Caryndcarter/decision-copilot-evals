@@ -1,3 +1,4 @@
+import { runProviderLabel } from "@/lib/run-display-name";
 import type {
   DecisionBrief,
   DecisionRunResult,
@@ -6,7 +7,7 @@ import type {
 } from "@/types/decision";
 
 /** Models that can synthesize the Unified Brief (distinct from think-tank member runs). */
-export const UNIFIED_BRIEF_SYNTHESIZERS = ["anthropic", "gemini"] as const;
+export const UNIFIED_BRIEF_SYNTHESIZERS = ["anthropic", "openai", "gemini", "xai"] as const;
 
 export type UnifiedBriefSynthesizer = (typeof UNIFIED_BRIEF_SYNTHESIZERS)[number];
 
@@ -15,13 +16,15 @@ export function isUnifiedBriefSynthesizer(value: string): value is UnifiedBriefS
 }
 
 export function unifiedBriefSynthesizerLabel(author: UnifiedBriefSynthesizer): string {
-  if (author === "gemini") return "Google Gemini";
-  return "Anthropic";
+  if (author === "openai") return "ChatGPT";
+  return runProviderLabel(author);
 }
 
 export function unifiedBriefSynthesizerCoachLabel(author: UnifiedBriefSynthesizer): string {
+  if (author === "anthropic") return "Anthropic Claude";
+  if (author === "openai") return "ChatGPT (OpenAI)";
   if (author === "gemini") return "Google Gemini";
-  return "Anthropic Claude";
+  return "xAI";
 }
 
 /** Whether this run document stores at least one Unified Brief (legacy or per-author map). */

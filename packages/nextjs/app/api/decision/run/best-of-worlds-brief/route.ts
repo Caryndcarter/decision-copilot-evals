@@ -18,7 +18,7 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/best-of-worlds-brief
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"gemini"`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
  * Loads all runs for that decision, merges every eligible posture/provider line, and persists
  * the brief on `unified_briefs_by_author` (legacy `decision_brief_best_of_worlds` when Anthropic).
  */

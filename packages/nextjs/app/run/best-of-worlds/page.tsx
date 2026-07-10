@@ -16,6 +16,7 @@ import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import {
   getUnifiedBriefContributionsForAuthor,
   getUnifiedBriefForAuthor,
+  isUnifiedBriefSynthesizer,
   listAvailableUnifiedBriefAuthors,
   UNIFIED_BRIEF_SYNTHESIZERS,
   unifiedBriefSynthesizerLabel,
@@ -71,10 +72,12 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
   /** Which synthesizer's brief is on screen and target for Generate / Regenerate. */
   const [activeSynthesizer, setActiveSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
-  /** Synthesizers with API keys configured (subset of anthropic + gemini). */
+  /** Synthesizers with API keys configured (subset of UNIFIED_BRIEF_SYNTHESIZERS). */
   const [configuredSynthesizers, setConfiguredSynthesizers] = useState<UnifiedBriefSynthesizer[]>([
     "anthropic",
+    "openai",
     "gemini",
+    "xai",
   ]);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
@@ -217,7 +220,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       }
       const next = data.run as DecisionRunResult;
       const synth =
-        typeof data.synthesizer === "string" && data.synthesizer === "gemini" ? "gemini" : activeSynthesizer;
+        typeof data.synthesizer === "string" && isUnifiedBriefSynthesizer(data.synthesizer)
+          ? data.synthesizer
+          : activeSynthesizer;
       selectSynthesizer(synth);
       setPersistRun(next);
       if (typeof window !== "undefined") {
@@ -448,10 +453,11 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                         type="button"
                         onClick={() => void load()}
                         disabled={generating}
-                        title="Reload decision runs from the server"
+                        title="Fetch the latest saved runs and briefs from the server. Does not call an AI model or rewrite the brief."
+                        aria-label="Reload data from server without regenerating the brief"
                         className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Refresh
+                        Reload data
                       </button>
                       <button
                         type="button"
@@ -465,9 +471,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                       {lastSyncedAt != null ? (
                         <span
                           className="text-xs text-zinc-400"
-                          title="Last successful reload of this decision and its runs"
+                          title="Last time saved data was loaded from the server"
                         >
-                          Refreshed{" "}
+                          Reloaded{" "}
                           {new Date(lastSyncedAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
                         </span>
                       ) : null}

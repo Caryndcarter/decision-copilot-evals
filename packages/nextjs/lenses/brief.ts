@@ -1145,7 +1145,8 @@ function buildBestOfWorldsBriefMessages(
 - When models **disagree**, name the tension and suggest how to decide or de-risk.
 - **title**: short topic style (not a recommendation sentence).
 - **custom_sections**: prefer [] unless 1–3 appendices add clear new structure (e.g. cross-model comparison table).
-- **next_steps**: at least 3 concrete verb-led actions grounded in the merged material.
+- **next_steps**: at least 3 concrete verb-led actions grounded in the merged material (more when warranted — do not stop at the minimum if the decision needs richer follow-through).
+- **summary** and **key_considerations**: give enough depth for a busy executive (not a terse outline).
 
 Return only structured JSON matching the schema (title, summary, recommendation, key_considerations, next_steps, custom_sections).`;
 
@@ -1163,6 +1164,24 @@ Return only structured JSON matching the schema (title, summary, recommendation,
   ];
 }
 
+function hitBriefOutputTokenCap(finishReason: string | undefined): boolean {
+  return !!finishReason && /^(length|max_tokens|MAX_TOKENS)$/i.test(finishReason);
+}
+
+function unifiedBriefMaxTokens(synthesizer: UnifiedBriefSynthesizer): number {
+  // Unified brief JSON is large; xAI Grok often needs extra headroom vs Anthropic/Gemini.
+  return synthesizer === "xai" ? 16_384 : 8192;
+}
+
+const BRIEF_JSON_RETRY_USER: LLMMessage = {
+  role: "user",
+  content:
+    "Your previous reply was not valid JSON for the required schema, or it may have been cut off before finishing. " +
+    "Reply NOW with one complete JSON object matching the schema exactly. " +
+    "Include a full summary, recommendation, 3–7 key_considerations, at least 3 next_steps, and custom_sections (use [] if none). " +
+    "No prose, no markdown fences — only the JSON object.",
+};
+
 /**
  * One synthesized brief merging all runs (all providers/postures), all research, and all variants.
  * Caller stores on `unified_briefs_by_author` (and legacy `decision_brief_best_of_worlds` when author is Anthropic).
@@ -1175,13 +1194,46 @@ export async function runBestOfWorldsBriefSynthesis(
 ): Promise<DecisionBrief> {
   const researchRuns = allRunsForResearch ?? canonicalRuns;
   const messages = buildBestOfWorldsBriefMessages(anchorRun, canonicalRuns, researchRuns, synthesizer);
-  const response = await getClient(synthesizer).run(messages, {
+  const maxTokens = unifiedBriefMaxTokens(synthesizer);
+  const requestOpts = {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.45,
-    maxTokens: 8192,
-  });
+    maxTokens,
+  };
+
+  let response = await getClient(synthesizer).run(messages, requestOpts);
+
+  if (!response.parsed || hitBriefOutputTokenCap(response.meta?.finishReason)) {
+    console.warn("[best-of-worlds-brief] Retrying synthesis (parse fail or output token cap).", {
+      synthesizer,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+    });
+    response = await getClient(synthesizer).run([...messages, BRIEF_JSON_RETRY_USER], {
+      ...requestOpts,
+      temperature: 0.2,
+      maxTokens: Math.max(maxTokens, 16_384),
+    });
+  }
+
   if (!response.parsed) {
-    throw new Error("Best-of-worlds brief synthesis did not return valid structured output");
+    console.error("[best-of-worlds-brief] Synthesis failed after retry.", {
+      synthesizer,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Best-of-worlds brief synthesis did not return valid structured output (provider: ${synthesizer}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
+  }
+
+  if (hitBriefOutputTokenCap(response.meta?.finishReason)) {
+    console.warn("[best-of-worlds-brief] Response may be truncated by output token limit.", {
+      synthesizer,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+    });
   }
   const generated_at = new Date().toISOString();
   let brief = parseBriefOutput(response.parsed, generated_at);

@@ -8,6 +8,7 @@ import {
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefContributionsIntoRun,
+  unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type { DecisionRunResult } from "@/types/decision";
@@ -16,7 +17,7 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"gemini"`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
  * Requires the matching Unified Brief. Persists on `unified_brief_contributions_by_author`.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!brief) {
     return NextResponse.json(
       {
-        error: `Generate the Unified Brief with ${synthesizer === "gemini" ? "Google Gemini" : "Anthropic"} first, then analyze contributions.`,
+        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)} first, then analyze contributions.`,
       },
       { status: 400 }
     );
