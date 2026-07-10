@@ -68,7 +68,7 @@ const RERUN_PROVIDER_OPTIONS: { value: LLMProviderName | "all"; label: string }[
   { value: "anthropic", label: "Anthropic" },
   { value: "gemini", label: "Google Gemini" },
   { value: "xai", label: "xAI" },
-  { value: "all", label: "All providers (parallel)" },
+  { value: "all", label: "Full think tank (parallel)" },
 ];
 
 // ── Generic analysis renderer ─────────────────────────────────────────────────
@@ -670,8 +670,8 @@ function FreeformContent() {
                 {rerunBusy ? "Running…" : "Run freeform again"}
               </button>
               <p className="text-xs text-zinc-500">
-                Creates a new saved run for this decision. Choosing &quot;All providers&quot; adds four runs (OpenAI,
-                Anthropic, Gemini, and xAI — like on intake) and returns you to My decisions.
+                Creates a new saved run for this decision. Choosing &quot;Full think tank&quot; adds one run
+                per configured model (like on intake) and returns you to My Decisions.
               </p>
             </CollapsibleBlock>
           )}

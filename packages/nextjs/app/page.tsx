@@ -265,8 +265,8 @@ export default function Home() {
                 Decision Copilot is built for that moment. You describe what&apos;s going on:
                 your situation, constraints, what you know and what you don&apos;t. Multiple AI
                 models analyze the same brief independently — and you get structured output you
-                can compare, refine, and act on together with your AI think tank. The
-                best-of-all-worlds thinking for the best outcome.
+                can compare, refine, and act on together with your AI think tank — best-of-all-worlds
+                thinking that pulls the strongest ideas from every perspective into one recommendation.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link

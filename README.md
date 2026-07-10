@@ -1,25 +1,25 @@
 # Decision Copilot
 
-A decision-support app that helps you think through important decisions using three analysis lenses (Risk, Reversibility, People), optional follow-up questions, and an AI-generated decision brief. Run one provider or all four in parallel, compare outputs, see which model's ideas made the cut, extend analysis with research and variants, and discuss results in streaming chat.
+Turn AI models into **your own think tank** for high-stakes decisions. Describe your situation, run one model or many on the same brief through three analysis lenses (Risk, Reversibility, People), answer follow-up questions, and get structured briefs you can compare. When you're ready, synthesize a **Unified Brief** — best-of-all-worlds thinking that merges the strongest ideas across models — with attribution for whose ideas made the cut. Extend analysis with research and variants, and discuss results in streaming chat.
 
 > **Just want to run it?** Jump to [Run it locally](#run-it-locally).
 
 ## What it does
 
-1. **Intake** — Describe the decision, constraints, facts and assumptions, and open questions. Choose an analysis posture (compare options openly, challenge a leaning, risk-first, or widen the option set). Demo scenarios illustrate the level of detail that works well. For “Challenge my leaning” you also state the plan you want pressure-tested.
+1. **Intake — brief your think tank** — Describe the decision, constraints, facts and assumptions, and open questions. Choose an analysis posture (compare options openly, challenge a leaning, risk-first, or widen the option set). Pick one AI model or convene your full think tank on the same brief. Demo scenarios illustrate the level of detail that works well. For “Challenge my leaning” you also state the plan you want pressure-tested.
 
 2. **Three-lens analysis** — The app runs three lenses in parallel:
    - **Risk** — Top risks, assumptions, blind spots, tradeoffs, remaining uncertainty.
    - **Reversibility** — Irreversible steps, safe-to-try-first options.
    - **People** — Stakeholder impacts (who’s affected, how, positive/negative/neutral), execution risks.
 
-3. **Clarification (optional)** — If a lens needs more information, it can ask follow-up questions. The answer control is inferred from the question wording (a question asking for an explanation renders as text, not a Yes/No dropdown). On all-provider runs, similar follow-ups from different models are **de-duplicated and merged** into one combined form so you answer each distinct question once. The analysis is then re-run with your answers so the model doesn’t repeat the same questions.
+3. **Clarification (optional)** — If a lens needs more information, it can ask follow-up questions. The answer control is inferred from the question wording (a question asking for an explanation renders as text, not a Yes/No dropdown). When multiple think-tank members are awaiting answers, similar follow-ups from different models are **de-duplicated and merged** into one combined form so you answer each distinct question once. The analysis is then re-run with your answers so the model doesn’t repeat the same questions.
 
 4. **Decision brief** — After lenses (and any clarification), an AI synthesis produces a brief: title, summary, recommendation, key considerations, and next steps, with a **generated-at** timestamp shown in the UI.
 
-5. **Multi-provider runs** — Choose **OpenAI**, **Anthropic**, **Google Gemini**, or **xAI (Grok)**, or run **all four simultaneously** on the same intake. Partial failures are surfaced when one provider errors in an all-providers run.
+5. **Multi-model think tank** — Choose **OpenAI**, **Anthropic**, **Google Gemini**, or **xAI (Grok)** individually, select a subset, or run **every configured model** on the same intake. Each produces its own structured analysis on the same brief. Partial failures are surfaced when one model errors in a parallel run.
 
-6. **Cross-provider comparison & unified brief** — Compare provider outputs side by side and synthesize a **Unified Brief** (Anthropic-authored) that merges research, variants, and lens outputs across lanes. Regenerate synthesis as you add research or variants.
+6. **Cross-model comparison & Unified Brief** — Compare think-tank members side by side and synthesize a **Unified Brief** (Anthropic-authored) that merges research, variants, and lens outputs across lanes — best-of-all-worlds thinking in one recommendation. Regenerate synthesis as you add research or variants.
 
 7. **Contribution attribution** — On the Unified Brief page, toggle the side panel from **Discuss** to **Contributions** to see Anthropic's honest take on *whose ideas made the cut*: per model, how much it influenced the final brief, which ideas were adopted, which unique angles only it raised, and what was deliberately left out.
 
@@ -128,7 +128,7 @@ npm run dynamo:init   # starts DynamoDB Local in Docker + creates the …-app ta
 npm run dev
 ```
 
-- **App:** [http://localhost:3000](http://localhost:3000) — click **Start a decision intake** to begin (or load a demo scenario).
+- **App:** [http://localhost:3000](http://localhost:3000) — describe a decision and convene your think tank (or load a demo scenario).
 - **DynamoDB Admin UI:** [http://127.0.0.1:8011](http://127.0.0.1:8011) (port from `DYNAMODB_ADMIN_PORT`).
 
 On later sessions you don't need `dynamo:init` again — `npm run dynamo:start` (or just `npm run dev` if the container is already up) is enough; data persists in the Docker volume.

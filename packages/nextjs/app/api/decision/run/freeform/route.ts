@@ -14,7 +14,7 @@ import { insertRun } from "@/lib/db/runs";
 import { parseIntakeLlmSelection } from "@/lib/intake-llm-selection";
 import { runForProviders } from "@/lib/run-for-providers";
 
-/** All four providers run in parallel; wall time ≈ slowest single call, not sum. */
+/** Parallel freeform runs: wall time ≈ slowest single call, not sum. */
 export const maxDuration = 180;
 
 function isValidPosture(p: string): p is DecisionIntake["posture"] {

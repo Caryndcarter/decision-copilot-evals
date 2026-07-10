@@ -125,7 +125,7 @@ function ClarifyAllContent() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">All providers</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Your think tank</p>
           <h1 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
             Answer unique follow-up questions
           </h1>

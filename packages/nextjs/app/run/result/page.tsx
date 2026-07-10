@@ -485,7 +485,7 @@ function RunResultContent() {
                     className="mt-0.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span>
-                    <span className="font-medium">All providers (simultaneous)</span>
+                    <span className="font-medium">Full think tank (simultaneous)</span>
                     <span className="mt-0.5 block text-xs font-normal text-zinc-500">
                       Run OpenAI, Anthropic, Google Gemini, and xAI in parallel for this posture—same as on the intake form.
                     </span>
