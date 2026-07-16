@@ -16,10 +16,20 @@ import type {
 } from "./types";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+/** Default chat model; override with `ANTHROPIC_MODEL` in env. */
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL?.trim() || "claude-fable-5";
 const DEFAULT_MAX_TOKENS = 4096;
 const API_VERSION = "2023-06-01";
 const DEFAULT_WEB_SEARCH_MAX_CONTINUATIONS = 8;
+
+/**
+ * Claude Fable 5 / Mythos 5 keep adaptive thinking always on and reject a custom
+ * `temperature` (it must be 1.0 or unset). Omit the field entirely for those models.
+ */
+export function anthropicRejectsCustomTemperature(model: string): boolean {
+  const m = model.toLowerCase();
+  return m.includes("fable") || m.includes("mythos");
+}
 
 function getApiKey(): string {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -198,8 +208,10 @@ export async function run(
   const requestBase: Record<string, unknown> = {
     model,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    temperature: options.temperature ?? 0.7,
   };
+  if (!anthropicRejectsCustomTemperature(model)) {
+    requestBase.temperature = options.temperature ?? 0.7;
+  }
 
   if (system) {
     requestBase.system = system;

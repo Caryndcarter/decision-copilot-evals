@@ -150,7 +150,9 @@ Full list of variables for `.env` at the repo root:
 | `ANTHROPIC_API_KEY` | Optional. When set, you can choose Anthropic as the AI provider. |
 | `GEMINI_API_KEY` | Optional. Same as above for Google Gemini. |
 | `XAI_API_KEY` | Optional. When set, you can choose xAI (Grok) as the AI provider. |
-| `XAI_MODEL` | Optional. xAI chat model (default `grok-4.3`). |
+| `OPENAI_MODEL` | Optional. OpenAI chat model (default `gpt-5.6-sol`; e.g. `gpt-5.6-terra` for lower cost). |
+| `ANTHROPIC_MODEL` | Optional. Anthropic chat model (default `claude-fable-5`). |
+| `XAI_MODEL` | Optional. xAI chat model (default `grok-4.5`). |
 | `PROJECT_KEY` / `PROJECT_ENV` | Used in container and table names (default `decision-copilot` / `local`). |
 | `APP_TABLE_NAME` | Optional. Single-table name (default `${PROJECT_KEY}-${PROJECT_ENV}-app`). |
 | `DYNAMODB_ENDPOINT` | DynamoDB endpoint URL. Set for local Docker (`http://127.0.0.1:8010`); leave unset in prod to use real AWS. |

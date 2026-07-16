@@ -15,7 +15,7 @@ import type {
 
 const XAI_API_URL = "https://api.x.ai/v1/chat/completions";
 /** Default chat model; override with `XAI_MODEL` in env. */
-const DEFAULT_MODEL = process.env.XAI_MODEL?.trim() || "grok-4.3";
+const DEFAULT_MODEL = process.env.XAI_MODEL?.trim() || "grok-4.5";
 const DEFAULT_MAX_TOKENS = 4096;
 
 function getApiKey(): string {

@@ -8,7 +8,7 @@
 import "server-only";
 import type { LLMMessage, LLMRequestOptions, LLMResponse, LLMProvider } from "./types";
 import { openai } from "./openai";
-import { anthropic } from "./anthropic";
+import { anthropic, anthropicRejectsCustomTemperature } from "./anthropic";
 import { gemini } from "./gemini";
 import { xai } from "./xai";
 
@@ -257,7 +257,7 @@ export async function runStream(
     if (!key) throw new Error("OPENAI_API_KEY environment variable is not set");
     const messages =
       typeof prompt === "string" ? [{ role: "user" as const, content: prompt }] : prompt;
-    const model = (options.model ?? process.env.OPENAI_MODEL?.trim()) || "gpt-5.5";
+    const model = (options.model ?? process.env.OPENAI_MODEL?.trim()) || "gpt-5.6-sol";
     const mLower = model.toLowerCase();
     const usesMax = mLower.startsWith("gpt-5") || /^o\d/i.test(mLower);
     const body: Record<string, unknown> = {
@@ -290,7 +290,7 @@ export async function runStream(
       "https://api.x.ai/v1/chat/completions",
       key,
       {
-        model: (options.model ?? process.env.XAI_MODEL?.trim()) || "grok-4.3",
+        model: (options.model ?? process.env.XAI_MODEL?.trim()) || "grok-4.5",
         messages,
         max_tokens: options.maxTokens ?? 4096,
         temperature: options.temperature ?? 0.7,
@@ -317,12 +317,15 @@ export async function runStream(
         : prompt
             .filter((m) => m.role !== "system")
             .map((m) => ({ role: m.role, content: m.content }));
+    const anthropicModel = (options.model ?? process.env.ANTHROPIC_MODEL?.trim()) || "claude-fable-5";
     const body: Record<string, unknown> = {
-      model: options.model ?? "claude-sonnet-4-6",
+      model: anthropicModel,
       max_tokens: options.maxTokens ?? 4096,
-      temperature: options.temperature ?? 0.7,
       messages: other,
     };
+    if (!anthropicRejectsCustomTemperature(anthropicModel)) {
+      body.temperature = options.temperature ?? 0.7;
+    }
     if (systemMsg) body.system = systemMsg;
     return streamAnthropicMessages(key, body, onDelta);
   }

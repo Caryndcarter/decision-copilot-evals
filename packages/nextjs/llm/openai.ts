@@ -15,8 +15,8 @@ import type {
 } from "./types";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-/** Default chat model; override with `OPENAI_MODEL` in env (e.g. `gpt-5.4` for lower cost). */
-const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-5.5";
+/** Default chat model; override with `OPENAI_MODEL` in env (e.g. `gpt-5.6-terra` for lower cost). */
+const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol";
 const DEFAULT_MAX_TOKENS = 4096;
 
 function getApiKey(): string {
