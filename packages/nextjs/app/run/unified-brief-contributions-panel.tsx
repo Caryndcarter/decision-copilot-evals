@@ -23,6 +23,8 @@ interface UnifiedBriefContributionsPanelProps {
   onUpdated: (run: DecisionRunResult) => void;
   /** Opens the full-width influence charts overlay (heatmap + averages). */
   onOpenInfluenceCharts?: () => void;
+  /** When true, anonymize model brands in the contributions analysis prompt. */
+  blindAuthorship?: boolean;
 }
 
 const PROVIDER_BADGE: Record<LLMProviderName, string> = {
@@ -111,6 +113,7 @@ export function UnifiedBriefContributionsPanel({
   listMaxHeightClassName = "max-h-[min(560px,calc(100vh-13rem))]",
   onUpdated,
   onOpenInfluenceCharts,
+  blindAuthorship = false,
 }: UnifiedBriefContributionsPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,11 +133,11 @@ export function UnifiedBriefContributionsPanel({
       const res = await fetch("/api/decision/run/unified-brief-contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          decisionId
-            ? { decision_id: decisionId, synthesizer }
-            : { run_id: runId, synthesizer }
-        ),
+        body: JSON.stringify({
+          ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
+          synthesizer,
+          blind: blindAuthorship,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -147,7 +150,7 @@ export function UnifiedBriefContributionsPanel({
     } finally {
       setGenerating(false);
     }
-  }, [disabled, generating, runId, decisionId, synthesizer, onUpdated]);
+  }, [disabled, generating, runId, decisionId, synthesizer, blindAuthorship, onUpdated]);
 
   const scrollToProvider = useCallback((provider: string) => {
     document

@@ -18,12 +18,12 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/best-of-worlds-brief
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind` (anonymize model brands in the prompt).
  * Loads all runs for that decision, merges every eligible posture/provider line, and persists
  * the brief on `unified_briefs_by_author` (legacy `decision_brief_best_of_worlds` when Anthropic).
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
+  let body: { run_id?: string; decision_id?: string; synthesizer?: string; blind?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
     ? synthesizerRaw
     : "anthropic";
+  const blind = body.blind === true;
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -70,10 +71,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const incomplete_runs = listIncompleteRunsForBestOfWorlds(allRuns);
 
   try {
-    const brief = await runBestOfWorldsBriefSynthesis(persistRun, eligible, allRuns, synthesizer);
+    const brief = await runBestOfWorldsBriefSynthesis(
+      persistRun,
+      eligible,
+      allRuns,
+      synthesizer,
+      blind
+    );
     const updated = mergeUnifiedBriefIntoRun(persistRun, synthesizer, brief);
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, incomplete_runs, synthesizer });
+    return NextResponse.json({ run: updated, incomplete_runs, synthesizer, blind });
   } catch (err) {
     console.error("[best-of-worlds-brief]", err);
     const message = err instanceof Error ? err.message : "Brief synthesis failed";

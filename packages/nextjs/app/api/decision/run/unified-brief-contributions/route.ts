@@ -17,11 +17,11 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind`.
  * Requires the matching Unified Brief. Persists on `unified_brief_contributions_by_author`.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
+  let body: { run_id?: string; decision_id?: string; synthesizer?: string; blind?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
     ? synthesizerRaw
     : "anthropic";
+  const blind = body.blind === true;
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -81,11 +82,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       eligible,
       brief,
       allRuns,
-      synthesizer
+      synthesizer,
+      blind
     );
     const updated = mergeUnifiedBriefContributionsIntoRun(persistRun, synthesizer, contributions);
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, synthesizer });
+    return NextResponse.json({ run: updated, synthesizer, blind });
   } catch (err) {
     console.error("[unified-brief-contributions]", err);
     const message = err instanceof Error ? err.message : "Contributions analysis failed";

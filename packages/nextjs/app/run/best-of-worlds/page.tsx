@@ -86,6 +86,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     "gemini",
     "xai",
   ]);
+  /** When on, prompts use AI Model 1/2/… instead of brand names; UI still shows decoded brands. */
+  const [blindAuthorship, setBlindAuthorship] = useState(false);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
   const generatingSteps = unifiedBriefGeneratingSteps(activeSynthesizer);
@@ -217,6 +219,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
         body: JSON.stringify({
           ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
           synthesizer: activeSynthesizer,
+          blind: blindAuthorship,
         }),
       });
       const data = await res.json();
@@ -425,38 +428,53 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   </div>
 
                   <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <button
-                      type="button"
-                      onClick={() => void handleRegenerate()}
-                      disabled={generating}
-                      title={
-                        brief
-                          ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
-                          : `Generate a Unified Brief using ${activeSynthesizerLabel}`
-                      }
-                      aria-label={
-                        generating
-                          ? `Generating Unified Brief with ${activeSynthesizerLabel}`
-                          : brief
-                            ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
-                            : `Generate Unified Brief with ${activeSynthesizerLabel}`
-                      }
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                    >
-                      {generating ? (
-                        <>
-                          <span
-                            className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
-                            aria-hidden
-                          />
-                          Generating with {activeSynthesizerLabel}…
-                        </>
-                      ) : brief ? (
-                        <>Regenerate with {activeSynthesizerLabel}</>
-                      ) : (
-                        <>Generate with {activeSynthesizerLabel}</>
-                      )}
-                    </button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+                      <button
+                        type="button"
+                        onClick={() => void handleRegenerate()}
+                        disabled={generating}
+                        title={
+                          brief
+                            ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
+                            : `Generate a Unified Brief using ${activeSynthesizerLabel}`
+                        }
+                        aria-label={
+                          generating
+                            ? `Generating Unified Brief with ${activeSynthesizerLabel}`
+                            : brief
+                              ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
+                              : `Generate Unified Brief with ${activeSynthesizerLabel}`
+                        }
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                      >
+                        {generating ? (
+                          <>
+                            <span
+                              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                              aria-hidden
+                            />
+                            Generating with {activeSynthesizerLabel}…
+                          </>
+                        ) : brief ? (
+                          <>Regenerate with {activeSynthesizerLabel}</>
+                        ) : (
+                          <>Generate with {activeSynthesizerLabel}</>
+                        )}
+                      </button>
+                      <label
+                        className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none"
+                        title="Hide ChatGPT / Claude / Gemini / Grok names in the synthesis prompt. Sources are labeled AI Model 1, 2, 3…; the brief you see still uses real names."
+                      >
+                        <input
+                          type="checkbox"
+                          checked={blindAuthorship}
+                          onChange={(e) => setBlindAuthorship(e.target.checked)}
+                          disabled={generating}
+                          className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        Blind authorship
+                      </label>
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <button
@@ -766,6 +784,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     brief={brief}
                     contributions={contributions}
                     synthesizer={activeSynthesizer}
+                    blindAuthorship={blindAuthorship}
                     onUpdated={applyPersistRun}
                     onOpenInfluenceCharts={() => setInfluenceChartsOpen(true)}
                   />

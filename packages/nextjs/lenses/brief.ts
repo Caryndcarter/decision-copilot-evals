@@ -25,7 +25,32 @@ import type {
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
 import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
 import { unifiedBriefRunDedupeKey } from "@/lib/best-of-worlds-incomplete";
-import { runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
+import { runPostureLabel } from "@/lib/run-display-name";
+import {
+  buildProviderAliasMap,
+  providerDisplayForPrompt,
+  type ProviderAliasMap,
+} from "@/lib/unified-brief-blind";
+import type { LLMProviderName } from "@/types/decision";
+
+/** How provider names and run ids appear in Unified Brief merge prompts. */
+export type BestOfWorldsPromptLabeling = {
+  aliasMap: ProviderAliasMap | null;
+  /** When true, omit run_id / compared run_ids from the prompt. */
+  omitRunIds: boolean;
+};
+
+const OPEN_PROMPT_LABELING: BestOfWorldsPromptLabeling = {
+  aliasMap: null,
+  omitRunIds: false,
+};
+
+function labelProvider(
+  provider: LLMProviderName | string | undefined,
+  labeling: BestOfWorldsPromptLabeling
+): string {
+  return providerDisplayForPrompt(provider, labeling.aliasMap);
+}
 
 const BRIEF_OUTPUT_SCHEMA = {
   type: "object",
@@ -801,13 +826,14 @@ function pickBriefForConsolidatedRun(run: DecisionRunResult): DecisionBrief | un
 /** Compact index so chat/synthesis see research counts even when per-run blocks are truncated. */
 export function formatResearchInventoryForBrief(
   canonicalRuns: DecisionRunResult[],
-  allRuns: DecisionRunResult[]
+  allRuns: DecisionRunResult[],
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
 ): string {
   const lines: string[] = [];
   for (const run of canonicalRuns) {
     const rcs = researchCompletionsForLane(run, allRuns).filter((rc) => rc.research_id?.trim());
     if (!rcs.length) continue;
-    const tag = `${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}`;
+    const tag = `${labelProvider(run.llm_provider, labeling)} · ${runPostureLabel(run.intake.posture)}`;
     const items = rcs
       .slice(0, 12)
       .map((rc) => {
@@ -815,15 +841,16 @@ export function formatResearchInventoryForBrief(
         return `[research_id:${rc.research_id}] ${truncateForPrompt(label, 80)}`;
       })
       .join("; ");
-    lines.push(
-      `- **${tag}** (canonical run_id \`${run.run_id}\`, ${rcs.length} task${rcs.length === 1 ? "" : "s"}): ${items}`
-    );
+    const idPart = labeling.omitRunIds
+      ? `${rcs.length} task${rcs.length === 1 ? "" : "s"}`
+      : `canonical run_id \`${run.run_id}\`, ${rcs.length} task${rcs.length === 1 ? "" : "s"}`;
+    lines.push(`- **${tag}** (${idPart}): ${items}`);
   }
   if (!lines.length) return "";
   return (
-    "## Research inventory (one row per provider · posture lane)\n" +
+    "## Research inventory (one row per model · posture lane)\n" +
     "Counts union every duplicate run in that lane (older abandoned runs are not listed separately). " +
-    "Each task has a `[research_id:…]` tag and appears under **Research on this run** at the top of the matching provider block when not truncated.\n\n" +
+    "Each task has a `[research_id:…]` tag and appears under **Research on this run** at the top of the matching model block when not truncated.\n\n" +
     lines.join("\n")
   );
 }
@@ -847,24 +874,26 @@ export function variantsForLane(canonicalRun: DecisionRunResult, allRuns: Decisi
 /** Variant counts per lane — same canonical semantics as research inventory. */
 export function formatVariantInventoryForBrief(
   canonicalRuns: DecisionRunResult[],
-  allRuns: DecisionRunResult[]
+  allRuns: DecisionRunResult[],
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
 ): string {
   const lines: string[] = [];
   for (const run of canonicalRuns) {
     const variants = variantsForLane(run, allRuns);
     if (!variants.length) continue;
-    const tag = `${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}`;
+    const tag = `${labelProvider(run.llm_provider, labeling)} · ${runPostureLabel(run.intake.posture)}`;
     const items = variants
       .slice(0, 8)
       .map((v) => `[variant_id:${v.variant_id}] ${truncateForPrompt(v.label, 60)}`)
       .join("; ");
-    lines.push(
-      `- **${tag}** (canonical run_id \`${run.run_id}\`, ${variants.length} variant${variants.length === 1 ? "" : "s"}): ${items}`
-    );
+    const idPart = labeling.omitRunIds
+      ? `${variants.length} variant${variants.length === 1 ? "" : "s"}`
+      : `canonical run_id \`${run.run_id}\`, ${variants.length} variant${variants.length === 1 ? "" : "s"}`;
+    lines.push(`- **${tag}** (${idPart}): ${items}`);
   }
   if (!lines.length) return "";
   return (
-    "## Variant inventory (one row per provider · posture lane)\n" +
+    "## Variant inventory (one row per model · posture lane)\n" +
     "Counts union saved format variants across every run in that lane.\n\n" +
     lines.join("\n")
   );
@@ -892,11 +921,14 @@ function formatResearchOnRunForBestOfWorlds(rcs: ResearchCompletion[]): string {
 }
 
 /** Merge research completions from every run; dedupe by `research_id`. */
-export function mergeResearchFromAllRuns(runs: DecisionRunResult[]): ResearchCompletion[] {
+export function mergeResearchFromAllRuns(
+  runs: DecisionRunResult[],
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
+): ResearchCompletion[] {
   const seen = new Set<string>();
   const out: ResearchCompletion[] = [];
   for (const run of runs) {
-    const tag = `${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}`;
+    const tag = `${labelProvider(run.llm_provider, labeling)} · ${runPostureLabel(run.intake.posture)}`;
     for (const rc of run.research_completions ?? []) {
       if (!rc.research_id?.trim()) continue;
       if (seen.has(rc.research_id)) continue;
@@ -910,10 +942,13 @@ export function mergeResearchFromAllRuns(runs: DecisionRunResult[]): ResearchCom
   return out;
 }
 
-function flattenVariantsFromAllRuns(runs: DecisionRunResult[]): RunVariant[] {
+function flattenVariantsFromAllRuns(
+  runs: DecisionRunResult[],
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
+): RunVariant[] {
   const out: RunVariant[] = [];
   for (const run of runs) {
-    const tag = `${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}`;
+    const tag = `${labelProvider(run.llm_provider, labeling)} · ${runPostureLabel(run.intake.posture)}`;
     for (const v of run.variants ?? []) {
       out.push({ ...v, label: `${v.label} — ${tag}` });
     }
@@ -937,18 +972,21 @@ function collectCrossProviderSyntheses(runs: DecisionRunResult[]): ProviderSynth
 }
 
 /** Same shape as cross-provider comparison / run chat context. */
-export function formatProviderSynthesisForBrief(synthesis: ProviderSynthesis): string {
-  const labels = synthesis.providers.map((p) => runProviderLabel(p)).join(", ");
+export function formatProviderSynthesisForBrief(
+  synthesis: ProviderSynthesis,
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
+): string {
+  const labels = synthesis.providers.map((p) => labelProvider(p, labeling)).join(", ");
   const lines: string[] = [
-    `### Cross-provider comparison (${labels})`,
-    `Compared run_ids: ${synthesis.run_ids.join(", ")}`,
+    `### Cross-model comparison (${labels})`,
+    ...(labeling.omitRunIds ? [] : [`Compared run_ids: ${synthesis.run_ids.join(", ")}`]),
     `Generated: ${synthesis.generated_at}`,
     synthesis.has_drafts ? "*(includes pre-clarification drafts)*" : "",
     "",
     synthesis.overall_summary,
   ].filter(Boolean);
   if (synthesis.consensus.length) {
-    lines.push("", "**Consensus (all providers agree):**");
+    lines.push("", "**Consensus (all models agree):**");
     for (const p of synthesis.consensus) {
       lines.push(`- **${p.area}:** ${truncateForPrompt(p.description, 1200)}`);
     }
@@ -957,15 +995,15 @@ export function formatProviderSynthesisForBrief(synthesis: ProviderSynthesis): s
     lines.push("", "**Majority view:**");
     for (const p of synthesis.majority_view) {
       lines.push(
-        `- **${p.area}** [${p.providers.map((x) => runProviderLabel(x)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
+        `- **${p.area}** [${p.providers.map((x) => labelProvider(x, labeling)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
       );
     }
   }
   if (synthesis.minority_opinions.length) {
-    lines.push("", "**Minority opinions (one provider only):**");
+    lines.push("", "**Minority opinions (one model only):**");
     for (const p of synthesis.minority_opinions) {
       lines.push(
-        `- **${p.area}** [${p.providers.map((x) => runProviderLabel(x)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
+        `- **${p.area}** [${p.providers.map((x) => labelProvider(x, labeling)).join(", ")}]: ${truncateForPrompt(p.description, 1200)}`
       );
     }
   }
@@ -995,7 +1033,8 @@ export function researchCompletionsForLane(
 function formatOneRunForBestOfWorlds(
   run: DecisionRunResult,
   maxChars: number,
-  researchRuns: DecisionRunResult[]
+  researchRuns: DecisionRunResult[],
+  labeling: BestOfWorldsPromptLabeling = OPEN_PROMPT_LABELING
 ): string {
   const lenses = pickLensOutputsForConsolidatedRun(run);
   const brief = pickBriefForConsolidatedRun(run);
@@ -1004,9 +1043,11 @@ function formatOneRunForBestOfWorlds(
     run.status !== "complete" && run.status !== "pending_brief"
       ? " (not final — analysis may change after clarification)"
       : "";
-  lines.push(
-    `## Run: ${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}\n**run_id:** ${run.run_id}\n**status:** ${run.status}${draftHint}`
-  );
+  const header = `## Run: ${labelProvider(run.llm_provider, labeling)} · ${runPostureLabel(run.intake.posture)}`;
+  const meta = labeling.omitRunIds
+    ? `**status:** ${run.status}${draftHint}`
+    : `**run_id:** ${run.run_id}\n**status:** ${run.status}${draftHint}`;
+  lines.push(`${header}\n${meta}`);
   const researchBlock = formatResearchOnRunForBestOfWorlds(
     researchCompletionsForLane(run, researchRuns)
   );
@@ -1071,29 +1112,46 @@ function formatOneRunForBestOfWorlds(
 export type BuildBestOfWorldsSourceOptions = {
   /** When set, research inventory + merged research include every decision run (not only canonical lanes). */
   allRunsForResearch?: DecisionRunResult[];
+  /**
+   * Blind authorship: replace provider brand names with AI Model N aliases and omit run_ids.
+   * The mapping is server-side only; decode after the model responds.
+   */
+  blind?: boolean;
 };
+
+function resolvePromptLabeling(
+  canonicalRuns: DecisionRunResult[],
+  blind: boolean | undefined
+): BestOfWorldsPromptLabeling {
+  if (!blind) return OPEN_PROMPT_LABELING;
+  return {
+    aliasMap: buildProviderAliasMap(canonicalRuns),
+    omitRunIds: true,
+  };
+}
 
 export function buildBestOfWorldsSourceUserContent(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   opts?: BuildBestOfWorldsSourceOptions
 ): string {
+  const labeling = resolvePromptLabeling(canonicalRuns, opts?.blind);
   const intake = anchorRun.intake;
   const clar = anchorRun.clarifications ?? [];
   const researchRuns = opts?.allRunsForResearch ?? canonicalRuns;
-  const researchMerged = mergeResearchFromAllRuns(researchRuns);
-  const researchInventory = formatResearchInventoryForBrief(canonicalRuns, researchRuns);
-  const variantInventory = formatVariantInventoryForBrief(canonicalRuns, researchRuns);
-  const variantsMerged = flattenVariantsFromAllRuns(researchRuns);
+  const researchMerged = mergeResearchFromAllRuns(researchRuns, labeling);
+  const researchInventory = formatResearchInventoryForBrief(canonicalRuns, researchRuns, labeling);
+  const variantInventory = formatVariantInventoryForBrief(canonicalRuns, researchRuns, labeling);
+  const variantsMerged = flattenVariantsFromAllRuns(researchRuns, labeling);
   const runsSorted = [...canonicalRuns].sort((a, b) => {
-    const pa = runProviderLabel(a.llm_provider);
-    const pb = runProviderLabel(b.llm_provider);
+    const pa = labelProvider(a.llm_provider, labeling);
+    const pb = labelProvider(b.llm_provider, labeling);
     if (pa !== pb) return pa.localeCompare(pb);
     return runPostureLabel(a.intake.posture).localeCompare(runPostureLabel(b.intake.posture));
   });
   const perBudget = Math.max(3500, Math.floor(52000 / Math.max(1, runsSorted.length)));
   const runBlocks = runsSorted
-    .map((r) => formatOneRunForBestOfWorlds(r, perBudget, researchRuns))
+    .map((r) => formatOneRunForBestOfWorlds(r, perBudget, researchRuns, labeling))
     .join("\n\n---\n\n");
   const researchBlock = formatResearchCompletionsForBrief(researchMerged, 14_000);
   const variantsBlock = formatVariantsForBrief(variantsMerged, 3000);
@@ -1107,16 +1165,22 @@ export function buildBestOfWorldsSourceUserContent(
   if (clarBlock) userParts.push(clarBlock);
   if (researchInventory) userParts.push(researchInventory);
   if (variantInventory) userParts.push(variantInventory);
-  userParts.push(`## All provider / posture runs (mine for best ideas)\n\n${runBlocks}`);
+  userParts.push(
+    labeling.aliasMap
+      ? `## All model / posture runs (mine for best ideas)\n\nModels are labeled AI Model 1, AI Model 2, … — do not infer vendor brands from style or content.\n\n${runBlocks}`
+      : `## All provider / posture runs (mine for best ideas)\n\n${runBlocks}`
+  );
   if (researchBlock) userParts.push(`## All research (merged across runs)\n\n${researchBlock}`);
   if (variantsBlock) userParts.push(`## All saved variants (merged across runs)\n\n${variantsBlock}`);
 
   const syntheses = collectCrossProviderSyntheses(canonicalRuns);
   if (syntheses.length > 0) {
-    const synBlocks = syntheses.map(formatProviderSynthesisForBrief).join("\n\n---\n\n");
+    const synBlocks = syntheses
+      .map((s) => formatProviderSynthesisForBrief(s, labeling))
+      .join("\n\n---\n\n");
     userParts.push(
-      `## Cross-provider comparisons (same inputs as the result-page comparison feature)\n\n` +
-        "Use these meta-analyses when merging the Unified Brief—they summarize agreement, majority views, and provider-only angles per posture.\n\n" +
+      `## Cross-model comparisons (same inputs as the result-page comparison feature)\n\n` +
+        "Use these meta-analyses when merging the Unified Brief—they summarize agreement, majority views, and model-only angles per posture.\n\n" +
         synBlocks
     );
   }
@@ -1128,20 +1192,24 @@ function buildBestOfWorldsBriefMessages(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch: DecisionRunResult[],
-  synthesizer: UnifiedBriefSynthesizer
+  synthesizer: UnifiedBriefSynthesizer,
+  blind = false
 ): LLMMessage[] {
   const coach = unifiedBriefSynthesizerCoachLabel(synthesizer);
+  const modelsBlurb = blind
+    ? "Every AI run on this decision (labeled only as AI Model 1, AI Model 2, … — brand identities are withheld—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so. Do not try to guess which vendor produced which block."
+    : "Every AI run on this decision (any configured provider—OpenAI, Anthropic, Google Gemini, xAI, etc.—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.";
   const systemPrompt = `You are an expert decision coach (${coach}). Produce ONE structured decision brief that captures the **best ideas across all inputs** below.
 
 **What you receive**
 1) Shared **decision context** (intake + clarifications from the storage run for this decision’s unified brief).
-2) **Every AI run** on this decision (any configured provider—OpenAI, Anthropic, Google Gemini, xAI, etc.—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.
+2) ${modelsBlurb}
 3) **All research** and **all saved variants** (also merged globally below the per-run blocks).
-4) When present, **cross-provider comparison** sections (consensus / majority / minority per posture)—the same meta-analysis shown on individual run pages.
+4) When present, **cross-model comparison** sections (consensus / majority / minority per posture)—the same meta-analysis shown on individual run pages.
 
 **What you must do**
-- **Synthesize**: merge consensus, surface the strongest unique angles from any model, and fold in research, variant, and cross-provider comparison insights. Do not paste full runs verbatim.
-- When a **cross-provider comparison** notes provider-only minority or majority themes, reflect them in the Unified Brief (summary, key_considerations, or a custom_section)—do not drop them because lens summaries look similar.
+- **Synthesize**: merge consensus, surface the strongest unique angles from any model, and fold in research, variant, and cross-model comparison insights. Do not paste full runs verbatim.
+- When a **cross-model comparison** notes model-only minority or majority themes, reflect them in the Unified Brief (summary, key_considerations, or a custom_section)—do not drop them because lens summaries look similar.
 - When models **disagree**, name the tension and suggest how to decide or de-risk.
 - **title**: short topic style (not a recommendation sentence).
 - **custom_sections**: prefer [] unless 1–3 appendices add clear new structure (e.g. cross-model comparison table).
@@ -1152,6 +1220,7 @@ Return only structured JSON matching the schema (title, summary, recommendation,
 
   const source = buildBestOfWorldsSourceUserContent(anchorRun, canonicalRuns, {
     allRunsForResearch: allRunsForResearch,
+    blind,
   });
   const userContent =
     source +
@@ -1190,10 +1259,17 @@ export async function runBestOfWorldsBriefSynthesis(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch?: DecisionRunResult[],
-  synthesizer: UnifiedBriefSynthesizer = "anthropic"
+  synthesizer: UnifiedBriefSynthesizer = "anthropic",
+  blind = false
 ): Promise<DecisionBrief> {
   const researchRuns = allRunsForResearch ?? canonicalRuns;
-  const messages = buildBestOfWorldsBriefMessages(anchorRun, canonicalRuns, researchRuns, synthesizer);
+  const messages = buildBestOfWorldsBriefMessages(
+    anchorRun,
+    canonicalRuns,
+    researchRuns,
+    synthesizer,
+    blind
+  );
   const maxTokens = unifiedBriefMaxTokens(synthesizer);
   const requestOpts = {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
