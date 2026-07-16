@@ -11,6 +11,7 @@ import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
+import { UnifiedBriefInfluenceChartsOverlay } from "../unified-brief-influence-charts";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import {
@@ -70,6 +71,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   /** Right panel view: discuss (chat) or contribution attribution. */
   const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
+  const [influenceChartsOpen, setInfluenceChartsOpen] = useState(false);
   /** Which synthesizer's brief is on screen and target for Generate / Regenerate. */
   const [activeSynthesizer, setActiveSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
   /** Synthesizers with API keys configured (subset of UNIFIED_BRIEF_SYNTHESIZERS). */
@@ -737,6 +739,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     contributions={contributions}
                     synthesizer={activeSynthesizer}
                     onUpdated={applyPersistRun}
+                    onOpenInfluenceCharts={() => setInfluenceChartsOpen(true)}
                   />
                 </div>
               </div>
@@ -744,6 +747,12 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
           </div>
         )}
       </div>
+
+      <UnifiedBriefInfluenceChartsOverlay
+        open={influenceChartsOpen}
+        onClose={() => setInfluenceChartsOpen(false)}
+        persistRun={persistRun}
+      />
     </main>
   );
 }

@@ -21,6 +21,8 @@ interface UnifiedBriefContributionsPanelProps {
   className?: string;
   listMaxHeightClassName?: string;
   onUpdated: (run: DecisionRunResult) => void;
+  /** Opens the full-width influence charts overlay (heatmap + averages). */
+  onOpenInfluenceCharts?: () => void;
 }
 
 const PROVIDER_BADGE: Record<LLMProviderName, string> = {
@@ -108,6 +110,7 @@ export function UnifiedBriefContributionsPanel({
   className = "",
   listMaxHeightClassName = "max-h-[min(560px,calc(100vh-13rem))]",
   onUpdated,
+  onOpenInfluenceCharts,
 }: UnifiedBriefContributionsPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,6 +164,17 @@ export function UnifiedBriefContributionsPanel({
           brief, and what was left out. Once generated, this is included as an appendix in the downloaded
           PDF.
         </p>
+        {onOpenInfluenceCharts ? (
+          <button
+            type="button"
+            onClick={onOpenInfluenceCharts}
+            title="Open heatmap and average influence scores across brief authors"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            View influence charts
+            <span aria-hidden>→</span>
+          </button>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
