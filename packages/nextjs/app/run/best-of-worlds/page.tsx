@@ -11,10 +11,15 @@ import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
-import { UnifiedBriefInfluenceChartsOverlay } from "../unified-brief-influence-charts";
+import {
+  UnifiedBriefInfluenceChartsBody,
+  UnifiedBriefInfluenceChartsOverlay,
+} from "../unified-brief-influence-charts";
+import { buildInfluenceMatrix } from "@/lib/unified-brief-influence-matrix";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import {
+  getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefContributionsForAuthor,
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
@@ -246,6 +251,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const contributions = persistRun
     ? getUnifiedBriefContributionsForAuthor(persistRun, activeSynthesizer)
     : undefined;
+  const influenceMatrix = persistRun
+    ? buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun))
+    : null;
   const activeSynthesizerLabel = unifiedBriefSynthesizerLabel(activeSynthesizer);
   const navRunId = persistRun?.run_id ?? (runId || "");
 
@@ -652,6 +660,26 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   </div>
                 </section>
               )}
+
+              {/* Print-only appendix: cross-model influence charts from all brief authors' contribution analyses. */}
+              {influenceMatrix ? (
+                <section
+                  className="mt-8 hidden break-before-page print:block print-color-adjust-exact"
+                  style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
+                >
+                  <header className="border-b border-zinc-200 pb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Appendix</p>
+                    <h2 className="text-lg font-semibold text-zinc-900">Influence charts</h2>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      How each Unified Brief author weighted think tank members. High = 4, Medium = 3,
+                      Low = 2, Minimal = 1.
+                    </p>
+                  </header>
+                  <div className="mt-4">
+                    <UnifiedBriefInfluenceChartsBody matrix={influenceMatrix} />
+                  </div>
+                </section>
+              ) : null}
             </div>
 
             <aside
