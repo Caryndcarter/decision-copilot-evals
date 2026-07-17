@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ResearchMarkdownInline } from "./research-markdown";
+import { AuthorshipRemapLegend } from "./authorship-remap-legend";
 import type {
   ContributionInfluence,
   DecisionBrief,
@@ -10,6 +11,7 @@ import type {
   ProviderContribution,
   UnifiedBriefContributions,
 } from "@/types/decision";
+import { friendlyProviderLabel } from "@/lib/unified-brief-blind";
 import { unifiedBriefSynthesizerLabel, type UnifiedBriefSynthesizer } from "@/lib/unified-briefs";
 
 interface UnifiedBriefContributionsPanelProps {
@@ -43,15 +45,30 @@ const INFLUENCE_STYLE: Record<ContributionInfluence, { label: string; cls: strin
   minimal: { label: "Minimal influence", cls: "bg-zinc-300 text-zinc-700" },
 };
 
-function ContributionCard({ c, id }: { c: ProviderContribution; id?: string }) {
+function ContributionCard({
+  c,
+  id,
+  shownAsLabel,
+}: {
+  c: ProviderContribution;
+  id?: string;
+  shownAsLabel?: string;
+}) {
   const influence = INFLUENCE_STYLE[c.influence] ?? INFLUENCE_STYLE.low;
   const badge = PROVIDER_BADGE[c.provider] ?? PROVIDER_BADGE.openai;
   return (
     <div id={id} className="scroll-mt-2 rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${badge}`}>
-          {c.provider_label}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${badge}`}>
+            {c.provider_label}
+          </span>
+          {shownAsLabel ? (
+            <span className="text-xs text-amber-800">
+              appeared as <span className="font-semibold">{shownAsLabel}</span>
+            </span>
+          ) : null}
+        </div>
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${influence.cls}`}>
           {influence.label}
         </span>
@@ -126,6 +143,11 @@ export function UnifiedBriefContributionsPanel({
     !!contributions?.brief_generated_at &&
     !!brief?.generated_at &&
     contributions.brief_generated_at !== brief.generated_at;
+
+  const authorshipRemap = useMemo(
+    () => contributions?.authorship_provider_remap ?? brief?.authorship_provider_remap,
+    [contributions?.authorship_provider_remap, brief?.authorship_provider_remap]
+  );
 
   const generate = useCallback(async () => {
     if (disabled || generating) return;
@@ -214,6 +236,21 @@ export function UnifiedBriefContributionsPanel({
         ) : null}
         {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
 
+        {reassignedAuthorship || authorshipRemap ? (
+          <div className="mt-3">
+            <AuthorshipRemapLegend
+              remap={authorshipRemap}
+              synthesizerLabel={unifiedBriefSynthesizerLabel(synthesizer)}
+            />
+            {reassignedAuthorship && !authorshipRemap ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Generate (or regenerate) the reassigned Unified Brief to reveal the brand mapping used for
+                this synthesizer.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {contributions && contributions.contributions.length > 1 ? (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Jump to</span>
@@ -245,7 +282,16 @@ export function UnifiedBriefContributionsPanel({
               </div>
             ) : null}
             {contributions.contributions.map((c) => (
-              <ContributionCard key={c.provider} c={c} id={`contribution-${c.provider}`} />
+              <ContributionCard
+                key={c.provider}
+                c={c}
+                id={`contribution-${c.provider}`}
+                shownAsLabel={
+                  authorshipRemap?.[c.provider]
+                    ? friendlyProviderLabel(authorshipRemap[c.provider])
+                    : undefined
+                }
+              />
             ))}
           </div>
         ) : (

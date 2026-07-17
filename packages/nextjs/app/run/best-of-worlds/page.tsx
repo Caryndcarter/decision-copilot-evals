@@ -11,6 +11,7 @@ import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
+import { AuthorshipRemapLegend } from "../authorship-remap-legend";
 import {
   UnifiedBriefInfluenceChartsBody,
   UnifiedBriefInfluenceChartsOverlay,
@@ -18,6 +19,7 @@ import {
 import { buildInfluenceMatrix } from "@/lib/unified-brief-influence-matrix";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
+import { friendlyProviderLabel } from "@/lib/unified-brief-blind";
 import {
   authorshipModeFromFlags,
   getUnifiedBriefContributionsByAuthor,
@@ -653,9 +655,22 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     <h2 className="text-lg font-semibold text-zinc-900">Model contributions to this brief</h2>
                     <p className="mt-1 text-xs text-zinc-500">
                       {activeSynthesizerLabel}&apos;s attribution of which model&apos;s ideas shaped the Unified
-                      Brief.
+                      Brief
+                      {authorshipMode === "reassigned" ? " (reassigned authorship)" : ""}.
                     </p>
                   </header>
+
+                  {authorshipMode === "reassigned" ? (
+                    <div className="mt-4">
+                      <AuthorshipRemapLegend
+                        remap={
+                          contributions.authorship_provider_remap ?? brief.authorship_provider_remap
+                        }
+                        synthesizerLabel={activeSynthesizerLabel}
+                        compact
+                      />
+                    </div>
+                  ) : null}
 
                   {contributions.overall ? (
                     <div className="mt-4">
@@ -669,13 +684,26 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   ) : null}
 
                   <div className="mt-4 space-y-4">
-                    {contributions.contributions.map((c) => (
+                    {contributions.contributions.map((c) => {
+                      const shownAs =
+                        authorshipMode === "reassigned"
+                          ? (contributions.authorship_provider_remap ?? brief.authorship_provider_remap)?.[
+                              c.provider
+                            ]
+                          : undefined;
+                      return (
                       <div key={c.provider} className="break-inside-avoid">
                         <h3 className="text-sm font-semibold text-zinc-900">
                           {c.provider_label}{" "}
                           <span className="font-normal text-zinc-600">
                             — {c.influence.charAt(0).toUpperCase() + c.influence.slice(1)} influence
                           </span>
+                          {shownAs ? (
+                            <span className="font-normal text-amber-800">
+                              {" "}
+                              (appeared as {friendlyProviderLabel(shownAs)})
+                            </span>
+                          ) : null}
                         </h3>
                         {c.summary ? (
                           <div className="mt-1 text-sm text-zinc-800">
@@ -719,7 +747,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                           </div>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -735,9 +764,25 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     <h2 className="text-lg font-semibold text-zinc-900">Influence charts</h2>
                     <p className="mt-1 text-xs text-zinc-500">
                       How each Unified Brief author weighted think tank members. High = 4, Medium = 3,
-                      Low = 2, Minimal = 1.
+                      Low = 2, Minimal = 1
+                      {authorshipMode === "reassigned" ? " (reassigned authorship)" : ""}.
                     </p>
                   </header>
+                  {authorshipMode === "reassigned" ? (
+                    <div className="mt-4">
+                      <AuthorshipRemapLegend
+                        remap={
+                          getUnifiedBriefContributionsByAuthor(persistRun!, "reassigned")[
+                            activeSynthesizer
+                          ]?.authorship_provider_remap ??
+                          getUnifiedBriefForAuthor(persistRun!, activeSynthesizer, "reassigned")
+                            ?.authorship_provider_remap
+                        }
+                        synthesizerLabel={activeSynthesizerLabel}
+                        compact
+                      />
+                    </div>
+                  ) : null}
                   <div className="mt-4">
                     <UnifiedBriefInfluenceChartsBody matrix={influenceMatrix} />
                   </div>
@@ -848,6 +893,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
         onClose={() => setInfluenceChartsOpen(false)}
         persistRun={persistRun}
         authorshipMode={authorshipMode}
+        activeSynthesizer={activeSynthesizer}
       />
     </main>
   );

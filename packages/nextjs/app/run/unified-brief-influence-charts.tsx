@@ -6,7 +6,12 @@ import type {
   DecisionRunResult,
   UnifiedBriefAuthorshipMode,
 } from "@/types/decision";
-import { getUnifiedBriefContributionsByAuthor } from "@/lib/unified-briefs";
+import {
+  getUnifiedBriefContributionsByAuthor,
+  getUnifiedBriefForAuthor,
+  unifiedBriefSynthesizerLabel,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 import {
   buildInfluenceMatrix,
   influenceLabel,
@@ -15,6 +20,7 @@ import {
   type InfluenceMatrix,
   type InfluenceMatrixCell,
 } from "@/lib/unified-brief-influence-matrix";
+import { AuthorshipRemapLegend } from "./authorship-remap-legend";
 
 /** Site-theme heatmap cells: indigo scale (not canvas host theme). */
 const HEATMAP_CELL: Record<ContributionInfluence, string> = {
@@ -180,6 +186,8 @@ export interface UnifiedBriefInfluenceChartsOverlayProps {
   persistRun: DecisionRunResult | null;
   /** Which authorship-mode contributions feed the matrix (open vs blind). */
   authorshipMode?: UnifiedBriefAuthorshipMode;
+  /** When reassigned, show this author's brand remap once (not every synthesizer). */
+  activeSynthesizer?: UnifiedBriefSynthesizer;
 }
 
 export function UnifiedBriefInfluenceChartsOverlay({
@@ -187,12 +195,20 @@ export function UnifiedBriefInfluenceChartsOverlay({
   onClose,
   persistRun,
   authorshipMode = "open",
+  activeSynthesizer = "anthropic",
 }: UnifiedBriefInfluenceChartsOverlayProps) {
   const titleId = useId();
   const matrix = useMemo(() => {
     if (!persistRun) return null;
     return buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, authorshipMode));
   }, [persistRun, authorshipMode]);
+
+  const activeRemap = useMemo(() => {
+    if (!persistRun || authorshipMode !== "reassigned") return undefined;
+    const contrib = getUnifiedBriefContributionsByAuthor(persistRun, "reassigned")[activeSynthesizer];
+    const brief = getUnifiedBriefForAuthor(persistRun, activeSynthesizer, "reassigned");
+    return contrib?.authorship_provider_remap ?? brief?.authorship_provider_remap;
+  }, [persistRun, authorshipMode, activeSynthesizer]);
 
   useEffect(() => {
     if (!open) return;
@@ -261,7 +277,25 @@ export function UnifiedBriefInfluenceChartsOverlay({
               brief authors, then reopen these charts.
             </div>
           ) : (
-            <UnifiedBriefInfluenceChartsBody matrix={matrix} />
+            <div className="space-y-6">
+              {authorshipMode === "reassigned" && activeRemap ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-zinc-600">
+                    Charts use <span className="font-medium text-zinc-800">real</span> think-tank members.
+                    Below is the brand remapping for{" "}
+                    <span className="font-medium text-zinc-800">
+                      {unifiedBriefSynthesizerLabel(activeSynthesizer)}
+                    </span>
+                    .
+                  </p>
+                  <AuthorshipRemapLegend
+                    remap={activeRemap}
+                    synthesizerLabel={unifiedBriefSynthesizerLabel(activeSynthesizer)}
+                  />
+                </div>
+              ) : null}
+              <UnifiedBriefInfluenceChartsBody matrix={matrix} />
+            </div>
           )}
         </div>
       </div>

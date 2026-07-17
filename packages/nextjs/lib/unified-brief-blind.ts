@@ -188,6 +188,48 @@ export function scrambleRemapFromAliasMap(
   return { ...map.realToLabelKey };
 }
 
+/** UI-facing brand label (ChatGPT for OpenAI). */
+export function friendlyProviderLabel(provider: LLMProviderName | string | undefined): string {
+  const p = (provider ?? "openai") as LLMProviderName;
+  return displayNameForProviderKey(p);
+}
+
+export type ScrambleMappingRow = {
+  real: LLMProviderName;
+  realLabel: string;
+  shownAs: LLMProviderName;
+  shownAsLabel: string;
+};
+
+/** Rows for revealing real vs prompt-facing brands under reassigned authorship. */
+export function scrambleMappingRows(
+  remap: Partial<Record<LLMProviderName, LLMProviderName>> | undefined
+): ScrambleMappingRow[] {
+  if (!remap) return [];
+  const rows: ScrambleMappingRow[] = [];
+  for (const real of PROVIDER_ALIAS_ORDER) {
+    const shownAs = remap[real];
+    if (!shownAs) continue;
+    rows.push({
+      real,
+      realLabel: friendlyProviderLabel(real),
+      shownAs,
+      shownAsLabel: friendlyProviderLabel(shownAs),
+    });
+  }
+  for (const [real, shownAs] of Object.entries(remap) as [LLMProviderName, LLMProviderName][]) {
+    if (PROVIDER_ALIAS_ORDER.includes(real)) continue;
+    if (!shownAs) continue;
+    rows.push({
+      real,
+      realLabel: friendlyProviderLabel(real),
+      shownAs,
+      shownAsLabel: friendlyProviderLabel(shownAs),
+    });
+  }
+  return rows;
+}
+
 export function providerDisplayForPrompt(
   provider: LLMProviderName | string | undefined,
   map: ProviderAliasMap | null
