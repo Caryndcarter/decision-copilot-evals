@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useId, useMemo } from "react";
-import type { ContributionInfluence, DecisionRunResult } from "@/types/decision";
+import type {
+  ContributionInfluence,
+  DecisionRunResult,
+  UnifiedBriefAuthorshipMode,
+} from "@/types/decision";
 import { getUnifiedBriefContributionsByAuthor } from "@/lib/unified-briefs";
 import {
   buildInfluenceMatrix,
@@ -174,18 +178,21 @@ export interface UnifiedBriefInfluenceChartsOverlayProps {
   open: boolean;
   onClose: () => void;
   persistRun: DecisionRunResult | null;
+  /** Which authorship-mode contributions feed the matrix (open vs blind). */
+  authorshipMode?: UnifiedBriefAuthorshipMode;
 }
 
 export function UnifiedBriefInfluenceChartsOverlay({
   open,
   onClose,
   persistRun,
+  authorshipMode = "open",
 }: UnifiedBriefInfluenceChartsOverlayProps) {
   const titleId = useId();
   const matrix = useMemo(() => {
     if (!persistRun) return null;
-    return buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun));
-  }, [persistRun]);
+    return buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, authorshipMode));
+  }, [persistRun, authorshipMode]);
 
   useEffect(() => {
     if (!open) return;
@@ -221,9 +228,11 @@ export function UnifiedBriefInfluenceChartsOverlay({
           <div className="min-w-0">
             <h2 id={titleId} className="text-lg font-semibold text-zinc-900">
               Influence charts
+              {authorshipMode === "blind" ? " (blind authorship)" : ""}
             </h2>
             <p className="mt-1 text-sm text-zinc-600">
-              How each Unified Brief author weighted think tank members in their contribution analysis.
+              How each Unified Brief author weighted think tank members in their contribution analysis
+              {authorshipMode === "blind" ? " (blind-authorship briefs)" : " (standard briefs)"}.
               High = 4, Medium = 3, Low = 2, Minimal = 1.
             </p>
           </div>

@@ -8,6 +8,7 @@ import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMMessage } from "@/llm/types";
 import { runProviderLabel } from "@/lib/run-display-name";
 import {
+  authorshipModeFromBlind,
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   unifiedBriefSynthesizerCoachLabel,
@@ -165,6 +166,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       run_id?: string;
       llm_provider?: string;
       brief_synthesizer?: string;
+      blind?: boolean;
       messages?: { role: "user" | "assistant"; content: string }[];
       newMessage?: string;
     };
@@ -178,6 +180,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const briefAuthor: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(rawBriefAuthor)
       ? rawBriefAuthor
       : "anthropic";
+    const authorshipMode = authorshipModeFromBlind(body.blind === true);
     const newMessage = typeof body.newMessage === "string" ? body.newMessage.trim() : "";
     const messages = Array.isArray(body.messages) ? body.messages : [];
 
@@ -196,7 +199,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Run not found" }, { status: 404 });
     }
 
-    const brief = getUnifiedBriefForAuthor(run, briefAuthor);
+    const brief = getUnifiedBriefForAuthor(run, briefAuthor, authorshipMode);
     if (!brief) {
       return NextResponse.json(
         { error: "Generate a Unified Brief on this page before starting chat." },

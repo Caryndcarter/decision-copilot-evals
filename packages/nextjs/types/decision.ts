@@ -204,6 +204,15 @@ export interface ProviderContribution {
 }
 
 /**
+ * Whether a Unified Brief / contributions analysis was authored with brand names visible
+ * (`open`) or anonymized as AI Model 1/2/… (`blind`). Both may be stored per synthesizer.
+ */
+export type UnifiedBriefAuthorshipMode = "open" | "blind";
+
+/** Per-synthesizer slot holding open and/or blind variants of the same artifact. */
+export type UnifiedBriefAuthorshipVersions<T> = Partial<Record<UnifiedBriefAuthorshipMode, T>>;
+
+/**
  * Anthropic's explanation of which model's ideas made the cut in the Unified Brief.
  * Generated on demand from the same merged inputs used to build the brief.
  */
@@ -347,17 +356,26 @@ export interface DecisionRunResult {
    */
   decision_brief_best_of_worlds?: DecisionBrief;
   /**
-   * Unified Brief keyed by synthesizing model (Anthropic, Gemini, …). Source of truth when present.
+   * Unified Brief keyed by synthesizing model, then authorship mode (`open` | `blind`).
+   * Legacy values may still be a bare `DecisionBrief` (treated as `open`).
    */
-  unified_briefs_by_author?: Partial<Record<LLMProviderName, DecisionBrief>>;
+  unified_briefs_by_author?: Partial<
+    Record<LLMProviderName, UnifiedBriefAuthorshipVersions<DecisionBrief> | DecisionBrief>
+  >;
   /**
    * Attribution of which think-tank model's ideas made the cut in the unified brief.
    * Legacy field for Anthropic-authored brief; prefer `unified_brief_contributions_by_author`.
    */
   decision_brief_best_of_worlds_contributions?: UnifiedBriefContributions;
-  /** Contributions analysis keyed by Unified Brief synthesizer (matches `unified_briefs_by_author`). */
+  /**
+   * Contributions analysis keyed by synthesizer, then authorship mode (matches briefs).
+   * Legacy values may still be a bare `UnifiedBriefContributions` (treated as `open`).
+   */
   unified_brief_contributions_by_author?: Partial<
-    Record<LLMProviderName, UnifiedBriefContributions>
+    Record<
+      LLMProviderName,
+      UnifiedBriefAuthorshipVersions<UnifiedBriefContributions> | UnifiedBriefContributions
+    >
   >;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).

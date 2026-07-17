@@ -5,6 +5,7 @@ import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incom
 import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
+  authorshipModeFromBlind,
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefContributionsIntoRun,
@@ -18,7 +19,7 @@ export const maxDuration = 60;
 /**
  * POST /api/decision/run/unified-brief-contributions
  * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind`.
- * Requires the matching Unified Brief. Persists on `unified_brief_contributions_by_author`.
+ * Requires the matching Unified Brief for that authorship mode. Persists under the same mode slot.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   let body: { run_id?: string; decision_id?: string; synthesizer?: string; blind?: boolean };
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ? synthesizerRaw
     : "anthropic";
   const blind = body.blind === true;
+  const authorshipMode = authorshipModeFromBlind(blind);
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -57,11 +59,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
   }
 
-  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer);
+  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer, authorshipMode);
   if (!brief) {
+    const modeHint = blind ? " with Blind authorship on" : "";
     return NextResponse.json(
       {
-        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)} first, then analyze contributions.`,
+        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)}${modeHint} first, then analyze contributions.`,
       },
       { status: 400 }
     );
@@ -85,7 +88,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       synthesizer,
       blind
     );
-    const updated = mergeUnifiedBriefContributionsIntoRun(persistRun, synthesizer, contributions);
+    const updated = mergeUnifiedBriefContributionsIntoRun(
+      persistRun,
+      synthesizer,
+      contributions,
+      authorshipMode
+    );
     await replaceRun(persistRun.run_id, updated);
     return NextResponse.json({ run: updated, synthesizer, blind });
   } catch (err) {
