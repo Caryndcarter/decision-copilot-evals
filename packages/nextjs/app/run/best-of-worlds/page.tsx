@@ -19,7 +19,7 @@ import { buildInfluenceMatrix } from "@/lib/unified-brief-influence-matrix";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import {
-  authorshipModeFromBlind,
+  authorshipModeFromFlags,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefContributionsForAuthor,
   getUnifiedBriefForAuthor,
@@ -27,6 +27,7 @@ import {
   listAvailableUnifiedBriefAuthors,
   UNIFIED_BRIEF_SYNTHESIZERS,
   unifiedBriefSynthesizerLabel,
+  type UnifiedBriefAuthorshipMode,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type { LLMProviderName } from "@/types/decision";
@@ -89,6 +90,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   ]);
   /** When on, prompts use AI Model 1/2/… instead of brand names; UI still shows decoded brands. */
   const [blindAuthorship, setBlindAuthorship] = useState(false);
+  /** When on, brand names are randomly reassigned (unique bijection) in the prompt. Mutually exclusive with blind. */
+  const [reassignedAuthorship, setReassignedAuthorship] = useState(false);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
   const generatingSteps = unifiedBriefGeneratingSteps(activeSynthesizer);
@@ -221,6 +224,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
           ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
           synthesizer: activeSynthesizer,
           blind: blindAuthorship,
+          reassigned: reassignedAuthorship,
         }),
       });
       const data = await res.json();
@@ -251,7 +255,10 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
   const showIncomplete = incomplete.length > 0;
   const rows = incomplete;
-  const authorshipMode = authorshipModeFromBlind(blindAuthorship);
+  const authorshipMode: UnifiedBriefAuthorshipMode = authorshipModeFromFlags(
+    blindAuthorship,
+    reassignedAuthorship
+  );
   const brief = persistRun
     ? getUnifiedBriefForAuthor(persistRun, activeSynthesizer, authorshipMode)
     : undefined;
@@ -263,6 +270,12 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     : null;
   const activeSynthesizerLabel = unifiedBriefSynthesizerLabel(activeSynthesizer);
   const navRunId = persistRun?.run_id ?? (runId || "");
+  const authorshipModeLabel =
+    authorshipMode === "blind"
+      ? "Blind authorship"
+      : authorshipMode === "reassigned"
+        ? "Reassigned authorship"
+        : "Standard authorship";
 
   const handlePrintBrief = useCallback(() => {
     if (!brief || !persistRun) return;
@@ -433,52 +446,40 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     })}
                   </div>
 
-                  <div className="flex flex-col gap-2 border-t border-zinc-100 pt-4">
+                  <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-                        <button
-                          type="button"
-                          onClick={() => void handleRegenerate()}
-                          disabled={generating}
-                          title={
-                            brief
-                              ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
-                              : `Generate a Unified Brief using ${activeSynthesizerLabel}`
-                          }
-                          aria-label={
-                            generating
-                              ? `Generating Unified Brief with ${activeSynthesizerLabel}`
-                              : brief
-                                ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
-                                : `Generate Unified Brief with ${activeSynthesizerLabel}`
-                          }
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                        >
-                          {generating ? (
-                            <>
-                              <span
-                                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
-                                aria-hidden
-                              />
-                              Generating with {activeSynthesizerLabel}…
-                            </>
-                          ) : brief ? (
-                            <>Regenerate with {activeSynthesizerLabel}</>
-                          ) : (
-                            <>Generate with {activeSynthesizerLabel}</>
-                          )}
-                        </button>
-                        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
-                          <input
-                            type="checkbox"
-                            checked={blindAuthorship}
-                            onChange={(e) => setBlindAuthorship(e.target.checked)}
-                            disabled={generating}
-                            className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
-                          />
-                          Blind authorship
-                        </label>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void handleRegenerate()}
+                        disabled={generating}
+                        title={
+                          brief
+                            ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
+                            : `Generate a Unified Brief using ${activeSynthesizerLabel}`
+                        }
+                        aria-label={
+                          generating
+                            ? `Generating Unified Brief with ${activeSynthesizerLabel}`
+                            : brief
+                              ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
+                              : `Generate Unified Brief with ${activeSynthesizerLabel}`
+                        }
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                      >
+                        {generating ? (
+                          <>
+                            <span
+                              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                              aria-hidden
+                            />
+                            Generating with {activeSynthesizerLabel}…
+                          </>
+                        ) : brief ? (
+                          <>Regenerate with {activeSynthesizerLabel}</>
+                        ) : (
+                          <>Generate with {activeSynthesizerLabel}</>
+                        )}
+                      </button>
 
                       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                         <button
@@ -511,10 +512,44 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                         ) : null}
                       </div>
                     </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
+                        <input
+                          type="checkbox"
+                          checked={blindAuthorship}
+                          onChange={(e) => {
+                            const on = e.target.checked;
+                            setBlindAuthorship(on);
+                            if (on) setReassignedAuthorship(false);
+                          }}
+                          disabled={generating}
+                          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        Blind authorship
+                      </label>
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
+                        <input
+                          type="checkbox"
+                          checked={reassignedAuthorship}
+                          onChange={(e) => {
+                            const on = e.target.checked;
+                            setReassignedAuthorship(on);
+                            if (on) setBlindAuthorship(false);
+                          }}
+                          disabled={generating}
+                          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        Reassigned authorship
+                      </label>
+                    </div>
+
                     <p className="text-xs leading-relaxed text-zinc-500">
-                      Blind authorship hides model brand names from the brief author (who synthesizes every
-                      model’s analysis)—sources become AI Model 1, 2, 3…. You still see real names. Standard
-                      and blind briefs are saved separately.
+                      Blind authorship hides brand names from the brief author (sources become AI Model 1, 2,
+                      3…). Reassigned authorship keeps brand names but randomly remaps them—each voice gets a
+                      unique wrong label (e.g. Anthropic’s run may appear as xAI). You still see real names.
+                      Standard, blind, and reassigned briefs are saved separately; the toggles switch between
+                      them.
                     </p>
                   </div>
                 </div>
@@ -546,8 +581,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     </p>
                     <h2 className="text-xl font-semibold text-zinc-900">{brief.title || "Decision brief"}</h2>
                     <p className="mt-1 text-xs text-zinc-500 print:hidden">
-                      Synthesized by {activeSynthesizerLabel}
-                      {blindAuthorship ? " · Blind authorship" : " · Standard authorship"}
+                      Synthesized by {activeSynthesizerLabel} · {authorshipModeLabel}
                     </p>
                     <BriefGeneratedDateLine iso={brief.generated_at} className="mt-1" label="Generated" />
                   </header>
@@ -765,6 +799,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     unifiedBrief={brief}
                     briefSynthesizer={activeSynthesizer}
                     blindAuthorship={blindAuthorship}
+                    reassignedAuthorship={reassignedAuthorship}
                     unifiedBriefChatByProvider={persistRun?.unified_brief_chat_by_provider}
                     unifiedBriefChatMessagesLegacy={persistRun?.unified_brief_chat_messages}
                     showChromeHeader={false}
@@ -797,6 +832,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     contributions={contributions}
                     synthesizer={activeSynthesizer}
                     blindAuthorship={blindAuthorship}
+                    reassignedAuthorship={reassignedAuthorship}
                     onUpdated={applyPersistRun}
                     onOpenInfluenceCharts={() => setInfluenceChartsOpen(true)}
                   />

@@ -180,6 +180,11 @@ export interface DecisionBrief {
   next_steps: string[];
   /** Additional sections added via format variants */
   custom_sections?: { heading: string; content: string }[];
+  /**
+   * Reassigned authorship only: real think-tank provider → brand key shown to the brief author.
+   * Used to rebuild the same scramble when analyzing contributions.
+   */
+  authorship_provider_remap?: Partial<Record<LLMProviderName, LLMProviderName>>;
 }
 
 /** How much a given model's thinking shaped the final Unified Brief. */
@@ -207,7 +212,7 @@ export interface ProviderContribution {
  * Whether a Unified Brief / contributions analysis was authored with brand names visible
  * (`open`) or anonymized as AI Model 1/2/… (`blind`). Both may be stored per synthesizer.
  */
-export type UnifiedBriefAuthorshipMode = "open" | "blind";
+export type UnifiedBriefAuthorshipMode = "open" | "blind" | "reassigned";
 
 /** Per-synthesizer slot holding open and/or blind variants of the same artifact. */
 export type UnifiedBriefAuthorshipVersions<T> = Partial<Record<UnifiedBriefAuthorshipMode, T>>;
@@ -225,6 +230,8 @@ export interface UnifiedBriefContributions {
   overall: string;
   /** One entry per participating provider. */
   contributions: ProviderContribution[];
+  /** Echo of the brief's scramble map when this analysis was run under reassigned authorship. */
+  authorship_provider_remap?: Partial<Record<LLMProviderName, LLMProviderName>>;
 }
 
 /** A format variant of the analysis (same decision, different presentation) */
@@ -356,7 +363,7 @@ export interface DecisionRunResult {
    */
   decision_brief_best_of_worlds?: DecisionBrief;
   /**
-   * Unified Brief keyed by synthesizing model, then authorship mode (`open` | `blind`).
+   * Unified Brief keyed by synthesizing model, then authorship mode (`open` | `blind` | `reassigned`).
    * Legacy values may still be a bare `DecisionBrief` (treated as `open`).
    */
   unified_briefs_by_author?: Partial<

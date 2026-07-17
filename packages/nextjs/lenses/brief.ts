@@ -10,6 +10,7 @@ import { getClient } from "@/llm";
 import type { LLMMessage, LLMProvider } from "@/llm/types";
 import {
   unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefAuthorshipMode,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type {
@@ -21,6 +22,7 @@ import type {
   ResearchCompletion,
   RunVariant,
   ProviderSynthesis,
+  LLMProviderName,
 } from "@/types/decision";
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
 import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
@@ -28,10 +30,13 @@ import { unifiedBriefRunDedupeKey } from "@/lib/best-of-worlds-incomplete";
 import { runPostureLabel } from "@/lib/run-display-name";
 import {
   buildProviderAliasMap,
+  buildProviderAliasMapFromRemap,
+  buildProviderScrambleMap,
+  decodeAliasesInText,
   providerDisplayForPrompt,
+  scrambleRemapFromAliasMap,
   type ProviderAliasMap,
 } from "@/lib/unified-brief-blind";
-import type { LLMProviderName } from "@/types/decision";
 
 /** How provider names and run ids appear in Unified Brief merge prompts. */
 export type BestOfWorldsPromptLabeling = {
@@ -1113,21 +1118,39 @@ export type BuildBestOfWorldsSourceOptions = {
   /** When set, research inventory + merged research include every decision run (not only canonical lanes). */
   allRunsForResearch?: DecisionRunResult[];
   /**
-   * Blind authorship: replace provider brand names with AI Model N aliases and omit run_ids.
-   * The mapping is server-side only; decode after the model responds.
+   * Authorship labeling for the prompt:
+   * - blind: AI Model 1/2/3… (omit run ids)
+   * - reassigned: random unique brand remap (omit run ids); pass scrambleRemap to reuse a prior map
+   * - open / omitted: real brand names
    */
+  authorshipMode?: UnifiedBriefAuthorshipMode;
+  /** Blind authorship (legacy flag). Prefer authorshipMode. */
   blind?: boolean;
+  /** When reassigned, reuse this real→label-key map (e.g. from a stored brief). */
+  scrambleRemap?: Partial<Record<LLMProviderName, LLMProviderName>>;
+  /** Optional: receive the alias map used so callers can persist / decode. */
+  onAliasMap?: (map: ProviderAliasMap | null) => void;
 };
 
 function resolvePromptLabeling(
   canonicalRuns: DecisionRunResult[],
-  blind: boolean | undefined
+  opts?: BuildBestOfWorldsSourceOptions
 ): BestOfWorldsPromptLabeling {
-  if (!blind) return OPEN_PROMPT_LABELING;
-  return {
-    aliasMap: buildProviderAliasMap(canonicalRuns),
-    omitRunIds: true,
-  };
+  const mode: UnifiedBriefAuthorshipMode =
+    opts?.authorshipMode ?? (opts?.blind ? "blind" : "open");
+  if (mode === "blind") {
+    return {
+      aliasMap: buildProviderAliasMap(canonicalRuns),
+      omitRunIds: true,
+    };
+  }
+  if (mode === "reassigned") {
+    const aliasMap = opts?.scrambleRemap
+      ? buildProviderAliasMapFromRemap(opts.scrambleRemap, canonicalRuns)
+      : buildProviderScrambleMap(canonicalRuns);
+    return { aliasMap, omitRunIds: true };
+  }
+  return OPEN_PROMPT_LABELING;
 }
 
 export function buildBestOfWorldsSourceUserContent(
@@ -1135,7 +1158,8 @@ export function buildBestOfWorldsSourceUserContent(
   canonicalRuns: DecisionRunResult[],
   opts?: BuildBestOfWorldsSourceOptions
 ): string {
-  const labeling = resolvePromptLabeling(canonicalRuns, opts?.blind);
+  const labeling = resolvePromptLabeling(canonicalRuns, opts);
+  opts?.onAliasMap?.(labeling.aliasMap);
   const intake = anchorRun.intake;
   const clar = anchorRun.clarifications ?? [];
   const researchRuns = opts?.allRunsForResearch ?? canonicalRuns;
@@ -1165,11 +1189,13 @@ export function buildBestOfWorldsSourceUserContent(
   if (clarBlock) userParts.push(clarBlock);
   if (researchInventory) userParts.push(researchInventory);
   if (variantInventory) userParts.push(variantInventory);
-  userParts.push(
-    labeling.aliasMap
+  const runsHeader =
+    labeling.aliasMap?.kind === "blind"
       ? `## All model / posture runs (mine for best ideas)\n\nModels are labeled AI Model 1, AI Model 2, … — do not infer vendor brands from style or content.\n\n${runBlocks}`
-      : `## All provider / posture runs (mine for best ideas)\n\n${runBlocks}`
-  );
+      : labeling.aliasMap?.kind === "reassigned"
+        ? `## All provider / posture runs (mine for best ideas)\n\nProvider brand names in this prompt are reassigned (each voice has a unique brand label that may not match the true vendor). Treat the labels as given; do not try to correct them.\n\n${runBlocks}`
+        : `## All provider / posture runs (mine for best ideas)\n\n${runBlocks}`;
+  userParts.push(runsHeader);
   if (researchBlock) userParts.push(`## All research (merged across runs)\n\n${researchBlock}`);
   if (variantsBlock) userParts.push(`## All saved variants (merged across runs)\n\n${variantsBlock}`);
 
@@ -1188,17 +1214,36 @@ export function buildBestOfWorldsSourceUserContent(
   return userParts.join("\n\n---\n\n");
 }
 
+function decodeBriefWithAliasMap(brief: DecisionBrief, map: ProviderAliasMap | null): DecisionBrief {
+  if (!map) return brief;
+  return {
+    ...brief,
+    summary: decodeAliasesInText(brief.summary ?? "", map),
+    recommendation: decodeAliasesInText(brief.recommendation ?? "", map),
+    key_considerations: (brief.key_considerations ?? []).map((k) => decodeAliasesInText(k, map)),
+    next_steps: (brief.next_steps ?? []).map((n) => decodeAliasesInText(n, map)),
+    custom_sections: brief.custom_sections?.map((s) => ({
+      heading: decodeAliasesInText(s.heading ?? "", map),
+      content: decodeAliasesInText(s.content ?? "", map),
+    })),
+  };
+}
+
 function buildBestOfWorldsBriefMessages(
   anchorRun: DecisionRunResult,
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch: DecisionRunResult[],
   synthesizer: UnifiedBriefSynthesizer,
-  blind = false
+  authorshipMode: UnifiedBriefAuthorshipMode = "open",
+  onAliasMap?: (map: ProviderAliasMap | null) => void
 ): LLMMessage[] {
   const coach = unifiedBriefSynthesizerCoachLabel(synthesizer);
-  const modelsBlurb = blind
-    ? "Every AI run on this decision (labeled only as AI Model 1, AI Model 2, … — brand identities are withheld—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so. Do not try to guess which vendor produced which block."
-    : "Every AI run on this decision (any configured provider—OpenAI, Anthropic, Google Gemini, xAI, etc.—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.";
+  const modelsBlurb =
+    authorshipMode === "blind"
+      ? "Every AI run on this decision (labeled only as AI Model 1, AI Model 2, … — brand identities are withheld—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so. Do not try to guess which vendor produced which block."
+      : authorshipMode === "reassigned"
+        ? "Every AI run on this decision (provider brand names are randomly reassigned—each block has a unique brand label that may not be the true vendor—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so. Use the brand labels as given; do not try to unmask or correct them."
+        : "Every AI run on this decision (any configured provider—OpenAI, Anthropic, Google Gemini, xAI, etc.—and/or postures). Each block has **three-lens analysis**, **standard brief** (including optional appendices), **integrated brief** when present, **per-run research**, and/or **free-form JSON**. Some runs may still be **in-flight or awaiting clarification**—treat their text as provisional when status says so.";
   const systemPrompt = `You are an expert decision coach (${coach}). Produce ONE structured decision brief that captures the **best ideas across all inputs** below.
 
 **What you receive**
@@ -1220,7 +1265,8 @@ Return only structured JSON matching the schema (title, summary, recommendation,
 
   const source = buildBestOfWorldsSourceUserContent(anchorRun, canonicalRuns, {
     allRunsForResearch: allRunsForResearch,
-    blind,
+    authorshipMode,
+    onAliasMap,
   });
   const userContent =
     source +
@@ -1260,15 +1306,26 @@ export async function runBestOfWorldsBriefSynthesis(
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch?: DecisionRunResult[],
   synthesizer: UnifiedBriefSynthesizer = "anthropic",
-  blind = false
+  authorshipMode: UnifiedBriefAuthorshipMode | boolean = "open"
 ): Promise<DecisionBrief> {
+  // Legacy callers passed `blind: boolean` as the 5th arg.
+  const mode: UnifiedBriefAuthorshipMode =
+    typeof authorshipMode === "boolean"
+      ? authorshipMode
+        ? "blind"
+        : "open"
+      : authorshipMode;
   const researchRuns = allRunsForResearch ?? canonicalRuns;
+  let usedAliasMap: ProviderAliasMap | null = null;
   const messages = buildBestOfWorldsBriefMessages(
     anchorRun,
     canonicalRuns,
     researchRuns,
     synthesizer,
-    blind
+    mode,
+    (map) => {
+      usedAliasMap = map;
+    }
   );
   const maxTokens = unifiedBriefMaxTokens(synthesizer);
   const requestOpts = {
@@ -1313,6 +1370,11 @@ export async function runBestOfWorldsBriefSynthesis(
   }
   const generated_at = new Date().toISOString();
   let brief = parseBriefOutput(response.parsed, generated_at);
+  brief = decodeBriefWithAliasMap(brief, usedAliasMap);
+  if (mode === "reassigned" && usedAliasMap) {
+    const remap = scrambleRemapFromAliasMap(usedAliasMap);
+    if (remap) brief = { ...brief, authorship_provider_remap: remap };
+  }
   const intake = anchorRun.intake;
   const lensOutputs = pickLensOutputsForConsolidatedRun(anchorRun);
   const clarifications = anchorRun.clarifications ?? [];

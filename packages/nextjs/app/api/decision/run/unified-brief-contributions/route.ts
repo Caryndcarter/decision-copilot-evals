@@ -5,7 +5,7 @@ import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incom
 import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
-  authorshipModeFromBlind,
+  authorshipModeFromFlags,
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefContributionsIntoRun,
@@ -18,11 +18,17 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind` / `reassigned`.
  * Requires the matching Unified Brief for that authorship mode. Persists under the same mode slot.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string; blind?: boolean };
+  let body: {
+    run_id?: string;
+    decision_id?: string;
+    synthesizer?: string;
+    blind?: boolean;
+    reassigned?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -36,7 +42,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ? synthesizerRaw
     : "anthropic";
   const blind = body.blind === true;
-  const authorshipMode = authorshipModeFromBlind(blind);
+  const reassigned = body.reassigned === true;
+  const authorshipMode = authorshipModeFromFlags(blind, reassigned);
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -61,7 +68,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const brief = getUnifiedBriefForAuthor(persistRun, synthesizer, authorshipMode);
   if (!brief) {
-    const modeHint = blind ? " with Blind authorship on" : "";
+    const modeHint =
+      authorshipMode === "blind"
+        ? " with Blind authorship on"
+        : authorshipMode === "reassigned"
+          ? " with Reassigned authorship on"
+          : "";
     return NextResponse.json(
       {
         error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)}${modeHint} first, then analyze contributions.`,
@@ -86,7 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       brief,
       allRuns,
       synthesizer,
-      blind
+      authorshipMode
     );
     const updated = mergeUnifiedBriefContributionsIntoRun(
       persistRun,
@@ -95,7 +107,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       authorshipMode
     );
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, synthesizer, blind });
+    return NextResponse.json({
+      run: updated,
+      synthesizer,
+      blind,
+      reassigned,
+      authorshipMode,
+    });
   } catch (err) {
     console.error("[unified-brief-contributions]", err);
     const message = err instanceof Error ? err.message : "Contributions analysis failed";

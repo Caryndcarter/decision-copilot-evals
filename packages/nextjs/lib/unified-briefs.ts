@@ -19,8 +19,18 @@ export function isUnifiedBriefSynthesizer(value: string): value is UnifiedBriefS
   return (UNIFIED_BRIEF_SYNTHESIZERS as readonly string[]).includes(value);
 }
 
+export function authorshipModeFromFlags(
+  blind: boolean,
+  reassigned = false
+): UnifiedBriefAuthorshipMode {
+  if (reassigned) return "reassigned";
+  if (blind) return "blind";
+  return "open";
+}
+
+/** @deprecated Prefer authorshipModeFromFlags */
 export function authorshipModeFromBlind(blind: boolean): UnifiedBriefAuthorshipMode {
-  return blind ? "blind" : "open";
+  return authorshipModeFromFlags(blind, false);
 }
 
 export function unifiedBriefSynthesizerLabel(author: UnifiedBriefSynthesizer): string {
@@ -47,7 +57,7 @@ function looksLikeContributions(value: unknown): value is UnifiedBriefContributi
   return Array.isArray(o.contributions) || typeof o.overall === "string";
 }
 
-/** Normalize a stored brief slot (legacy flat brief or `{ open, blind }`) to version map. */
+/** Normalize a stored brief slot (legacy flat brief or `{ open, blind, reassigned }`) to version map. */
 export function normalizeBriefAuthorshipSlot(
   slot: unknown
 ): UnifiedBriefAuthorshipVersions<DecisionBrief> {
@@ -57,10 +67,11 @@ export function normalizeBriefAuthorshipSlot(
   const out: UnifiedBriefAuthorshipVersions<DecisionBrief> = {};
   if (looksLikeDecisionBrief(o.open)) out.open = o.open;
   if (looksLikeDecisionBrief(o.blind)) out.blind = o.blind;
+  if (looksLikeDecisionBrief(o.reassigned)) out.reassigned = o.reassigned;
   return out;
 }
 
-/** Normalize a stored contributions slot (legacy flat or `{ open, blind }`) to version map. */
+/** Normalize a stored contributions slot (legacy flat or versioned) to version map. */
 export function normalizeContributionsAuthorshipSlot(
   slot: unknown
 ): UnifiedBriefAuthorshipVersions<UnifiedBriefContributions> {
@@ -70,12 +81,13 @@ export function normalizeContributionsAuthorshipSlot(
   const out: UnifiedBriefAuthorshipVersions<UnifiedBriefContributions> = {};
   if (looksLikeContributions(o.open)) out.open = o.open;
   if (looksLikeContributions(o.blind)) out.blind = o.blind;
+  if (looksLikeContributions(o.reassigned)) out.reassigned = o.reassigned;
   return out;
 }
 
 function slotHasAnyBrief(slot: unknown): boolean {
   const versions = normalizeBriefAuthorshipSlot(slot);
-  return !!(versions.open || versions.blind);
+  return !!(versions.open || versions.blind || versions.reassigned);
 }
 
 /** Whether this run document stores at least one Unified Brief (legacy or per-author map). */
@@ -124,6 +136,7 @@ export function listAvailableUnifiedBriefAuthors(
   return UNIFIED_BRIEF_SYNTHESIZERS.filter((author) => {
     if (getUnifiedBriefForAuthor(run, author, "open")) return true;
     if (getUnifiedBriefForAuthor(run, author, "blind")) return true;
+    if (getUnifiedBriefForAuthor(run, author, "reassigned")) return true;
     return false;
   });
 }
@@ -160,14 +173,6 @@ export function mergeUnifiedBriefIntoRun(
   mode: UnifiedBriefAuthorshipMode = "open"
 ): DecisionRunResult {
   const prevVersions = normalizeBriefAuthorshipSlot(run.unified_briefs_by_author?.[author]);
-  // Preserve sibling mode when upgrading a legacy flat slot (which becomes open only).
-  if (
-    mode === "blind" &&
-    !prevVersions.open &&
-    looksLikeDecisionBrief(run.unified_briefs_by_author?.[author])
-  ) {
-    prevVersions.open = run.unified_briefs_by_author![author] as DecisionBrief;
-  }
   const versions: UnifiedBriefAuthorshipVersions<DecisionBrief> = {
     ...prevVersions,
     [mode]: brief,
@@ -177,7 +182,6 @@ export function mergeUnifiedBriefIntoRun(
     ...(run.unified_briefs_by_author ?? {}),
     [author]: versions,
   };
-  // Ensure other authors' legacy flat slots stay readable; normalize nothing on them.
   const next: DecisionRunResult = { ...run, unified_briefs_by_author };
   if (author === "anthropic" && mode === "open") {
     next.decision_brief_best_of_worlds = brief;
@@ -194,15 +198,6 @@ export function mergeUnifiedBriefContributionsIntoRun(
   const prevVersions = normalizeContributionsAuthorshipSlot(
     run.unified_brief_contributions_by_author?.[author]
   );
-  if (
-    mode === "blind" &&
-    !prevVersions.open &&
-    looksLikeContributions(run.unified_brief_contributions_by_author?.[author])
-  ) {
-    prevVersions.open = run.unified_brief_contributions_by_author![
-      author
-    ] as UnifiedBriefContributions;
-  }
   const versions: UnifiedBriefAuthorshipVersions<UnifiedBriefContributions> = {
     ...prevVersions,
     [mode]: contributions,

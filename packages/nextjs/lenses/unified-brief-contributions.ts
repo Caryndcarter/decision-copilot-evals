@@ -14,13 +14,16 @@ import { buildBestOfWorldsSourceUserContent } from "@/lenses/brief";
 import { runProviderLabel } from "@/lib/run-display-name";
 import {
   buildProviderAliasMap,
+  buildProviderAliasMapFromRemap,
   decodeAliasesInText,
   providerSlugForBlindSchema,
   resolveBlindProvider,
+  scrambleRemapFromAliasMap,
   type ProviderAliasMap,
 } from "@/lib/unified-brief-blind";
 import {
   unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefAuthorshipMode,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type {
@@ -166,18 +169,22 @@ function buildContributionsMessages(
   allRunsForResearch: DecisionRunResult[],
   brief: DecisionBrief,
   author: UnifiedBriefSynthesizer,
-  blind: boolean,
+  authorshipMode: UnifiedBriefAuthorshipMode,
   aliasMap: ProviderAliasMap | null
 ): LLMMessage[] {
   const providers = participatingProviders(canonicalRuns, aliasMap);
-  const providerList = blind
+  const useAliasKeys = authorshipMode === "blind" || authorshipMode === "reassigned";
+  const providerList = useAliasKeys
     ? providers.map((p) => `- ${p.label} (\`${p.schemaKey}\`)`).join("\n")
     : providers.map((p) => `- ${p.label} (\`${p.provider}\`)`).join("\n");
   const coach = unifiedBriefSynthesizerCoachLabel(author);
 
-  const identityRule = blind
-    ? "- Models are labeled only as AI Model 1, AI Model 2, … Use those labels and the matching `ai_model_N` provider keys. Do not invent vendor brands (OpenAI, Anthropic, Gemini, xAI, etc.)."
-    : "- Use the real provider keys and labels from the participating list.";
+  const identityRule =
+    authorshipMode === "blind"
+      ? "- Models are labeled only as AI Model 1, AI Model 2, … Use those labels and the matching `ai_model_N` provider keys. Do not invent vendor brands (OpenAI, Anthropic, Gemini, xAI, etc.)."
+      : authorshipMode === "reassigned"
+        ? "- Provider brand names in the source blocks are reassigned (unique labels that may not match the true vendor). Use the labels and provider keys from the participating list exactly as shown."
+        : "- Use the real provider keys and labels from the participating list.";
 
   const systemPrompt = `You are ${coach}. You are the author of the **Unified Brief** below — you merged every model/posture run, all research, and all saved variants into that one brief.
 
@@ -198,7 +205,8 @@ Return ONLY structured JSON matching the schema.`;
 
   const source = buildBestOfWorldsSourceUserContent(anchorRun, canonicalRuns, {
     allRunsForResearch,
-    blind,
+    authorshipMode,
+    scrambleRemap: brief.authorship_provider_remap,
   });
 
   const userContent = `## Participating models (one contribution entry required per item)
@@ -324,6 +332,9 @@ function coerceContributions(
     brief_generated_at: briefGeneratedAt,
     overall,
     contributions,
+    ...(aliasMap?.kind === "reassigned"
+      ? { authorship_provider_remap: scrambleRemapFromAliasMap(aliasMap) }
+      : {}),
   };
 }
 
@@ -337,10 +348,21 @@ export async function runUnifiedBriefContributionsAnalysis(
   brief: DecisionBrief,
   allRunsForResearch?: DecisionRunResult[],
   author: UnifiedBriefSynthesizer = "anthropic",
-  blind = false
+  authorshipMode: UnifiedBriefAuthorshipMode | boolean = "open"
 ): Promise<UnifiedBriefContributions> {
+  const mode: UnifiedBriefAuthorshipMode =
+    typeof authorshipMode === "boolean"
+      ? authorshipMode
+        ? "blind"
+        : "open"
+      : authorshipMode;
   const researchRuns = allRunsForResearch ?? canonicalRuns;
-  const aliasMap = blind ? buildProviderAliasMap(canonicalRuns) : null;
+  const aliasMap =
+    mode === "blind"
+      ? buildProviderAliasMap(canonicalRuns)
+      : mode === "reassigned"
+        ? buildProviderAliasMapFromRemap(brief.authorship_provider_remap, canonicalRuns)
+        : null;
   const providers = participatingProviders(canonicalRuns, aliasMap);
   const messages = buildContributionsMessages(
     anchorRun,
@@ -348,18 +370,22 @@ export async function runUnifiedBriefContributionsAnalysis(
     researchRuns,
     brief,
     author,
-    blind,
+    mode,
     aliasMap
   );
 
   const schema = contributionsSchema(
     providers.map((p) => p.schemaKey),
-    blind
+    mode === "blind"
       ? "Blind model key: ai_model_1, ai_model_2, … matching the participating list."
-      : "Provider key: openai, anthropic, gemini, or xai.",
-    blind
+      : mode === "reassigned"
+        ? "Reassigned brand key as shown in the participating list (openai, anthropic, gemini, or xai)."
+        : "Provider key: openai, anthropic, gemini, or xai.",
+    mode === "blind"
       ? "Blind label, e.g. 'AI Model 1', 'AI Model 2'."
-      : "Human label, e.g. 'OpenAI', 'Anthropic', 'Google Gemini', 'xAI'."
+      : mode === "reassigned"
+        ? "Brand label as shown in the participating list (may not be the true vendor)."
+        : "Human label, e.g. 'OpenAI', 'Anthropic', 'Google Gemini', 'xAI'."
   );
 
   const response = await getClient(author).run(messages, {

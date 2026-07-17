@@ -25,6 +25,8 @@ interface UnifiedBriefContributionsPanelProps {
   onOpenInfluenceCharts?: () => void;
   /** When true, anonymize model brands in the contributions analysis prompt. */
   blindAuthorship?: boolean;
+  /** When true, use the stored reassigned brand remap for contributions analysis. */
+  reassignedAuthorship?: boolean;
 }
 
 const PROVIDER_BADGE: Record<LLMProviderName, string> = {
@@ -114,6 +116,7 @@ export function UnifiedBriefContributionsPanel({
   onUpdated,
   onOpenInfluenceCharts,
   blindAuthorship = false,
+  reassignedAuthorship = false,
 }: UnifiedBriefContributionsPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,6 +140,7 @@ export function UnifiedBriefContributionsPanel({
           ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
           synthesizer,
           blind: blindAuthorship,
+          reassigned: reassignedAuthorship,
         }),
       });
       const data = await res.json();
@@ -150,7 +154,7 @@ export function UnifiedBriefContributionsPanel({
     } finally {
       setGenerating(false);
     }
-  }, [disabled, generating, runId, decisionId, synthesizer, blindAuthorship, onUpdated]);
+  }, [disabled, generating, runId, decisionId, synthesizer, blindAuthorship, reassignedAuthorship, onUpdated]);
 
   const scrollToProvider = useCallback((provider: string) => {
     document

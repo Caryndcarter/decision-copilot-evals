@@ -228,12 +228,20 @@ export function UnifiedBriefInfluenceChartsOverlay({
           <div className="min-w-0">
             <h2 id={titleId} className="text-lg font-semibold text-zinc-900">
               Influence charts
-              {authorshipMode === "blind" ? " (blind authorship)" : ""}
+              {authorshipMode === "blind"
+                ? " (blind authorship)"
+                : authorshipMode === "reassigned"
+                  ? " (reassigned authorship)"
+                  : ""}
             </h2>
             <p className="mt-1 text-sm text-zinc-600">
               How each Unified Brief author weighted think tank members in their contribution analysis
-              {authorshipMode === "blind" ? " (blind-authorship briefs)" : " (standard briefs)"}.
-              High = 4, Medium = 3, Low = 2, Minimal = 1.
+              {authorshipMode === "blind"
+                ? " (blind-authorship briefs)"
+                : authorshipMode === "reassigned"
+                  ? " (reassigned-authorship briefs)"
+                  : " (standard briefs)"}
+              . High = 4, Medium = 3, Low = 2, Minimal = 1.
             </p>
           </div>
           <button

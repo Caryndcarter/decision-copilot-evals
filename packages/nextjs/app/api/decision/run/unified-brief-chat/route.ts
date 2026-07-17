@@ -8,7 +8,7 @@ import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMMessage } from "@/llm/types";
 import { runProviderLabel } from "@/lib/run-display-name";
 import {
-  authorshipModeFromBlind,
+  authorshipModeFromFlags,
   getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   unifiedBriefSynthesizerCoachLabel,
@@ -167,6 +167,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       llm_provider?: string;
       brief_synthesizer?: string;
       blind?: boolean;
+      reassigned?: boolean;
       messages?: { role: "user" | "assistant"; content: string }[];
       newMessage?: string;
     };
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const briefAuthor: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(rawBriefAuthor)
       ? rawBriefAuthor
       : "anthropic";
-    const authorshipMode = authorshipModeFromBlind(body.blind === true);
+    const authorshipMode = authorshipModeFromFlags(body.blind === true, body.reassigned === true);
     const newMessage = typeof body.newMessage === "string" ? body.newMessage.trim() : "";
     const messages = Array.isArray(body.messages) ? body.messages : [];
 
