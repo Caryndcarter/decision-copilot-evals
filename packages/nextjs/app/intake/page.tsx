@@ -194,6 +194,21 @@ const DEMO_SCENARIOS = [
     unknowns:
       "Who should be modeled as Customers vs. Prospects in HubSpot — the platform, the ISO partner, or the end merchant? What is the right pipeline and funnel structure given that acquisition happens at different layers per deal type? How should the mix of fixed fees, revenue shares, and performance-based structures be represented? What belongs in HubSpot vs. the billing system vs. elsewhere as the source of truth? What does upgrading from Starter unlock that is relevant to our use case and when does it make sense? What specific object structures, pipelines, and properties are recommended for our situation? What training or onboarding path would bring a ZenDesk-experienced admin up to speed on HubSpot quickly?",
   },
+  {
+    id: "meridian-civitas-saas-rollup",
+    label: "Meridian / Civitas SaaS roll-up",
+    situation:
+      "Meridian Holdings is a PE-backed software operating company executing a roll-up of mature, profitable, low-growth vertical SaaS. Civitas (acquired Q1 2025 for $58M / ~4.2x ARR) is municipal permitting, licensing, and code-enforcement software for ~340 US towns and counties: ~$14M ARR, 61% gross margin (heavy services load), ~$41K ACV, 9-year average tenure, 97% NRR.\n\nEngineering at acquisition: 42 people (30 engineers on a 15-year Java monolith with heavy per-municipality customization, 6 QA, 4 DevOps, 2 managers). CS/support: 18 people with deep town-clerk relationships. ~15–20% of municipal configurations have no written spec—they live in tribal knowledge of ~5 senior engineers.\n\nAn AI-assisted engineering audit says a team of 6–8 could rebuild the core in ~9 months (LLM-assisted migration + AI regression testing), with ~70% engineering headcount cut and ~40% infra savings—but flags that AI migration may miss undocumented edge cases (e.g. flood-zone fee waivers) until production. Some contracts have ambiguous 2003-era “key personnel” / continuity language. IC is reviewing Civitas for strategic sale vs hold-and-harvest in 18–24 months; modernization path changes valuation either way.\n\nWe must decide: (1) how aggressively to compress headcount reduction (single event vs phased), (2) whether to retain a permanent “tribal knowledge” senior tier vs treating all 42 as in-scope, and (3) how much municipal migration risk to accept for speed/savings.\n\nOptions: (A) full AI rebuild in 9 months + single large layoff after validation; (B) phased 18–24 month rebuild with staged cuts, seniors retained longest + structured severance/placement; (C) hybrid—AI rebuild but keep 8–10 including the 5 seniors permanently, cut mid-level/QA hardest; (D) delay modernization and sell Civitas as-is; (E) modernize but cap headcount cut (~40%) and reinvest into adjacent municipal products.\n\nSuccess (stated): zero critical outages blocking permits/licenses; ≥50% engineering cost-to-serve cut within 12 months of full migration; NRR ≥95% through transition; no public failure story (botched town migration or high-profile layoff) given LP pension optics and AI-displacement press.",
+    constraints:
+      "IC wants a modernization plan/timeline in ~6 weeks. Audit claims 9-month technical compression; conservative validation across 340 configs likely longer. $2.1M reserved for tooling/AI infra/contractors; severance currently modeled at 2 weeks/year tenure capped at 16 weeks (richer packages need separate IC approval). Ideal-state eng headcount per audit: 8–12 (no hard floor set—that’s the decision). WARN Act aggregation vs Meridian portfolio unresolved; municipal customers subject to public-records laws. Reputational risk: roll-up watched by trade press; LPs include public pension funds. Leadership frames thesis itself as non-negotiable (modernization/cost reduction happens somehow); pace, sequencing, retention, and customer-failure risk tolerance are open. Delay cost ~$180K/month legacy infra/maintenance vs modernized baseline, plus unpatched security debt.",
+    posture: "pressure_test" as const,
+    leaning_direction:
+      "Option B with elements of C: phased 18–24 month rebuild, staged headcount reduction tied to migration milestones, retain the 5–6 most senior engineers longest for knowledge transfer/validation, plus structured severance and job-placement support—believed to prove the thesis while limiting municipal risk and treating leavers more humanely than a single-event layoff",
+    knowns_assumptions:
+      "FACTS: 340 municipalities; $14M ARR; 97% NRR; 42 eng / 18 CS; audit projects 8–12 eng post-modernization; 15–20% configs undocumented; $2.1M modernization budget; legal flagged unresolved key-personnel language.\nASSUMPTIONS (treat skeptically): AI tooling catches undocumented edge cases acceptably (asserted by audit team whose engagement continues if project proceeds); seniors retained “longest” will stay through validation rather than leave early once roles look temporary (not surveyed candidly); 340 thin IT shops tolerate multi-year transition without competitor shopping; “job placement support” helps in a mid-sized Midwest metro with thin tech demand for legacy Java/gov skills (not verified); IC will accept slower/costlier path if risk case is strong (not tested with them); WARN/legal exposure manageable under either timeline (legal incomplete).",
+    unknowns:
+      "What do the 5–6 tribal-knowledge seniors actually say if asked candidly about staying through validation with no guaranteed long-term role? Real local demand for their skill set? Does Civitas+Meridian aggregation trip WARN (60-day notice etc.) forcing a slower path? What is enforceable in key-personnel clauses—can towns demand continuity or exit? Have we modeled the cost of one real failure (e.g. town can’t issue permits for two weeks) vs savings from the faster timeline? Would IC actually reject a lower-margin humane path if shown full downside—or is that resistance assumed? What do a sample of the 340 customers say about phased transition risk vs vendor stability?",
+  },
 ] as const;
 
 function FieldHelp({ children }: { children: React.ReactNode }) {
@@ -565,16 +580,24 @@ export default function IntakePage() {
             <p className="text-sm text-indigo-700 font-medium">Load a sample scenario to try it out</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {DEMO_SCENARIOS.map((demo) => (
-              <button
-                key={demo.id}
-                type="button"
-                onClick={() => loadDemo(demo.id)}
-                className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors"
-              >
-                {demo.label}
-              </button>
-            ))}
+            {DEMO_SCENARIOS.map((demo) => {
+              const selected = demoScenarioId === demo.id;
+              return (
+                <button
+                  key={demo.id}
+                  type="button"
+                  onClick={() => loadDemo(demo.id)}
+                  aria-pressed={selected}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selected
+                      ? "border-indigo-500 bg-indigo-100 text-indigo-900 ring-1 ring-indigo-500"
+                      : "border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300"
+                  }`}
+                >
+                  {demo.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 

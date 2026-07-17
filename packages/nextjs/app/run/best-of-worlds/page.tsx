@@ -119,10 +119,11 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
   useEffect(() => {
     if (!persistRun) return;
-    const available = listAvailableUnifiedBriefAuthors(persistRun);
+    const mode = authorshipModeFromFlags(blindAuthorship, reassignedAuthorship);
+    const available = listAvailableUnifiedBriefAuthors(persistRun, mode);
     if (available.length === 0) return;
     setActiveSynthesizer((prev) => (available.includes(prev) ? prev : available[0]));
-  }, [persistRun]);
+  }, [persistRun, blindAuthorship, reassignedAuthorship]);
 
   useEffect(() => {
     setActiveSynthesizer((prev) =>
@@ -413,6 +414,21 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                       const hasBrief = !!(
                         persistRun && getUnifiedBriefForAuthor(persistRun, author, authorshipMode)
                       );
+                      const hasContributions = !!(
+                        persistRun &&
+                        getUnifiedBriefContributionsForAuthor(persistRun, author, authorshipMode)
+                      );
+                      // "Saved" alone was misleading: a blind brief can exist without contribution analysis.
+                      const statusLabel = !hasBrief
+                        ? "New"
+                        : hasContributions
+                          ? "Analyzed"
+                          : "Brief only";
+                      const statusTitle = !hasBrief
+                        ? `No ${authorshipModeLabel.toLowerCase()} Unified Brief yet`
+                        : hasContributions
+                          ? `${authorshipModeLabel} brief and contribution analysis are saved`
+                          : `${authorshipModeLabel} brief is saved, but contribution analysis is missing`;
                       return (
                         <button
                           key={author}
@@ -420,6 +436,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                           role="tab"
                           aria-selected={selected}
                           disabled={generating}
+                          title={statusTitle}
                           onClick={() => selectSynthesizer(author)}
                           className={`flex min-w-[9.5rem] shrink-0 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                             selected
@@ -432,16 +449,20 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                           </span>
                           <span
                             className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                              hasBrief
+                              hasContributions
                                 ? selected
                                   ? "bg-emerald-100 text-emerald-800"
                                   : "bg-emerald-50 text-emerald-700"
-                                : selected
-                                  ? "bg-zinc-200/80 text-zinc-600"
-                                  : "bg-zinc-100 text-zinc-500"
+                                : hasBrief
+                                  ? selected
+                                    ? "bg-amber-100 text-amber-900"
+                                    : "bg-amber-50 text-amber-800"
+                                  : selected
+                                    ? "bg-zinc-200/80 text-zinc-600"
+                                    : "bg-zinc-100 text-zinc-500"
                             }`}
                           >
-                            {hasBrief ? "Saved" : "New"}
+                            {statusLabel}
                           </span>
                         </button>
                       );

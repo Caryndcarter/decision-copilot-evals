@@ -15,6 +15,15 @@ import {
 import { buildDemoSampleQuestions } from "@/lib/clarification-demo-request";
 import type { ClarificationDemoSamplesResult } from "@/lib/clarification-demo-samples-types";
 
+function formatDemoModelLabel(model: string): string {
+  const m = model.trim();
+  if (m.includes("fable")) return "Claude Fable 5";
+  if (m.includes("claude")) return m.replace(/^claude-/, "Claude ").replace(/-/g, " ");
+  if (m.startsWith("gemini-")) return m.replace("gemini-", "Gemini ").replace(/-/g, " ");
+  if (m.includes("gpt") || m.includes("sol")) return m.replace(/-/g, " ");
+  return m;
+}
+
 export {
   buildClarificationAnswersForSubmit,
   buildDemoClarificationSamples,
@@ -66,8 +75,8 @@ export function ClarificationDemoQuickFill({
         onApply(data.answers);
         setStatus(
           data.demo_method === "fallback"
-            ? "Used generic fallback — Gemini unavailable."
-            : `Generated with ${data.demo_model.replace("gemini-", "Gemini ").replace(/-/g, " ")}.`
+            ? "Used generic fallback — sample model unavailable."
+            : `Generated with ${formatDemoModelLabel(data.demo_model)}.`
         );
         return;
       }

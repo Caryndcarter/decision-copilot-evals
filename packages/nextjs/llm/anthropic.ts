@@ -45,7 +45,8 @@ function createError(code: string, message: string, retryable = false): LLMError
 
 /**
  * Anthropic tool `input_schema` restricts JSON Schema arrays: `minItems` may only be 0 or 1,
- * and `maxItems` is not supported. Clone and adjust so other providers can keep stricter schemas.
+ * and `maxItems` is not supported. It also requires every `object` type to explicitly set
+ * `additionalProperties: false`. Clone and adjust so other providers can keep stricter schemas.
  */
 function sanitizeAnthropicInputSchema(schema: Record<string, unknown>): Record<string, unknown> {
   const clone = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>;
@@ -61,6 +62,10 @@ function sanitizeAnthropicInputSchema(schema: Record<string, unknown>): Record<s
         o.minItems = 1;
       }
       delete o.maxItems;
+    }
+    // Anthropic requires additionalProperties to be explicitly false on object types.
+    if (o.type === "object" && o.additionalProperties === undefined) {
+      o.additionalProperties = false;
     }
     for (const v of Object.values(o)) walk(v);
   };

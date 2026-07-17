@@ -234,15 +234,51 @@ export async function runRiskLens(
   provider: LLMProvider = "openai"
 ): Promise<RiskLensOutput> {
   const messages = buildRiskPrompt(intake, clarifications);
-
-  const response = await getClient(provider).run(messages, {
-    schema: RISK_OUTPUT_SCHEMA,
+  // Dense intakes can truncate Grok mid-JSON at 2048; match people/reversibility headroom.
+  const requestOpts = {
+    schema: RISK_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: 2048,
-  });
+    maxTokens: provider === "xai" ? 8192 : 4096,
+  };
+
+  const client = getClient(provider);
+  let response = await client.run(messages, requestOpts);
 
   if (!response.parsed) {
-    throw new Error("Risk lens did not return valid structured output");
+    console.warn("[Risk] First attempt did not return parseable JSON; retrying once.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 300),
+    });
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous reply was not valid JSON for the required schema. " +
+          "Reply NOW with one JSON object that matches the schema exactly. " +
+          "No prose, no markdown, no code fences — only the JSON object. " +
+          "Keep top_risks, assumptions_detected, and remaining_uncertainty to 3–5 items each and questions_to_answer_next to 1–2 so the object fully closes.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      temperature: 0.2,
+      maxTokens: Math.max(requestOpts.maxTokens, 8192),
+    });
+  }
+
+  if (!response.parsed) {
+    console.error("[Risk] Lens failed to produce parseable JSON after retry.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Risk lens did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
   }
 
   return parseRiskOutput(response.parsed);

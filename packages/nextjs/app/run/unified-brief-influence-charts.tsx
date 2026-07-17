@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useId, useMemo } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type {
   ContributionInfluence,
   DecisionRunResult,
+  LLMProviderName,
   UnifiedBriefAuthorshipMode,
 } from "@/types/decision";
 import {
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefForAuthor,
+  UNIFIED_BRIEF_SYNTHESIZERS,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
@@ -31,6 +33,74 @@ const HEATMAP_CELL: Record<ContributionInfluence, string> = {
 };
 
 const MAX_SCORE = 4;
+const CHART_MODES: UnifiedBriefAuthorshipMode[] = ["open", "blind", "reassigned"];
+
+type ChartTab = UnifiedBriefAuthorshipMode | "findings";
+type MatrixByMode = Record<UnifiedBriefAuthorshipMode, InfluenceMatrix | null>;
+
+function authorshipModeChartLabel(mode: UnifiedBriefAuthorshipMode): string {
+  if (mode === "blind") return "Blind";
+  if (mode === "reassigned") return "Reassigned";
+  return "Standard";
+}
+
+function authorshipModeDescription(mode: UnifiedBriefAuthorshipMode): string {
+  if (mode === "blind") return "blind-authorship briefs";
+  if (mode === "reassigned") return "reassigned-authorship briefs";
+  return "standard briefs";
+}
+
+function signedDelta(delta: number): string {
+  return delta > 0 ? `+${delta}` : String(delta);
+}
+
+function isProviderName(value: string): value is LLMProviderName {
+  return value === "anthropic" || value === "openai" || value === "gemini" || value === "xai";
+}
+
+function remapForRater(
+  persistRun: DecisionRunResult | null,
+  rater: UnifiedBriefSynthesizer
+): Partial<Record<LLMProviderName, LLMProviderName>> | undefined {
+  if (!persistRun) return undefined;
+  return (
+    getUnifiedBriefContributionsByAuthor(persistRun, "reassigned")[rater]?.authorship_provider_remap ??
+    getUnifiedBriefForAuthor(persistRun, rater, "reassigned")?.authorship_provider_remap
+  );
+}
+
+/** e.g. "Google Gemini (shown to xAI as ChatGPT)" when reassigned remap is known. */
+function ratedLabelWithRemap(
+  rated: LLMProviderName,
+  rater: UnifiedBriefSynthesizer,
+  mode: UnifiedBriefAuthorshipMode,
+  persistRun: DecisionRunResult | null
+): string {
+  const base = ratedLabel(rated);
+  if (mode !== "reassigned") return base;
+  const shownAs = remapForRater(persistRun, rater)?.[rated];
+  if (!shownAs) return `${base} (reassigned brand unknown)`;
+  if (shownAs === rated) return `${base} (shown as itself)`;
+  return `${base} (shown to ${raterLabel(rater)} as ${ratedLabel(shownAs)})`;
+}
+
+function cellFindingDetail(
+  rater: UnifiedBriefSynthesizer,
+  rated: LLMProviderName,
+  fromMode: UnifiedBriefAuthorshipMode,
+  toMode: UnifiedBriefAuthorshipMode,
+  from: InfluenceMatrixCell,
+  to: InfluenceMatrixCell,
+  persistRun: DecisionRunResult | null
+): string {
+  const fromLabel = ratedLabelWithRemap(rated, rater, fromMode, persistRun);
+  const toLabel = ratedLabelWithRemap(rated, rater, toMode, persistRun);
+  const sameDisplay = fromLabel === toLabel;
+  if (sameDisplay) {
+    return `${raterLabel(rater)} rated ${fromLabel} ${influenceLabel(from.influence)} in ${authorshipModeChartLabel(fromMode).toLowerCase()} and ${influenceLabel(to.influence)} in ${authorshipModeChartLabel(toMode).toLowerCase()}.`;
+  }
+  return `${raterLabel(rater)} rated ${fromLabel} ${influenceLabel(from.influence)} in ${authorshipModeChartLabel(fromMode).toLowerCase()}, then ${toLabel} ${influenceLabel(to.influence)} in ${authorshipModeChartLabel(toMode).toLowerCase()}.`;
+}
 
 function HeatmapCell({ cell }: { cell: InfluenceMatrixCell | undefined }) {
   if (!cell) {
@@ -143,6 +213,182 @@ function Legend() {
   );
 }
 
+type InfluenceFinding = {
+  key: string;
+  title: string;
+  detail: string;
+  severity: number;
+  badge: string;
+};
+
+function cellAt(
+  matrix: InfluenceMatrix | null,
+  rater: UnifiedBriefSynthesizer,
+  rated: LLMProviderName
+): InfluenceMatrixCell | undefined {
+  return matrix?.cells[rater]?.[rated];
+}
+
+function buildInfluenceFindings(
+  matrices: MatrixByMode,
+  persistRun: DecisionRunResult | null
+): { findings: InfluenceFinding[]; missing: string[] } {
+  const findings: InfluenceFinding[] = [];
+  const missing: string[] = [];
+
+  for (const mode of CHART_MODES) {
+    const matrix = matrices[mode];
+    if (!matrix) {
+      missing.push(`${authorshipModeChartLabel(mode)}: no contribution analyses yet`);
+      continue;
+    }
+    const missingAuthors = UNIFIED_BRIEF_SYNTHESIZERS.filter((author) => !matrix.raters.includes(author));
+    if (missingAuthors.length > 0) {
+      missing.push(
+        `${authorshipModeChartLabel(mode)}: missing ${missingAuthors
+          .map(unifiedBriefSynthesizerLabel)
+          .join(", ")}`
+      );
+    }
+  }
+
+  const comparedModes: Array<[UnifiedBriefAuthorshipMode, UnifiedBriefAuthorshipMode]> = [
+    ["open", "blind"],
+    ["open", "reassigned"],
+    ["blind", "reassigned"],
+  ];
+
+  for (const [fromMode, toMode] of comparedModes) {
+    const fromMatrix = matrices[fromMode];
+    const toMatrix = matrices[toMode];
+    if (!fromMatrix || !toMatrix) continue;
+
+    for (const rater of UNIFIED_BRIEF_SYNTHESIZERS) {
+      for (const rated of new Set([...fromMatrix.rated, ...toMatrix.rated])) {
+        const from = cellAt(fromMatrix, rater, rated);
+        const to = cellAt(toMatrix, rater, rated);
+        if (!from || !to) continue;
+        const delta = to.score - from.score;
+        if (Math.abs(delta) < 2) continue;
+        const involvesReassigned = fromMode === "reassigned" || toMode === "reassigned";
+        const shownAs =
+          involvesReassigned ? remapForRater(persistRun, rater)?.[rated] : undefined;
+        findings.push({
+          key: `cell-${fromMode}-${toMode}-${rater}-${rated}`,
+          title: shownAs
+            ? `${ratedLabel(rated)} (as ${ratedLabel(shownAs)}) moved ${signedDelta(delta)} for ${raterLabel(rater)}`
+            : `${ratedLabel(rated)} moved ${signedDelta(delta)} for ${raterLabel(rater)}`,
+          detail: cellFindingDetail(rater, rated, fromMode, toMode, from, to, persistRun),
+          severity: Math.abs(delta),
+          badge: `${authorshipModeChartLabel(fromMode)} → ${authorshipModeChartLabel(toMode)}`,
+        });
+      }
+    }
+
+    for (const provider of new Set([
+      ...fromMatrix.averageReceived.map((r) => r.provider),
+      ...toMatrix.averageReceived.map((r) => r.provider),
+    ])) {
+      const from = fromMatrix.averageReceived.find((r) => r.provider === provider);
+      const to = toMatrix.averageReceived.find((r) => r.provider === provider);
+      if (!from || !to) continue;
+      const delta = Math.round((to.average - from.average) * 100) / 100;
+      if (Math.abs(delta) < 1) continue;
+      findings.push({
+        key: `avg-${fromMode}-${toMode}-${provider}`,
+        title: `${ratedLabel(provider)} average influence shifted ${signedDelta(delta)}`,
+        detail: `Average weight received changed from ${from.average.toFixed(2)} in ${authorshipModeChartLabel(fromMode).toLowerCase()} to ${to.average.toFixed(2)} in ${authorshipModeChartLabel(toMode).toLowerCase()}.`,
+        severity: Math.abs(delta),
+        badge: "Average received",
+      });
+    }
+  }
+
+  if (persistRun && matrices.open && matrices.reassigned) {
+    const openMatrix = matrices.open;
+    const reassignedMatrix = matrices.reassigned;
+    for (const rater of UNIFIED_BRIEF_SYNTHESIZERS) {
+      const remap = remapForRater(persistRun, rater);
+      if (!remap) continue;
+      for (const [realProvider, shownProvider] of Object.entries(remap)) {
+        if (!isProviderName(realProvider) || !isProviderName(shownProvider)) continue;
+        const open = cellAt(openMatrix, rater, realProvider);
+        const reassigned = cellAt(reassignedMatrix, rater, realProvider);
+        if (!open || !reassigned) continue;
+        const delta = reassigned.score - open.score;
+        if (Math.abs(delta) < 2) continue;
+        findings.push({
+          key: `remap-${rater}-${realProvider}-${shownProvider}`,
+          title: `${ratedLabel(realProvider)} changed when shown as ${ratedLabel(shownProvider)}`,
+          detail: `${raterLabel(rater)} saw ${ratedLabel(realProvider)} as ${ratedLabel(shownProvider)} in reassigned authorship; the score moved from ${influenceLabel(open.influence)} standard to ${influenceLabel(reassigned.influence)} reassigned (${signedDelta(delta)}).`,
+          severity: Math.abs(delta) + 0.25,
+          badge: "Reassigned remap",
+        });
+      }
+    }
+  }
+
+  findings.sort((a, b) => b.severity - a.severity || a.title.localeCompare(b.title));
+  return { findings: findings.slice(0, 8), missing };
+}
+
+function FindingsPanel({
+  matrices,
+  persistRun,
+}: {
+  matrices: MatrixByMode;
+  persistRun: DecisionRunResult | null;
+}) {
+  const { findings, missing } = useMemo(
+    () => buildInfluenceFindings(matrices, persistRun),
+    [matrices, persistRun]
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h3 className="text-sm font-semibold text-zinc-900">Combined findings</h3>
+        <p className="mt-1 text-sm text-zinc-600">
+          Highlights large credit shifts across standard, blind, and reassigned contribution analyses.
+          These are deterministic chart comparisons, not a new model interpretation.
+        </p>
+      </div>
+
+      {findings.length === 0 ? (
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-5 text-sm text-zinc-600">
+          No large influence shifts yet. Run contribution analyses for the same brief authors across at
+          least two authorship modes to unlock comparisons.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {findings.map((finding) => (
+            <article key={finding.key} className="rounded-xl border border-zinc-200 bg-white p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h4 className="text-sm font-semibold text-zinc-900">{finding.title}</h4>
+                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                  {finding.badge}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-600">{finding.detail}</p>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {missing.length > 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">Coverage notes</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {missing.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /** Heatmap + average bars; used in overlay and print/PDF appendix. */
 export function UnifiedBriefInfluenceChartsBody({ matrix }: { matrix: InfluenceMatrix }) {
   return (
@@ -198,17 +444,27 @@ export function UnifiedBriefInfluenceChartsOverlay({
   activeSynthesizer = "anthropic",
 }: UnifiedBriefInfluenceChartsOverlayProps) {
   const titleId = useId();
-  const matrix = useMemo(() => {
-    if (!persistRun) return null;
-    return buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, authorshipMode));
-  }, [persistRun, authorshipMode]);
+  const [activeTab, setActiveTab] = useState<ChartTab>(authorshipMode);
+  const matrices = useMemo<MatrixByMode>(() => {
+    if (!persistRun) return { open: null, blind: null, reassigned: null };
+    return {
+      open: buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, "open")),
+      blind: buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, "blind")),
+      reassigned: buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, "reassigned")),
+    };
+  }, [persistRun]);
+  const matrix = activeTab === "findings" ? null : matrices[activeTab];
 
   const activeRemap = useMemo(() => {
-    if (!persistRun || authorshipMode !== "reassigned") return undefined;
+    if (!persistRun || activeTab !== "reassigned") return undefined;
     const contrib = getUnifiedBriefContributionsByAuthor(persistRun, "reassigned")[activeSynthesizer];
     const brief = getUnifiedBriefForAuthor(persistRun, activeSynthesizer, "reassigned");
     return contrib?.authorship_provider_remap ?? brief?.authorship_provider_remap;
-  }, [persistRun, authorshipMode, activeSynthesizer]);
+  }, [persistRun, activeTab, activeSynthesizer]);
+
+  useEffect(() => {
+    if (open) setActiveTab(authorshipMode);
+  }, [open, authorshipMode]);
 
   useEffect(() => {
     if (!open) return;
@@ -244,20 +500,10 @@ export function UnifiedBriefInfluenceChartsOverlay({
           <div className="min-w-0">
             <h2 id={titleId} className="text-lg font-semibold text-zinc-900">
               Influence charts
-              {authorshipMode === "blind"
-                ? " (blind authorship)"
-                : authorshipMode === "reassigned"
-                  ? " (reassigned authorship)"
-                  : ""}
             </h2>
             <p className="mt-1 text-sm text-zinc-600">
-              How each Unified Brief author weighted think tank members in their contribution analysis
-              {authorshipMode === "blind"
-                ? " (blind-authorship briefs)"
-                : authorshipMode === "reassigned"
-                  ? " (reassigned-authorship briefs)"
-                  : " (standard briefs)"}
-              . High = 4, Medium = 3, Low = 2, Minimal = 1.
+              Compare how each Unified Brief author weighted think tank members across authorship modes.
+              High = 4, Medium = 3, Low = 2, Minimal = 1.
             </p>
           </div>
           <button
@@ -270,15 +516,55 @@ export function UnifiedBriefInfluenceChartsOverlay({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-          {!matrix ? (
+          <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-200 pb-3">
+            {CHART_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setActiveTab(mode)}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                  activeTab === mode
+                    ? "bg-indigo-600 text-white"
+                    : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                }`}
+              >
+                {authorshipModeChartLabel(mode)}
+                {matrices[mode] ? "" : " · empty"}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setActiveTab("findings")}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                activeTab === "findings"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+              }`}
+            >
+              Findings
+            </button>
+          </div>
+
+          {activeTab === "findings" ? (
+            <FindingsPanel matrices={matrices} persistRun={persistRun} />
+          ) : !matrix ? (
             <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-6 text-sm text-zinc-600">
-              No contribution analyses yet. On the Contributions tab, run{" "}
+              No {authorshipModeDescription(activeTab)} contribution analyses yet. On the Contributions tab, run{" "}
               <span className="font-medium text-zinc-800">Analyze contributions</span> for one or more
-              brief authors, then reopen these charts.
+              brief authors in this authorship mode, then reopen these charts.
             </div>
           ) : (
             <div className="space-y-6">
-              {authorshipMode === "reassigned" && activeRemap ? (
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900">
+                  {authorshipModeChartLabel(activeTab)} authorship
+                </h3>
+                <p className="mt-1 text-sm text-zinc-600">
+                  Showing influence weights from {authorshipModeDescription(activeTab)}.
+                </p>
+              </div>
+
+              {activeTab === "reassigned" && activeRemap ? (
                 <div className="space-y-2">
                   <p className="text-sm text-zinc-600">
                     Charts use <span className="font-medium text-zinc-800">real</span> think-tank members.

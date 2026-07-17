@@ -52,6 +52,31 @@ function normalizeAssistantMessageContent(message: unknown): string {
   return parts.join("");
 }
 
+/** Grok sometimes wraps JSON in fences or adds a short preface; peel that off before parse. */
+function tryParseStructuredContent(content: string): unknown | undefined {
+  const trimmed = content.trim();
+  if (!trimmed) return undefined;
+
+  const candidates: string[] = [trimmed];
+  const fence = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fence?.[1]) candidates.push(fence[1].trim());
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    candidates.push(trimmed.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // try next candidate
+    }
+  }
+  return undefined;
+}
+
 export async function run(
   prompt: string | LLMMessage[],
   options: LLMRequestOptions = {}
@@ -102,10 +127,14 @@ export async function run(
 
   let parsed: unknown;
   if (options.schema || options.preferJsonObject) {
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      // Content wasn't valid JSON despite schema / json_object request
+    parsed = tryParseStructuredContent(content);
+    if (parsed === undefined && content.trim()) {
+      console.warn("[xAI] Structured response was not valid JSON", {
+        model,
+        finishReason: choice?.finish_reason,
+        contentLen: content.length,
+        contentPreview: content.slice(0, 240),
+      });
     }
   }
 

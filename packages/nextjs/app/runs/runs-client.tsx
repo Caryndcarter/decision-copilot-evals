@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -157,6 +157,11 @@ export function RunsClient({
   const [deletingRunId, setDeletingRunId] = useState<string | null>(null);
   const [deletingDecisionId, setDeletingDecisionId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
+
+  // Keep local optimistic state aligned with server refreshes (pagination / new runs).
+  useEffect(() => {
+    setGroups(initialGroups);
+  }, [initialGroups]);
 
   function removeRun(run_id: string) {
     setGroups((prev) =>
