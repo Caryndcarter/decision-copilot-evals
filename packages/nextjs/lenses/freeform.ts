@@ -158,7 +158,7 @@ Analyze this decision. Respond with a single raw JSON object only — no text be
       (provider === "openai"
         ? process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol"
         : provider === "gemini"
-          ? "gemini-2.5-flash"
+          ? process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash"
           : provider === "xai"
             ? process.env.XAI_MODEL?.trim() || "grok-4.5"
             : "claude"),

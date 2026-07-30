@@ -16,7 +16,8 @@ import type {
 } from "./types";
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_MODEL = "gemini-2.5-flash";
+/** Default chat model; override with `GEMINI_MODEL` in env. */
+const DEFAULT_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
 const DEFAULT_MAX_TOKENS = 4096;
 
 function getApiKey(): string {

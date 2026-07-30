@@ -22,7 +22,7 @@ export const CLARIFICATION_DEMO_PRIMARY_MODEL =
 export const GEMINI_CLARIFICATION_DEMO_MODEL =
   process.env.GEMINI_CLARIFICATION_DEMO_MODEL?.trim() ||
   process.env.GEMINI_CLARIFICATION_DEDUP_MODEL?.trim() ||
-  "gemini-3.5-flash";
+  "gemini-3.6-flash";
 
 function buildSchema() {
   return {

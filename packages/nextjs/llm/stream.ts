@@ -336,7 +336,7 @@ export async function runStream(
     }
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new Error("GEMINI_API_KEY environment variable is not set");
-    const model = options.model ?? "gemini-2.5-flash";
+    const model = (options.model ?? process.env.GEMINI_MODEL?.trim()) || "gemini-3.6-flash";
     const messages =
       typeof prompt === "string" ? [{ role: "user" as const, content: prompt }] : prompt;
     const systemMessage = messages.find((m) => m.role === "system");
