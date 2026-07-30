@@ -247,18 +247,22 @@ function coerceProvider(
   label: unknown,
   aliasMap: ProviderAliasMap | null
 ): LLMProviderName | undefined {
-  if (typeof value === "string") {
+  const tryResolve = (raw: unknown): LLMProviderName | undefined => {
+    if (typeof raw !== "string") return undefined;
     if (aliasMap) {
-      const fromBlind = resolveBlindProvider(value, aliasMap);
+      const fromBlind = resolveBlindProvider(raw, aliasMap);
       if (fromBlind) return fromBlind;
     }
-    const v = value.trim().toLowerCase();
+    const v = raw.trim().toLowerCase();
     if ((PROVIDER_VALUES as string[]).includes(v)) return v as LLMProviderName;
-  }
-  if (aliasMap && typeof label === "string") {
-    return resolveBlindProvider(label, aliasMap);
-  }
-  return undefined;
+    if (v === "chatgpt" || v === "gpt" || v === "gpt-4" || v === "gpt-5") return "openai";
+    if (v === "claude" || v.includes("anthropic") || v.includes("claude")) return "anthropic";
+    if (v === "google" || v.includes("gemini")) return "gemini";
+    if (v === "grok" || v === "x.ai" || v.includes("xai")) return "xai";
+    return undefined;
+  };
+
+  return tryResolve(value) ?? tryResolve(label);
 }
 
 function coerceInfluence(value: unknown): ContributionInfluence {
@@ -275,6 +279,23 @@ function realProviderLabel(provider: LLMProviderName): string {
 function decodeTextFields(value: string, aliasMap: ProviderAliasMap | null): string {
   if (!aliasMap) return value;
   return decodeAliasesInText(value, aliasMap);
+}
+
+const FILLER_SUMMARY = "No distinct attribution was returned for this model.";
+
+function isFillerContribution(entry: ProviderContribution): boolean {
+  return (
+    entry.summary === FILLER_SUMMARY &&
+    entry.adopted_ideas.length === 0 &&
+    entry.distinct_contributions.length === 0 &&
+    entry.not_adopted.length === 0
+  );
+}
+
+/** True when overall text exists but every provider row was our silent placeholder. */
+function contributionsLookTruncated(result: UnifiedBriefContributions): boolean {
+  if (!result.overall.trim() || result.contributions.length === 0) return true;
+  return result.contributions.every(isFillerContribution);
 }
 
 function coerceContributions(
@@ -320,7 +341,7 @@ function coerceContributions(
       provider,
       provider_label: realProviderLabel(provider),
       influence: "minimal",
-      summary: "No distinct attribution was returned for this model.",
+      summary: FILLER_SUMMARY,
       adopted_ideas: [],
       distinct_contributions: [],
       not_adopted: [],
@@ -388,20 +409,116 @@ export async function runUnifiedBriefContributionsAnalysis(
         : "Human label, e.g. 'OpenAI', 'Anthropic', 'Google Gemini', 'xAI'."
   );
 
-  const response = await getClient(author).run(messages, {
+  // Thinking models (Fable, Gemini 2.5) count reasoning against max_tokens / maxOutputTokens.
+  // Large attribution JSON needs headroom; keep effort low so thinking does not empty the output.
+  const maxTokens = author === "openai" ? 8192 : 16_384;
+  const requestOpts = {
     schema: schema as unknown as Record<string, unknown>,
     temperature: 0.3,
-    maxTokens: 4096,
-  });
+    maxTokens,
+    effort: "low" as const,
+  };
 
-  if (!response.parsed) {
-    throw new Error("Unified brief contributions analysis did not return valid structured output");
+  const client = getClient(author);
+  let response = await client.run(messages, requestOpts);
+
+  const hitTokenCap = (finishReason: string | undefined) =>
+    !!finishReason && /^(length|max_tokens|MAX_TOKENS)$/i.test(finishReason);
+
+  if (!response.parsed || hitTokenCap(response.meta?.finishReason)) {
+    console.warn("[unified-brief-contributions] Retrying (parse fail or output token cap).", {
+      author,
+      mode,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 400),
+    });
+    response = await client.run(
+      [
+        ...messages,
+        {
+          role: "user",
+          content:
+            "Your previous reply was not valid JSON for the required schema, or it may have been cut off. " +
+            "Reply NOW with one complete JSON object matching the schema. " +
+            "`overall` plus `contributions` with exactly one object per participating model " +
+            "(real influence ratings and specific adopted_ideas). No prose, no markdown fences.",
+        },
+      ],
+      {
+        ...requestOpts,
+        temperature: 0.2,
+        maxTokens: Math.max(maxTokens, 16_384),
+        effort: "low",
+      }
+    );
   }
 
-  return coerceContributions(
+  if (!response.parsed) {
+    console.error("[unified-brief-contributions] Analysis failed after retry.", {
+      author,
+      mode,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Unified brief contributions analysis did not return valid structured output (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
+  }
+
+  let result = coerceContributions(
     response.parsed,
     providers.map(({ provider, label }) => ({ provider, label })),
     brief.generated_at,
     aliasMap
   );
+
+  if (contributionsLookTruncated(result)) {
+    console.warn(
+      "[unified-brief-contributions] Attribution looked truncated (overall present, all provider rows empty); retrying once.",
+      {
+        author,
+        mode,
+        finishReason: response.meta?.finishReason,
+        overallLen: result.overall.length,
+        rawContributionCount: Array.isArray((response.parsed as { contributions?: unknown })?.contributions)
+          ? ((response.parsed as { contributions: unknown[] }).contributions.length)
+          : 0,
+      }
+    );
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous structured response filled `overall` but left `contributions` empty or unusable. " +
+          "Reply again with the SAME schema. `contributions` MUST contain exactly one object per participating model " +
+          "listed above, each with a real influence rating and specific adopted_ideas. Do not leave the array empty.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      maxTokens: Math.max(requestOpts.maxTokens, 16_384),
+      effort: "low",
+    });
+    if (!response.parsed) {
+      throw new Error(
+        `Unified brief contributions analysis did not return valid structured output after retry (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+      );
+    }
+    result = coerceContributions(
+      response.parsed,
+      providers.map(({ provider, label }) => ({ provider, label })),
+      brief.generated_at,
+      aliasMap
+    );
+    if (contributionsLookTruncated(result)) {
+      throw new Error(
+        `Unified brief contributions analysis returned an overall narrative but no usable per-model attributions (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"}). Try regenerating.`
+      );
+    }
+  }
+
+  return result;
 }

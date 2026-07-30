@@ -423,6 +423,13 @@ export interface DecisionRunResult {
   synthesis?: ProviderSynthesis;
   /** Set when the user started from an intake demo scenario button */
   demo_scenario_id?: DemoScenarioId;
+  /**
+   * True when this run was created by the Civitas/Meridian stress harness
+   * (`npm run harness:civitas`). My Decisions shows these under a separate tab.
+   */
+  harness_run?: boolean;
+  /** 1-based trial index within a harness batch (when `harness_run` is set). */
+  harness_trial?: number;
   /** Completed research-starter chats (persisted with the run) */
   research_completions?: ResearchCompletion[];
   /** Owner of this run (session user id). Optional for legacy runs without auth. */

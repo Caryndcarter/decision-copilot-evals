@@ -31,6 +31,11 @@ export function anthropicRejectsCustomTemperature(model: string): boolean {
   return m.includes("fable") || m.includes("mythos");
 }
 
+/** Fable/Mythos always use adaptive thinking; depth is steered via output_config.effort. */
+export function anthropicUsesAdaptiveEffort(model: string): boolean {
+  return anthropicRejectsCustomTemperature(model);
+}
+
 function getApiKey(): string {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
@@ -220,6 +225,18 @@ export async function run(
 
   if (system) {
     requestBase.system = system;
+  }
+
+  // Fable/Mythos adaptive thinking counts against max_tokens. For structured tool
+  // output, default to low effort so the response is not truncated before the
+  // nested arrays (e.g. contributions[]) are filled.
+  if (anthropicUsesAdaptiveEffort(model)) {
+    const effort =
+      options.effort ??
+      (options.schema || options.preferJsonObject ? "low" : undefined);
+    if (effort) {
+      requestBase.output_config = { effort };
+    }
   }
 
   if (options.schema) {

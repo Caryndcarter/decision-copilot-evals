@@ -11,3 +11,4 @@ docs/SESSION_SUMMARY.md
 docs/MIGRATION_SUMMARY.md
 docs/DYNAMODB_SINGLE_TABLE.md
 packages/nextjs/scripts/backfill-orphan-runs.ts
+packages/nextjs/scripts/output/

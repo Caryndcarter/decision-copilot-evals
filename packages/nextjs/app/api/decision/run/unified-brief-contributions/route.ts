@@ -2,19 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRun, getRunsByDecisionId, replaceRun } from "@/lib/db/runs";
 import { runUnifiedBriefContributionsAnalysis } from "@/lenses/unified-brief-contributions";
 import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incomplete";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
+import {
+  consolidateUnifiedAuthorshipOntoRun,
+  findUnifiedBriefAcrossRuns,
+  pickPersistRunForUnifiedBrief,
+} from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
   authorshipModeFromFlags,
-  getUnifiedBriefForAuthor,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefContributionsIntoRun,
+  mergeUnifiedBriefIntoRun,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type { DecisionRunResult } from "@/types/decision";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
@@ -66,8 +70,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
   }
 
-  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer, authorshipMode);
-  if (!brief) {
+  const found = findUnifiedBriefAcrossRuns(allRuns, synthesizer, authorshipMode);
+  if (!found) {
     const modeHint =
       authorshipMode === "blind"
         ? " with Blind authorship on"
@@ -95,13 +99,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const contributions = await runUnifiedBriefContributionsAnalysis(
       persistRun,
       eligible,
-      brief,
+      found.brief,
       allRuns,
       synthesizer,
       authorshipMode
     );
+    // Re-read + consolidate before write so concurrent brief generations aren't clobbered.
+    const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
+    let base = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
+    // Keep the analyzed brief on the persist document (heals sibling-run / race drift).
+    base = mergeUnifiedBriefIntoRun(base, synthesizer, found.brief, authorshipMode);
     const updated = mergeUnifiedBriefContributionsIntoRun(
-      persistRun,
+      base,
       synthesizer,
       contributions,
       authorshipMode

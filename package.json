@@ -21,6 +21,8 @@
     "dynamo:remove": "cd packages/local/docker-dynamodb && env-cmd --file ../../../.env -- docker compose down -v",
     "dynamo:start": "cd packages/local/docker-dynamodb && env-cmd --file ../../../.env -- docker compose up -d",
     "dynamo:stop": "cd packages/local/docker-dynamodb && env-cmd --file ../../../.env -- docker compose stop",
+    "harness:civitas": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/civitas-demo-stress-harness.ts",
+    "harness:civitas:moral": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/civitas-moral-coding.ts",
     "start": "npm run dev",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces"

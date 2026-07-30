@@ -7,7 +7,7 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import type { DecisionRunResult } from "@/types/decision";
 import { ResearchMarkdown, ResearchMarkdownInline } from "../research-markdown";
 import { listIncompleteRunsForBestOfWorlds } from "@/lib/best-of-worlds-incomplete";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
+import { pickPersistRunForUnifiedBrief, consolidateUnifiedAuthorshipOntoRun } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
@@ -94,6 +94,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const [blindAuthorship, setBlindAuthorship] = useState(false);
   /** When on, brand names are randomly reassigned (unique bijection) in the prompt. Mutually exclusive with blind. */
   const [reassignedAuthorship, setReassignedAuthorship] = useState(false);
+  /** Progress while Generate all walks every synthesizer for the current authorship mode. */
+  const [generateAllStatus, setGenerateAllStatus] = useState<string | null>(null);
 
   const incomplete = listIncompleteRunsForBestOfWorlds(allRuns);
   const generatingSteps = unifiedBriefGeneratingSteps(activeSynthesizer);
@@ -195,10 +197,11 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
         setAllRuns([]);
         return;
       }
-      setPersistRun(picked);
+      const consolidated = consolidateUnifiedAuthorshipOntoRun(picked, runs);
+      setPersistRun(consolidated);
       setAllRuns(runs);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(picked));
+        sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(consolidated));
       }
       setLastSyncedAt(Date.now());
     } catch {
@@ -217,6 +220,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     if (!runId && !decisionId) return;
     const regenSeq = ++regenSeqRef.current;
     setGenError(null);
+    setGenerateAllStatus(null);
     setGeneratingStep(0);
     setGenerating(true);
     try {
@@ -253,6 +257,91 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     } finally {
       setGenerating(false);
       setGeneratingStep(0);
+    }
+  }
+
+  /**
+   * Generate Unified Briefs for every configured synthesizer in the *current*
+   * authorship mode (standard, blind, or reassigned) — not all modes at once.
+   */
+  async function handleGenerateAll() {
+    if (!runId && !decisionId) return;
+    if (configuredSynthesizers.length === 0) return;
+
+    const mode = authorshipModeFromFlags(blindAuthorship, reassignedAuthorship);
+    const modeLabel =
+      mode === "blind" ? "Blind" : mode === "reassigned" ? "Reassigned" : "Standard";
+    const jobs = configuredSynthesizers.map((synthesizer) => ({
+      synthesizer,
+      blind: blindAuthorship,
+      reassigned: reassignedAuthorship,
+    }));
+
+    const regenSeq = ++regenSeqRef.current;
+    setGenError(null);
+    setGeneratingStep(0);
+    setGenerating(true);
+    const failures: string[] = [];
+
+    try {
+      for (let i = 0; i < jobs.length; i++) {
+        if (regenSeq !== regenSeqRef.current) return;
+        const job = jobs[i]!;
+        const label = unifiedBriefSynthesizerLabel(job.synthesizer);
+        setGenerateAllStatus(
+          `Generating ${modeLabel} · ${label} (${i + 1} of ${jobs.length})…`
+        );
+        selectSynthesizer(job.synthesizer);
+
+        try {
+          const res = await fetch("/api/decision/run/best-of-worlds-brief", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
+              synthesizer: job.synthesizer,
+              blind: job.blind,
+              reassigned: job.reassigned,
+            }),
+          });
+          const data = await res.json();
+          if (regenSeq !== regenSeqRef.current) return;
+          if (!res.ok) {
+            failures.push(`${label}: ${data.error || "failed"}`);
+            continue;
+          }
+          const next = data.run as DecisionRunResult;
+          setPersistRun(next);
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(RUN_RESULT_KEY, JSON.stringify(next));
+          }
+        } catch (e) {
+          failures.push(`${label}: ${e instanceof Error ? e.message : "failed"}`);
+        }
+      }
+
+      if (regenSeq !== regenSeqRef.current) return;
+      await load();
+      if (failures.length > 0) {
+        setGenError(
+          `${modeLabel}: ${failures.length} failure${failures.length === 1 ? "" : "s"}:\n` +
+            failures.join("\n")
+        );
+      } else {
+        setGenerateAllStatus(`All ${jobs.length} ${modeLabel.toLowerCase()} briefs generated.`);
+      }
+    } finally {
+      if (regenSeq === regenSeqRef.current) {
+        setGenerating(false);
+        setGeneratingStep(0);
+        if (failures.length === 0) {
+          window.setTimeout(() => {
+            if (regenSeqRef.current === regenSeq) setGenerateAllStatus(null);
+          }, 4000);
+        } else {
+          setGenerateAllStatus(null);
+        }
+      }
     }
   }
 
@@ -471,38 +560,60 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
                   <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <button
-                        type="button"
-                        onClick={() => void handleRegenerate()}
-                        disabled={generating}
-                        title={
-                          brief
-                            ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
-                            : `Generate a Unified Brief using ${activeSynthesizerLabel}`
-                        }
-                        aria-label={
-                          generating
-                            ? `Generating Unified Brief with ${activeSynthesizerLabel}`
-                            : brief
-                              ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
-                              : `Generate Unified Brief with ${activeSynthesizerLabel}`
-                        }
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                      >
-                        {generating ? (
-                          <>
-                            <span
-                              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
-                              aria-hidden
-                            />
-                            Generating with {activeSynthesizerLabel}…
-                          </>
-                        ) : brief ? (
-                          <>Regenerate with {activeSynthesizerLabel}</>
-                        ) : (
-                          <>Generate with {activeSynthesizerLabel}</>
-                        )}
-                      </button>
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        <button
+                          type="button"
+                          onClick={() => void handleRegenerate()}
+                          disabled={generating}
+                          title={
+                            brief
+                              ? `Regenerate the Unified Brief using ${activeSynthesizerLabel}`
+                              : `Generate a Unified Brief using ${activeSynthesizerLabel}`
+                          }
+                          aria-label={
+                            generating
+                              ? `Generating Unified Brief with ${activeSynthesizerLabel}`
+                              : brief
+                                ? `Regenerate Unified Brief with ${activeSynthesizerLabel}`
+                                : `Generate Unified Brief with ${activeSynthesizerLabel}`
+                          }
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                          {generating && !generateAllStatus ? (
+                            <>
+                              <span
+                                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                aria-hidden
+                              />
+                              Generating with {activeSynthesizerLabel}…
+                            </>
+                          ) : brief ? (
+                            <>Regenerate with {activeSynthesizerLabel}</>
+                          ) : (
+                            <>Generate with {activeSynthesizerLabel}</>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleGenerateAll()}
+                          disabled={generating || configuredSynthesizers.length === 0}
+                          title={`Generate or regenerate Unified Briefs for every configured model in ${authorshipModeLabel.toLowerCase()} (currently ${configuredSynthesizers.length}). Does not switch authorship modes.`}
+                          aria-label={`Generate all ${authorshipModeLabel} Unified Briefs`}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-indigo-300 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-800 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                          {generating && generateAllStatus ? (
+                            <>
+                              <span
+                                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-indigo-700 border-t-transparent"
+                                aria-hidden
+                              />
+                              Generating all…
+                            </>
+                          ) : (
+                            <>Generate all {authorshipModeLabel.replace(" authorship", "")}</>
+                          )}
+                        </button>
+                      </div>
 
                       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                         <button
@@ -577,18 +688,27 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                   </div>
                 </div>
 
-                {(generating || genError) && (
+                {(generating || genError || generateAllStatus) && (
                   <div className="border-t border-zinc-100 px-4 py-3 text-sm">
                     {generating ? (
                       <div className="text-indigo-800" role="status" aria-live="polite">
-                        <p className="font-medium">{generatingSteps[generatingStep]}</p>
+                        <p className="font-medium whitespace-pre-wrap">
+                          {generateAllStatus ?? generatingSteps[generatingStep]}
+                        </p>
                         <p className="mt-1 text-xs text-indigo-600">
-                          {activeSynthesizerLabel} reads every member&apos;s run, research, and variants in one
-                          pass. This often takes 30–60 seconds and can run longer on large decisions.
+                          {generateAllStatus
+                            ? `Running every configured model for ${authorshipModeLabel.toLowerCase()}, one at a time. Each pass often takes 30–60 seconds.`
+                            : `${activeSynthesizerLabel} reads every member's run, research, and variants in one pass. This often takes 30–60 seconds and can run longer on large decisions.`}
                         </p>
                       </div>
+                    ) : generateAllStatus ? (
+                      <p className="text-emerald-700" role="status">
+                        {generateAllStatus}
+                      </p>
                     ) : null}
-                    {genError ? <p className="text-red-600">{genError}</p> : null}
+                    {genError ? (
+                      <p className="whitespace-pre-wrap text-red-600">{genError}</p>
+                    ) : null}
                   </div>
                 )}
               </div>

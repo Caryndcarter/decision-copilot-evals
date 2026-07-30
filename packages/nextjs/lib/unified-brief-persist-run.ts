@@ -1,5 +1,15 @@
-import type { DecisionRunResult } from "@/types/decision";
-import { runHasAnyUnifiedBrief } from "@/lib/unified-briefs";
+import type { DecisionBrief, DecisionRunResult } from "@/types/decision";
+import {
+  getUnifiedBriefForAuthor,
+  mergeUnifiedBriefIntoRun,
+  mergeUnifiedBriefContributionsIntoRun,
+  normalizeBriefAuthorshipSlot,
+  normalizeContributionsAuthorshipSlot,
+  runHasAnyUnifiedBrief,
+  UNIFIED_BRIEF_SYNTHESIZERS,
+  type UnifiedBriefAuthorshipMode,
+  type UnifiedBriefSynthesizer,
+} from "@/lib/unified-briefs";
 
 function runTimeMs(r: DecisionRunResult): number {
   const ext = r as { createdAt?: string | Date; updatedAt?: string | Date };
@@ -22,4 +32,60 @@ export function pickPersistRunForUnifiedBrief(runs: DecisionRunResult[]): Decisi
     return withUnified.reduce((best, cur) => (runTimeMs(cur) > runTimeMs(best) ? cur : best));
   }
   return runs.reduce((best, cur) => (runTimeMs(cur) > runTimeMs(best) ? cur : best));
+}
+
+const AUTHORSHIP_MODES: UnifiedBriefAuthorshipMode[] = ["open", "blind", "reassigned"];
+
+/**
+ * Copy any authorship-mode briefs/contributions that exist on sibling runs onto `target`
+ * without overwriting slots already present on `target`. Heals split/lost-update drift.
+ */
+export function consolidateUnifiedAuthorshipOntoRun(
+  target: DecisionRunResult,
+  sources: DecisionRunResult[]
+): DecisionRunResult {
+  let next = target;
+  for (const src of sources) {
+    if (src.run_id === target.run_id) continue;
+    for (const author of UNIFIED_BRIEF_SYNTHESIZERS) {
+      const briefVersions = normalizeBriefAuthorshipSlot(src.unified_briefs_by_author?.[author]);
+      for (const mode of AUTHORSHIP_MODES) {
+        const incoming = briefVersions[mode];
+        if (incoming && !getUnifiedBriefForAuthor(next, author, mode)) {
+          next = mergeUnifiedBriefIntoRun(next, author, incoming, mode);
+        }
+      }
+      const contribVersions = normalizeContributionsAuthorshipSlot(
+        src.unified_brief_contributions_by_author?.[author]
+      );
+      for (const mode of AUTHORSHIP_MODES) {
+        const incoming = contribVersions[mode];
+        if (!incoming) continue;
+        const existing = normalizeContributionsAuthorshipSlot(
+          next.unified_brief_contributions_by_author?.[author]
+        );
+        if (!existing[mode]) {
+          next = mergeUnifiedBriefContributionsIntoRun(next, author, incoming, mode);
+        }
+      }
+    }
+  }
+  return next;
+}
+
+/** Find a synthesizer+mode brief on the preferred persist run, then any sibling run. */
+export function findUnifiedBriefAcrossRuns(
+  runs: DecisionRunResult[],
+  author: UnifiedBriefSynthesizer,
+  mode: UnifiedBriefAuthorshipMode
+): { brief: DecisionBrief; run: DecisionRunResult } | null {
+  const preferred = pickPersistRunForUnifiedBrief(runs);
+  const ordered = preferred
+    ? [preferred, ...runs.filter((r) => r.run_id !== preferred.run_id)]
+    : runs;
+  for (const run of ordered) {
+    const brief = getUnifiedBriefForAuthor(run, author, mode);
+    if (brief) return { brief, run };
+  }
+  return null;
 }

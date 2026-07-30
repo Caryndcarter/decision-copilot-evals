@@ -83,7 +83,7 @@ export async function run(
   const apiKey = getApiKey();
   const messages = normalizeMessages(prompt);
   const baseModel = options.model ?? DEFAULT_MODEL;
-  const useWebSearch = Boolean(options.enableWebSearch && !options.schema);
+  const useWebSearch = Boolean(options.enableWebSearch && !options.schema && !options.preferJsonObject);
   const model = useWebSearch
     ? (process.env.OPENAI_WEB_SEARCH_MODEL?.trim() || "gpt-4o-search-preview")
     : baseModel;

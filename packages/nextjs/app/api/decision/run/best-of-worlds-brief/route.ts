@@ -5,7 +5,10 @@ import {
   canonicalRunsForUnifiedBriefDecision,
   listIncompleteRunsForBestOfWorlds,
 } from "@/lib/best-of-worlds-incomplete";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
+import {
+  consolidateUnifiedAuthorshipOntoRun,
+  pickPersistRunForUnifiedBrief,
+} from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
   authorshipModeFromFlags,
@@ -86,7 +89,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       synthesizer,
       authorshipMode
     );
-    const updated = mergeUnifiedBriefIntoRun(persistRun, synthesizer, brief, authorshipMode);
+    // Re-read before write so a concurrent synthesizer doesn't clobber sibling authorship slots.
+    const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
+    const consolidated = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
+    const updated = mergeUnifiedBriefIntoRun(consolidated, synthesizer, brief, authorshipMode);
     await replaceRun(persistRun.run_id, updated);
     return NextResponse.json({
       run: updated,

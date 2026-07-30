@@ -736,20 +736,28 @@ export async function runBriefSynthesis(
     (clarifications.length > 0 && !formatInstruction?.trim()) ||
     Boolean(promptOpts?.priorPublishedBrief);
 
+  // Gemini 2.5 thinking shares maxOutputTokens with visible JSON; variant/matrix briefs
+  // often truncate at 8192 (MAX_TOKENS) mid-object. Give Gemini (and retries) more room.
+  const briefMaxTokens =
+    provider === "gemini" ? 16_384 : largeBriefPayload ? 8192 : 1024;
+
   const requestOpts = {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.5,
-    // Variant briefs and post-clarification briefs (optional appendices) need room for structured JSON.
-    maxTokens: largeBriefPayload ? 8192 : 1024,
+    maxTokens: briefMaxTokens,
+    ...(provider === "gemini" ? { effort: "low" as const } : {}),
   };
 
   const client = getClient(provider);
   let response = await client.run(messages, requestOpts);
 
+  const hitTokenCap = (finishReason: string | undefined) =>
+    !!finishReason && /^(length|max_tokens|MAX_TOKENS)$/i.test(finishReason);
+
   // Providers occasionally return text that isn't valid JSON or that gets truncated mid-object,
   // even with a responseSchema set (Gemini in particular). One retry with an explicit JSON-only
-  // reminder, lower temperature, and even more headroom catches the vast majority of these.
-  if (!response.parsed) {
+  // reminder, lower temperature, and more headroom catches the vast majority of these.
+  if (!response.parsed || hitTokenCap(response.meta?.finishReason)) {
     console.warn("[Brief] First attempt did not return parseable JSON; retrying once.", {
       provider,
       finishReason: response.meta?.finishReason,
@@ -761,16 +769,17 @@ export async function runBriefSynthesis(
       {
         role: "user",
         content:
-          "Your previous reply was not valid JSON for the required schema. " +
-          "Reply NOW with one JSON object that matches the schema exactly. " +
-          "No prose, no markdown, no code fences — only the JSON object. " +
-          "Make sure every required property is present and the object is fully closed.",
+          "Your previous reply was not valid JSON for the required schema, or it was cut off (MAX_TOKENS). " +
+          "Reply NOW with one COMPLETE, fully closed JSON object that matches the schema exactly. " +
+          "Keep summary/recommendation/custom_sections concise enough to finish. " +
+          "No prose, no markdown, no code fences — only the JSON object.",
       },
     ];
     response = await client.run(retryMessages, {
       ...requestOpts,
       temperature: 0.2,
-      maxTokens: Math.max(requestOpts.maxTokens, 8192),
+      maxTokens: Math.max(requestOpts.maxTokens, provider === "gemini" ? 32_768 : 16_384),
+      ...(provider === "gemini" ? { effort: "low" as const } : {}),
     });
   }
 
@@ -1284,8 +1293,9 @@ function hitBriefOutputTokenCap(finishReason: string | undefined): boolean {
 }
 
 function unifiedBriefMaxTokens(synthesizer: UnifiedBriefSynthesizer): number {
-  // Unified brief JSON is large; xAI Grok often needs extra headroom vs Anthropic/Gemini.
-  return synthesizer === "xai" ? 16_384 : 8192;
+  // Unified brief JSON is large; Gemini thinking + long Civitas briefs need more than 8k.
+  if (synthesizer === "xai" || synthesizer === "gemini") return 16_384;
+  return 8192;
 }
 
 const BRIEF_JSON_RETRY_USER: LLMMessage = {
@@ -1332,6 +1342,7 @@ export async function runBestOfWorldsBriefSynthesis(
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.45,
     maxTokens,
+    ...(synthesizer === "gemini" ? { effort: "low" as const } : {}),
   };
 
   let response = await getClient(synthesizer).run(messages, requestOpts);
@@ -1345,7 +1356,8 @@ export async function runBestOfWorldsBriefSynthesis(
     response = await getClient(synthesizer).run([...messages, BRIEF_JSON_RETRY_USER], {
       ...requestOpts,
       temperature: 0.2,
-      maxTokens: Math.max(maxTokens, 16_384),
+      maxTokens: Math.max(maxTokens, synthesizer === "gemini" ? 32_768 : 16_384),
+      ...(synthesizer === "gemini" ? { effort: "low" as const } : {}),
     });
   }
 

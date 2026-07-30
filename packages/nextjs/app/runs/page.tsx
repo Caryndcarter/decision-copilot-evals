@@ -39,11 +39,19 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         runs: [],
         hasUnifiedBrief: false,
         unifiedBriefRunId: undefined,
+        isHarness: false,
+        harnessTrial: undefined,
       });
     }
     const group = map.get(id)!;
     const runDate = activityDate(run);
     if (runDate > group.latestAt) group.latestAt = runDate;
+    if (run.harness_run) {
+      group.isHarness = true;
+      if (typeof run.harness_trial === "number") {
+        group.harnessTrial = run.harness_trial;
+      }
+    }
     // Track unified brief: prefer the run that already has one
     if (runHasAnyUnifiedBrief(run)) {
       group.hasUnifiedBrief = true;
@@ -119,17 +127,24 @@ async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMet
 export default async function RunsDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ new?: string }>;
+  searchParams: Promise<{ new?: string; tab?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/auth/signin?callbackUrl=/runs");
   }
 
-  const { new: newDecisionId } = await searchParams;
+  const { new: newDecisionId, tab } = await searchParams;
   const isAdmin = (session.user as { is_admin?: boolean }).is_admin ?? false;
   const runs = await getUserRuns(session.user.id, isAdmin);
   const groups = groupByDecision(runs);
+  const decisionGroups = groups.filter((g) => !g.isHarness);
+  const harnessGroups = groups.filter((g) => g.isHarness);
+  const newGroup = newDecisionId
+    ? groups.find((g) => g.decision_id === newDecisionId)
+    : undefined;
+  const initialTab =
+    tab === "harness" || newGroup?.isHarness ? "harness" : "decisions";
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -158,14 +173,22 @@ export default async function RunsDashboard({
           <p className="mt-1.5 text-sm text-zinc-500">
             {groups.length === 0
               ? "No decisions yet — brief your think tank to get started"
-              : `${groups.length} decision${groups.length === 1 ? "" : "s"}, ${runs.length} run${runs.length === 1 ? "" : "s"} across your think tank`}
+              : `${decisionGroups.length} decision${decisionGroups.length === 1 ? "" : "s"}${
+                  harnessGroups.length > 0
+                    ? ` · ${harnessGroups.length} harness trial${harnessGroups.length === 1 ? "" : "s"}`
+                    : ""
+                }, ${runs.length} run${runs.length === 1 ? "" : "s"} across your think tank`}
           </p>
         </div>
       </div>
 
       {/* Groups */}
       <div className="mx-auto max-w-4xl px-6 py-8">
-        <RunsClient initialGroups={groups} newDecisionId={newDecisionId} />
+        <RunsClient
+          initialGroups={groups}
+          newDecisionId={newDecisionId}
+          initialTab={initialTab}
+        />
       </div>
     </main>
   );
