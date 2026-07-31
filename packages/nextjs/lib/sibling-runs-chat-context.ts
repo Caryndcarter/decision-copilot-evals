@@ -4,6 +4,7 @@
  */
 
 import type { DecisionRunResult, LensOutput } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import { runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
 
 function truncate(s: string, max: number): string {
@@ -72,7 +73,11 @@ function formatOneSiblingRun(run: DecisionRunResult, maxChars: number): string {
   const header = `${runProviderLabel(run.llm_provider)} · ${runPostureLabel(run.intake.posture)}`;
   lines.push(`### Other run: ${header}`);
   lines.push(`Status: ${run.status}`);
-  if (run.intake.posture === "pressure_test" && "leaning_direction" in run.intake && run.intake.leaning_direction) {
+  if (
+    postureRequiresLeaning(run.intake.posture) &&
+    "leaning_direction" in run.intake &&
+    run.intake.leaning_direction
+  ) {
     lines.push(`Leaning toward: ${run.intake.leaning_direction}`);
   }
 

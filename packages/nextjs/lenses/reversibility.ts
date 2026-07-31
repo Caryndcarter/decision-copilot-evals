@@ -17,6 +17,7 @@ import type {
   LensQuestion,
   Clarification,
 } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 const REVERSIBILITY_OUTPUT_SCHEMA = {
   type: "object",
@@ -117,6 +118,8 @@ function getPostureInstruction(posture: Posture, leaningDirection?: string): str
       return "The user is exploring this decision openly. Identify what's reversible vs irreversible and what they could try first with low commitment.";
     case "pressure_test":
       return `The user is leaning toward: "${leaningDirection}". Stress-test this by naming what would be hard to undo if they go this way, and what they could try before committing.`;
+    case "show_opposition":
+      return `The user is leaning toward: "${leaningDirection}". Argue as a serious opponent would on reversibility: why committing to this lean locks them into a bad path, what irreversible damage or option-foreclosure the opposition would highlight, and what more reversible alternative the opposition would prefer. Do not hedge back into defending the user's lean.`;
     case "surface_risks":
       return "The user wants to understand risks. Focus on irreversible steps and what could lock them in; suggest safe experiments first.";
     case "generate_alternatives":
@@ -147,7 +150,7 @@ export function buildReversibilityPrompt(
 ): LLMMessage[] {
   const postureInstruction = getPostureInstruction(
     intake.posture,
-    intake.posture === "pressure_test" ? intake.leaning_direction : undefined
+    postureRequiresLeaning(intake.posture) ? intake.leaning_direction : undefined
   );
 
   const systemPrompt = `You are an advisor helping someone think through the reversibility of an important decision. Your job is to identify:
@@ -236,11 +239,11 @@ export async function runReversibilityLens(
   provider: LLMProvider = "openai"
 ): Promise<ReversibilityLensOutput> {
   const messages = buildReversibilityPrompt(intake, clarifications);
-  // Dense intakes (e.g. Meridian) can truncate Grok mid-JSON at 2048.
+  // Dense intakes can truncate Grok mid-JSON; OpenAI GPT-5 needs reasoning headroom.
   const requestOpts = {
     schema: REVERSIBILITY_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: provider === "xai" || provider === "openai" ? 8192 : 4096,
+    maxTokens: provider === "openai" ? 16_384 : provider === "xai" ? 8192 : 4096,
   };
 
   const client = getClient(provider);
@@ -267,7 +270,7 @@ export async function runReversibilityLens(
     response = await client.run(retryMessages, {
       ...requestOpts,
       temperature: 0.2,
-      maxTokens: Math.max(requestOpts.maxTokens, 8192),
+      maxTokens: Math.max(requestOpts.maxTokens, 16_384),
     });
   }
 

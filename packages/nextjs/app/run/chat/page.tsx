@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionNav } from "@/app/components/session-nav";
 import type { DecisionRunResult, LensQuestion, Posture, DecisionBrief, ProviderSynthesis, SynthesisPoint } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import type { ClarificationAnswersMap } from "../clarification-form";
 import { ResultContent } from "../result-content";
 import { CollapsibleBlock } from "../collapsible-block";
@@ -52,7 +53,7 @@ function statusTextColor(status: string): string {
   return "text-slate-600";
 }
 
-const POSTURES: Posture[] = ["explore", "pressure_test", "surface_risks", "generate_alternatives"];
+const POSTURES: Posture[] = ["explore", "pressure_test", "surface_risks", "generate_alternatives", "show_opposition"];
 
 function questionKey(q: { lens: string; question_id: string }) {
   return `${q.lens}-${q.question_id}`;
@@ -829,7 +830,7 @@ export function ChatContent() {
 
   async function handleRerunPosture() {
     if (!result) return;
-    if (rerunPosture === "pressure_test" && !rerunLeaningDirection.trim()) {
+    if (postureRequiresLeaning(rerunPosture) && !rerunLeaningDirection.trim()) {
       setRerunError("Leaning direction is required for Pressure test");
       return;
     }
@@ -843,7 +844,7 @@ export function ChatContent() {
           type: "rerun_posture",
           run_id: result.run_id,
           posture: rerunPosture,
-          ...(rerunPosture === "pressure_test" && { leaning_direction: rerunLeaningDirection.trim() }),
+          ...(postureRequiresLeaning(rerunPosture) && { leaning_direction: rerunLeaningDirection.trim() }),
           ...(rerunAllProviders ? { llm_provider: "all" } : {}),
         }),
       });
@@ -1329,7 +1330,7 @@ export function ChatContent() {
                 </select>
               </div>
               )}
-              {rerunPosture === "pressure_test" && availablePostures.length > 0 && (
+              {postureRequiresLeaning(rerunPosture) && availablePostures.length > 0 && (
                 <div>
                   <label htmlFor="rerun-leaning" className="block text-sm font-medium text-slate-700">
                     Leaning toward
@@ -1374,7 +1375,7 @@ export function ChatContent() {
               <button
                 type="button"
                 onClick={handleRerunPosture}
-                disabled={rerunSubmitting || availablePostures.length === 0 || (rerunPosture === "pressure_test" && !rerunLeaningDirection.trim())}
+                disabled={rerunSubmitting || availablePostures.length === 0 || (postureRequiresLeaning(rerunPosture) && !rerunLeaningDirection.trim())}
                 className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {rerunSubmitting ? (

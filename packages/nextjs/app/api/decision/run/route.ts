@@ -18,7 +18,8 @@ import type {
   LLMProviderName,
   DemoScenarioId,
 } from "@/types/decision";
-import { parseDemoScenarioId } from "@/types/decision";
+import { parseDemoScenarioId, isValidPosture, postureRequiresLeaning } from "@/types/decision";
+import { runPostureLabel } from "@/lib/run-display-name";
 import { runRiskLens } from "@/lenses/risk";
 import { runReversibilityLens } from "@/lenses/reversibility";
 import { runPeopleLens } from "@/lenses/people";
@@ -142,19 +143,8 @@ type RunRequest =
 // Validation
 // ============================================
 
-function isValidPosture(posture: string): posture is Posture {
-  return ["explore", "pressure_test", "surface_risks", "generate_alternatives"].includes(posture);
-}
-
-const POSTURE_LABELS: Record<string, string> = {
-  explore: "Explore",
-  pressure_test: "Pressure test",
-  surface_risks: "Surface risks",
-  generate_alternatives: "Generate alternatives",
-};
-
 function postureLabel(posture: string): string {
-  return POSTURE_LABELS[posture] ?? posture.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return runPostureLabel(posture);
 }
 
 function validateIntake(intake: InitialRunRequest["intake"]): string | null {
@@ -165,10 +155,10 @@ function validateIntake(intake: InitialRunRequest["intake"]): string | null {
     return "constraints is required";
   }
   if (!intake.posture || !isValidPosture(intake.posture)) {
-    return "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives";
+    return "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives, show_opposition";
   }
-  if (intake.posture === "pressure_test" && !intake.leaning_direction?.trim()) {
-    return "leaning_direction is required when posture is pressure_test";
+  if (postureRequiresLeaning(intake.posture) && !intake.leaning_direction?.trim()) {
+    return `leaning_direction is required when posture is ${intake.posture}`;
   }
   return null;
 }
@@ -967,12 +957,15 @@ async function handleRerunFreeform(req: RerunFreeformRequest): Promise<NextRespo
   }
   if (!isValidPosture(req.posture)) {
     return NextResponse.json(
-      { error: "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives" },
+      { error: "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives, show_opposition" },
       { status: 400 }
     );
   }
-  if (req.posture === "pressure_test" && !req.leaning_direction?.trim()) {
-    return NextResponse.json({ error: "leaning_direction is required when posture is pressure_test" }, { status: 400 });
+  if (postureRequiresLeaning(req.posture) && !req.leaning_direction?.trim()) {
+    return NextResponse.json(
+      { error: `leaning_direction is required when posture is ${req.posture}` },
+      { status: 400 }
+    );
   }
 
   const sourceRun = await getRun(req.run_id.trim());
@@ -986,8 +979,8 @@ async function handleRerunFreeform(req: RerunFreeformRequest): Promise<NextRespo
   const newIntake: DecisionIntake = {
     ...sourceRun.intake,
     posture: req.posture,
-    ...(req.posture === "pressure_test" && { leaning_direction: req.leaning_direction!.trim() }),
-    ...(req.posture !== "pressure_test" && { leaning_direction: undefined }),
+    ...(postureRequiresLeaning(req.posture) && { leaning_direction: req.leaning_direction!.trim() }),
+    ...(!postureRequiresLeaning(req.posture) && { leaning_direction: undefined }),
   } as DecisionIntake;
 
   if (req.llm_provider === "all") {
@@ -1030,12 +1023,15 @@ async function handleRerunPosture(req: RerunPostureRequest): Promise<NextRespons
   }
   if (!isValidPosture(req.posture)) {
     return NextResponse.json(
-      { error: "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives" },
+      { error: "posture must be one of: explore, pressure_test, surface_risks, generate_alternatives, show_opposition" },
       { status: 400 }
     );
   }
-  if (req.posture === "pressure_test" && !req.leaning_direction?.trim()) {
-    return NextResponse.json({ error: "leaning_direction is required when posture is pressure_test" }, { status: 400 });
+  if (postureRequiresLeaning(req.posture) && !req.leaning_direction?.trim()) {
+    return NextResponse.json(
+      { error: `leaning_direction is required when posture is ${req.posture}` },
+      { status: 400 }
+    );
   }
 
   const sourceRun = await getRun(req.run_id.trim());
@@ -1046,8 +1042,8 @@ async function handleRerunPosture(req: RerunPostureRequest): Promise<NextRespons
   const newIntake: DecisionIntake = {
     ...sourceRun.intake,
     posture: req.posture,
-    ...(req.posture === "pressure_test" && { leaning_direction: req.leaning_direction!.trim() }),
-    ...(req.posture !== "pressure_test" && { leaning_direction: undefined }),
+    ...(postureRequiresLeaning(req.posture) && { leaning_direction: req.leaning_direction!.trim() }),
+    ...(!postureRequiresLeaning(req.posture) && { leaning_direction: undefined }),
   } as DecisionIntake;
 
   if (req.llm_provider === "all") {

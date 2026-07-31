@@ -5,6 +5,7 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { DemoScenarioId, LLMProviderName } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import { SessionNav } from "@/app/components/session-nav";
 import {
   buildIntakeLlmRequestBody,
@@ -59,6 +60,12 @@ const POSTURE_OPTIONS = [
     title: "Challenge my leaning",
     description:
       "Pressure-testing of the plan you are currently considering to produce a thorough analysis with downsides and blind spots.",
+  },
+  {
+    value: "show_opposition" as const,
+    title: "Show me the opposition",
+    description:
+      "Steelmans the strongest opposing case — what a serious skeptic would argue against your lean, so you can be ready for it.",
   },
   {
     value: "surface_risks" as const,
@@ -245,7 +252,7 @@ export default function IntakePage() {
   const [error, setError] = useState<string | null>(null);
   const [partialWarning, setPartialWarning] = useState<string | null>(null);
   const router = useRouter();
-  const showLeaningDirection = posture === "pressure_test";
+  const showLeaningDirection = postureRequiresLeaning(posture);
   const intakeCharCount = situation.trim().length + constraints.trim().length;
   const showBriefInputHint =
     intakeCharCount > 0 && intakeCharCount < INTAKE_BRIEF_CHAR_HINT && !submitting && !freeformSubmitting;
@@ -705,11 +712,15 @@ export default function IntakePage() {
           {showLeaningDirection && (
             <div>
               <label htmlFor="leaning_direction" className="block text-sm font-medium text-zinc-800">
-                Direction you want challenged <span className="text-red-500">*</span>
+                {posture === "show_opposition"
+                  ? "Direction you want opposed"
+                  : "Direction you want challenged"}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <FieldHelp>
-                State the plan you&apos;re currently considering. The analysis will focus on downsides and blind
-                spots.
+                {posture === "show_opposition"
+                  ? "State the plan you're currently considering. Models will steelman the strongest opposing case — what a serious skeptic would argue."
+                  : "State the plan you're currently considering. The analysis will focus on downsides and blind spots."}
               </FieldHelp>
               <input
                 type="text"

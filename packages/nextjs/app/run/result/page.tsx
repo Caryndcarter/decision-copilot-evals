@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionNav } from "@/app/components/session-nav";
 import type { DecisionRunResult, Posture, DecisionBrief } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import { ResultContent, type ResultContentHandle } from "../result-content";
 import { CollapsibleBlock } from "../collapsible-block";
 import { ResearchMarkdown, ResearchMarkdownInline } from "../research-markdown";
@@ -36,7 +37,7 @@ function removeStoredSnapshot(run_id: string) {
   }
 }
 
-const POSTURES: Posture[] = ["explore", "pressure_test", "surface_risks", "generate_alternatives"];
+const POSTURES: Posture[] = ["explore", "pressure_test", "surface_risks", "generate_alternatives", "show_opposition"];
 
 function RunResultContent() {
   const router = useRouter();
@@ -285,7 +286,7 @@ function RunResultContent() {
 
   async function handleRerunPosture() {
     if (!result) return;
-    if (rerunPosture === "pressure_test" && !rerunLeaningDirection.trim()) {
+    if (postureRequiresLeaning(rerunPosture) && !rerunLeaningDirection.trim()) {
       setRerunError("Leaning direction is required for Pressure test");
       return;
     }
@@ -299,7 +300,7 @@ function RunResultContent() {
           type: "rerun_posture",
           run_id: result.run_id,
           posture: rerunPosture,
-          ...(rerunPosture === "pressure_test" && { leaning_direction: rerunLeaningDirection.trim() }),
+          ...(postureRequiresLeaning(rerunPosture) && { leaning_direction: rerunLeaningDirection.trim() }),
           ...(rerunAllProviders ? { llm_provider: "all" } : {}),
         }),
       });
@@ -463,7 +464,7 @@ function RunResultContent() {
                 </select>
               </div>
               )}
-              {rerunPosture === "pressure_test" && availablePostures.length > 0 && (
+              {postureRequiresLeaning(rerunPosture) && availablePostures.length > 0 && (
                 <div>
                   <label htmlFor="rerun-leaning-result" className="block text-sm font-medium text-zinc-700">Leaning toward</label>
                   <input
@@ -501,7 +502,7 @@ function RunResultContent() {
               <button
                 type="button"
                 onClick={handleRerunPosture}
-                disabled={rerunSubmitting || availablePostures.length === 0 || (rerunPosture === "pressure_test" && !rerunLeaningDirection.trim())}
+                disabled={rerunSubmitting || availablePostures.length === 0 || (postureRequiresLeaning(rerunPosture) && !rerunLeaningDirection.trim())}
                 className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {rerunSubmitting ? "Running…" : rerunAllProviders ? "Run all providers" : "Run analysis"}

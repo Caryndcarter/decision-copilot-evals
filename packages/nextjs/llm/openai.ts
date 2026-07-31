@@ -77,19 +77,49 @@ function normalizeAssistantMessageContent(message: unknown): string {
   return parts.join("");
 }
 
-export async function run(
-  prompt: string | LLMMessage[],
-  options: LLMRequestOptions = {}
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchOpenAI(
+  apiKey: string,
+  requestBody: Record<string, unknown>,
+  attempt = 1
+): Promise<Response> {
+  try {
+    const response = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+    return response;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Node often surfaces transient TLS/network blips as plain "fetch failed".
+    if (attempt < 3 && /fetch failed|ECONNRESET|ETIMEDOUT|network/i.test(message)) {
+      console.warn(`[openai] fetch failed (attempt ${attempt}/3); retrying…`, message);
+      await sleep(400 * attempt);
+      return fetchOpenAI(apiKey, requestBody, attempt + 1);
+    }
+    throw createError("FETCH_FAILED", message, true);
+  }
+}
+
+async function runOnce(
+  apiKey: string,
+  messages: LLMMessage[],
+  options: LLMRequestOptions,
+  maxOut: number
 ): Promise<LLMResponse> {
-  const apiKey = getApiKey();
-  const messages = normalizeMessages(prompt);
   const baseModel = options.model ?? DEFAULT_MODEL;
   const useWebSearch = Boolean(options.enableWebSearch && !options.schema && !options.preferJsonObject);
   const model = useWebSearch
     ? (process.env.OPENAI_WEB_SEARCH_MODEL?.trim() || "gpt-4o-search-preview")
     : baseModel;
 
-  const maxOut = options.maxTokens ?? DEFAULT_MAX_TOKENS;
   const requestBody: Record<string, unknown> = {
     model,
     messages,
@@ -101,7 +131,6 @@ export async function run(
       : {}),
   };
 
-  // Add JSON schema for structured output if provided
   if (options.schema) {
     requestBody.response_format = {
       type: "json_schema",
@@ -125,14 +154,7 @@ export async function run(
     requestBody.reasoning_effort = "low";
   }
 
-  const response = await fetch(OPENAI_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  const response = await fetchOpenAI(apiKey, requestBody);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -183,6 +205,36 @@ export async function run(
     },
     ...(webSources.length ? { webSearch: { sources: webSources } } : {}),
   };
+}
+
+export async function run(
+  prompt: string | LLMMessage[],
+  options: LLMRequestOptions = {}
+): Promise<LLMResponse> {
+  const apiKey = getApiKey();
+  const messages = normalizeMessages(prompt);
+  const wantsJson = Boolean(options.schema || options.preferJsonObject);
+  let maxOut = options.maxTokens ?? DEFAULT_MAX_TOKENS;
+
+  let result = await runOnce(apiKey, messages, options, maxOut);
+
+  // GPT-5 often returns empty content when reasoning eats the whole completion budget.
+  if (wantsJson && !result.parsed && usesMaxCompletionTokensParam(result.meta?.model ?? DEFAULT_MODEL)) {
+    const bumped = Math.max(maxOut, 16_384);
+    if (bumped > maxOut || !result.content.trim()) {
+      console.warn("[openai] Empty/unparseable structured output; retrying with higher max_completion_tokens.", {
+        finishReason: result.meta?.finishReason,
+        contentLen: result.content.length,
+        completionTokens: result.usage?.completionTokens,
+        fromMaxTokens: maxOut,
+        toMaxTokens: bumped,
+      });
+      maxOut = bumped;
+      result = await runOnce(apiKey, messages, options, maxOut);
+    }
+  }
+
+  return result;
 }
 
 // Export a client object matching the LLMClient interface
