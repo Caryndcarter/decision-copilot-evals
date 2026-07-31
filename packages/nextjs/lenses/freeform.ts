@@ -12,6 +12,7 @@ import { getClient } from "@/llm";
 import { extractFirstBalancedJsonObject } from "@/lib/extract-json-object";
 import type { LLMProvider } from "@/llm/types";
 import type { DecisionIntake } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 const SUGGESTED_SCHEMA = `{
   "risk_analysis": {
@@ -106,18 +107,25 @@ Requirements:
 3. Ground every point in the exact situation described
 4. Plain text only in all string values — no markdown (**bold**, *italics*, headings, etc.)`;
 
-  const postureNote =
-    intake.posture === "pressure_test" && intake.leaning_direction
+  const leaningLine =
+    postureRequiresLeaning(intake.posture) && intake.leaning_direction
       ? `\n**Leaning toward:** ${intake.leaning_direction}`
       : "";
+
+  const postureGuidance =
+    intake.posture === "show_opposition"
+      ? `\n**Posture instruction:** Steelman the strongest opposing case to the user's lean. Argue as a serious opponent would — do not hedge back into defending their direction. The user wants to hear what opposition would say so they can be ready for it.`
+      : intake.posture === "pressure_test"
+        ? `\n**Posture instruction:** Actively challenge the user's lean — surface risks and blind spots they may be downplaying.`
+        : "";
 
   const userPrompt = `**Situation:** ${intake.situation}
 
 **Constraints:** ${intake.constraints}
 ${intake.knowns_assumptions ? `\n**What I know / am assuming:** ${intake.knowns_assumptions}` : ""}
-${intake.unknowns ? `\n**What I don't know:** ${intake.unknowns}` : ""}${postureNote}
+${intake.unknowns ? `\n**What I don't know:** ${intake.unknowns}` : ""}${leaningLine}
 
-**Analysis posture:** ${intake.posture.replace(/_/g, " ")}
+**Analysis posture:** ${intake.posture.replace(/_/g, " ")}${postureGuidance}
 
 Analyze this decision. Respond with a single raw JSON object only — no text before or after it.`;
 

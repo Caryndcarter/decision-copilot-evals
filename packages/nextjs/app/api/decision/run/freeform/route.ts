@@ -3,6 +3,8 @@ import { randomUUID } from "crypto";
 import { auth } from "@/auth";
 import {
   parseDemoScenarioId,
+  isValidPosture,
+  postureRequiresLeaning,
   type DecisionIntake,
   type DecisionRunResult,
   type DemoScenarioId,
@@ -16,10 +18,6 @@ import { runForProviders } from "@/lib/run-for-providers";
 
 /** Parallel freeform runs: wall time ≈ slowest single call, not sum. */
 export const maxDuration = 180;
-
-function isValidPosture(p: string): p is DecisionIntake["posture"] {
-  return ["explore", "pressure_test", "surface_risks", "generate_alternatives"].includes(p);
-}
 
 function buildFreeformRunRecord(params: {
   intake: DecisionIntake;
@@ -99,8 +97,11 @@ export async function POST(request: NextRequest) {
     if (!raw?.posture || !isValidPosture(raw.posture)) {
       return NextResponse.json({ error: "valid posture is required" }, { status: 400 });
     }
-    if (raw.posture === "pressure_test" && !raw.leaning_direction?.trim()) {
-      return NextResponse.json({ error: "leaning_direction is required when posture is pressure_test" }, { status: 400 });
+    if (postureRequiresLeaning(raw.posture) && !raw.leaning_direction?.trim()) {
+      return NextResponse.json(
+        { error: `leaning_direction is required when posture is ${raw.posture}` },
+        { status: 400 }
+      );
     }
 
     const selection = parseIntakeLlmSelection({

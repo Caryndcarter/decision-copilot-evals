@@ -10,7 +10,27 @@ export type Posture =
   | "explore"
   | "pressure_test"
   | "surface_risks"
-  | "generate_alternatives";
+  | "generate_alternatives"
+  | "show_opposition";
+
+/** Postures that require the user to state a leaning (to challenge or oppose). */
+export type PostureWithLeaning = "pressure_test" | "show_opposition";
+
+export const POSTURES: readonly Posture[] = [
+  "explore",
+  "pressure_test",
+  "surface_risks",
+  "generate_alternatives",
+  "show_opposition",
+] as const;
+
+export function isValidPosture(posture: string): posture is Posture {
+  return (POSTURES as readonly string[]).includes(posture);
+}
+
+export function postureRequiresLeaning(posture: Posture): posture is PostureWithLeaning {
+  return posture === "pressure_test" || posture === "show_opposition";
+}
 
 export type Lens = "risk" | "reversibility" | "people";
 
@@ -60,20 +80,20 @@ interface DecisionIntakeBase {
   unknowns?: string;
 }
 
-/** Intake for non-pressure_test postures (leaning_direction not allowed) */
+/** Intake for postures that do not take a leaning_direction */
 interface DecisionIntakeStandard extends DecisionIntakeBase {
-  posture: Exclude<Posture, "pressure_test">;
+  posture: Exclude<Posture, PostureWithLeaning>;
   leaning_direction?: never;
 }
 
-/** Intake for pressure_test posture (leaning_direction required) */
-interface DecisionIntakePressureTest extends DecisionIntakeBase {
-  posture: "pressure_test";
+/** Intake for postures that require leaning_direction (pressure_test, show_opposition) */
+interface DecisionIntakeWithLeaning extends DecisionIntakeBase {
+  posture: PostureWithLeaning;
   leaning_direction: string;
 }
 
-/** Discriminated union ensures leaning_direction is required iff posture = "pressure_test" */
-export type DecisionIntake = DecisionIntakeStandard | DecisionIntakePressureTest;
+/** Discriminated union: leaning_direction required iff postureRequiresLeaning(posture) */
+export type DecisionIntake = DecisionIntakeStandard | DecisionIntakeWithLeaning;
 
 // ============================================
 // 2) LensQuestion (system → user follow-up)

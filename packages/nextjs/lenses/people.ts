@@ -18,6 +18,7 @@ import type {
   Clarification,
   StakeholderImpact,
 } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 const PEOPLE_OUTPUT_SCHEMA = {
   type: "object",
@@ -130,6 +131,8 @@ function getPostureInstruction(posture: Posture, leaningDirection?: string): str
       return "The user is exploring this decision openly. Surface who is affected and what execution risks matter across options.";
     case "pressure_test":
       return `The user is leaning toward: "${leaningDirection}". Stress-test this by identifying who might resist, who is left out, and what could derail execution.`;
+    case "show_opposition":
+      return `The user is leaning toward: "${leaningDirection}". Do not help them sell or soft-land that lean. Argue as a serious opponent would on the people and execution side: who would resist and why they're right to, whose interests the lean sacrifices, how opponents would frame stakeholder harm, and what alternative the opposition would prefer. Do not hedge back into defending the user's lean.`;
     case "surface_risks":
       return "The user wants to understand risks. Be thorough on stakeholder impacts and execution risks; don't soften the people side.";
     case "generate_alternatives":
@@ -160,7 +163,7 @@ export function buildPeoplePrompt(
 ): LLMMessage[] {
   const postureInstruction = getPostureInstruction(
     intake.posture,
-    intake.posture === "pressure_test" ? intake.leaning_direction : undefined
+    postureRequiresLeaning(intake.posture) ? intake.leaning_direction : undefined
   );
 
   const systemPrompt = `You are an advisor helping someone think through the people and execution side of an important decision. Your job is to identify:
@@ -258,15 +261,51 @@ export async function runPeopleLens(
   provider: LLMProvider = "openai"
 ): Promise<PeopleLensOutput> {
   const messages = buildPeoplePrompt(intake, clarifications);
-
-  const response = await getClient(provider).run(messages, {
-    schema: PEOPLE_OUTPUT_SCHEMA,
+  // OpenAI GPT-5 reasoning + xAI need headroom; 2048 often yields empty/truncated JSON.
+  const requestOpts = {
+    schema: PEOPLE_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: 2048,
-  });
+    maxTokens: provider === "openai" ? 16_384 : provider === "xai" ? 8192 : 4096,
+  };
+
+  const client = getClient(provider);
+  let response = await client.run(messages, requestOpts);
 
   if (!response.parsed) {
-    throw new Error("People lens did not return valid structured output");
+    console.warn("[People] First attempt did not return parseable JSON; retrying once.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 300),
+    });
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous reply was not valid JSON for the required schema. " +
+          "Reply NOW with one JSON object that matches the schema exactly. " +
+          "No prose, no markdown, no code fences — only the JSON object. " +
+          "Keep stakeholder_impacts to 4–6 items and questions_to_answer_next to 1–2 so the object fully closes.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      temperature: 0.2,
+      maxTokens: Math.max(requestOpts.maxTokens, 16_384),
+    });
+  }
+
+  if (!response.parsed) {
+    console.error("[People] People lens failed to produce parseable JSON after retry.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `People lens did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
   }
 
   return parsePeopleOutput(response.parsed);

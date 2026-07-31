@@ -5,6 +5,7 @@ const POSTURE_LABELS: Record<string, string> = {
   pressure_test: "Pressure test",
   surface_risks: "Surface risks",
   generate_alternatives: "Generate alternatives",
+  show_opposition: "Show opposition",
 };
 
 const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {

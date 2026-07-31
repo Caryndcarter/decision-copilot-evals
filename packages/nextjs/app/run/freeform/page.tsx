@@ -7,6 +7,7 @@ import { LogoLockup } from "@/app/components/logo-icon";
 import { SessionNav } from "@/app/components/session-nav";
 import type { FreeformResult } from "@/lenses/freeform";
 import type { DecisionRunResult, LLMProviderName, Posture } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import { ChatMessageCopyActions } from "@/app/components/chat-copy-button";
 import { CollapsibleBlock } from "../collapsible-block";
 import { runHeadline, runPostureLabel, runProviderLabel } from "@/lib/run-display-name";
@@ -61,6 +62,7 @@ const POSTURES: { value: Posture; label: string }[] = [
   { value: "pressure_test", label: "Pressure test" },
   { value: "surface_risks", label: "Surface risks" },
   { value: "generate_alternatives", label: "Generate alternatives" },
+  { value: "show_opposition", label: "Show opposition" },
 ];
 
 const RERUN_PROVIDER_OPTIONS: { value: LLMProviderName | "all"; label: string }[] = [
@@ -472,7 +474,7 @@ function FreeformContent() {
 
   async function handleRerunFreeform() {
     if (!data?.run_id) return;
-    if (rerunPosture === "pressure_test" && !rerunLeaning.trim()) {
+    if (postureRequiresLeaning(rerunPosture) && !rerunLeaning.trim()) {
       setRerunError("Leaning toward is required for pressure test.");
       return;
     }
@@ -486,7 +488,7 @@ function FreeformContent() {
           type: "rerun_freeform",
           run_id: data.run_id,
           posture: rerunPosture,
-          ...(rerunPosture === "pressure_test" && { leaning_direction: rerunLeaning.trim() }),
+          ...(postureRequiresLeaning(rerunPosture) && { leaning_direction: rerunLeaning.trim() }),
           llm_provider: rerunProvider,
         }),
       });
@@ -635,7 +637,7 @@ function FreeformContent() {
                   </select>
                 </div>
               </div>
-              {rerunPosture === "pressure_test" && (
+              {postureRequiresLeaning(rerunPosture) && (
                 <div>
                   <label htmlFor="freeform-rerun-leaning" className="block text-xs font-medium text-zinc-600">
                     Leaning toward
@@ -704,7 +706,7 @@ function FreeformContent() {
                 {data.intake.unknowns}
               </p>
             ) : null}
-            {data.intake.posture === "pressure_test" && data.intake.leaning_direction ? (
+            {postureRequiresLeaning(data.intake.posture) && data.intake.leaning_direction ? (
               <p>
                 <span className="font-medium text-zinc-500">Leaning toward · </span>
                 {data.intake.leaning_direction}

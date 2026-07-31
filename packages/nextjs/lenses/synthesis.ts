@@ -25,6 +25,7 @@ import type {
   SynthesisSourceRef,
   LLMProviderName,
 } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 import { normalizeSynthesisProviderLabel, runProviderLabel } from "@/lib/run-display-name";
 import type { SynthesisInputInventory } from "@/lib/synthesis-inputs";
 import {
@@ -343,7 +344,11 @@ Be specific. Reference the actual content of each analysis. Do not pad with gene
 
 **Situation:** ${first.intake.situation}
 **Constraints:** ${first.intake.constraints}
-**Posture:** ${first.intake.posture}${first.intake.posture === "pressure_test" && "leaning_direction" in first.intake ? ` · Leaning toward: ${(first.intake as { leaning_direction: string }).leaning_direction}` : ""}
+**Posture:** ${first.intake.posture}${
+  postureRequiresLeaning(first.intake.posture) && first.intake.leaning_direction
+    ? ` · Leaning toward: ${first.intake.leaning_direction}`
+    : ""
+}
 
 ---
 

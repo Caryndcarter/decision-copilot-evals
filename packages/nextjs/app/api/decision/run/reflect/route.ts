@@ -3,6 +3,7 @@ import { getRun } from "@/lib/db/runs";
 import { getClient } from "@/llm";
 import { parseReflectionSuggestion } from "@/lib/suggest-format-tag";
 import type { DecisionRunResult } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 /**
  * Build a summary of the run for the LLM to evaluate
@@ -14,7 +15,7 @@ function buildReflectionContext(run: DecisionRunResult): string {
   parts.push(`Situation: ${run.intake.situation}`);
   parts.push(`Constraints: ${run.intake.constraints}`);
   parts.push(`Posture: ${run.intake.posture}`);
-  if (run.intake.posture === "pressure_test" && run.intake.leaning_direction) {
+  if (postureRequiresLeaning(run.intake.posture) && run.intake.leaning_direction) {
     parts.push(`Leaning toward: ${run.intake.leaning_direction}`);
   }
   if (run.intake.knowns_assumptions) {

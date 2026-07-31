@@ -5,6 +5,7 @@ import { createChatSseResponse } from "@/lib/chat-stream";
 import type { LLMProvider } from "@/llm/types";
 import { getRun } from "@/lib/db/runs";
 import type { DecisionIntake, LLMProviderName } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 export const maxDuration = 60;
 
@@ -26,7 +27,7 @@ interface FreeformChatRequest {
 
 function buildSystemPrompt(intake: DecisionIntake, output: Record<string, unknown>): string {
   const postureNote =
-    intake.posture === "pressure_test" && intake.leaning_direction
+    postureRequiresLeaning(intake.posture) && intake.leaning_direction
       ? `\nLeaning toward: ${intake.leaning_direction}`
       : "";
 

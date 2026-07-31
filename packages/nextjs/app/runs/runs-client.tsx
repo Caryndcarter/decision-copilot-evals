@@ -40,6 +40,7 @@ const POSTURE_LABELS: Record<string, string> = {
   pressure_test: "Pressure test",
   surface_risks: "Surface risks",
   generate_alternatives: "Generate alternatives",
+  show_opposition: "Show opposition",
 };
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -55,6 +56,7 @@ function PostureBadge({ posture }: { posture: string }) {
     pressure_test: "bg-amber-50 text-amber-700",
     surface_risks: "bg-red-50 text-red-700",
     generate_alternatives: "bg-violet-50 text-violet-700",
+    show_opposition: "bg-rose-50 text-rose-700",
   };
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[posture] ?? "bg-zinc-100 text-zinc-600"}`}>

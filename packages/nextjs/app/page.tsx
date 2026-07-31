@@ -318,7 +318,7 @@ export default function Home() {
             <Step
               n="1"
               title="Describe what's on the table"
-              desc="Paste in your situation: what you're deciding, constraints, what you already know, and what's still unclear. Pick an analysis posture — compare options openly, pressure-test a leaning you already have, focus on risks first, or widen the option set."
+              desc="Paste in your situation: what you're deciding, constraints, what you already know, and what's still unclear. Pick an analysis posture — compare options openly, challenge a leaning, hear the opposition case, focus on risks first, or widen the option set."
             />
             <Step
               n="2"

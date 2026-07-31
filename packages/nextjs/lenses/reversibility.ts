@@ -17,6 +17,7 @@ import type {
   LensQuestion,
   Clarification,
 } from "@/types/decision";
+import { postureRequiresLeaning } from "@/types/decision";
 
 const REVERSIBILITY_OUTPUT_SCHEMA = {
   type: "object",
@@ -117,6 +118,8 @@ function getPostureInstruction(posture: Posture, leaningDirection?: string): str
       return "The user is exploring this decision openly. Identify what's reversible vs irreversible and what they could try first with low commitment.";
     case "pressure_test":
       return `The user is leaning toward: "${leaningDirection}". Stress-test this by naming what would be hard to undo if they go this way, and what they could try before committing.`;
+    case "show_opposition":
+      return `The user is leaning toward: "${leaningDirection}". Argue as a serious opponent would on reversibility: why committing to this lean locks them into a bad path, what irreversible damage or option-foreclosure the opposition would highlight, and what more reversible alternative the opposition would prefer. Do not hedge back into defending the user's lean.`;
     case "surface_risks":
       return "The user wants to understand risks. Focus on irreversible steps and what could lock them in; suggest safe experiments first.";
     case "generate_alternatives":
@@ -147,7 +150,7 @@ export function buildReversibilityPrompt(
 ): LLMMessage[] {
   const postureInstruction = getPostureInstruction(
     intake.posture,
-    intake.posture === "pressure_test" ? intake.leaning_direction : undefined
+    postureRequiresLeaning(intake.posture) ? intake.leaning_direction : undefined
   );
 
   const systemPrompt = `You are an advisor helping someone think through the reversibility of an important decision. Your job is to identify:
@@ -236,15 +239,50 @@ export async function runReversibilityLens(
   provider: LLMProvider = "openai"
 ): Promise<ReversibilityLensOutput> {
   const messages = buildReversibilityPrompt(intake, clarifications);
-
-  const response = await getClient(provider).run(messages, {
-    schema: REVERSIBILITY_OUTPUT_SCHEMA,
+  const requestOpts = {
+    schema: REVERSIBILITY_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: 2048,
-  });
+    maxTokens: provider === "openai" ? 16_384 : provider === "xai" ? 8192 : 4096,
+  };
+
+  const client = getClient(provider);
+  let response = await client.run(messages, requestOpts);
 
   if (!response.parsed) {
-    throw new Error("Reversibility lens did not return valid structured output");
+    console.warn("[Reversibility] First attempt did not return parseable JSON; retrying once.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 300),
+    });
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous reply was not valid JSON for the required schema. " +
+          "Reply NOW with one JSON object that matches the schema exactly. " +
+          "No prose, no markdown, no code fences — only the JSON object. " +
+          "Keep irreversible_steps and safe_to_try_first to 3–5 items each and questions_to_answer_next to 1–2 so the object fully closes.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      temperature: 0.2,
+      maxTokens: Math.max(requestOpts.maxTokens, 16_384),
+    });
+  }
+
+  if (!response.parsed) {
+    console.error("[Reversibility] Lens failed to produce parseable JSON after retry.", {
+      provider,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Reversibility lens did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
   }
 
   return parseReversibilityOutput(response.parsed);
