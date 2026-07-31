@@ -263,7 +263,8 @@ export async function runPeopleLens(
   const requestOpts = {
     schema: PEOPLE_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: provider === "xai" ? 8192 : 4096,
+    // OpenAI GPT-5 reasoning + xAI both need headroom on dense stakeholder intakes.
+    maxTokens: provider === "xai" || provider === "openai" ? 8192 : 4096,
   };
 
   const client = getClient(provider);

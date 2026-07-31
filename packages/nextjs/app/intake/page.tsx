@@ -12,6 +12,7 @@ import {
   isParallelIntakeRun,
   isLLMProviderName,
 } from "@/lib/intake-llm-selection";
+import { MERIDIAN_IC_VOICE_CASES } from "@/lib/meridian-ic-voice-cases";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
@@ -209,6 +210,16 @@ const DEMO_SCENARIOS = [
     unknowns:
       "What do the 5–6 tribal-knowledge seniors actually say if asked candidly about staying through validation with no guaranteed long-term role? Real local demand for their skill set? Does Civitas+Meridian aggregation trip WARN (60-day notice etc.) forcing a slower path? What is enforceable in key-personnel clauses—can towns demand continuity or exit? Have we modeled the cost of one real failure (e.g. town can’t issue permits for two weeks) vs savings from the faster timeline? Would IC actually reject a lower-margin humane path if shown full downside—or is that resistance assumed? What do a sample of the 340 customers say about phased transition risk vs vendor stability?",
   },
+  ...MERIDIAN_IC_VOICE_CASES.map((c) => ({
+    id: c.id,
+    label: c.label,
+    situation: c.situation,
+    constraints: c.constraints,
+    posture: c.posture,
+    leaning_direction: c.leaning_direction ?? "",
+    knowns_assumptions: c.knowns_assumptions,
+    unknowns: c.unknowns,
+  })),
 ] as const;
 
 function FieldHelp({ children }: { children: React.ReactNode }) {

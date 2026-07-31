@@ -17,7 +17,8 @@ import type {
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 /** Default chat model; override with `OPENAI_MODEL` in env (e.g. `gpt-5.6-terra` for lower cost). */
 const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-5.6-sol";
-const DEFAULT_MAX_TOKENS = 4096;
+/** GPT-5 reasoning burns completion budget; 4k often yields empty content + finish_reason length. */
+const DEFAULT_MAX_TOKENS = 8192;
 
 function getApiKey(): string {
   const key = process.env.OPENAI_API_KEY;

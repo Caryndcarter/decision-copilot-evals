@@ -240,7 +240,7 @@ export async function runReversibilityLens(
   const requestOpts = {
     schema: REVERSIBILITY_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
-    maxTokens: provider === "xai" ? 8192 : 4096,
+    maxTokens: provider === "xai" || provider === "openai" ? 8192 : 4096,
   };
 
   const client = getClient(provider);

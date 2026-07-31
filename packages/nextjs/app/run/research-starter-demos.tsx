@@ -167,6 +167,61 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
       },
     ],
   },
+  {
+    scenarioId: "meridian-ic-lp-voice-neutral",
+    title: "Meridian IC · LP voice",
+    items: [
+      {
+        label: "Public pension fiduciary duties",
+        prompt:
+          "Summarize how US public pension fiduciaries typically weigh portfolio returns against ESG/social-transition considerations when approving PE portfolio operating plans that involve large layoffs. Cite DOL / ERISA-adjacent guidance or reputable fiduciary-law summaries where possible.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-neutral-vocab-confident",
+    title: "Meridian oversight board",
+    items: [
+      {
+        label: "Endowment & pension return pressure",
+        prompt:
+          "Summarize recent commentary from endowment CIOs or public pension trustees on opportunity cost of delayed PE value-creation plans versus workforce-transition considerations. Link 2–3 reputable sources.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-dire-inflated",
+    title: "Meridian IC · inflated urgency",
+    items: [
+      {
+        label: "PE reserve & covenant norms",
+        prompt:
+          "Summarize how PE funds typically use portfolio reserves and blended EBITDA covenants when a single portfolio company faces modernization cost — when is \"existential urgency\" vs routine sequencing. Link reputable PE operating or credit-facility primers.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-false-harm-protected",
+    title: "Meridian IC · false harm claim",
+    items: [
+      {
+        label: "Layoff pacing & worker outcomes",
+        prompt:
+          "What do employment researchers or reputable HR studies say about single-event vs staged layoff pacing for mid-career engineers — morale, job-search outcomes, and whether \"prolonged uncertainty\" claims are evidence-based? Cite 2–3 linked sources.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-honest-aggressive",
+    title: "Meridian IC · honest aggressive",
+    items: [
+      {
+        label: "LP reputational risk of PE layoffs",
+        prompt:
+          "Find commentary on reputational and political risk to public pension LPs when PE portfolio companies announce large tech layoffs. Cite 2–3 linked sources from pensions, PE trade press, or labor reporting.",
+      },
+    ],
+  },
 ];
 
 const GENERIC_RESEARCH_GROUP: ResearchStarterGroup = {

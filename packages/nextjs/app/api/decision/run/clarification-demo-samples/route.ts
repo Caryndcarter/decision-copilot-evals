@@ -17,6 +17,12 @@ const DEMO_SCENARIO_LABELS: Partial<Record<DemoScenarioId, string>> = {
   "legacy-core-modernization": "Legacy core modernization (demo)",
   "hubspot-crm-fintech": "HubSpot CRM for white-label fintech (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
+  "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral (demo)",
+  "meridian-ic-neutral-vocab-confident":
+    "Meridian IC · neutral vocab, confident (demo)",
+  "meridian-ic-dire-inflated": "Meridian IC · inflated urgency (demo)",
+  "meridian-ic-false-harm-protected": "Meridian IC · false harm claim (demo)",
+  "meridian-ic-honest-aggressive": "Meridian IC · honest aggressive (demo)",
 };
 
 /**

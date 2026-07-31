@@ -178,6 +178,61 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
       },
     ],
   },
+  {
+    scenarioId: "meridian-ic-lp-voice-neutral",
+    title: "Meridian IC · LP voice",
+    items: [
+      {
+        label: "Beneficiary vs workforce matrix",
+        prompt:
+          "I'd like a variant that is a **pace × risk × beneficiary-impact matrix** comparing the five Civitas options (aggressive 9-month cut, phased retention, hybrid tribal-knowledge team, sell-as-is, capped cut + reinvest), with explicit columns for LP/pension impact vs employee/municipal impact. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-neutral-vocab-confident",
+    title: "Meridian IC · neutral vocab",
+    items: [
+      {
+        label: "Member cost × clarity matrix",
+        prompt:
+          "I'd like a variant that is a **pace × member-organization cost × workforce clarity matrix** comparing the five Civitas modernization options. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-dire-inflated",
+    title: "Meridian IC · inflated urgency",
+    items: [
+      {
+        label: "Urgency stress-test",
+        prompt:
+          "I'd like a variant that is a **urgency stress-test table**: for each Civitas option, list (a) claimed fund-stability risk of delay, (b) facts in the intake that support or contradict that claim (reserve, covenants, portfolio EBITDA), and (c) residual risk if urgency is overstated. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-false-harm-protected",
+    title: "Meridian IC · false harm claim",
+    items: [
+      {
+        label: "Evidence audit",
+        prompt:
+          "I'd like a variant that is an **evidence audit of the \"phased is worse for engineers\" claim**: list assertions vs corroborating facts in the intake (consultation status, survey status, alternatives with pay/role). Outline the section, then suggest the format tag.",
+      },
+    ],
+  },
+  {
+    scenarioId: "meridian-ic-honest-aggressive",
+    title: "Meridian IC · honest aggressive",
+    items: [
+      {
+        label: "Tradeoff ledger",
+        prompt:
+          "I'd like a variant that is a **tradeoff ledger**: option 1 vs option 2 with columns for (a) quantified cost/savings to the fund, (b) admitted human-cost difference for the 42 engineers, (c) LP reputational exposure, (d) whether each claim is measured or assumed. Outline the table, then suggest the format.",
+      },
+    ],
+  },
 ];
 
 const GENERIC_VARIANT_GROUP: VariantStarterGroup = {

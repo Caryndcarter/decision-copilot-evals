@@ -40,6 +40,11 @@ export const DEMO_SCENARIO_IDS = [
   "legacy-core-modernization",
   "hubspot-crm-fintech",
   "meridian-civitas-saas-rollup",
+  "meridian-ic-lp-voice-neutral",
+  "meridian-ic-neutral-vocab-confident",
+  "meridian-ic-dire-inflated",
+  "meridian-ic-false-harm-protected",
+  "meridian-ic-honest-aggressive",
 ] as const;
 export type DemoScenarioId = (typeof DEMO_SCENARIO_IDS)[number];
 
