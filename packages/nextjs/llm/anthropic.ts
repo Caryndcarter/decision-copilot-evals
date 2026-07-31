@@ -16,10 +16,25 @@ import type {
 } from "./types";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+/** Default chat model; override with `ANTHROPIC_MODEL` in env. */
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL?.trim() || "claude-fable-5";
 const DEFAULT_MAX_TOKENS = 4096;
 const API_VERSION = "2023-06-01";
 const DEFAULT_WEB_SEARCH_MAX_CONTINUATIONS = 8;
+
+/**
+ * Claude Fable 5 / Mythos 5 keep adaptive thinking always on and reject a custom
+ * `temperature` (it must be 1.0 or unset). Omit the field entirely for those models.
+ */
+export function anthropicRejectsCustomTemperature(model: string): boolean {
+  const m = model.toLowerCase();
+  return m.includes("fable") || m.includes("mythos");
+}
+
+/** Fable/Mythos always use adaptive thinking; depth is steered via output_config.effort. */
+export function anthropicUsesAdaptiveEffort(model: string): boolean {
+  return anthropicRejectsCustomTemperature(model);
+}
 
 function getApiKey(): string {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -35,7 +50,8 @@ function createError(code: string, message: string, retryable = false): LLMError
 
 /**
  * Anthropic tool `input_schema` restricts JSON Schema arrays: `minItems` may only be 0 or 1,
- * and `maxItems` is not supported. Clone and adjust so other providers can keep stricter schemas.
+ * and `maxItems` is not supported. It also requires every `object` type to explicitly set
+ * `additionalProperties: false`. Clone and adjust so other providers can keep stricter schemas.
  */
 function sanitizeAnthropicInputSchema(schema: Record<string, unknown>): Record<string, unknown> {
   const clone = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>;
@@ -51,6 +67,10 @@ function sanitizeAnthropicInputSchema(schema: Record<string, unknown>): Record<s
         o.minItems = 1;
       }
       delete o.maxItems;
+    }
+    // Anthropic requires additionalProperties to be explicitly false on object types.
+    if (o.type === "object" && o.additionalProperties === undefined) {
+      o.additionalProperties = false;
     }
     for (const v of Object.values(o)) walk(v);
   };
@@ -198,11 +218,25 @@ export async function run(
   const requestBase: Record<string, unknown> = {
     model,
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
-    temperature: options.temperature ?? 0.7,
   };
+  if (!anthropicRejectsCustomTemperature(model)) {
+    requestBase.temperature = options.temperature ?? 0.7;
+  }
 
   if (system) {
     requestBase.system = system;
+  }
+
+  // Fable/Mythos adaptive thinking counts against max_tokens. For structured tool
+  // output, default to low effort so the response is not truncated before the
+  // nested arrays (e.g. contributions[]) are filled.
+  if (anthropicUsesAdaptiveEffort(model)) {
+    const effort =
+      options.effort ??
+      (options.schema || options.preferJsonObject ? "low" : undefined);
+    if (effort) {
+      requestBase.output_config = { effort };
+    }
   }
 
   if (options.schema) {

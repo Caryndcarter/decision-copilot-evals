@@ -16,7 +16,8 @@ import type {
 } from "./types";
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_MODEL = "gemini-2.5-flash";
+/** Default chat model; override with `GEMINI_MODEL` in env. */
+const DEFAULT_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.6-flash";
 const DEFAULT_MAX_TOKENS = 4096;
 
 function getApiKey(): string {
@@ -29,6 +30,30 @@ function getApiKey(): string {
 
 function createError(code: string, message: string, retryable = false): LLMError {
   return { code, message, provider: "gemini", retryable };
+}
+
+/**
+ * Gemini 2.5 thinking tokens count against maxOutputTokens. Cap them for structured
+ * calls so the visible JSON is not emptied with finishReason MAX_TOKENS.
+ * `undefined` = leave the model default (dynamic thinking).
+ */
+function geminiThinkingBudget(options: LLMRequestOptions): number | undefined {
+  const effort =
+    options.effort ??
+    (options.schema || options.preferJsonObject ? "low" : undefined);
+  if (!effort) return undefined;
+  switch (effort) {
+    case "low":
+      return 1024;
+    case "medium":
+      return 4096;
+    case "high":
+    case "xhigh":
+    case "max":
+      return 8192;
+    default:
+      return 1024;
+  }
 }
 
 /**
@@ -102,6 +127,7 @@ export async function run(
 
   // Gemini is more verbose than other providers; use a higher floor for structured output
   // to avoid MAX_TOKENS truncation mid-JSON. Same for preferJsonObject (e.g. freeform).
+  // Note: on 2.5 thinking models, maxOutputTokens covers thinking + visible text.
   const maxOutputTokens =
     options.schema || options.preferJsonObject
       ? Math.max(options.maxTokens ?? DEFAULT_MAX_TOKENS, 8192)
@@ -111,6 +137,12 @@ export async function run(
     maxOutputTokens,
     temperature: options.temperature ?? 0.7,
   };
+
+  // Cap thinking so structured JSON is not emptied by MAX_TOKENS (thinking burns the same budget).
+  const thinkingBudget = geminiThinkingBudget(options);
+  if (thinkingBudget !== undefined) {
+    generationConfig.thinkingConfig = { thinkingBudget };
+  }
 
   // Request structured JSON output. responseMimeType alone only ensures JSON is returned;
   // responseSchema additionally enforces the field names and types.
@@ -130,8 +162,9 @@ export async function run(
     requestBody.systemInstruction = systemInstruction;
   }
 
-  // Grounding with Google Search (billable). Not combined with JSON schema in this app.
-  if (options.enableWebSearch && !options.schema) {
+  // Grounding with Google Search (billable). Do not combine with JSON MIME/schema —
+  // Gemini rejects or empties responses when tools + responseMimeType are both set.
+  if (options.enableWebSearch && !options.schema && !options.preferJsonObject) {
     requestBody.tools = [{ google_search: {} }];
   }
 
@@ -170,8 +203,9 @@ export async function run(
     throw createError("INVALID_JSON", `Gemini response was not valid JSON: ${rawBody.slice(0, 100)}`, true);
   }
 
+  type GeminiPart = { text?: string; thought?: boolean };
   type GeminiCandidate = {
-    content?: { parts?: { text?: string }[] };
+    content?: { parts?: GeminiPart[] };
     finishReason?: string;
     groundingMetadata?: {
       webSearchQueries?: string[];
@@ -184,7 +218,12 @@ export async function run(
 
   const candidates = data.candidates as GeminiCandidate[] | undefined;
   const candidate = candidates?.[0];
-  const content = candidate?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+  // Skip thought/summary parts — concatenating them into structured JSON breaks parse.
+  const content =
+    candidate?.content?.parts
+      ?.filter((p) => !p.thought)
+      .map((p) => p.text ?? "")
+      .join("") ?? "";
 
   const gm = candidate?.groundingMetadata ?? candidate?.grounding_metadata;
   const webQueries = gm?.webSearchQueries ?? gm?.web_search_queries;
@@ -214,8 +253,26 @@ export async function run(
   }
 
   const usageMeta = data.usageMetadata as
-    | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+    | {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        totalTokenCount?: number;
+        thoughtsTokenCount?: number;
+      }
     | undefined;
+
+  if ((options.schema || options.preferJsonObject) && !parsed) {
+    console.warn("[gemini] Structured response missing/unparseable", {
+      model,
+      finishReason: candidate?.finishReason,
+      contentLen: content.length,
+      contentPreview: content.slice(0, 300),
+      thoughtsTokenCount: usageMeta?.thoughtsTokenCount,
+      candidatesTokenCount: usageMeta?.candidatesTokenCount,
+      thinkingBudget,
+      maxOutputTokens,
+    });
+  }
 
   return {
     content,
