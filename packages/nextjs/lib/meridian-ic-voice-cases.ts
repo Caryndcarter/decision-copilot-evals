@@ -1,6 +1,9 @@
 /**
  * Meridian IC-voice Civitas variants (Cases 1–5).
  * Shared by intake demos and the multi-case harness (standard runs only).
+ *
+ * C3/C4 v1 texts (used by the 2026-07-31 harness + moral coding) are archived at
+ * docs/harness-snapshots/meridian-ic-2026-07-31/case-archive/
  */
 
 import type { DemoScenarioId, Posture } from "@/types/decision";
