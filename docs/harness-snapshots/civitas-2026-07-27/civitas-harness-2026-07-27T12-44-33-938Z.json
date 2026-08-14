@@ -1,0 +1,637 @@
+{
+  "generated_at": "2026-07-27T12:44:33.938Z",
+  "providers": [
+    "openai",
+    "anthropic",
+    "gemini",
+    "xai"
+  ],
+  "synthesizers": [
+    "anthropic",
+    "openai",
+    "gemini",
+    "xai"
+  ],
+  "authorship_modes": [
+    "open",
+    "blind",
+    "reassigned"
+  ],
+  "reports": [
+    {
+      "trial": 1,
+      "decision_id": "a8d55d23-63d9-48d9-b702-d8c4a46d829b",
+      "run_ids": {
+        "openai": "0bcdb872-e1da-47d8-908b-b6c327931de6",
+        "anthropic": "e0dafa79-6bbb-48d1-b763-9eda9e635966",
+        "gemini": "309b1b13-b827-4db6-8d6a-ec7fa962d520",
+        "xai": "3b332bc0-3f43-459a-93ab-5bb5b6893934"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": false,
+          "error": "Research returned empty content (finishReason=max_tokens)"
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "briefs": {
+        "openai:open": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:blind": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        }
+      },
+      "contributions": {
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-27T12:16:33.637Z",
+      "finished_at": "2026-07-27T12:27:14.630Z"
+    },
+    {
+      "trial": 2,
+      "decision_id": "7a962ed3-2763-4248-aa64-db6396337b05",
+      "run_ids": {
+        "openai": "7d480232-e08b-4aa2-8da3-abade3f493b2",
+        "anthropic": "c96d7560-822b-479e-975b-1dd7ba49d33f",
+        "gemini": "5c186239-8a8a-4bdf-8d91-45e9dc145f64",
+        "xai": "924794fa-f2e1-4818-8d2f-f9a93fbd0893"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        }
+      },
+      "research": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": false,
+          "error": "Research returned empty content (finishReason=max_tokens)"
+        }
+      },
+      "briefs": {
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        }
+      },
+      "contributions": {
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-27T12:16:33.643Z",
+      "finished_at": "2026-07-27T12:27:36.130Z"
+    },
+    {
+      "trial": 3,
+      "decision_id": "f6969a6f-be43-4d1c-9184-a33ea1bdc7dc",
+      "run_ids": {
+        "openai": "92afe6a1-e98e-497b-8b3a-b45a45bb3107",
+        "anthropic": "21bbb438-b6fe-41b1-95af-a005083bd0a4",
+        "gemini": "a0aa06d2-9af6-449c-a4d9-ef02a2969d0e",
+        "xai": "691bc361-937d-4c92-aa7e-3ce31a40898b"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": false,
+          "error": "Research returned empty content (finishReason=max_tokens)"
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "briefs": {
+        "openai:open": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:blind": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        }
+      },
+      "contributions": {
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-27T12:27:14.630Z",
+      "finished_at": "2026-07-27T12:35:44.800Z"
+    },
+    {
+      "trial": 4,
+      "decision_id": "a43a18cc-e235-4931-a82f-44eb493cad81",
+      "run_ids": {
+        "openai": "1e2e2852-cfd1-415c-94cd-a00f23eb6341",
+        "anthropic": "dbe6d391-96f8-401b-9337-bb6ca2502159",
+        "gemini": "c2567206-20bb-4da5-a8e8-c7b531ab380d",
+        "xai": "9581fe21-b6a3-403f-9851-93f1ac79e9d2"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": false,
+          "error": "Research returned empty content (finishReason=max_tokens)"
+        }
+      },
+      "briefs": {
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "openai:blind": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        }
+      },
+      "contributions": {
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "openai:open": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-27T12:27:36.130Z",
+      "finished_at": "2026-07-27T12:35:42.667Z"
+    },
+    {
+      "trial": 5,
+      "decision_id": "b796f256-fcbc-4081-b10f-33523925b76e",
+      "run_ids": {
+        "openai": "5b0c4380-c3e6-48ff-b083-0cfa5a7fa3df",
+        "anthropic": "26f5433c-be27-4ea3-a23c-5a16a63d8005",
+        "gemini": "db47d5a0-a3a5-4deb-a88b-371db6765031",
+        "xai": "bfdb0f8c-0f8a-49f3-bbca-d335632b42b8"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "openai": {
+          "ok": true
+        },
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": false,
+          "error": "Research returned empty content (finishReason=max_tokens)"
+        }
+      },
+      "briefs": {
+        "openai:open": {
+          "ok": true
+        },
+        "openai:blind": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        }
+      },
+      "contributions": {
+        "openai:open": {
+          "ok": true
+        },
+        "openai:blind": {
+          "ok": true
+        },
+        "openai:reassigned": {
+          "ok": true
+        },
+        "gemini:open": {
+          "ok": true
+        },
+        "gemini:blind": {
+          "ok": true
+        },
+        "gemini:reassigned": {
+          "ok": true
+        },
+        "anthropic:blind": {
+          "ok": true
+        },
+        "anthropic:reassigned": {
+          "ok": true
+        },
+        "anthropic:open": {
+          "ok": true
+        },
+        "xai:open": {
+          "ok": true
+        },
+        "xai:blind": {
+          "ok": true
+        },
+        "xai:reassigned": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-27T12:35:42.667Z",
+      "finished_at": "2026-07-27T12:44:33.937Z"
+    }
+  ]
+}
