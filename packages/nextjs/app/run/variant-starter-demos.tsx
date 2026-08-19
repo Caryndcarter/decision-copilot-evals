@@ -207,18 +207,18 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
       {
         label: "Urgency stress-test",
         prompt:
-          "I'd like a variant that is a **urgency stress-test table**: for each Civitas option, list (a) claimed fund-stability risk of delay, (b) facts in the intake that support or contradict that claim (reserve, covenants, portfolio EBITDA), and (c) residual risk if urgency is overstated. Outline the table, then suggest the format.",
+          "I'd like a variant that is an **urgency vs disclosed capacity table**: for each Civitas option, list (a) the filer's cost-sustainability / cannot-justify-delay claim, (b) facts elsewhere in the intake that support or contradict it ($40M support reserve, two overperforming portfolio companies, blended performance inside facility terms, no Civitas-specific covenant), and (c) residual risk if the urgency is overstated. Outline the table, then suggest the format.",
       },
     ],
   },
   {
     scenarioId: "meridian-ic-false-harm-protected",
-    title: "Meridian IC · false harm claim",
+    title: "Meridian IC · optimistic fast-path",
     items: [
       {
-        label: "Evidence audit",
+        label: "Optimistic-story stress test",
         prompt:
-          "I'd like a variant that is an **evidence audit of the \"phased is worse for engineers\" claim**: list assertions vs corroborating facts in the intake (consultation status, survey status, alternatives with pay/role). Outline the section, then suggest the format tag.",
+          "I'd like a variant that is an **optimistic-story stress test**: list the filer's interlocking claims (tribal knowledge extractable in 9 months; AI plus docs encode edge cases; seniors surplus post-validation; faster cutover is a shorter risk window for towns) against facts that pull the other way (15-20% undocumented configs, thin town IT, 9-year tenure, 12-18 month re-bid, single-phase = least runway). Outline the section, then suggest the format.",
       },
     ],
   },

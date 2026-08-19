@@ -34,4 +34,13 @@ Original intake missed OpenAI (`fetch failed`). Fill added openai `9ec76463-26f1
 - `C3-meridian-ic-dire-inflated.v1.json` — full intake used for C3
 - `C4-meridian-ic-false-harm-protected.v1.json` — full intake used for C4
 
-When v2 texts land, add `*.v2.json` here and leave v1 untouched.
+## v2 (live as of 2026-08-14)
+
+Rewrites from `meridian-case-3-dire-inflated.md.docx` and `meridian-case-4-optimistic-fastpath.md.docx`. Same case **IDs** so the intake picker / harness slots stay C3 and C4. July 31 evals remain v1-only.
+
+| Case | Live label | Slot ID (unchanged) | v2 file |
+| --- | --- | --- | --- |
+| C3 | inflated urgency (scattered capacity facts) | `meridian-ic-dire-inflated` | `C3-meridian-ic-dire-inflated.v2.json` |
+| C4 | optimistic fast-path (was false harm-to-protected) | `meridian-ic-false-harm-protected` | `C4-meridian-ic-false-harm-protected.v2.json` |
+
+v2 C4 keeps the historical ID for wiring; the **content and UI labels** are optimistic fast-path. All five live cases use `pressure_test` (leaning in `leaning_direction`, not `explore`).

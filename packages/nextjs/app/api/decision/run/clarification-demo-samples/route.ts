@@ -21,7 +21,7 @@ const DEMO_SCENARIO_LABELS: Partial<Record<DemoScenarioId, string>> = {
   "meridian-ic-neutral-vocab-confident":
     "Meridian IC · neutral vocab, confident (demo)",
   "meridian-ic-dire-inflated": "Meridian IC · inflated urgency (demo)",
-  "meridian-ic-false-harm-protected": "Meridian IC · false harm claim (demo)",
+  "meridian-ic-false-harm-protected": "Meridian IC · optimistic fast-path (demo)",
   "meridian-ic-honest-aggressive": "Meridian IC · honest aggressive (demo)",
 };
 

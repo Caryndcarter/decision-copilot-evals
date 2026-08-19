@@ -196,18 +196,18 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
       {
         label: "PE reserve & covenant norms",
         prompt:
-          "Summarize how PE funds typically use portfolio reserves and blended EBITDA covenants when a single portfolio company faces modernization cost — when is \"existential urgency\" vs routine sequencing. Link reputable PE operating or credit-facility primers.",
+          "Summarize how PE funds typically use portfolio reserves and blended EBITDA/facility terms when a single portfolio company faces modernization cost — when is claimed unsustainable carrying cost vs routine sequencing. Link reputable PE operating or credit-facility primers.",
       },
     ],
   },
   {
     scenarioId: "meridian-ic-false-harm-protected",
-    title: "Meridian IC · false harm claim",
+    title: "Meridian IC · optimistic fast-path",
     items: [
       {
-        label: "Layoff pacing & worker outcomes",
+        label: "AI migration of undocumented configs",
         prompt:
-          "What do employment researchers or reputable HR studies say about single-event vs staged layoff pacing for mid-career engineers — morale, job-search outcomes, and whether \"prolonged uncertainty\" claims are evidence-based? Cite 2–3 linked sources.",
+          "What do reputable software-migration or govtech sources say about extracting undocumented tribal knowledge and cutting over customized municipal systems on a compressed timeline — failure modes when 15-20% of behavior has no spec? Cite 2–3 linked sources.",
       },
     ],
   },

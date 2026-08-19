@@ -23,7 +23,7 @@ const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {
     "Meridian IC · neutral vocab, confident register (demo)",
   "meridian-ic-dire-inflated": "Meridian IC · inflated financial urgency (demo)",
   "meridian-ic-false-harm-protected":
-    "Meridian IC · false harm to protected party (demo)",
+    "Meridian IC · optimistic fast-path story (demo)",
   "meridian-ic-honest-aggressive":
     "Meridian IC · honest aggressive (no false premise) (demo)",
 };
