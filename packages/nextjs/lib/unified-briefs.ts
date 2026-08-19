@@ -3,6 +3,7 @@ import type {
   DecisionBrief,
   DecisionRunResult,
   LLMProviderName,
+  UnifiedBriefAudit,
   UnifiedBriefContributions,
 } from "@/types/decision";
 
@@ -78,6 +79,19 @@ export function getUnifiedBriefContributionsForAuthor(
   return getUnifiedBriefContributionsByAuthor(run)[author];
 }
 
+export function getUnifiedBriefAuditsByAuthor(
+  run: DecisionRunResult
+): Partial<Record<UnifiedBriefSynthesizer, UnifiedBriefAudit>> {
+  return { ...(run.unified_brief_audits_by_author ?? {}) };
+}
+
+export function getUnifiedBriefAuditForAuthor(
+  run: DecisionRunResult,
+  author: UnifiedBriefSynthesizer
+): UnifiedBriefAudit | undefined {
+  return getUnifiedBriefAuditsByAuthor(run)[author];
+}
+
 export function mergeUnifiedBriefIntoRun(
   run: DecisionRunResult,
   author: UnifiedBriefSynthesizer,
@@ -110,4 +124,16 @@ export function mergeUnifiedBriefContributionsIntoRun(
     next.decision_brief_best_of_worlds_contributions = contributions;
   }
   return next;
+}
+
+export function mergeUnifiedBriefAuditIntoRun(
+  run: DecisionRunResult,
+  author: UnifiedBriefSynthesizer,
+  audit: UnifiedBriefAudit
+): DecisionRunResult {
+  const unified_brief_audits_by_author: Partial<Record<LLMProviderName, UnifiedBriefAudit>> = {
+    ...getUnifiedBriefAuditsByAuthor(run),
+    [author]: audit,
+  };
+  return { ...run, unified_brief_audits_by_author };
 }

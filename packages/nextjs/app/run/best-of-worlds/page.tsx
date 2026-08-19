@@ -11,6 +11,7 @@ import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
+import { UnifiedBriefAuditPanel } from "../unified-brief-audit-panel";
 import {
   UnifiedBriefInfluenceChartsBody,
   UnifiedBriefInfluenceChartsOverlay,
@@ -19,6 +20,7 @@ import { buildInfluenceMatrix } from "@/lib/unified-brief-influence-matrix";
 import { SessionNav } from "@/app/components/session-nav";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import {
+  getUnifiedBriefAuditForAuthor,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefContributionsForAuthor,
   getUnifiedBriefForAuthor,
@@ -75,7 +77,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   /** Shown after successful refresh/load so “Refresh data” visibly did work even when data looks unchanged. */
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   /** Right panel view: discuss (chat) or contribution attribution. */
-  const [asideTab, setAsideTab] = useState<"discuss" | "contributions">("discuss");
+  const [asideTab, setAsideTab] = useState<"discuss" | "contributions" | "audit">("discuss");
   const [influenceChartsOpen, setInfluenceChartsOpen] = useState(false);
   /** Which synthesizer's brief is on screen and target for Generate / Regenerate. */
   const [activeSynthesizer, setActiveSynthesizer] = useState<UnifiedBriefSynthesizer>("anthropic");
@@ -250,6 +252,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const brief = persistRun ? getUnifiedBriefForAuthor(persistRun, activeSynthesizer) : undefined;
   const contributions = persistRun
     ? getUnifiedBriefContributionsForAuthor(persistRun, activeSynthesizer)
+    : undefined;
+  const audit = persistRun
+    ? getUnifiedBriefAuditForAuthor(persistRun, activeSynthesizer)
     : undefined;
   const influenceMatrix = persistRun
     ? buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun))
@@ -719,6 +724,19 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     >
                       Contributions
                     </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={asideTab === "audit"}
+                      onClick={() => setAsideTab("audit")}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        asideTab === "audit"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Audit
+                    </button>
                   </div>
                 </div>
 
@@ -768,6 +786,17 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     synthesizer={activeSynthesizer}
                     onUpdated={applyPersistRun}
                     onOpenInfluenceCharts={() => setInfluenceChartsOpen(true)}
+                  />
+                </div>
+
+                <div className={asideTab === "audit" ? "" : "hidden"}>
+                  <UnifiedBriefAuditPanel
+                    runId={navRunId}
+                    decisionId={decisionId || persistRun?.decision_id || ""}
+                    brief={brief}
+                    audit={audit}
+                    synthesizer={activeSynthesizer}
+                    onUpdated={applyPersistRun}
                   />
                 </div>
               </div>

@@ -238,6 +238,34 @@ export interface UnifiedBriefContributions {
   contributions: ProviderContribution[];
 }
 
+/** One coded dimension from the generic Unified Brief audit rubric. */
+export interface UnifiedBriefAuditField {
+  value: string;
+  quote: string;
+}
+
+/**
+ * Blind structured audit of a Unified Brief on domain-agnostic ethics dimensions.
+ * Generated on demand; keyed by synthesizer like contributions.
+ */
+export interface UnifiedBriefAudit {
+  generated_at: string;
+  brief_generated_at?: string;
+  rubric_version: number;
+  rubric_id: string;
+  judge_provider: LLMProviderName;
+  codes: {
+    tradeoff_honesty: UnifiedBriefAuditField;
+    filer_alignment: UnifiedBriefAuditField;
+    downside_bearer: UnifiedBriefAuditField;
+    uncertainty_acknowledgment: UnifiedBriefAuditField;
+    stakeholder_dignity: UnifiedBriefAuditField;
+    framing_truthfulness: UnifiedBriefAuditField;
+    premise_scrutiny: UnifiedBriefAuditField;
+    power_balance: UnifiedBriefAuditField;
+  };
+}
+
 /** A format variant of the analysis (same decision, different presentation) */
 export interface RunVariant {
   variant_id: string;
@@ -379,6 +407,8 @@ export interface DecisionRunResult {
   unified_brief_contributions_by_author?: Partial<
     Record<LLMProviderName, UnifiedBriefContributions>
   >;
+  /** Generic ethics audit keyed by Unified Brief synthesizer (matches `unified_briefs_by_author`). */
+  unified_brief_audits_by_author?: Partial<Record<LLMProviderName, UnifiedBriefAudit>>;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).
    * Prefer `unified_brief_chat_by_provider`; readers should treat this as
