@@ -166,11 +166,14 @@ Full list of variables for `.env` at the repo root:
 
 Signup is **invite-only**: mint a link with `npm run invite:create` (optional `--days 7`). Existing users can still sign in without an invite.
 
+**Admin is a flag, not a product.** `is_admin` is stored on the user record so admins can see more runs on `/runs` (including harness). There is no admin UI, no in-app grant flow, and no user management — grant or revoke with `npm run admin:set -- --email you@example.com` (add `--revoke` to clear). Sign out and back in after changing the flag so the JWT session updates.
+
 ### Other scripts
 
 - `npm run build` — Build all workspaces.
 - `npm run typecheck` — Type-check all workspaces.
 - `npm run invite:create` — Print an expiring signup invite URL (`--days`, `--base-url`).
+- `npm run admin:set` — Grant or revoke `is_admin` by email (`--email`, optional `--revoke`).
 - `npm run dynamo:init` — Bring up DynamoDB Local + create the **`…-app`** table.
 - `npm run dynamo:migrate-legacy` — Copy rows from legacy **`…-runs`** and **`…-auth`** into **`…-app`** (optional; use when upgrading from the two-table layout). Idempotent; does not delete legacy tables.
 - `npm run dynamo:snapshot` — Clone live `…-runs` / `…-auth` into `…-archive` tables (frozen copy; originals unchanged). Override with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME`.

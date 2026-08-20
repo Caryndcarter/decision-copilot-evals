@@ -12,7 +12,7 @@
 
 import "server-only";
 import { randomUUID } from "crypto";
-import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { dynamo, AUTH_TABLE } from "@/server/config/dynamodb";
 
 export interface UserRecord {
@@ -118,4 +118,33 @@ export async function createUserWithPassword(input: {
 
   // Non-null is safe: we just constructed `item`.
   return itemToUser(item)!;
+}
+
+/**
+ * Set or clear the `is_admin` flag. Admin is a stored flag only (no admin product UI);
+ * use the `admin:set` CLI to grant or revoke. Callers must re-sign-in for JWT sessions
+ * to pick up the change.
+ */
+export async function setUserAdminByEmail(
+  email: string,
+  isAdmin: boolean
+): Promise<UserRecord> {
+  const existing = await findUserByEmail(email);
+  if (!existing) {
+    throw new Error(`No user found for email ${email.toLowerCase().trim()}`);
+  }
+  const pk = userPk(existing.id);
+  const res = await dynamo.send(
+    new UpdateCommand({
+      TableName: AUTH_TABLE,
+      Key: { pk, sk: pk },
+      UpdateExpression: "SET is_admin = :a",
+      ExpressionAttributeValues: { ":a": isAdmin },
+      ReturnValues: "ALL_NEW",
+    })
+  );
+  return itemToUser(res.Attributes as UserItem | undefined) ?? {
+    ...existing,
+    is_admin: isAdmin,
+  };
 }
