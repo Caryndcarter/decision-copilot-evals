@@ -4,7 +4,7 @@
  * Usage:
  *   npm run invite:create
  *   npm run invite:create -- --days 3
- *   npm run invite:create -- --days 1 --base-url http://localhost:3001
+ *   npm run invite:create -- --days 1 --base-url http://localhost:5001
  */
 
 import { createInviteToken } from "../lib/invite-token";
@@ -35,7 +35,7 @@ function resolveBaseUrl(override?: string): string {
     override ||
     process.env.AUTH_URL ||
     process.env.NEXTAUTH_URL ||
-    `http://localhost:${process.env.PORT || "3001"}`;
+    `http://localhost:${process.env.PORT || "5001"}`;
   return raw.replace(/\/$/, "");
 }
 

@@ -1,7 +1,7 @@
 /**
  * Streaming text generation for chat (server-only).
  *
- * Structured output (`schema`) and Anthropic/OpenAI web-search loops fall back to
+ * Structured output (`schema`) and Anthropic/OpenAI/xAI web-search loops fall back to
  * buffered `run()` then emit the full text as one delta before returning.
  */
 
@@ -282,6 +282,9 @@ export async function runStream(
   }
 
   if (provider === "xai") {
+    if (options.enableWebSearch) {
+      return bufferedAsStream(await xai.run(prompt, options), onDelta);
+    }
     const key = process.env.XAI_API_KEY;
     if (!key) throw new Error("XAI_API_KEY environment variable is not set");
     const messages =

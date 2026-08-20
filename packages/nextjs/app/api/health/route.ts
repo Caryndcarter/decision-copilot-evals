@@ -1,25 +1,23 @@
 import { NextResponse } from "next/server";
-import { DescribeTableCommand } from "@aws-sdk/client-dynamodb";
-import { dynamo, RUNS_TABLE } from "@/server/config/dynamodb";
+import { clientPromise, DB_NAME } from "@/server/config/mongodb";
 
 /**
  * Health check endpoint
- * GET /api/health — verifies the DynamoDB app table (runs + auth) is reachable.
+ * GET /api/health — verifies MongoDB is reachable.
  */
 export async function GET() {
   try {
-    await dynamo.send(new DescribeTableCommand({ TableName: RUNS_TABLE }));
+    const client = await clientPromise;
+    await client.db(DB_NAME).command({ ping: 1 });
 
     return NextResponse.json({
       status: "ok",
+      db: DB_NAME,
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Health check error:", message);
-    return NextResponse.json(
-      { status: "error", message },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: "error", message }, { status: 500 });
   }
 }

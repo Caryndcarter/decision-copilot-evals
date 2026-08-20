@@ -1,17 +1,18 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { DynamoDBAdapter } from "@auth/dynamodb-adapter";
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { dynamo, AUTH_TABLE } from "@/server/config/dynamodb";
+import { clientPromise, DB_NAME } from "@/server/config/mongodb";
 import { findUserByEmail } from "@/lib/db/users";
 import { INVITE_COOKIE_NAME, verifyInviteToken } from "@/lib/invite-token";
 import { authConfig } from "@/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: DynamoDBAdapter(dynamo, { tableName: AUTH_TABLE }),
+  secret: process.env.AUTH_SECRET,
+  adapter: MongoDBAdapter(clientPromise, { databaseName: DB_NAME }),
   session: { strategy: "jwt" },
   providers: [
     Google({
