@@ -218,7 +218,7 @@ async function runWithWebSearch(
   };
   if (instructions) requestBody.instructions = instructions;
 
-  // Keep reasoning light so search + answer fit the output budget.
+  // Keep reasoning light so search + answer fit a modest output budget (cost parity with peers).
   const mLower = model.toLowerCase();
   if (usesMaxCompletionTokensParam(model) && !mLower.includes("gpt-5-pro")) {
     requestBody.reasoning = { effort: options.effort ?? "low" };
@@ -315,7 +315,7 @@ async function runOnce(
     usesMaxCompletionTokensParam(model) &&
     !mLower.includes("gpt-5-pro")
   ) {
-    requestBody.reasoning_effort = "low";
+    requestBody.reasoning_effort = options.effort ?? "low";
   }
 
   const response = await fetchOpenAI(apiKey, OPENAI_CHAT_URL, requestBody);

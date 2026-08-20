@@ -270,7 +270,7 @@ export async function runStream(
     if (!(mLower.startsWith("gpt-5") || /^o\d/i.test(mLower)) || mLower.includes("gpt-5-chat")) {
       body.temperature = options.temperature ?? 0.7;
     } else if (usesMax && !mLower.includes("gpt-5-pro")) {
-      body.reasoning_effort = "low";
+      body.reasoning_effort = options.effort ?? "low";
     }
     return streamOpenAiCompat(
       "https://api.openai.com/v1/chat/completions",

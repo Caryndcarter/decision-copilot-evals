@@ -16,9 +16,10 @@
  *   HARNESS_USER_EMAIL=you@example.com
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
  *   HARNESS_CASE_CONCURRENCY=0   # cases in parallel (default 0 = all; set 1 for sequential)
+ *   HARNESS_RUN_NUMBER=N         # optional; default = max existing + 1 for that user
  *   --cases=meridian-ic-lp-voice-neutral,meridian-ic-dire-inflated
  *   --fill-decision=<uuid>[,uuid…]   # add missing --providers into existing decisions
- *   --user-email=... --providers=... --case-concurrency=2
+ *   --user-email=... --providers=... --case-concurrency=2 --run-number=3
  */
 
 import "dotenv/config";
@@ -27,7 +28,13 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { insertRun, getRun, getRunsByDecisionId, replaceRun } from "../lib/db/runs";
+import {
+  insertRun,
+  getRun,
+  getRunsByDecisionId,
+  replaceRun,
+  nextHarnessRunNumber,
+} from "../lib/db/runs";
 import { findUserByEmail } from "../lib/db/users";
 import { runForProviders } from "../lib/run-for-providers";
 import { ALL_LLM_PROVIDERS } from "../lib/intake-llm-selection";
@@ -76,6 +83,7 @@ type CaseReport = {
   case_id: string;
   case_label: string;
   case_index: number;
+  harness_run_number?: number;
   decision_id: string;
   run_ids: Partial<Record<LLMProviderName, string>>;
   failed_intake: { provider: string; message: string }[];
@@ -128,6 +136,8 @@ function parseArgs(argv: string[]) {
     caseConcurrency: Number(
       get("case-concurrency") ?? process.env.HARNESS_CASE_CONCURRENCY ?? 0
     ),
+    /** Explicit batch id; when unset, allocated as max(existing) + 1. */
+    runNumberRaw: (get("run-number") ?? process.env.HARNESS_RUN_NUMBER ?? "").trim(),
   };
 }
 
@@ -240,7 +250,8 @@ async function buildIntakeRun(
   provider: LLMProviderName,
   userId: string | undefined,
   caseDef: MeridianIcVoiceCase,
-  caseIndex: number
+  caseIndex: number,
+  harnessRunNumber: number
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
   caseLog(caseIndex, caseDef.id, `intake lenses → ${provider}`);
@@ -272,6 +283,7 @@ async function buildIntakeRun(
     llm_provider: provider,
     demo_scenario_id: caseDef.id,
     harness_run: true,
+    harness_run_number: harnessRunNumber,
     harness_trial: caseIndex,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -554,13 +566,15 @@ async function runCase(
   caseDef: MeridianIcVoiceCase,
   caseIndex: number,
   providers: LLMProviderName[],
-  userId: string | undefined
+  userId: string | undefined,
+  harnessRunNumber: number
 ): Promise<CaseReport> {
   const decision_id = randomUUID();
   const report: CaseReport = {
     case_id: caseDef.id,
     case_label: caseDef.label,
     case_index: caseIndex,
+    harness_run_number: harnessRunNumber,
     decision_id,
     run_ids: {},
     failed_intake: [],
@@ -570,11 +584,15 @@ async function runCase(
     started_at: new Date().toISOString(),
   };
 
-  caseLog(caseIndex, caseDef.id, `======== START · decision ${decision_id} ========`);
+  caseLog(
+    caseIndex,
+    caseDef.id,
+    `======== START · harness run ${harnessRunNumber} · decision ${decision_id} ========`
+  );
   const intake = buildIntakeFromCase(caseDef, decision_id);
 
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, caseDef, caseIndex)
+    buildIntakeRun(intake, p, userId, caseDef, caseIndex, harnessRunNumber)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -731,6 +749,10 @@ async function fillDecision(
     typeof primary.harness_trial === "number" && primary.harness_trial > 0
       ? primary.harness_trial
       : MERIDIAN_IC_VOICE_CASES.findIndex((c) => c.id === caseDef.id) + 1;
+  const harnessRunNumber =
+    typeof primary.harness_run_number === "number" && primary.harness_run_number > 0
+      ? primary.harness_run_number
+      : await nextHarnessRunNumber(userId ?? primary.user_id);
 
   const present = new Set(
     existing.map((r) => r.llm_provider).filter((p): p is LLMProviderName => Boolean(p))
@@ -740,6 +762,7 @@ async function fillDecision(
     case_id: caseDef.id,
     case_label: caseDef.label,
     case_index: caseIndex,
+    harness_run_number: harnessRunNumber,
     decision_id,
     run_ids: Object.fromEntries(
       existing
@@ -776,7 +799,7 @@ async function fillDecision(
   };
 
   const { runs, failed_providers } = await runForProviders(missing, (p) =>
-    buildIntakeRun(intake, p, userId ?? primary.user_id, caseDef, caseIndex)
+    buildIntakeRun(intake, p, userId ?? primary.user_id, caseDef, caseIndex, harnessRunNumber)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -1015,10 +1038,18 @@ async function main() {
   log(`  case concurrency: ${caseConcurrency}`);
   log(`  parallelism: cases + providers + variants/research`);
 
+  const parsedRunNumber = Number(args.runNumberRaw);
+  const harnessRunNumber =
+    Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
+      ? Math.floor(parsedRunNumber)
+      : await nextHarnessRunNumber(userId);
+  log(`  harness run number: ${harnessRunNumber}`);
+
   const reports = await mapPool(cases, caseConcurrency, async (c, i) => {
-    const caseIndex = i + 1;
+    const caseIndex =
+      MERIDIAN_IC_VOICE_CASES.findIndex((x) => x.id === c.id) + 1 || i + 1;
     try {
-      return await runCase(c, caseIndex, providers, userId);
+      return await runCase(c, caseIndex, providers, userId, harnessRunNumber);
     } catch (err) {
       const message = errMessage(err);
       log(`Case ${caseIndex} ${c.id} crashed`, message);
@@ -1026,6 +1057,7 @@ async function main() {
         case_id: c.id,
         case_label: c.label,
         case_index: caseIndex,
+        harness_run_number: harnessRunNumber,
         decision_id: "(crashed)",
         run_ids: {},
         failed_intake: [],
@@ -1050,6 +1082,7 @@ async function main() {
     JSON.stringify(
       {
         generated_at: new Date().toISOString(),
+        harness_run_number: harnessRunNumber,
         providers,
         cases: cases.map((c) => c.id),
         expected_runs: cases.length * providers.length,
@@ -1062,6 +1095,7 @@ async function main() {
   );
 
   console.log("\n======== Summary ========");
+  console.log(`Harness run #${harnessRunNumber}`);
   let runCount = 0;
   for (const r of reports) {
     const n = Object.keys(r.run_ids).length;

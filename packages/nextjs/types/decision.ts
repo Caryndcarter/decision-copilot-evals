@@ -478,7 +478,13 @@ export interface DecisionRunResult {
    * (`npm run harness:civitas`). My Decisions shows these under a separate tab.
    */
   harness_run?: boolean;
-  /** 1-based trial index within a harness batch (when `harness_run` is set). */
+  /**
+   * Monotonic id for one harness script invocation (batch). Shared by all cases/trials
+   * created in that run so My Decisions can group “Harness · Run 3 · Trial 2” stably
+   * even when newer batches interleave by `updatedAt`.
+   */
+  harness_run_number?: number;
+  /** 1-based trial/case index within a harness batch (when `harness_run` is set). */
   harness_trial?: number;
   /** Completed research-starter chats (persisted with the run) */
   research_completions?: ResearchCompletion[];

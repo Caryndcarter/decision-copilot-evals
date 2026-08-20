@@ -194,6 +194,10 @@ async function runWithWebSearch(
     temperature: options.temperature ?? 0.7,
   };
   if (instructions) requestBody.instructions = instructions;
+  // grok-4.5 defaults to high; pass through so harness/eval callers can set high explicitly.
+  if (options.effort) {
+    requestBody.reasoning = { effort: options.effort };
+  }
 
   const response = await fetch(XAI_RESPONSES_URL, {
     method: "POST",
@@ -271,6 +275,9 @@ export async function run(
     max_tokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
     temperature: options.temperature ?? 0.7,
   };
+  if (options.effort) {
+    requestBody.reasoning_effort = options.effort;
+  }
 
   if (options.schema) {
     requestBody.response_format = {

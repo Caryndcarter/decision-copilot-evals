@@ -33,7 +33,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { insertRun, getRun, getRunsByDecisionId, replaceRun } from "../lib/db/runs";
+import { insertRun, getRun, getRunsByDecisionId, replaceRun, nextHarnessRunNumber } from "../lib/db/runs";
 import { findUserByEmail } from "../lib/db/users";
 import { runForProviders } from "../lib/run-for-providers";
 import { ALL_LLM_PROVIDERS } from "../lib/intake-llm-selection";
@@ -177,6 +177,7 @@ function parseArgs(argv: string[]) {
     trialConcurrency: Number(
       get("trial-concurrency") ?? process.env.HARNESS_TRIAL_CONCURRENCY ?? 0
     ),
+    runNumberRaw: (get("run-number") ?? process.env.HARNESS_RUN_NUMBER ?? "").trim(),
   };
 }
 
@@ -234,7 +235,8 @@ async function buildIntakeRun(
   intake: DecisionIntake,
   provider: LLMProviderName,
   userId: string | undefined,
-  trial: number
+  trial: number,
+  harnessRunNumber: number
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
   trialLog(trial, `intake lenses → ${provider}`);
@@ -266,6 +268,7 @@ async function buildIntakeRun(
     llm_provider: provider,
     demo_scenario_id: DEMO_SCENARIO_ID,
     harness_run: true,
+    harness_run_number: harnessRunNumber,
     harness_trial: trial,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -661,7 +664,8 @@ async function runTrial(
   trial: number,
   providers: LLMProviderName[],
   synthesizers: UnifiedBriefSynthesizer[],
-  userId: string | undefined
+  userId: string | undefined,
+  harnessRunNumber: number
 ): Promise<TrialReport> {
   const decision_id = randomUUID();
   const report: TrialReport = {
@@ -678,7 +682,7 @@ async function runTrial(
   };
   const writeQueue = createWriteQueue();
 
-  trialLog(trial, `======== START · decision ${decision_id} ========`);
+  trialLog(trial, `======== START · harness run ${harnessRunNumber} · decision ${decision_id} ========`);
 
   const intake: DecisionIntake = {
     decision_id,
@@ -692,7 +696,7 @@ async function runTrial(
 
   // 1) Intake (providers already parallel via runForProviders)
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, trial)
+    buildIntakeRun(intake, p, userId, trial, harnessRunNumber)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -910,9 +914,16 @@ async function main() {
   log(`  variant: Risk vs savings matrix (fixed)`);
   log(`  research: WARN & multi-entity layoffs (fixed)`);
 
+  const parsedRunNumber = Number(args.runNumberRaw);
+  const harnessRunNumber =
+    Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
+      ? Math.floor(parsedRunNumber)
+      : await nextHarnessRunNumber(userId);
+  log(`  harness run number: ${harnessRunNumber}`);
+
   const reports = await mapPool(trialNumbers, trialConcurrency, async (t) => {
     try {
-      return await runTrial(t, providers, synthesizers, userId);
+      return await runTrial(t, providers, synthesizers, userId, harnessRunNumber);
     } catch (err) {
       const message = errMessage(err);
       log(`Trial ${t} crashed`, message);

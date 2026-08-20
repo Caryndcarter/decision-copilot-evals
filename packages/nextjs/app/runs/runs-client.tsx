@@ -138,6 +138,8 @@ export interface DecisionGroup {
   /** Stress-harness decisions (Civitas demo batch) — shown on the Harness tab. */
   isHarness?: boolean;
   harnessTrial?: number;
+  /** Batch id for one harness script invocation (groups Trials 1–N). */
+  harnessRunNumber?: number;
 }
 
 type RunsTab = "decisions" | "harness";
@@ -349,9 +351,14 @@ export function RunsClient({
                     )}
                     {group.isHarness && (
                       <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-white shrink-0">
-                        {typeof group.harnessTrial === "number"
-                          ? `Harness · Trial ${group.harnessTrial}`
-                          : "Harness"}
+                        {typeof group.harnessRunNumber === "number" &&
+                        typeof group.harnessTrial === "number"
+                          ? `Harness · Run ${group.harnessRunNumber} · Trial ${group.harnessTrial}`
+                          : typeof group.harnessRunNumber === "number"
+                            ? `Harness · Run ${group.harnessRunNumber}`
+                            : typeof group.harnessTrial === "number"
+                              ? `Harness · Trial ${group.harnessTrial}`
+                              : "Harness"}
                       </span>
                     )}
                     <p className="text-sm font-semibold text-zinc-900 leading-snug">
