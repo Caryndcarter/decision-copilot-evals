@@ -13,7 +13,7 @@ import type { LensQuestion } from "@/types/decision";
 
 /** Model for semantic clarification dedupe (override via env). */
 export const GEMINI_CLARIFICATION_DEDUP_MODEL =
-  process.env.GEMINI_CLARIFICATION_DEDUP_MODEL?.trim() || "gemini-3.5-flash";
+  process.env.GEMINI_CLARIFICATION_DEDUP_MODEL?.trim() || "gemini-3.6-flash";
 
 const LENS_ORDER = (l: string) => LENS_THEME_ORDER[l] ?? 9;
 

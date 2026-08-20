@@ -237,6 +237,7 @@ export async function runRiskLens(
   provider: LLMProvider = "openai"
 ): Promise<RiskLensOutput> {
   const messages = buildRiskPrompt(intake, clarifications);
+  // OpenAI GPT-5 reasoning + xAI need headroom; 2048/4k often yields empty/truncated JSON.
   const requestOpts = {
     schema: RISK_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,

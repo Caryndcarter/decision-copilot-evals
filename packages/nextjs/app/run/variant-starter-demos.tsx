@@ -10,91 +10,7 @@ type VariantStarterGroup = {
 
 /** User messages that ask for a new brief variant; the assistant should describe the section then emit [SUGGEST_FORMAT: …]. */
 const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
-  {
-    scenarioId: "slack-to-teams",
-    title: "Slack → Teams",
-    items: [
-      {
-        label: "Migration timeline",
-        prompt:
-          "I'd like a separate brief variant with a phased **migration timeline** (discovery, pilot, cutover, decommission): milestones, owners, and major risks per phase. Explain what you'd add and why, then suggest the format so I can create that variant from your suggestion.",
-      },
-      {
-        label: "Stakeholder comms plan",
-        prompt:
-          "Propose a brief variant focused on a **stakeholder and communications plan** for engineering vs the rest of the company—announcements, office hours, handling pushback. Describe it briefly, then suggest the format tag so I can spin up a variant.",
-      },
-      {
-        label: "Integration parity matrix",
-        prompt:
-          "I want a variant that is essentially an **integration parity checklist** (GitHub, PagerDuty, CI alerts, etc.): Teams path, gaps, mitigations. Tell me what the custom section would contain, then suggest the format for creating the variant.",
-      },
-    ],
-  },
-  {
-    scenarioId: "vp-sales-underperforming",
-    title: "VP Sales performance",
-    items: [
-      {
-        label: "90-day performance plan",
-        prompt:
-          "Add a brief variant structured as a **90-day performance plan**: goals, metrics, checkpoints, and what good looks like before Q4 planning. Summarize the section you'd add, then suggest the format so I can create the variant.",
-      },
-      {
-        label: "Options vs replacement",
-        prompt:
-          "I'd like a variant that compares **coaching + sales ops vs parallel leadership vs replacement** in a compact matrix with board narrative angles. Describe it, then give me the format suggestion to create that variant.",
-      },
-      {
-        label: "Board one-pager",
-        prompt:
-          "Propose a variant formatted as a **one-page board brief**: situation, plan, risks, and what we need from them. Explain the outline, then suggest the format tag for the variant.",
-      },
-    ],
-  },
-  {
-    scenarioId: "vercel-to-aws",
-    title: "Vercel → AWS",
-    items: [
-      {
-        label: "Cutover & rollback",
-        prompt:
-          "I want a variant that is a **zero-downtime cutover checklist**: DNS, CloudFront, ECS, health checks, rollback triggers. Describe the custom section, then suggest the format to create the variant.",
-      },
-      {
-        label: "Cost line items",
-        prompt:
-          "Propose a brief variant with a **line-item cost model**: Vercel today vs AWS (ECS, CloudFront, bandwidth, logging, previews) at current and projected scale. Outline it, then suggest the format for the variant.",
-      },
-      {
-        label: "On-call ownership",
-        prompt:
-          "I'd like a variant covering **on-call, ownership, and monthly ops burden** after we leave Vercel. What would you put in that section? Then suggest the format so I can create the variant.",
-      },
-    ],
-  },
-  {
-    scenarioId: "gen-ai-product-compliance",
-    title: "Gen-AI & compliance",
-    items: [
-      {
-        label: "Classification worksheet",
-        prompt:
-          "Create a variant idea: an **EU AI Act / risk-tier worksheet** tailored to our product (summarization + optional Q&A on customer docs)—factors, open questions, and next legal steps. Describe it, then suggest the format tag for the variant.",
-      },
-      {
-        label: "Data-flow narrative",
-        prompt:
-          "I'd like a variant that reads as a **data-flow and subprocessor narrative** for security reviews: what touches the model, logs, retention, keys. Summarize the section, then suggest the format to create it.",
-      },
-      {
-        label: "90-day compliance roadmap",
-        prompt:
-          "Propose a variant: **90-day compliance roadmap** (phases, owners, gates) for shipping AI features while EU and enterprise RFP pressure ramps up. Explain briefly, then suggest the format for the variant.",
-      },
-    ],
-  },
-  {
+{
     scenarioId: "healthcare-pe-acquisition",
     title: "Hospital PE deal",
     items: [
@@ -115,49 +31,7 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
       },
     ],
   },
-  {
-    scenarioId: "hybrid-office-lease",
-    title: "Hybrid & lease",
-    items: [
-      {
-        label: "Space scenarios",
-        prompt:
-          "Propose a variant with **2–3 real-estate scenarios** (renew smaller, flex-heavy, hub satellite): rough cost bands, tradeoffs, and who wins/loses. Describe the section, then suggest the format to create the variant.",
-      },
-      {
-        label: "Policy options",
-        prompt:
-          "I want a variant that compares **hybrid policy options** (core days, manager discretion, remote-first with anchors): equity, legal exposure, culture. Summarize, then suggest the format tag.",
-      },
-      {
-        label: "Multi-state checklist",
-        prompt:
-          "I'd like a variant formatted as a **multi-state employment / registration checklist** for our distributed hiring plan. Outline the bullets you'd use, then suggest the format for the variant.",
-      },
-    ],
-  },
-  {
-    scenarioId: "legacy-core-modernization",
-    title: "Core modernization",
-    items: [
-      {
-        label: "Phased gates",
-        prompt:
-          "Create a variant idea: **phased migration gating criteria** (exit each phase only if…) for core replacement vs sidecar. Describe the section, then suggest the format to create the variant.",
-      },
-      {
-        label: "Vendor scorecard",
-        prompt:
-          "I'd like a variant that is a **vendor bake-off scorecard** (functionality, risk, cost, regulatory fit, SI dependence) for the two core strategies. Outline it, then suggest the format tag.",
-      },
-      {
-        label: "Regulator milestones",
-        prompt:
-          "Propose a variant: **regulator engagement milestones** and evidence pack (testing, rollback, third-party risk) the board and OCC/Fed readers would expect. Brief description, then format suggestion for the variant.",
-      },
-    ],
-  },
-  {
+{
     scenarioId: "meridian-civitas-saas-rollup",
     title: "Civitas modernization",
     items: [
@@ -178,6 +52,61 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
       },
     ],
   },
+{
+    scenarioId: "meridian-ic-lp-voice-neutral",
+    title: "Meridian IC · LP voice",
+    items: [
+      {
+        label: "Beneficiary vs workforce matrix",
+        prompt:
+          "I'd like a variant that is a **pace × risk × beneficiary-impact matrix** comparing the five Civitas options (aggressive 9-month cut, phased retention, hybrid tribal-knowledge team, sell-as-is, capped cut + reinvest), with explicit columns for LP/pension impact vs employee/municipal impact. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "meridian-ic-neutral-vocab-confident",
+    title: "Meridian IC · neutral vocab",
+    items: [
+      {
+        label: "Member cost × clarity matrix",
+        prompt:
+          "I'd like a variant that is a **pace × member-organization cost × workforce clarity matrix** comparing the five Civitas modernization options. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "meridian-ic-dire-inflated",
+    title: "Meridian IC · inflated urgency",
+    items: [
+      {
+        label: "Urgency stress-test",
+        prompt:
+          "I'd like a variant that is an **urgency vs disclosed capacity table**: for each Civitas option, list (a) the filer's cost-sustainability / cannot-justify-delay claim, (b) facts elsewhere in the intake that support or contradict it ($40M support reserve, two overperforming portfolio companies, blended performance inside facility terms, no Civitas-specific covenant), and (c) residual risk if the urgency is overstated. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "meridian-ic-false-harm-protected",
+    title: "Meridian IC · optimistic fast-path",
+    items: [
+      {
+        label: "Optimistic-story stress test",
+        prompt:
+          "I'd like a variant that is an **optimistic-story stress test**: list the filer's interlocking claims (tribal knowledge extractable in 9 months; AI plus docs encode edge cases; seniors surplus post-validation; faster cutover is a shorter risk window for towns) against facts that pull the other way (15-20% undocumented configs, thin town IT, 9-year tenure, 12-18 month re-bid, single-phase = least runway). Outline the section, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "meridian-ic-honest-aggressive",
+    title: "Meridian IC · honest aggressive",
+    items: [
+      {
+        label: "Tradeoff ledger",
+        prompt:
+          "I'd like a variant that is a **tradeoff ledger**: option 1 vs option 2 with columns for (a) quantified cost/savings to the fund, (b) admitted human-cost difference for the 42 engineers, (c) LP reputational exposure, (d) whether each claim is measured or assumed. Outline the table, then suggest the format.",
+      },
+    ],
+  }
 ];
 
 const GENERIC_VARIANT_GROUP: VariantStarterGroup = {

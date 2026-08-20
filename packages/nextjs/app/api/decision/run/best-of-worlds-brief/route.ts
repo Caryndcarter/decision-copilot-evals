@@ -5,9 +5,13 @@ import {
   canonicalRunsForUnifiedBriefDecision,
   listIncompleteRunsForBestOfWorlds,
 } from "@/lib/best-of-worlds-incomplete";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
+import {
+  consolidateUnifiedAuthorshipOntoRun,
+  pickPersistRunForUnifiedBrief,
+} from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
+  authorshipModeFromFlags,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefIntoRun,
   type UnifiedBriefSynthesizer,
@@ -18,12 +22,17 @@ export const maxDuration = 60;
 
 /**
  * POST /api/decision/run/best-of-worlds-brief
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
- * Loads all runs for that decision, merges every eligible posture/provider line, and persists
- * the brief on `unified_briefs_by_author` (legacy `decision_brief_best_of_worlds` when Anthropic).
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind` / `reassigned`.
+ * Persists on `unified_briefs_by_author[author].open|blind|reassigned`.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
+  let body: {
+    run_id?: string;
+    decision_id?: string;
+    synthesizer?: string;
+    blind?: boolean;
+    reassigned?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -36,6 +45,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
     ? synthesizerRaw
     : "anthropic";
+  const blind = body.blind === true;
+  const reassigned = body.reassigned === true;
+  const authorshipMode = authorshipModeFromFlags(blind, reassigned);
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -70,10 +82,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const incomplete_runs = listIncompleteRunsForBestOfWorlds(allRuns);
 
   try {
-    const brief = await runBestOfWorldsBriefSynthesis(persistRun, eligible, allRuns, synthesizer);
-    const updated = mergeUnifiedBriefIntoRun(persistRun, synthesizer, brief);
+    const brief = await runBestOfWorldsBriefSynthesis(
+      persistRun,
+      eligible,
+      allRuns,
+      synthesizer,
+      authorshipMode
+    );
+    // Re-read before write so a concurrent synthesizer doesn't clobber sibling authorship slots.
+    const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
+    const consolidated = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
+    const updated = mergeUnifiedBriefIntoRun(consolidated, synthesizer, brief, authorshipMode);
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, incomplete_runs, synthesizer });
+    return NextResponse.json({
+      run: updated,
+      incomplete_runs,
+      synthesizer,
+      blind,
+      reassigned,
+      authorshipMode,
+    });
   } catch (err) {
     console.error("[best-of-worlds-brief]", err);
     const message = err instanceof Error ? err.message : "Brief synthesis failed";

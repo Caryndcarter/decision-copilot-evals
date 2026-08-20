@@ -25,6 +25,13 @@ export interface LLMRequestOptions {
   maxTokens?: number;
   /** Temperature for response randomness (0-1) */
   temperature?: number;
+  /**
+   * Soft reasoning depth for providers that support it (Anthropic Fable/Mythos
+   * `output_config.effort`, OpenAI `reasoning_effort`, Gemini `thinkingConfig.thinkingBudget`).
+   * Structured paths usually want `"low"` so thinking does not consume the entire
+   * `maxTokens` / `maxOutputTokens` budget.
+   */
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
   /** Optional JSON schema for structured output */
   schema?: Record<string, unknown>;
   /**

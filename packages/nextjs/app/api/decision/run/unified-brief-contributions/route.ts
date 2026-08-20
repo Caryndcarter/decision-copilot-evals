@@ -2,26 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRun, getRunsByDecisionId, replaceRun } from "@/lib/db/runs";
 import { runUnifiedBriefContributionsAnalysis } from "@/lenses/unified-brief-contributions";
 import { canonicalRunsForUnifiedBriefDecision } from "@/lib/best-of-worlds-incomplete";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
+import {
+  consolidateUnifiedAuthorshipOntoRun,
+  findUnifiedBriefAcrossRuns,
+  pickPersistRunForUnifiedBrief,
+} from "@/lib/unified-brief-persist-run";
 import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
-  getUnifiedBriefForAuthor,
+  authorshipModeFromFlags,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefContributionsIntoRun,
+  mergeUnifiedBriefIntoRun,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type { DecisionRunResult } from "@/types/decision";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 /**
  * POST /api/decision/run/unified-brief-contributions
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`: `"anthropic"` | `"openai"` | `"gemini"` | `"xai"`.
- * Requires the matching Unified Brief. Persists on `unified_brief_contributions_by_author`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind` / `reassigned`.
+ * Requires the matching Unified Brief for that authorship mode. Persists under the same mode slot.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
+  let body: {
+    run_id?: string;
+    decision_id?: string;
+    synthesizer?: string;
+    blind?: boolean;
+    reassigned?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -34,6 +45,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
     ? synthesizerRaw
     : "anthropic";
+  const blind = body.blind === true;
+  const reassigned = body.reassigned === true;
+  const authorshipMode = authorshipModeFromFlags(blind, reassigned);
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -56,11 +70,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
   }
 
-  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer);
-  if (!brief) {
+  const found = findUnifiedBriefAcrossRuns(allRuns, synthesizer, authorshipMode);
+  if (!found) {
+    const modeHint =
+      authorshipMode === "blind"
+        ? " with Blind authorship on"
+        : authorshipMode === "reassigned"
+          ? " with Reassigned authorship on"
+          : "";
     return NextResponse.json(
       {
-        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)} first, then analyze contributions.`,
+        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)}${modeHint} first, then analyze contributions.`,
       },
       { status: 400 }
     );
@@ -79,13 +99,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const contributions = await runUnifiedBriefContributionsAnalysis(
       persistRun,
       eligible,
-      brief,
+      found.brief,
       allRuns,
-      synthesizer
+      synthesizer,
+      authorshipMode
     );
-    const updated = mergeUnifiedBriefContributionsIntoRun(persistRun, synthesizer, contributions);
+    // Re-read + consolidate before write so concurrent brief generations aren't clobbered.
+    const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
+    let base = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
+    // Keep the analyzed brief on the persist document (heals sibling-run / race drift).
+    base = mergeUnifiedBriefIntoRun(base, synthesizer, found.brief, authorshipMode);
+    const updated = mergeUnifiedBriefContributionsIntoRun(
+      base,
+      synthesizer,
+      contributions,
+      authorshipMode
+    );
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, synthesizer });
+    return NextResponse.json({
+      run: updated,
+      synthesizer,
+      blind,
+      reassigned,
+      authorshipMode,
+    });
   } catch (err) {
     console.error("[unified-brief-contributions]", err);
     const message = err instanceof Error ? err.message : "Contributions analysis failed";

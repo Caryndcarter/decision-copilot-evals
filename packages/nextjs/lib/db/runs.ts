@@ -97,24 +97,46 @@ export async function getRun(run_id: string): Promise<DecisionRunResult | null> 
   return stripRunDdbKeys(res.Item as Record<string, unknown> | undefined) as DecisionRunResult | null;
 }
 
+/**
+ * DynamoDB Query responses are capped at ~1MB. Large Unified Brief / contributions
+ * payloads often fill that with far fewer than `Limit` items, so callers must page
+ * with ExclusiveStartKey or the dashboard silently drops older decisions.
+ */
+async function queryAllPages(
+  input: ConstructorParameters<typeof QueryCommand>[0]
+): Promise<Record<string, unknown>[]> {
+  const items: Record<string, unknown>[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+  do {
+    const res = await dynamo.send(
+      new QueryCommand({
+        ...input,
+        ...(exclusiveStartKey ? { ExclusiveStartKey: exclusiveStartKey } : {}),
+      })
+    );
+    const page = (res.Items as Record<string, unknown>[] | undefined) ?? [];
+    items.push(...page);
+    exclusiveStartKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (exclusiveStartKey);
+  return items;
+}
+
 /** List all runs for a decision (multiple postures). Order: most recently updated first. */
 export async function getRunsByDecisionId(decision_id: string): Promise<DecisionRunResult[]> {
-  const res = await dynamo.send(
-    new QueryCommand({
-      TableName: RUNS_TABLE,
-      IndexName: RUNS_GSI_BY_DECISION,
-      KeyConditionExpression: "#did = :did",
-      ExpressionAttributeNames: { "#did": "decision_id" },
-      ExpressionAttributeValues: { ":did": decision_id },
-      ScanIndexForward: false,
-    })
-  );
-  const items = (res.Items as Record<string, unknown>[] | undefined) ?? [];
+  const items = await queryAllPages({
+    TableName: RUNS_TABLE,
+    IndexName: RUNS_GSI_BY_DECISION,
+    KeyConditionExpression: "#did = :did",
+    ExpressionAttributeNames: { "#did": "decision_id" },
+    ExpressionAttributeValues: { ":did": decision_id },
+    ScanIndexForward: false,
+  });
   return items.map((it) => stripRunDdbKeys(it)!).filter(Boolean) as DecisionRunResult[];
 }
 
 /**
  * List runs for the dashboard. Most recently updated first, capped at `limit`.
+ * Pages past DynamoDB's 1MB response size so dense Unified Brief runs still surface.
  * The `asAdmin` flag is reserved for a future admin-wide view; per the
  * migration plan it currently behaves identically to a normal user query.
  */
@@ -123,19 +145,30 @@ export async function listRunsForUser(
   options: { limit?: number; asAdmin?: boolean } = {}
 ): Promise<DecisionRunResult[]> {
   const limit = options.limit ?? 200;
-  const res = await dynamo.send(
-    new QueryCommand({
-      TableName: RUNS_TABLE,
-      IndexName: RUNS_GSI_BY_USER,
-      KeyConditionExpression: "#uid = :uid",
-      ExpressionAttributeNames: { "#uid": "user_id" },
-      ExpressionAttributeValues: { ":uid": userId },
-      ScanIndexForward: false,
-      Limit: limit,
-    })
-  );
-  const items = (res.Items as Record<string, unknown>[] | undefined) ?? [];
-  return items.map((it) => stripRunDdbKeys(it)!).filter(Boolean) as DecisionRunResult[];
+  const collected: Record<string, unknown>[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+
+  do {
+    const remaining = limit - collected.length;
+    if (remaining <= 0) break;
+    const res = await dynamo.send(
+      new QueryCommand({
+        TableName: RUNS_TABLE,
+        IndexName: RUNS_GSI_BY_USER,
+        KeyConditionExpression: "#uid = :uid",
+        ExpressionAttributeNames: { "#uid": "user_id" },
+        ExpressionAttributeValues: { ":uid": userId },
+        ScanIndexForward: false,
+        Limit: remaining,
+        ...(exclusiveStartKey ? { ExclusiveStartKey: exclusiveStartKey } : {}),
+      })
+    );
+    const page = (res.Items as Record<string, unknown>[] | undefined) ?? [];
+    collected.push(...page);
+    exclusiveStartKey = res.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (exclusiveStartKey && collected.length < limit);
+
+  return collected.map((it) => stripRunDdbKeys(it)!).filter(Boolean) as DecisionRunResult[];
 }
 
 export async function insertRun(result: DecisionRunResult): Promise<void> {

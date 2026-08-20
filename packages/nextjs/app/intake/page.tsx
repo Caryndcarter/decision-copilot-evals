@@ -13,6 +13,7 @@ import {
   isParallelIntakeRun,
   isLLMProviderName,
 } from "@/lib/intake-llm-selection";
+import { MERIDIAN_IC_VOICE_CASES } from "@/lib/meridian-ic-voice-cases";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
@@ -87,64 +88,7 @@ const LLM_PROVIDER_OPTIONS: { value: LLMProviderName; label: string }[] = [
 ];
 
 const DEMO_SCENARIOS = [
-  {
-    id: "slack-to-teams",
-    label: "Slack → Teams migration",
-    situation:
-      "We're considering replacing Slack with Microsoft Teams to consolidate our tooling. We already pay for Microsoft 365 and Teams is included. Slack costs us $15k/year. The engineering team strongly prefers Slack; everyone else is indifferent.",
-    constraints:
-      "IT wants to decide by end of quarter. 85 employees. No budget for running both tools long-term.",
-    posture: "explore" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "Teams has feature parity for most use cases. Engineers use Slack integrations heavily (GitHub, PagerDuty, CI alerts). Migration would take 2-3 weeks. I assume people will adapt after initial grumbling.",
-    unknowns:
-      "How much productivity we'd lose during transition. Whether the Slack integrations have Teams equivalents. If engineers would see this as a signal that leadership doesn't value their preferences.",
-  },
-  {
-    id: "vp-sales-underperforming",
-    label: "Underperforming VP Sales",
-    situation:
-      "Our VP of Sales of 2 years is underperforming. Pipeline is down 30% year-over-year despite adding two reps. She's well-liked, has deep customer relationships, and was critical to landing our three largest accounts. The board is asking why we're missing targets.",
-    constraints:
-      "Q4 planning starts in 6 weeks. Sales team is already anxious about potential changes. We can't afford a long leadership gap.",
-    posture: "pressure_test" as const,
-    leaning_direction:
-      "Keeping her but adding a sales ops lead to handle process and accountability, letting her focus on strategic deals",
-    knowns_assumptions:
-      "She's great at relationships but weak on process and pipeline management. The two new reps aren't ramping well due to lack of structure. I assume adding ops support will fix the gap without losing her customer relationships.",
-    unknowns:
-      "Whether she'll accept an ops hire as support vs. see it as undermining her. If the real problem is her or the reps she hired. How the board will react to anything short of replacement.",
-  },
-  {
-    id: "vercel-to-aws",
-    label: "Vercel → AWS migration",
-    situation:
-      "We're evaluating whether to migrate our Next.js app from Vercel to self-hosted on AWS (ECS + CloudFront). Vercel costs are growing fast — we're at $1,800/month and projected to hit $5k/month in 6 months as traffic scales. Self-hosted would cost roughly $600/month at current traffic but requires setup and maintenance.",
-    constraints:
-      "Two engineers can dedicate 2 weeks to migration. Need zero-downtime cutover. Currently using Vercel's edge functions, image optimization, and analytics. Page load times must stay under 200ms.",
-    posture: "surface_risks" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "Our app doesn't use Vercel-specific features that can't be replicated (ISR works with standard Next.js, edge functions can move to Lambda@Edge). We have AWS experience from other projects. I assume CloudFront + ECS can match Vercel's performance. Our CI/CD is already GitHub Actions so deployment changes are manageable.",
-    unknowns:
-      "Hidden complexity in replicating Vercel's build pipeline. Whether Lambda@Edge cold starts will hurt performance. True ongoing maintenance burden for ECS (patching, scaling configs, debugging). If the cost projections account for CloudFront bandwidth costs accurately. How we'd handle preview deployments for PRs (Vercel does this automatically). Rollback strategy if a deploy goes bad. Who's on-call when infrastructure breaks at 3am. Whether the $4k/month savings is offset by slower developer velocity.",
-  },
-  {
-    id: "gen-ai-product-compliance",
-    label: "Gen-AI features + compliance",
-    situation:
-      "We're a B2B analytics SaaS (~200 employees, US HQ) shipping assistant-style features: summarization over customer-uploaded reports, suggested chart titles, and optional 'ask your data' Q&A. Sales is hearing that enterprise RFPs now ask about AI governance, training data, and EU compliance. Legal is nervous; security wants everything on our VPC with no third-party inference if possible; product wants to ship in one quarter using a hosted model API to move fast.",
-    constraints:
-      "We sell to US mid-market and a growing EU segment (Germany and France first). Two anchor customers are in regulated industries (healthcare and financial services) but we are not their processor for clinical or core banking data—still, their security reviews are brutal. No dedicated AI governance hire yet. Engineering capacity is one senior ML engineer and two backend engineers part-time.",
-    posture: "surface_risks" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "Current product is SOC 2 Type II. We assume most EU customers can accept standard DPA + SCCs. We believe we can add opt-out of model improvement/training in vendor contracts. I assume 'EU AI Act' obligations depend heavily on how we classify the system (high-risk or not) and I'm not sure we've done that analysis rigorously.",
-    unknowns:
-      "Whether our use cases count as high-risk under the EU AI Act or UK/EU national implementations. What large-enterprise RFPs actually require vs what is negotiable. If on-prem or VPC-only inference is feasible on our timeline and budget. How much we must disclose about prompts, logging, and retention. Whether we need human-in-the-loop for certain workflows. Cross-border transfer implications if we use US-hosted APIs. What breaks if a customer demands zero subprocessors for AI.",
-  },
-  {
+{
     id: "healthcare-pe-acquisition",
     label: "Hospital PE / second-site deal",
     situation:
@@ -159,49 +103,7 @@ const DEMO_SCENARIOS = [
     unknowns:
       "True post-close capital needs and hidden liabilities (pensions, malpractice tail, IT debt). Whether regulators will require divestitures or behavioral remedies. How hard unions will fight and what precedents say about timing. If the community campaign could block certificate-of-need or other approvals. Whether our clinical leadership will support the deal publicly. If 'partnership instead of purchase' is realistic with the seller and creditors.",
   },
-  {
-    id: "hybrid-office-lease",
-    label: "Hybrid policy + lease crunch",
-    situation:
-      "We're ~140 people across product, engineering, GTM, and corporate. Our downtown lease ends in 7 months; current space fits ~90 desks and we use hoteling, but attendance is all over the place—sales and CS want more in-person for customers, engineers are vocal about remote-first, and new hires are in four states we didn't have before COVID. Leadership keeps saying 'hybrid' without a consistent definition. Finance is pushing to cut square footage to save ~$400k/year.",
-    constraints:
-      "Must decide on renewal vs sublease vs smaller office vs flex space in the next 90 days to avoid holdover penalties. Hiring plan adds ~25 heads next year, mostly eng and design, distributed. We have no formal relocation policy; some managers are enforcing 'three days in office' informally, others aren't. IT says security for fully remote is fine; HR worries about equity and promotion visibility.",
-    posture: "generate_alternatives" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "Engagement survey shows satisfaction is mixed—remote folks love flexibility, junior staff feel disconnected. I assume we won't mandate five days in office without losing senior engineers. We think the landlord will negotiate if we commit early.",
-    unknowns:
-      "Actual utilization of space by team and by week—we have badge data but it's noisy. Whether 'core collaboration days' would help or backfire. Legal exposure if policies differ by manager. Cost of flex providers vs traditional lease in our market. How relocation stipends would affect budget. What competitors we lose candidates to and why. Whether we need registered business addresses in each state for compliance.",
-  },
-  {
-    id: "legacy-core-modernization",
-    label: "Core banking modernization",
-    situation:
-      "We're a regional bank (~$18B assets) on a 20-year-old core with heavy customization. Mobile and digital teams want real-time balances, better product bundling, and faster feature shipping; core batch windows and rigid APIs are the bottleneck. The board approved a 'strategic modernization' budget but not a specific vendor or greenfield vs incremental approach. Two large vendors are courting us with different models: rip-and-replace over 3+ years vs incremental 'sidecar' services with phased migration.",
-    constraints:
-      "Regulators expect a credible program plan, testing evidence, and rollback—we've been told informally that a big-bang weekend cutover would face scrutiny. Internal IT is stretched; we'd need SI partners. Cyber and fraud teams worry about expanded attack surface. CFO wants predictable opex and clear break-even vs status quo within five years.",
-    posture: "surface_risks" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "We assume some degree of vendor lock-in is inevitable. We believe our risk and audit teams can absorb additional control work if the roadmap is phased. I assume cloud for non-core workloads is acceptable to regulators if we document resilience—I'm less sure about core ledger in cloud within three years.",
-    unknowns:
-      "Which vendor references are comparable to our size and charter complexity. Hidden integration cost with mortgage, treasury, and card systems. True regulatory posture on cloud core vs on-prem in our district. Whether incremental approaches actually reduce risk or just spread it over longer timelines. Talent market for mainframe and core skills during transition. What we'd do if a phase fails mid-program—contractual exits, data repatriation, customer communication.",
-  },
-  {
-    id: "hubspot-crm-fintech",
-    label: "HubSpot CRM for white-label fintech",
-    situation:
-      "We are a small startup building white-label AI products for the financial industry. Two major customers are live and a third is in the pipeline. We need to start tracking everything in HubSpot immediately — retroactively capturing in-progress deals and building a structure for future ones.\n\nOur deal structures vary significantly across three platforms:\n1. Platform A pays a fixed monthly fee plus a performance-based fee after a revenue hurdle (e.g., 40% of revenue above a 0% floor on the first 10%). They use our product to service thousands of merchants who are unaware of us.\n2. Platform B sells our product into their customer base on a performance/revenue-share basis. They bill end merchants and remit our portion. Merchants are unaware of us.\n3. Platform C supplies ISO partners. We want to enroll those partners in our program. Partners market to their merchants, who contract directly with us. We collect a performance fee (no hurdle), withdraw monthly, then pay Platform C their split; Platform C pays the ISO partner.\n\nSuccess looks like: HubSpot accurately reflects all relationships and deal economics before we onboard a large merchant cohort, with a foundation for eventual revenue forecasting and sales observability.",
-    constraints:
-      "Timeline is immediate — we must be fully operational before a large merchant onboarding wave. We are on HubSpot Starter and willing to upgrade when it becomes limiting. Our HubSpot admin has zero HubSpot experience but has run relational, data-driven ticketing systems (e.g., ZenDesk) and can handle API integrations with custom data sources. The setup must be intuitive for a seasoned HubSpot pro who joins the company later. No plans to track performance fee calculations inside HubSpot — that logic will live in a billing system we plan to build for ACH payouts.",
-    posture: "explore" as const,
-    leaning_direction: "",
-    knowns_assumptions:
-      "HubSpot is appropriate for all customer, contact, and deal data except bank/payment information. A separate billing system will handle ACH and performance fee calculations; source of truth for billing is TBD but will likely integrate into HubSpot via API. Anticipated scale: dozens of ISO partners, hundreds to thousands of merchants. For billing, our customers are Platform A (pays us directly), Platform B (bills merchants themselves and remits our share), and ISO partners' merchants under Platform C (who contract with us directly). Eventual goals beyond initial setup: revenue forecasting, sales observability, and partner payout tracking (nice to have, sourced from billing).",
-    unknowns:
-      "Who should be modeled as Customers vs. Prospects in HubSpot — the platform, the ISO partner, or the end merchant? What is the right pipeline and funnel structure given that acquisition happens at different layers per deal type? How should the mix of fixed fees, revenue shares, and performance-based structures be represented? What belongs in HubSpot vs. the billing system vs. elsewhere as the source of truth? What does upgrading from Starter unlock that is relevant to our use case and when does it make sense? What specific object structures, pipelines, and properties are recommended for our situation? What training or onboarding path would bring a ZenDesk-experienced admin up to speed on HubSpot quickly?",
-  },
-  {
+{
     id: "meridian-civitas-saas-rollup",
     label: "Meridian / Civitas SaaS roll-up",
     situation:
@@ -216,6 +118,16 @@ const DEMO_SCENARIOS = [
     unknowns:
       "What do the 5–6 tribal-knowledge seniors actually say if asked candidly about staying through validation with no guaranteed long-term role? Real local demand for their skill set? Does Civitas+Meridian aggregation trip WARN (60-day notice etc.) forcing a slower path? What is enforceable in key-personnel clauses—can towns demand continuity or exit? Have we modeled the cost of one real failure (e.g. town can’t issue permits for two weeks) vs savings from the faster timeline? Would IC actually reject a lower-margin humane path if shown full downside—or is that resistance assumed? What do a sample of the 340 customers say about phased transition risk vs vendor stability?",
   },
+  ...MERIDIAN_IC_VOICE_CASES.map((c) => ({
+    id: c.id,
+    label: c.label,
+    situation: c.situation,
+    constraints: c.constraints,
+    posture: c.posture,
+    leaning_direction: c.leaning_direction ?? "",
+    knowns_assumptions: c.knowns_assumptions,
+    unknowns: c.unknowns,
+  })),
 ] as const;
 
 function FieldHelp({ children }: { children: React.ReactNode }) {
@@ -587,16 +499,24 @@ export default function IntakePage() {
             <p className="text-sm text-indigo-700 font-medium">Load a sample scenario to try it out</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {DEMO_SCENARIOS.map((demo) => (
-              <button
-                key={demo.id}
-                type="button"
-                onClick={() => loadDemo(demo.id)}
-                className="rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors"
-              >
-                {demo.label}
-              </button>
-            ))}
+            {DEMO_SCENARIOS.map((demo) => {
+              const selected = demoScenarioId === demo.id;
+              return (
+                <button
+                  key={demo.id}
+                  type="button"
+                  onClick={() => loadDemo(demo.id)}
+                  aria-pressed={selected}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selected
+                      ? "border-indigo-500 bg-indigo-100 text-indigo-900 ring-1 ring-indigo-500"
+                      : "border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300"
+                  }`}
+                >
+                  {demo.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 

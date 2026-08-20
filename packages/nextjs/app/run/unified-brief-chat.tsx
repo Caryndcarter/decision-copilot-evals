@@ -47,6 +47,9 @@ export interface UnifiedBriefChatProps {
   unifiedBriefChatMessagesLegacy?: DecisionRunResult["unified_brief_chat_messages"];
   /** Which synthesizer authored the Unified Brief being discussed. */
   briefSynthesizer: UnifiedBriefSynthesizer;
+  /** Load the open vs blind vs reassigned brief variant for chat context. */
+  blindAuthorship?: boolean;
+  reassignedAuthorship?: boolean;
   onMessagesUpdated: (patch: UnifiedBriefChatPersistPatch) => void;
   /** When false, omit the indigo title strip (e.g. parent aside supplies a “Discuss” header). Default true. */
   showChromeHeader?: boolean;
@@ -60,6 +63,8 @@ export function UnifiedBriefChat({
   runId,
   unifiedBrief,
   briefSynthesizer,
+  blindAuthorship = false,
+  reassignedAuthorship = false,
   unifiedBriefChatByProvider,
   unifiedBriefChatMessagesLegacy,
   onMessagesUpdated,
@@ -113,6 +118,8 @@ export function UnifiedBriefChat({
           run_id: runId,
           llm_provider: chatProvider,
           brief_synthesizer: briefSynthesizer,
+          blind: blindAuthorship,
+          reassigned: reassignedAuthorship,
           messages: prior,
           newMessage: text,
         }),
@@ -164,7 +171,18 @@ export function UnifiedBriefChat({
     } finally {
       setLoading(false);
     }
-  }, [briefSynthesizer, chatProvider, input, loading, onMessagesUpdated, runId, unifiedBrief, unifiedBriefChatByProvider]);
+  }, [
+    blindAuthorship,
+    reassignedAuthorship,
+    briefSynthesizer,
+    chatProvider,
+    input,
+    loading,
+    onMessagesUpdated,
+    runId,
+    unifiedBrief,
+    unifiedBriefChatByProvider,
+  ]);
 
   const disabled = !unifiedBrief;
 

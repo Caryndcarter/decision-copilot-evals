@@ -8,15 +8,14 @@ import type { DecisionIntake, DemoScenarioId, LensQuestion } from "@/types/decis
 export const maxDuration = 60;
 
 const DEMO_SCENARIO_LABELS: Partial<Record<DemoScenarioId, string>> = {
-  "slack-to-teams": "Slack → Teams migration (demo)",
-  "vp-sales-underperforming": "Underperforming VP Sales (demo)",
-  "vercel-to-aws": "Vercel to AWS (demo)",
-  "gen-ai-product-compliance": "Gen-AI product compliance (demo)",
   "healthcare-pe-acquisition": "Healthcare PE acquisition (demo)",
-  "hybrid-office-lease": "Hybrid office lease (demo)",
-  "legacy-core-modernization": "Legacy core modernization (demo)",
-  "hubspot-crm-fintech": "HubSpot CRM for white-label fintech (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
+  "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral (demo)",
+  "meridian-ic-neutral-vocab-confident":
+    "Meridian IC · neutral vocab, confident (demo)",
+  "meridian-ic-dire-inflated": "Meridian IC · inflated urgency (demo)",
+  "meridian-ic-false-harm-protected": "Meridian IC · optimistic fast-path (demo)",
+  "meridian-ic-honest-aggressive": "Meridian IC · honest aggressive (demo)",
 };
 
 /**
@@ -33,10 +32,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       lens_questions?: LensQuestion[];
     };
 
-    let intake: Pick<
+    let intake: (Pick<
       DecisionIntake,
       "situation" | "constraints" | "knowns_assumptions" | "unknowns" | "posture"
-    > | null = null;
+    > & { leaning_direction?: string }) | null = null;
     let scenarioHint: string | undefined;
 
     const decision_id = body.decision_id?.trim();
@@ -44,7 +43,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const runs = await getRunsByDecisionId(decision_id);
       const run = runs.find((r) => r.intake?.situation) ?? runs[0];
       if (run?.intake) {
-        intake = run.intake;
+        intake = {
+          situation: run.intake.situation,
+          constraints: run.intake.constraints,
+          knowns_assumptions: run.intake.knowns_assumptions,
+          unknowns: run.intake.unknowns,
+          posture: run.intake.posture,
+          ...("leaning_direction" in run.intake && run.intake.leaning_direction
+            ? { leaning_direction: run.intake.leaning_direction }
+            : {}),
+        };
         if (run.demo_scenario_id) {
           scenarioHint = DEMO_SCENARIO_LABELS[run.demo_scenario_id as DemoScenarioId];
         }
@@ -52,7 +60,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     if (!intake && body.intake?.situation && body.intake?.constraints && body.intake?.posture) {
-      intake = body.intake as DecisionIntake;
+      const bodyIntake = body.intake;
+      intake = {
+        situation: bodyIntake.situation!,
+        constraints: bodyIntake.constraints!,
+        knowns_assumptions: bodyIntake.knowns_assumptions,
+        unknowns: bodyIntake.unknowns,
+        posture: bodyIntake.posture!,
+        ...("leaning_direction" in bodyIntake && typeof bodyIntake.leaning_direction === "string"
+          ? { leaning_direction: bodyIntake.leaning_direction }
+          : {}),
+      };
     }
 
     if (!intake) {

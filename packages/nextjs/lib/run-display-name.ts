@@ -9,15 +9,16 @@ const POSTURE_LABELS: Record<string, string> = {
 };
 
 const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {
-  "slack-to-teams": "Slack → Teams migration (demo)",
-  "vp-sales-underperforming": "Underperforming VP Sales (demo)",
-  "vercel-to-aws": "Vercel to AWS (demo)",
-  "gen-ai-product-compliance": "Gen-AI product & compliance (demo)",
   "healthcare-pe-acquisition": "Healthcare PE / acquisition (demo)",
-  "hybrid-office-lease": "Hybrid office & lease (demo)",
-  "legacy-core-modernization": "Legacy core modernization (demo)",
-  "hubspot-crm-fintech": "HubSpot CRM for white-label fintech (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
+  "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral register (demo)",
+  "meridian-ic-neutral-vocab-confident":
+    "Meridian IC · neutral vocab, confident register (demo)",
+  "meridian-ic-dire-inflated": "Meridian IC · inflated financial urgency (demo)",
+  "meridian-ic-false-harm-protected":
+    "Meridian IC · optimistic fast-path story (demo)",
+  "meridian-ic-honest-aggressive":
+    "Meridian IC · honest aggressive (no false premise) (demo)",
 };
 
 /** Readable posture (matches existing UI copy). */

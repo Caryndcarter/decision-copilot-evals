@@ -21,6 +21,8 @@ interface UnifiedBriefAuditPanelProps {
   className?: string;
   listMaxHeightClassName?: string;
   onUpdated: (run: DecisionRunResult) => void;
+  blindAuthorship?: boolean;
+  reassignedAuthorship?: boolean;
 }
 
 const TONE_CHIP: Record<
@@ -71,6 +73,8 @@ export function UnifiedBriefAuditPanel({
   className = "",
   listMaxHeightClassName = "max-h-[min(560px,calc(100vh-13rem))]",
   onUpdated,
+  blindAuthorship = false,
+  reassignedAuthorship = false,
 }: UnifiedBriefAuditPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +97,8 @@ export function UnifiedBriefAuditPanel({
         body: JSON.stringify({
           ...(decisionId ? { decision_id: decisionId } : { run_id: runId }),
           synthesizer,
+          blind: blindAuthorship,
+          reassigned: reassignedAuthorship,
         }),
       });
       const data = await res.json();
@@ -106,7 +112,7 @@ export function UnifiedBriefAuditPanel({
     } finally {
       setGenerating(false);
     }
-  }, [disabled, generating, runId, decisionId, synthesizer, onUpdated]);
+  }, [disabled, generating, runId, decisionId, synthesizer, blindAuthorship, reassignedAuthorship, onUpdated]);
 
   return (
     <div className={`flex flex-col ${className}`.trim()}>

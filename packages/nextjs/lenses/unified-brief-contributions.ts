@@ -13,7 +13,17 @@ import type { LLMMessage } from "@/llm/types";
 import { buildBestOfWorldsSourceUserContent } from "@/lenses/brief";
 import { runProviderLabel } from "@/lib/run-display-name";
 import {
+  buildProviderAliasMap,
+  buildProviderAliasMapFromRemap,
+  decodeAliasesInText,
+  providerSlugForBlindSchema,
+  resolveBlindProvider,
+  scrambleRemapFromAliasMap,
+  type ProviderAliasMap,
+} from "@/lib/unified-brief-blind";
+import {
   unifiedBriefSynthesizerCoachLabel,
+  type UnifiedBriefAuthorshipMode,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type {
@@ -28,76 +38,78 @@ import type {
 const INFLUENCE_VALUES: ContributionInfluence[] = ["high", "medium", "low", "minimal"];
 const PROVIDER_VALUES: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
 
-const CONTRIBUTIONS_SCHEMA = {
-  type: "object",
-  properties: {
-    overall: {
-      type: "string",
-      description:
-        "2-4 sentence narrative of how the blend came together: which model was most influential overall, where ideas converged, and where one model's distinct angle shaped the final brief.",
-    },
-    contributions: {
-      type: "array",
-      description:
-        "One entry per provider that participated in this decision. Do not invent providers that were not present.",
-      items: {
-        type: "object",
-        properties: {
-          provider: {
-            type: "string",
-            enum: PROVIDER_VALUES,
-            description: "Provider key: openai, anthropic, gemini, or xai.",
+function contributionsSchema(providerEnum: string[], providerDescription: string, labelDescription: string) {
+  return {
+    type: "object",
+    properties: {
+      overall: {
+        type: "string",
+        description:
+          "2-4 sentence narrative of how the blend came together: which model was most influential overall, where ideas converged, and where one model's distinct angle shaped the final brief.",
+      },
+      contributions: {
+        type: "array",
+        description:
+          "One entry per model that participated in this decision. Do not invent models that were not present.",
+        items: {
+          type: "object",
+          properties: {
+            provider: {
+              type: "string",
+              enum: providerEnum,
+              description: providerDescription,
+            },
+            provider_label: {
+              type: "string",
+              description: labelDescription,
+            },
+            influence: {
+              type: "string",
+              enum: INFLUENCE_VALUES,
+              description:
+                "How much of this model's thinking shaped the FINAL Unified Brief. 'high' = central ideas/recommendation; 'minimal' = mostly echoed others.",
+            },
+            summary: {
+              type: "string",
+              description:
+                "1-3 sentences on what this model contributed (or why it contributed little). Be specific, not generic praise.",
+            },
+            adopted_ideas: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Concrete ideas/angles from this model that appear in the Unified Brief. Cite the specific idea, not a category.",
+            },
+            distinct_contributions: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Unique angles ONLY this model raised that survived into the brief. Empty if it only reinforced shared points.",
+            },
+            not_adopted: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Notable ideas this model raised that were deliberately NOT used, with a brief reason. Empty if none.",
+            },
           },
-          provider_label: {
-            type: "string",
-            description: "Human label, e.g. 'OpenAI', 'Anthropic', 'Google Gemini', 'xAI'.",
-          },
-          influence: {
-            type: "string",
-            enum: INFLUENCE_VALUES,
-            description:
-              "How much of this model's thinking shaped the FINAL Unified Brief. 'high' = central ideas/recommendation; 'minimal' = mostly echoed others.",
-          },
-          summary: {
-            type: "string",
-            description:
-              "1-3 sentences on what this model contributed (or why it contributed little). Be specific, not generic praise.",
-          },
-          adopted_ideas: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Concrete ideas/angles from this model that appear in the Unified Brief. Cite the specific idea, not a category.",
-          },
-          distinct_contributions: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Unique angles ONLY this model raised that survived into the brief. Empty if it only reinforced shared points.",
-          },
-          not_adopted: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Notable ideas this model raised that were deliberately NOT used, with a brief reason. Empty if none.",
-          },
+          required: [
+            "provider",
+            "provider_label",
+            "influence",
+            "summary",
+            "adopted_ideas",
+            "distinct_contributions",
+            "not_adopted",
+          ],
+          additionalProperties: false,
         },
-        required: [
-          "provider",
-          "provider_label",
-          "influence",
-          "summary",
-          "adopted_ideas",
-          "distinct_contributions",
-          "not_adopted",
-        ],
-        additionalProperties: false,
       },
     },
-  },
-  required: ["overall", "contributions"],
-  additionalProperties: false,
-} as const;
+    required: ["overall", "contributions"],
+    additionalProperties: false,
+  } as const;
+}
 
 function truncate(s: string, max: number): string {
   if (s.length <= max) return s;
@@ -129,14 +141,26 @@ function formatUnifiedBriefForPrompt(b: DecisionBrief): string {
 
 /** Providers that actually fed the brief, with their display labels (deduped, stable order). */
 function participatingProviders(
-  canonicalRuns: DecisionRunResult[]
-): { provider: LLMProviderName; label: string }[] {
+  canonicalRuns: DecisionRunResult[],
+  aliasMap: ProviderAliasMap | null
+): { provider: LLMProviderName; label: string; schemaKey: string }[] {
+  if (aliasMap) {
+    return aliasMap.providers.map((provider) => ({
+      provider,
+      label: aliasMap.toAlias[provider],
+      schemaKey: providerSlugForBlindSchema(provider, aliasMap),
+    }));
+  }
   const seen = new Map<LLMProviderName, string>();
   for (const r of canonicalRuns) {
     const provider = (r.llm_provider ?? "openai") as LLMProviderName;
     if (!seen.has(provider)) seen.set(provider, runProviderLabel(provider));
   }
-  return [...seen.entries()].map(([provider, label]) => ({ provider, label }));
+  return [...seen.entries()].map(([provider, label]) => ({
+    provider,
+    label,
+    schemaKey: provider,
+  }));
 }
 
 function buildContributionsMessages(
@@ -144,18 +168,31 @@ function buildContributionsMessages(
   canonicalRuns: DecisionRunResult[],
   allRunsForResearch: DecisionRunResult[],
   brief: DecisionBrief,
-  author: UnifiedBriefSynthesizer
+  author: UnifiedBriefSynthesizer,
+  authorshipMode: UnifiedBriefAuthorshipMode,
+  aliasMap: ProviderAliasMap | null
 ): LLMMessage[] {
-  const providers = participatingProviders(canonicalRuns);
-  const providerList = providers.map((p) => `- ${p.label} (\`${p.provider}\`)`).join("\n");
+  const providers = participatingProviders(canonicalRuns, aliasMap);
+  const useAliasKeys = authorshipMode === "blind" || authorshipMode === "reassigned";
+  const providerList = useAliasKeys
+    ? providers.map((p) => `- ${p.label} (\`${p.schemaKey}\`)`).join("\n")
+    : providers.map((p) => `- ${p.label} (\`${p.provider}\`)`).join("\n");
   const coach = unifiedBriefSynthesizerCoachLabel(author);
 
-  const systemPrompt = `You are ${coach}. You are the author of the **Unified Brief** below — you merged every provider/posture run, all research, and all saved variants into that one brief.
+  const identityRule =
+    authorshipMode === "blind"
+      ? "- Models are labeled only as AI Model 1, AI Model 2, … Use those labels and the matching `ai_model_N` provider keys. Do not invent vendor brands (OpenAI, Anthropic, Gemini, xAI, etc.)."
+      : authorshipMode === "reassigned"
+        ? "- Provider brand names in the source blocks are reassigned (unique labels that may not match the true vendor). Use the labels and provider keys from the participating list exactly as shown."
+        : "- Use the real provider keys and labels from the participating list.";
 
-Your job now is an honest **attribution**: explain which model's ideas made the cut. For every participating provider, say what they contributed to the FINAL Unified Brief, how much influence they had, and what notable ideas of theirs you deliberately left out.
+  const systemPrompt = `You are ${coach}. You are the author of the **Unified Brief** below — you merged every model/posture run, all research, and all saved variants into that one brief.
+
+Your job now is an honest **attribution**: explain which model's ideas made the cut. For every participating model, say what they contributed to the FINAL Unified Brief, how much influence they had, and what notable ideas of theirs you deliberately left out.
 
 **Rules**
-- Produce exactly one contribution entry per provider in the participating list — no more, no fewer. Never invent a provider that did not participate.
+- Produce exactly one contribution entry per model in the participating list — no more, no fewer. Never invent a model that did not participate.
+${identityRule}
 - Ground every claim in the raw run blocks and the Unified Brief shown below. Cite the **specific idea**, not generic praise ("good analysis" is not allowed).
 - \`influence\`: high = its ideas are central to the recommendation/summary; medium = clearly shaped some sections; low = a few accents; minimal = mostly echoed what other models already said.
 - \`adopted_ideas\`: concrete points from that model that you can see reflected in the brief.
@@ -168,9 +205,11 @@ Return ONLY structured JSON matching the schema.`;
 
   const source = buildBestOfWorldsSourceUserContent(anchorRun, canonicalRuns, {
     allRunsForResearch,
+    authorshipMode,
+    scrambleRemap: brief.authorship_provider_remap,
   });
 
-  const userContent = `## Participating providers (one contribution entry required per item)
+  const userContent = `## Participating models (one contribution entry required per item)
 
 ${providerList}
 
@@ -188,7 +227,7 @@ ${source}
 
 ---
 
-Produce the contribution attribution as structured JSON. Exactly one entry per provider listed above.`;
+Produce the contribution attribution as structured JSON. Exactly one entry per model listed above.`;
 
   return [
     { role: "system", content: systemPrompt },
@@ -203,10 +242,27 @@ function coerceStringArray(value: unknown): string[] {
     .filter((v) => v.length > 0);
 }
 
-function coerceProvider(value: unknown): LLMProviderName | undefined {
-  if (typeof value !== "string") return undefined;
-  const v = value.trim().toLowerCase();
-  return (PROVIDER_VALUES as string[]).includes(v) ? (v as LLMProviderName) : undefined;
+function coerceProvider(
+  value: unknown,
+  label: unknown,
+  aliasMap: ProviderAliasMap | null
+): LLMProviderName | undefined {
+  const tryResolve = (raw: unknown): LLMProviderName | undefined => {
+    if (typeof raw !== "string") return undefined;
+    if (aliasMap) {
+      const fromBlind = resolveBlindProvider(raw, aliasMap);
+      if (fromBlind) return fromBlind;
+    }
+    const v = raw.trim().toLowerCase();
+    if ((PROVIDER_VALUES as string[]).includes(v)) return v as LLMProviderName;
+    if (v === "chatgpt" || v === "gpt" || v === "gpt-4" || v === "gpt-5") return "openai";
+    if (v === "claude" || v.includes("anthropic") || v.includes("claude")) return "anthropic";
+    if (v === "google" || v.includes("gemini")) return "gemini";
+    if (v === "grok" || v === "x.ai" || v.includes("xai")) return "xai";
+    return undefined;
+  };
+
+  return tryResolve(value) ?? tryResolve(label);
 }
 
 function coerceInfluence(value: unknown): ContributionInfluence {
@@ -216,47 +272,76 @@ function coerceInfluence(value: unknown): ContributionInfluence {
   return "low";
 }
 
+function realProviderLabel(provider: LLMProviderName): string {
+  return provider === "openai" ? "ChatGPT" : runProviderLabel(provider);
+}
+
+function decodeTextFields(value: string, aliasMap: ProviderAliasMap | null): string {
+  if (!aliasMap) return value;
+  return decodeAliasesInText(value, aliasMap);
+}
+
+const FILLER_SUMMARY = "No distinct attribution was returned for this model.";
+
+function isFillerContribution(entry: ProviderContribution): boolean {
+  return (
+    entry.summary === FILLER_SUMMARY &&
+    entry.adopted_ideas.length === 0 &&
+    entry.distinct_contributions.length === 0 &&
+    entry.not_adopted.length === 0
+  );
+}
+
+/** True when overall text exists but every provider row was our silent placeholder. */
+function contributionsLookTruncated(result: UnifiedBriefContributions): boolean {
+  if (!result.overall.trim() || result.contributions.length === 0) return true;
+  return result.contributions.every(isFillerContribution);
+}
+
 function coerceContributions(
   raw: unknown,
   providers: { provider: LLMProviderName; label: string }[],
-  briefGeneratedAt: string | undefined
+  briefGeneratedAt: string | undefined,
+  aliasMap: ProviderAliasMap | null
 ): UnifiedBriefContributions {
   const obj = (raw ?? {}) as Record<string, unknown>;
-  const overall = typeof obj.overall === "string" ? obj.overall.trim() : "";
+  const overallRaw = typeof obj.overall === "string" ? obj.overall.trim() : "";
+  const overall = decodeTextFields(overallRaw, aliasMap);
   const rawList = Array.isArray(obj.contributions) ? obj.contributions : [];
 
   const byProvider = new Map<LLMProviderName, ProviderContribution>();
   for (const item of rawList) {
     const entry = (item ?? {}) as Record<string, unknown>;
-    const provider = coerceProvider(entry.provider);
+    const provider = coerceProvider(entry.provider, entry.provider_label, aliasMap);
     if (!provider) continue;
-    const fallbackLabel = providers.find((p) => p.provider === provider)?.label ?? runProviderLabel(provider);
-    const label =
-      typeof entry.provider_label === "string" && entry.provider_label.trim()
-        ? entry.provider_label.trim()
-        : fallbackLabel;
+    const label = realProviderLabel(provider);
     // First entry per provider wins; ignore duplicates the model may emit.
     if (byProvider.has(provider)) continue;
     byProvider.set(provider, {
       provider,
       provider_label: label,
       influence: coerceInfluence(entry.influence),
-      summary: typeof entry.summary === "string" ? entry.summary.trim() : "",
-      adopted_ideas: coerceStringArray(entry.adopted_ideas),
-      distinct_contributions: coerceStringArray(entry.distinct_contributions),
-      not_adopted: coerceStringArray(entry.not_adopted),
+      summary: decodeTextFields(
+        typeof entry.summary === "string" ? entry.summary.trim() : "",
+        aliasMap
+      ),
+      adopted_ideas: coerceStringArray(entry.adopted_ideas).map((s) => decodeTextFields(s, aliasMap)),
+      distinct_contributions: coerceStringArray(entry.distinct_contributions).map((s) =>
+        decodeTextFields(s, aliasMap)
+      ),
+      not_adopted: coerceStringArray(entry.not_adopted).map((s) => decodeTextFields(s, aliasMap)),
     });
   }
 
   // Guarantee one entry per participating provider, in a stable order, even if the model skipped one.
-  const contributions: ProviderContribution[] = providers.map(({ provider, label }) => {
+  const contributions: ProviderContribution[] = providers.map(({ provider }) => {
     const existing = byProvider.get(provider);
     if (existing) return existing;
     return {
       provider,
-      provider_label: label,
+      provider_label: realProviderLabel(provider),
       influence: "minimal",
-      summary: "No distinct attribution was returned for this model.",
+      summary: FILLER_SUMMARY,
       adopted_ideas: [],
       distinct_contributions: [],
       not_adopted: [],
@@ -268,6 +353,9 @@ function coerceContributions(
     brief_generated_at: briefGeneratedAt,
     overall,
     contributions,
+    ...(aliasMap?.kind === "reassigned"
+      ? { authorship_provider_remap: scrambleRemapFromAliasMap(aliasMap) }
+      : {}),
   };
 }
 
@@ -280,21 +368,157 @@ export async function runUnifiedBriefContributionsAnalysis(
   canonicalRuns: DecisionRunResult[],
   brief: DecisionBrief,
   allRunsForResearch?: DecisionRunResult[],
-  author: UnifiedBriefSynthesizer = "anthropic"
+  author: UnifiedBriefSynthesizer = "anthropic",
+  authorshipMode: UnifiedBriefAuthorshipMode | boolean = "open"
 ): Promise<UnifiedBriefContributions> {
+  const mode: UnifiedBriefAuthorshipMode =
+    typeof authorshipMode === "boolean"
+      ? authorshipMode
+        ? "blind"
+        : "open"
+      : authorshipMode;
   const researchRuns = allRunsForResearch ?? canonicalRuns;
-  const messages = buildContributionsMessages(anchorRun, canonicalRuns, researchRuns, brief, author);
+  const aliasMap =
+    mode === "blind"
+      ? buildProviderAliasMap(canonicalRuns)
+      : mode === "reassigned"
+        ? buildProviderAliasMapFromRemap(brief.authorship_provider_remap, canonicalRuns)
+        : null;
+  const providers = participatingProviders(canonicalRuns, aliasMap);
+  const messages = buildContributionsMessages(
+    anchorRun,
+    canonicalRuns,
+    researchRuns,
+    brief,
+    author,
+    mode,
+    aliasMap
+  );
 
-  const response = await getClient(author).run(messages, {
-    schema: CONTRIBUTIONS_SCHEMA as unknown as Record<string, unknown>,
+  const schema = contributionsSchema(
+    providers.map((p) => p.schemaKey),
+    mode === "blind"
+      ? "Blind model key: ai_model_1, ai_model_2, … matching the participating list."
+      : mode === "reassigned"
+        ? "Reassigned brand key as shown in the participating list (openai, anthropic, gemini, or xai)."
+        : "Provider key: openai, anthropic, gemini, or xai.",
+    mode === "blind"
+      ? "Blind label, e.g. 'AI Model 1', 'AI Model 2'."
+      : mode === "reassigned"
+        ? "Brand label as shown in the participating list (may not be the true vendor)."
+        : "Human label, e.g. 'OpenAI', 'Anthropic', 'Google Gemini', 'xAI'."
+  );
+
+  // Thinking models (Fable, Gemini 2.5) count reasoning against max_tokens / maxOutputTokens.
+  // Large attribution JSON needs headroom; keep effort low so thinking does not empty the output.
+  const maxTokens = author === "openai" ? 8192 : 16_384;
+  const requestOpts = {
+    schema: schema as unknown as Record<string, unknown>,
     temperature: 0.3,
-    maxTokens: 4096,
-  });
+    maxTokens,
+    effort: "low" as const,
+  };
 
-  if (!response.parsed) {
-    throw new Error("Unified brief contributions analysis did not return valid structured output");
+  const client = getClient(author);
+  let response = await client.run(messages, requestOpts);
+
+  const hitTokenCap = (finishReason: string | undefined) =>
+    !!finishReason && /^(length|max_tokens|MAX_TOKENS)$/i.test(finishReason);
+
+  if (!response.parsed || hitTokenCap(response.meta?.finishReason)) {
+    console.warn("[unified-brief-contributions] Retrying (parse fail or output token cap).", {
+      author,
+      mode,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 400),
+    });
+    response = await client.run(
+      [
+        ...messages,
+        {
+          role: "user",
+          content:
+            "Your previous reply was not valid JSON for the required schema, or it may have been cut off. " +
+            "Reply NOW with one complete JSON object matching the schema. " +
+            "`overall` plus `contributions` with exactly one object per participating model " +
+            "(real influence ratings and specific adopted_ideas). No prose, no markdown fences.",
+        },
+      ],
+      {
+        ...requestOpts,
+        temperature: 0.2,
+        maxTokens: Math.max(maxTokens, 16_384),
+        effort: "low",
+      }
+    );
   }
 
-  const providers = participatingProviders(canonicalRuns);
-  return coerceContributions(response.parsed, providers, brief.generated_at);
+  if (!response.parsed) {
+    console.error("[unified-brief-contributions] Analysis failed after retry.", {
+      author,
+      mode,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content.length,
+      contentPreview: response.content.slice(0, 500),
+    });
+    throw new Error(
+      `Unified brief contributions analysis did not return valid structured output (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+    );
+  }
+
+  let result = coerceContributions(
+    response.parsed,
+    providers.map(({ provider, label }) => ({ provider, label })),
+    brief.generated_at,
+    aliasMap
+  );
+
+  if (contributionsLookTruncated(result)) {
+    console.warn(
+      "[unified-brief-contributions] Attribution looked truncated (overall present, all provider rows empty); retrying once.",
+      {
+        author,
+        mode,
+        finishReason: response.meta?.finishReason,
+        overallLen: result.overall.length,
+        rawContributionCount: Array.isArray((response.parsed as { contributions?: unknown })?.contributions)
+          ? ((response.parsed as { contributions: unknown[] }).contributions.length)
+          : 0,
+      }
+    );
+    const retryMessages: LLMMessage[] = [
+      ...messages,
+      {
+        role: "user",
+        content:
+          "Your previous structured response filled `overall` but left `contributions` empty or unusable. " +
+          "Reply again with the SAME schema. `contributions` MUST contain exactly one object per participating model " +
+          "listed above, each with a real influence rating and specific adopted_ideas. Do not leave the array empty.",
+      },
+    ];
+    response = await client.run(retryMessages, {
+      ...requestOpts,
+      maxTokens: Math.max(requestOpts.maxTokens, 16_384),
+      effort: "low",
+    });
+    if (!response.parsed) {
+      throw new Error(
+        `Unified brief contributions analysis did not return valid structured output after retry (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+      );
+    }
+    result = coerceContributions(
+      response.parsed,
+      providers.map(({ provider, label }) => ({ provider, label })),
+      brief.generated_at,
+      aliasMap
+    );
+    if (contributionsLookTruncated(result)) {
+      throw new Error(
+        `Unified brief contributions analysis returned an overall narrative but no usable per-model attributions (provider: ${author}, finishReason: ${response.meta?.finishReason ?? "unknown"}). Try regenerating.`
+      );
+    }
+  }
+
+  return result;
 }

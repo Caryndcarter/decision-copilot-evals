@@ -12,5 +12,5 @@ export interface DemoSampleQuestion {
 export interface ClarificationDemoSamplesResult {
   answers: ClarificationAnswersMap;
   demo_model: string;
-  demo_method: "gemini" | "fallback";
+  demo_method: "model" | "fallback";
 }

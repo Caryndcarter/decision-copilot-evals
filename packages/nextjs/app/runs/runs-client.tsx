@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -135,7 +135,12 @@ export interface DecisionGroup {
   runs: RunRow[];
   hasUnifiedBrief: boolean;
   unifiedBriefRunId?: string;
+  /** Stress-harness decisions (Civitas demo batch) — shown on the Harness tab. */
+  isHarness?: boolean;
+  harnessTrial?: number;
 }
+
+type RunsTab = "decisions" | "harness";
 
 async function deleteRun(run_id: string): Promise<boolean> {
   const res = await fetch("/api/decision/run", {
@@ -149,16 +154,39 @@ async function deleteRun(run_id: string): Promise<boolean> {
 export function RunsClient({
   initialGroups,
   newDecisionId,
+  initialTab = "decisions",
 }: {
   initialGroups: DecisionGroup[];
   newDecisionId?: string;
+  initialTab?: RunsTab;
 }) {
   const router = useRouter();
   const [groups, setGroups] = useState(initialGroups);
+  const [tab, setTab] = useState<RunsTab>(initialTab);
   const [pending, startTransition] = useTransition();
   const [deletingRunId, setDeletingRunId] = useState<string | null>(null);
   const [deletingDecisionId, setDeletingDecisionId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
+
+  // Keep local optimistic state aligned with server refreshes (pagination / new runs).
+  useEffect(() => {
+    setGroups(initialGroups);
+  }, [initialGroups]);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
+  const decisionGroups = groups.filter((g) => !g.isHarness);
+  const harnessGroups = groups.filter((g) => g.isHarness);
+  const visibleGroups = tab === "harness" ? harnessGroups : decisionGroups;
+  const showTabs = harnessGroups.length > 0 || tab === "harness";
+
+  function selectTab(next: RunsTab) {
+    setTab(next);
+    const url = next === "harness" ? "/runs?tab=harness" : "/runs";
+    router.replace(url, { scroll: false });
+  }
 
   function removeRun(run_id: string) {
     setGroups((prev) =>
@@ -212,25 +240,84 @@ export function RunsClient({
     });
   }
 
-  if (groups.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center">
-        <p className="text-zinc-500 text-sm">No decisions yet.</p>
-        <Link
-          href="/intake"
-          className="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
-        >
-          Start your first →
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <>
     {confirm && <ConfirmModal state={confirm} onCancel={() => setConfirm(null)} />}
+
+    {showTabs && (
+      <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-px">
+        <button
+          type="button"
+          onClick={() => selectTab("decisions")}
+          className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === "decisions"
+              ? "border-indigo-600 text-indigo-700"
+              : "border-transparent text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Decisions
+          <span className="ml-1.5 tabular-nums text-zinc-400">{decisionGroups.length}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => selectTab("harness")}
+          className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === "harness"
+              ? "border-indigo-600 text-indigo-700"
+              : "border-transparent text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Harness
+          <span className="ml-1.5 tabular-nums text-zinc-400">{harnessGroups.length}</span>
+        </button>
+      </div>
+    )}
+
+    {tab === "harness" && harnessGroups.length > 0 && (
+      <p className="mb-4 text-sm text-zinc-500">
+        Harness trials from <code className="text-xs">npm run harness:civitas</code> or{" "}
+        <code className="text-xs">npm run harness:meridian-ic</code>.{" "}
+        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
+          View Meridian IC moral eval
+        </Link>
+      </p>
+    )}
+
+    {tab === "harness" && harnessGroups.length === 0 ? (
+      <p className="mb-4 text-sm text-zinc-500">
+        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
+          View Meridian IC moral eval
+        </Link>{" "}
+        (committed snapshot batches — no live harness required).
+      </p>
+    ) : null}
+
+    {visibleGroups.length === 0 ? (
+      <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center">
+        {tab === "harness" ? (
+          <>
+            <p className="text-zinc-500 text-sm">No harness trials yet.</p>
+            <p className="mt-2 text-xs text-zinc-400">
+              Run <code className="rounded bg-zinc-100 px-1 py-0.5">npm run harness:civitas</code> with{" "}
+              <code className="rounded bg-zinc-100 px-1 py-0.5">HARNESS_USER_EMAIL</code> set to your
+              account.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-zinc-500 text-sm">No decisions yet.</p>
+            <Link
+              href="/intake"
+              className="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors"
+            >
+              Start your first →
+            </Link>
+          </>
+        )}
+      </div>
+    ) : (
     <div className="space-y-4">
-      {groups.map((group) => {
+      {visibleGroups.map((group) => {
         const isNew = newDecisionId === group.decision_id;
         const headline = group.title || group.situation.slice(0, 80) || "Untitled decision";
         const snippet = group.title && group.situation
@@ -254,10 +341,17 @@ export function RunsClient({
             <div className={`px-5 pt-4 pb-4 border-b ${isNew ? "border-indigo-100 bg-indigo-50/40" : "border-zinc-100"}`}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     {isNew && (
                       <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white shrink-0">
                         New
+                      </span>
+                    )}
+                    {group.isHarness && (
+                      <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-white shrink-0">
+                        {typeof group.harnessTrial === "number"
+                          ? `Harness · Trial ${group.harnessTrial}`
+                          : "Harness"}
                       </span>
                     )}
                     <p className="text-sm font-semibold text-zinc-900 leading-snug">
@@ -366,6 +460,7 @@ export function RunsClient({
         );
       })}
     </div>
+    )}
     </>
   );
 }

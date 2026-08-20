@@ -5,11 +5,16 @@ import {
   unifiedBriefAuditJudgeEnvKey,
   unifiedBriefAuditJudgeProvider,
 } from "@/lenses/unified-brief-audit";
-import { pickPersistRunForUnifiedBrief } from "@/lib/unified-brief-persist-run";
 import {
-  getUnifiedBriefForAuthor,
+  consolidateUnifiedAuthorshipOntoRun,
+  findUnifiedBriefAcrossRuns,
+  pickPersistRunForUnifiedBrief,
+} from "@/lib/unified-brief-persist-run";
+import {
+  authorshipModeFromFlags,
   isUnifiedBriefSynthesizer,
   mergeUnifiedBriefAuditIntoRun,
+  mergeUnifiedBriefIntoRun,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
@@ -19,11 +24,16 @@ export const maxDuration = 120;
 
 /**
  * POST /api/decision/run/unified-brief-audit
- * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`.
- * Requires the matching Unified Brief. Persists on `unified_brief_audits_by_author`.
+ * Body: `{ decision_id }` or `{ run_id }`, optional `synthesizer`, optional `blind` / `reassigned`.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: { run_id?: string; decision_id?: string; synthesizer?: string };
+  let body: {
+    run_id?: string;
+    decision_id?: string;
+    synthesizer?: string;
+    blind?: boolean;
+    reassigned?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -36,6 +46,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const synthesizer: UnifiedBriefSynthesizer = isUnifiedBriefSynthesizer(synthesizerRaw)
     ? synthesizerRaw
     : "anthropic";
+  const blind = body.blind === true;
+  const reassigned = body.reassigned === true;
+  const authorshipMode = authorshipModeFromFlags(blind, reassigned);
 
   if (!decision_id && !run_id) {
     return NextResponse.json({ error: "decision_id or run_id is required" }, { status: 400 });
@@ -67,22 +80,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No runs found for this decision." }, { status: 404 });
   }
 
-  const brief = getUnifiedBriefForAuthor(persistRun, synthesizer);
-  if (!brief) {
+  const found = findUnifiedBriefAcrossRuns(allRuns, synthesizer, authorshipMode);
+  if (!found) {
+    const modeHint =
+      authorshipMode === "blind"
+        ? " with Blind authorship on"
+        : authorshipMode === "reassigned"
+          ? " with Reassigned authorship on"
+          : "";
     return NextResponse.json(
       {
-        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)} first, then run the audit.`,
+        error: `Generate the Unified Brief with ${unifiedBriefSynthesizerLabel(synthesizer)}${modeHint} first, then run the audit.`,
       },
       { status: 400 }
     );
   }
 
   try {
-    const audit = await runUnifiedBriefAudit(persistRun.intake, brief);
+    const audit = await runUnifiedBriefAudit(persistRun.intake, found.brief);
     const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
-    const updated = mergeUnifiedBriefAuditIntoRun(fresh, synthesizer, audit);
+    let base = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
+    base = mergeUnifiedBriefIntoRun(base, synthesizer, found.brief, authorshipMode);
+    const updated = mergeUnifiedBriefAuditIntoRun(base, synthesizer, audit, authorshipMode);
     await replaceRun(persistRun.run_id, updated);
-    return NextResponse.json({ run: updated, synthesizer });
+    return NextResponse.json({
+      run: updated,
+      synthesizer,
+      blind,
+      reassigned,
+      authorshipMode,
+    });
   } catch (err) {
     console.error("[unified-brief-audit]", err);
     const message = err instanceof Error ? err.message : "Brief audit failed";

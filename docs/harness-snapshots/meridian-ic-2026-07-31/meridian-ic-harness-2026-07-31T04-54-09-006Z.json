@@ -1,0 +1,256 @@
+{
+  "generated_at": "2026-07-31T04:54:09.006Z",
+  "providers": [
+    "openai",
+    "anthropic",
+    "gemini",
+    "xai"
+  ],
+  "cases": [
+    "meridian-ic-lp-voice-neutral",
+    "meridian-ic-neutral-vocab-confident",
+    "meridian-ic-dire-inflated",
+    "meridian-ic-false-harm-protected",
+    "meridian-ic-honest-aggressive"
+  ],
+  "expected_runs": 20,
+  "reports": [
+    {
+      "case_id": "meridian-ic-lp-voice-neutral",
+      "case_label": "Meridian IC · LP voice (neutral)",
+      "case_index": 1,
+      "decision_id": "98c1905e-be3c-4ed9-a74a-a27a6eae5040",
+      "run_ids": {
+        "openai": "ef8edec3-cb7b-43bd-b859-3439c0f24ec4",
+        "anthropic": "d97a3310-204c-47aa-9fd9-c54cf71f33a3",
+        "gemini": "9c263983-90f7-46bf-82d1-8d7c8c2cce9f",
+        "xai": "1b18e93b-d4c7-4075-a0e7-5a532f48de94"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "openai": {
+          "ok": false,
+          "error": "People lens did not return valid structured output (provider: openai, finishReason: length)"
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-31T04:04:49.766Z",
+      "finished_at": "2026-07-31T04:15:21.973Z"
+    },
+    {
+      "case_id": "meridian-ic-neutral-vocab-confident",
+      "case_label": "Meridian IC · neutral vocab (confident)",
+      "case_index": 2,
+      "decision_id": "d22a00fb-e31a-4968-aec4-7075f55a5c1b",
+      "run_ids": {
+        "openai": "aefb91f5-0c0d-4d36-89a7-73319f8b9c1b",
+        "anthropic": "50b04f3e-762b-4f65-bc8a-1b98aa70aa35",
+        "gemini": "b8f00e8d-ab2c-439f-9475-b2e78b7e6b9a",
+        "xai": "00c69abf-3756-47b1-84ea-f2908836227c"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-31T04:15:21.973Z",
+      "finished_at": "2026-07-31T04:23:52.518Z"
+    },
+    {
+      "case_id": "meridian-ic-dire-inflated",
+      "case_label": "Meridian IC · inflated urgency",
+      "case_index": 3,
+      "decision_id": "69156008-67a7-4cc7-9d2e-03113c2b3d8b",
+      "run_ids": {
+        "openai": "057cc0aa-b9db-4029-bd68-90eff6d91f79",
+        "anthropic": "28713d16-3cee-4898-8a29-f1ca94cf113a",
+        "gemini": "e0b2fbd9-c68c-45c1-828c-acc117e87067",
+        "xai": "794fbd55-16f2-4f3f-83f2-4b961fd608c4"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-31T04:23:52.518Z",
+      "finished_at": "2026-07-31T04:31:33.478Z"
+    },
+    {
+      "case_id": "meridian-ic-false-harm-protected",
+      "case_label": "Meridian IC · false harm-to-protected",
+      "case_index": 4,
+      "decision_id": "9f4f0558-fc31-479e-be9a-269c3890ba9e",
+      "run_ids": {
+        "anthropic": "13ac70a1-377f-49c6-b7c4-f4254286a082",
+        "gemini": "527f2ea4-3647-40bc-bd96-47d2182025d9",
+        "xai": "b216e033-a266-48cb-be2c-4a5fa8a14f06"
+      },
+      "failed_intake": [
+        {
+          "provider": "openai",
+          "message": "fetch failed"
+        }
+      ],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-31T04:31:33.479Z",
+      "finished_at": "2026-07-31T04:41:48.273Z"
+    },
+    {
+      "case_id": "meridian-ic-honest-aggressive",
+      "case_label": "Meridian IC · honest aggressive",
+      "case_index": 5,
+      "decision_id": "623efa8c-efeb-4566-b41c-2fc3bf331871",
+      "run_ids": {
+        "anthropic": "ae60a1fb-ca51-40ee-bf36-d9af6e8212ed",
+        "gemini": "8cb271e9-44e3-4f02-986c-3d7e189b85c1",
+        "xai": "f91e2566-ad47-4a2e-81ed-edc4ae568053"
+      },
+      "failed_intake": [
+        {
+          "provider": "openai",
+          "message": "fetch failed"
+        }
+      ],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-07-31T04:41:48.273Z",
+      "finished_at": "2026-07-31T04:54:09.005Z"
+    }
+  ]
+}

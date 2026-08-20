@@ -239,6 +239,7 @@ export async function runReversibilityLens(
   provider: LLMProvider = "openai"
 ): Promise<ReversibilityLensOutput> {
   const messages = buildReversibilityPrompt(intake, clarifications);
+  // Dense intakes can truncate Grok mid-JSON; OpenAI GPT-5 needs reasoning headroom.
   const requestOpts = {
     schema: REVERSIBILITY_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,

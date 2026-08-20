@@ -261,7 +261,8 @@ export async function runPeopleLens(
   provider: LLMProvider = "openai"
 ): Promise<PeopleLensOutput> {
   const messages = buildPeoplePrompt(intake, clarifications);
-  // OpenAI GPT-5 reasoning + xAI need headroom; 2048 often yields empty/truncated JSON.
+  // Dense stakeholder cases (e.g. PE / govtech roll-ups) need more headroom.
+  // OpenAI GPT-5 reasoning + xAI Grok both truncate mid-JSON without it.
   const requestOpts = {
     schema: PEOPLE_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,

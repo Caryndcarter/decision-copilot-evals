@@ -51,15 +51,13 @@ export type LLMProviderName = "openai" | "anthropic" | "gemini" | "xai";
 
 /** Intake demo buttons on `/intake`; stored on the run for UI such as chat research starters. */
 export const DEMO_SCENARIO_IDS = [
-  "slack-to-teams",
-  "vp-sales-underperforming",
-  "vercel-to-aws",
-  "gen-ai-product-compliance",
   "healthcare-pe-acquisition",
-  "hybrid-office-lease",
-  "legacy-core-modernization",
-  "hubspot-crm-fintech",
   "meridian-civitas-saas-rollup",
+  "meridian-ic-lp-voice-neutral",
+  "meridian-ic-neutral-vocab-confident",
+  "meridian-ic-dire-inflated",
+  "meridian-ic-false-harm-protected",
+  "meridian-ic-honest-aggressive",
 ] as const;
 export type DemoScenarioId = (typeof DEMO_SCENARIO_IDS)[number];
 
@@ -201,6 +199,11 @@ export interface DecisionBrief {
   next_steps: string[];
   /** Additional sections added via format variants */
   custom_sections?: { heading: string; content: string }[];
+  /**
+   * Reassigned authorship only: real think-tank provider → brand key shown to the brief author.
+   * Used to rebuild the same scramble when analyzing contributions.
+   */
+  authorship_provider_remap?: Partial<Record<LLMProviderName, LLMProviderName>>;
 }
 
 /** How much a given model's thinking shaped the final Unified Brief. */
@@ -225,6 +228,15 @@ export interface ProviderContribution {
 }
 
 /**
+ * Whether a Unified Brief / contributions analysis was authored with brand names visible
+ * (`open`) or anonymized as AI Model 1/2/… (`blind`). Both may be stored per synthesizer.
+ */
+export type UnifiedBriefAuthorshipMode = "open" | "blind" | "reassigned";
+
+/** Per-synthesizer slot holding open and/or blind variants of the same artifact. */
+export type UnifiedBriefAuthorshipVersions<T> = Partial<Record<UnifiedBriefAuthorshipMode, T>>;
+
+/**
  * Anthropic's explanation of which model's ideas made the cut in the Unified Brief.
  * Generated on demand from the same merged inputs used to build the brief.
  */
@@ -237,6 +249,8 @@ export interface UnifiedBriefContributions {
   overall: string;
   /** One entry per participating provider. */
   contributions: ProviderContribution[];
+  /** Echo of the brief's scramble map when this analysis was run under reassigned authorship. */
+  authorship_provider_remap?: Partial<Record<LLMProviderName, LLMProviderName>>;
 }
 
 /** One coded dimension from the generic Unified Brief audit rubric. */
@@ -396,20 +410,31 @@ export interface DecisionRunResult {
    */
   decision_brief_best_of_worlds?: DecisionBrief;
   /**
-   * Unified Brief keyed by synthesizing model (Anthropic, Gemini, …). Source of truth when present.
+   * Unified Brief keyed by synthesizing model, then authorship mode (`open` | `blind` | `reassigned`).
+   * Legacy values may still be a bare `DecisionBrief` (treated as `open`).
    */
-  unified_briefs_by_author?: Partial<Record<LLMProviderName, DecisionBrief>>;
+  unified_briefs_by_author?: Partial<
+    Record<LLMProviderName, UnifiedBriefAuthorshipVersions<DecisionBrief> | DecisionBrief>
+  >;
   /**
    * Attribution of which think-tank model's ideas made the cut in the unified brief.
    * Legacy field for Anthropic-authored brief; prefer `unified_brief_contributions_by_author`.
    */
   decision_brief_best_of_worlds_contributions?: UnifiedBriefContributions;
-  /** Contributions analysis keyed by Unified Brief synthesizer (matches `unified_briefs_by_author`). */
+  /**
+   * Contributions analysis keyed by synthesizer, then authorship mode (matches briefs).
+   * Legacy values may still be a bare `UnifiedBriefContributions` (treated as `open`).
+   */
   unified_brief_contributions_by_author?: Partial<
-    Record<LLMProviderName, UnifiedBriefContributions>
+    Record<
+      LLMProviderName,
+      UnifiedBriefAuthorshipVersions<UnifiedBriefContributions> | UnifiedBriefContributions
+    >
   >;
-  /** Generic ethics audit keyed by Unified Brief synthesizer (matches `unified_briefs_by_author`). */
-  unified_brief_audits_by_author?: Partial<Record<LLMProviderName, UnifiedBriefAudit>>;
+  /** Generic ethics audit keyed by synthesizer, then authorship mode (matches briefs). */
+  unified_brief_audits_by_author?: Partial<
+    Record<LLMProviderName, UnifiedBriefAuthorshipVersions<UnifiedBriefAudit> | UnifiedBriefAudit>
+  >;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).
    * Prefer `unified_brief_chat_by_provider`; readers should treat this as
@@ -448,6 +473,13 @@ export interface DecisionRunResult {
   synthesis?: ProviderSynthesis;
   /** Set when the user started from an intake demo scenario button */
   demo_scenario_id?: DemoScenarioId;
+  /**
+   * True when this run was created by the Civitas/Meridian stress harness
+   * (`npm run harness:civitas`). My Decisions shows these under a separate tab.
+   */
+  harness_run?: boolean;
+  /** 1-based trial index within a harness batch (when `harness_run` is set). */
+  harness_trial?: number;
   /** Completed research-starter chats (persisted with the run) */
   research_completions?: ResearchCompletion[];
   /** Owner of this run (session user id). Optional for legacy runs without auth. */
