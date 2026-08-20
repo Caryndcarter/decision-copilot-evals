@@ -2,10 +2,10 @@
  * Civitas (Meridian) demo stress harness
  *
  * Runs the Meridian / Civitas SaaS roll-up demo end-to-end N times (default 5),
- * persisting to DynamoDB so results appear in the UI (My Decisions → Harness tab).
+ * persisting to MongoDB so results appear in the UI (My Decisions → Harness tab).
  *
  * Heavy LLM work is parallelized (providers, synthesizer×mode briefs/contributions).
- * DynamoDB authorship merges are serialized so concurrent briefs don't clobber each other.
+ * Authorship merges are serialized so concurrent briefs don't clobber each other.
  *
  * Per trial:
  *   1. Intake across all configured providers (awaiting clarification)
@@ -14,7 +14,7 @@
  *   4. Each provider run: fixed variant + fixed research starter
  *   5. Each synthesizer × open/blind/reassigned: Unified Brief + contributions
  *
- * From repo root (Docker DynamoDB must be up):
+ * From repo root (MongoDB Atlas via MONGODB_URI / DB_NAME):
  *   npm run harness:civitas
  *
  * Env / flags:
@@ -554,7 +554,7 @@ async function mapPool<T, R>(
   return results;
 }
 
-/** Serialize DynamoDB merges for unified authorship on one decision. */
+/** Serialize authorship merges for unified briefs on one decision. */
 function createWriteQueue() {
   let chain: Promise<void> = Promise.resolve();
   return function enqueue<T>(fn: () => Promise<T>): Promise<T> {
@@ -964,7 +964,7 @@ async function main() {
       `Trial ${r.trial}: decision_id=${r.decision_id}  clarification=${r.clarification.ok ? "ok" : "FAIL"}  briefs=${briefOk}/${briefTotal}  contrib=${contribOk}/${briefTotal}`
     );
     if (r.decision_id !== "(crashed)") {
-      console.log(`  → http://localhost:3001/run/best-of-worlds?decision_id=${r.decision_id}`);
+      console.log(`  → http://localhost:5001/run/best-of-worlds?decision_id=${r.decision_id}`);
     }
   }
   console.log(`\nWrote ${outPath}`);

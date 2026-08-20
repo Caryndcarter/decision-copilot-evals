@@ -9,16 +9,16 @@
  *
  * Expected: 5 cases × 4 providers = 20 runs (when all API keys are set).
  *
- * From repo root (Docker DynamoDB must be up):
+ * From repo root (MongoDB Atlas via MONGODB_URI / DB_NAME):
  *   npm run harness:meridian-ic
  *
  * Env / flags:
  *   HARNESS_USER_EMAIL=you@example.com
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
- *   HARNESS_CASE_CONCURRENCY=1   # cases in parallel (default 1 — sequential)
+ *   HARNESS_CASE_CONCURRENCY=0   # cases in parallel (default 0 = all; set 1 for sequential)
  *   --cases=meridian-ic-lp-voice-neutral,meridian-ic-dire-inflated
  *   --fill-decision=<uuid>[,uuid…]   # add missing --providers into existing decisions
- *   --user-email=... --providers=... --case-concurrency=1
+ *   --user-email=... --providers=... --case-concurrency=2
  */
 
 import "dotenv/config";
@@ -124,8 +124,9 @@ function parseArgs(argv: string[]) {
     providersRaw: (get("providers") ?? process.env.HARNESS_PROVIDERS ?? "").trim(),
     casesRaw: (get("cases") ?? process.env.HARNESS_CASES ?? "").trim(),
     fillDecisionRaw: (get("fill-decision") ?? "").trim(),
+    /** How many cases to run at once (default 0 = all selected cases). */
     caseConcurrency: Number(
-      get("case-concurrency") ?? process.env.HARNESS_CASE_CONCURRENCY ?? 1
+      get("case-concurrency") ?? process.env.HARNESS_CASE_CONCURRENCY ?? 0
     ),
   };
 }
@@ -990,7 +991,7 @@ async function main() {
       console.log(
         `C${r.case_index} ${r.case_id}: decision=${r.decision_id} runs=${n} clarification=${r.clarification.ok ? "ok" : "FAIL"} variants=${varOk} research=${resOk}`
       );
-      console.log(`  → http://localhost:3001/runs?tab=harness`);
+      console.log(`  → http://localhost:5001/runs?tab=harness`);
     }
     console.log(`Wrote ${outPath}`);
     return;
@@ -1002,13 +1003,17 @@ async function main() {
     process.exit(1);
   }
 
-  const caseConcurrency = Math.max(1, Math.floor(args.caseConcurrency) || 1);
+  const caseConcurrency =
+    args.caseConcurrency > 0
+      ? Math.max(1, Math.floor(args.caseConcurrency))
+      : cases.length;
 
   log("Meridian IC-voice multi-case harness (standard runs only — no Unified Briefs)");
   log(`  cases: ${cases.map((c) => c.id).join(", ")}`);
   log(`  providers: ${providers.join(", ")}`);
   log(`  expected runs: ${cases.length * providers.length}`);
   log(`  case concurrency: ${caseConcurrency}`);
+  log(`  parallelism: cases + providers + variants/research`);
 
   const reports = await mapPool(cases, caseConcurrency, async (c, i) => {
     const caseIndex = i + 1;
@@ -1067,7 +1072,7 @@ async function main() {
       `C${r.case_index} ${r.case_id}: decision=${r.decision_id} runs=${n} clarification=${r.clarification.ok ? "ok" : "FAIL"} variants=${varOk}/${n} research=${resOk}/${n}`
     );
     if (r.decision_id !== "(crashed)") {
-      console.log(`  → http://localhost:3001/runs?tab=harness`);
+      console.log(`  → http://localhost:5001/runs?tab=harness`);
     }
   }
   console.log(`Total provider runs: ${runCount} (expected ${cases.length * providers.length})`);

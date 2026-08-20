@@ -2,7 +2,9 @@
 
 Research copy of Decision Copilot for **Meridian IC moral evaluation**. Not the production app.
 
-Production lives in [`decision-copilot-dynamodb`](https://github.com/Caryndcarter/decision-copilot-dynamodb) (`main`).
+Persistence: **MongoDB Atlas**, database `decision-copilot-evals` (same cluster as the original app, separate DB).
+
+Production Dynamo app lives in [`decision-copilot-dynamodb`](https://github.com/Caryndcarter/decision-copilot-dynamodb) (`main`).
 
 ## Demos (intake)
 

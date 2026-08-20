@@ -3,7 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 export const authConfig: NextAuthConfig = {
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token.${process.env.PORT || "3001"}`,
+      name: `next-auth.session-token.${process.env.PORT || "5001"}`,
       options: { httpOnly: true, sameSite: "lax", path: "/", secure: false },
     },
   },

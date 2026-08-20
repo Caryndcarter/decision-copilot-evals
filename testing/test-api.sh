@@ -13,7 +13,7 @@ echo "Request: $REQUEST_FILE"
 echo "Output:  $OUTPUT_FILE"
 echo ""
 
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3000/api/decision/run \
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:5001/api/decision/run \
   -H "Content-Type: application/json" \
   -d @"$REQUEST_FILE")
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
@@ -21,7 +21,7 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 
 if [ -z "$BODY" ]; then
   echo "Empty response (HTTP $HTTP_CODE). Is the dev server running? (npm run dev)"
-  echo "If the server is running, check the terminal for errors (e.g. DynamoDB connection)."
+  echo "If the server is running, check the terminal for errors (e.g. MongoDB connection)."
   exit 1
 fi
 

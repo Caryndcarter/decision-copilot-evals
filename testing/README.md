@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-- **DynamoDB Local** running: `npm run dynamo:init` from repo root (one-time per machine; afterwards `npm run dynamo:start`).
-- **`.env`** in repo root with `DYNAMODB_ENDPOINT`, `AWS_REGION`, dummy AWS keys, etc. (see top-level `README.md`).
+- **`.env`** in repo root with `MONGODB_URI`, `DB_NAME=decision-copilot-evals`, and LLM keys (see top-level `README.md`).
 - **Next.js** dev server: `npm run dev` from repo root.
+- Optional: `npm run db:smoke` to verify Mongo runs/users DAOs.
 
-## 1. Test intake (persists to DynamoDB)
+## 1. Test intake (persists to MongoDB)
 
 From repo root:
 
@@ -23,23 +23,13 @@ Or with an explicit request file:
 - The response is printed and saved under `testing/responses/`.
 - Copy `run_id` and `decision_id` from the response if you want to test clarification or check the DB.
 
-## 2. Verify the run is in DynamoDB
+## 2. Verify the run is in MongoDB
 
-**Option A – Admin UI**
+In Atlas → Browse Collections → database `decision-copilot-evals` → `runs`, find the document by `run_id`.
 
-Open [http://127.0.0.1:8011](http://127.0.0.1:8011), pick the `decision-copilot-local-runs` table, and you should see your run by `run_id`.
+Or: `npm run db:smoke` for a synthetic round-trip.
 
-**Option B – AWS CLI**
-
-```bash
-AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local \
-  aws dynamodb scan \
-  --table-name decision-copilot-local-runs \
-  --endpoint-url http://127.0.0.1:8010 \
-  --region us-east-1
-```
-
-## 3. Test clarification (reads/updates from DynamoDB)
+## 3. Test clarification (reads/updates from MongoDB)
 
 1. From a previous intake response, note `decision_id` and `run_id`.
 2. Create a request file (e.g. `testing/requests/clarification.json`) with:
@@ -76,4 +66,4 @@ You should get back the updated run with `status: "complete"` and a new `decisio
 2. Stop the Next.js dev server (Ctrl+C), then start it again (`npm run dev`).
 3. Call the clarification endpoint with that same `run_id` (step 3 above).
 
-If the run is found and updated, runs are persisting in DynamoDB across restarts. (Container restarts also preserve the run because data lives on the `dynamodb-data` Docker volume; `npm run dynamo:remove` is what wipes it.)
+If the run is found and updated, runs are persisting in Atlas across restarts.

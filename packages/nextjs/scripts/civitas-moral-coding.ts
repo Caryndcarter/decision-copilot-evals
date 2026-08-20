@@ -5,7 +5,7 @@
  * on a fixed Civitas moral rubric. Synthesizer brand and authorship mode are hidden
  * from the judge; metadata is joined only in the output file.
  *
- * From repo root (Docker DynamoDB must be up; prior harness runs must exist):
+ * From repo root (MongoDB via MONGODB_URI; prior harness runs must exist):
  *   npm run harness:civitas:moral -- --report=packages/nextjs/scripts/output/civitas-harness-….json
  *   npm run harness:civitas:moral -- --report=scripts/output/civitas-harness-….json
  *   npm run harness:civitas:moral -- --decision-id=<uuid>

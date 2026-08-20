@@ -31,24 +31,22 @@ Turn AI models into **your own think tank** for high-stakes decisions. Describe 
 
 11. **Free-form analysis (optional)** — An alternate intake path where the model chooses its own JSON structure instead of the three-lens + brief workflow. Useful for experiments; the structured path is the recommended default.
 
-Runs are stored in DynamoDB (local Docker in dev, AWS in prod). The result page shows context, lens outputs, clarification when needed, the decision brief, research/variant tools, and chat.
+Runs are stored in **MongoDB Atlas** (database name from `DB_NAME`, default `decision-copilot-evals`). The result page shows context, lens outputs, clarification when needed, the decision brief, research/variant tools, and chat.
 
 ## Tech stack
 
 - **App:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS.
 - **LLM:** OpenAI, Anthropic, Google Gemini, and xAI (Grok). Structured outputs for lenses and brief; streaming for chat. Server-only API keys.
-- **Data:** DynamoDB — one physical **`…-app`** table on **`main`** for NextAuth and decision runs (`RUN#…` keys). Local dev uses `amazon/dynamodb-local` in Docker. Branch **`two-tables`** preserves the older two-table layout (`…-runs` + `…-auth`) if you need it.
-- **Monorepo:** npm workspaces (`packages/nextjs`, `packages/local/docker-dynamodb`).
+- **Data:** MongoDB Atlas — `runs` + Auth.js collections (`users`, sessions, etc.) in a dedicated database on the shared cluster.
+- **Monorepo:** npm workspaces (`packages/nextjs`, optional local packages).
 
-## DynamoDB persistence layer
+## MongoDB persistence layer
 
-**`main` (current):** one table **`${PROJECT_KEY}-${PROJECT_ENV}-app`**. NextAuth rows keep the adapter shape (`pk`/`sk`/`GSI1PK`/`GSI1SK`, TTL on `expires`). Decision runs use **`pk`/`sk` = `RUN#<run_id>`** with **`by-decision`** / **`by-user`** GSIs (hash on `decision_id` / `user_id`, range on **`updatedAt`** so lists reflect last activity). Code: `lib/db/runs.ts`, `lib/db/users.ts`, `lib/db/run-keys.ts`, `server/config/dynamodb.ts`. Table definition: `packages/local/docker-dynamodb/dynamo-create-table.sh`. Changing GSI key schema requires recreating the app table (for example `npm run dynamo:remove` then `npm run dynamo:create-table` in local dev).
+Same Atlas **cluster** credentials as the original Decision Copilot; a separate **`DB_NAME`** (default `decision-copilot-evals`) isolates evals data. Atlas creates the database on first write.
 
-More detail: [`docs/DYNAMODB_SINGLE_TABLE.md`](docs/DYNAMODB_SINGLE_TABLE.md).
-
-**Migrating from the old two-table layout?** Legacy **`…-runs`** and **`…-auth`** tables can stay on disk. Run **`npm run dynamo:migrate-legacy`** once after creating **`…-app`** to copy all runs and auth rows into the app table. Idempotent; does not delete legacy tables.
-
-**Branch `two-tables`:** frozen snapshot of the pre-migration layout (separate **`…-runs`** and **`…-auth`** tables). Use it if you need the old schema without the single-table changes.
+- **Connection:** `MONGODB_URI` + `DB_NAME` → `server/config/mongodb.ts` (native `mongodb` driver + `@auth/mongodb-adapter`).
+- **Runs:** collection `runs`, keyed by `run_id`, with indexes on `decision_id` / `user_id` + `updatedAt`. DAO: `lib/db/runs.ts`.
+- **Users:** collection `users` (credentials `passwordHash` + Auth.js adapter fields). DAO: `lib/db/users.ts`.
 
 ### DAO surface (`lib/db/runs.ts`)
 
@@ -69,15 +67,14 @@ decision-copilot/
 │   │   │   └── api/decision/run/     # Run, chat, research, synthesis APIs
 │   │   ├── lenses/                   # Risk, Reversibility, People, Brief, Synthesis
 │   │   ├── llm/                      # OpenAI, Anthropic, Gemini, xAI + streaming
-│   │   ├── lib/db/                   # DynamoDB persistence (runs, users)
-│   │   ├── server/config/dynamodb.ts # DynamoDB doc client singleton
+│   │   ├── lib/db/                   # MongoDB persistence (runs, users)
+│   │   ├── server/config/mongodb.ts  # Mongo client + DB_NAME
 │   │   └── types/                    # decision.ts (intake, lenses, brief, run)
-│   └── local/
-│       └── docker-dynamodb/          # Docker compose + create-table script
-├── docs/                             # DynamoDB single-table notes, migration guides
+│   └── local/                        # Optional local tooling
+├── docs/                             # Harness snapshots, design notes
 ├── testing/                          # Request/response samples, test scripts
 ├── .env                              # See "Environment" below
-└── package.json                      # Workspace root; dev/build/dynamo scripts
+└── package.json                      # Workspace root; dev/build/harness scripts
 ```
 
 ## Run it locally
@@ -85,14 +82,13 @@ decision-copilot/
 ### Prerequisites
 
 - **Node.js ≥ 20** and **npm ≥ 10**
-- **Docker** running (for local DynamoDB)
-- **AWS CLI** installed (the create-table script uses it; for local dev the credentials can be dummy values — see step 2)
+- **MongoDB Atlas** URI (same cluster as the original app is fine; use a distinct `DB_NAME`)
 
 ### 1. Install dependencies
 
 ```bash
-git clone https://github.com/Caryndcarter/decision-copilot-dynamodb.git
-cd decision-copilot-dynamodb
+git clone <this-repo>
+cd decision-copilot-evals
 npm install
 ```
 
@@ -107,38 +103,28 @@ ANTHROPIC_API_KEY=        # needed for the Unified Brief + Contributions
 GEMINI_API_KEY=           # needed for demo quick-fill sample answers
 XAI_API_KEY=
 
-# Local DynamoDB (Docker). These values work out of the box.
-DYNAMODB_ENDPOINT=http://127.0.0.1:8010
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=local
-AWS_SECRET_ACCESS_KEY=local
+# MongoDB Atlas — same cluster URI as original Decision Copilot; separate database
+MONGODB_URI=mongodb+srv://...
+DB_NAME=decision-copilot-evals
 ```
 
 > Only the LLM keys you set become selectable in the UI. OpenAI alone is enough to run the core three-lens + brief flow; add `ANTHROPIC_API_KEY` for the Unified Brief and `GEMINI_API_KEY` for demo answer generation. See the full [Environment](#environment) table for every option.
 
-### 3. Start DynamoDB and create the table
-
-```bash
-npm run dynamo:init   # starts DynamoDB Local in Docker + creates the …-app table (one-time per machine)
-```
-
-### 4. Start the dev server
+### 3. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-- **App:** [http://localhost:3000](http://localhost:3000) — describe a decision and convene your think tank (or load a demo scenario).
-- **DynamoDB Admin UI:** [http://127.0.0.1:8011](http://127.0.0.1:8011) (port from `DYNAMODB_ADMIN_PORT`).
+- **App:** [http://localhost:5001](http://localhost:5001) — describe a decision and convene your think tank (or load a demo scenario).
 
-On later sessions you don't need `dynamo:init` again — `npm run dynamo:start` (or just `npm run dev` if the container is already up) is enough; data persists in the Docker volume.
+Optional persistence check: `npm run db:smoke`.
 
 ### Troubleshooting
 
-- **Port already in use (8010/8011):** another DynamoDB stack is likely running. Change `DYNAMODB_PORT` / `DYNAMODB_ADMIN_PORT` in `.env` (and update `DYNAMODB_ENDPOINT` to match), then re-run `npm run dynamo:init`.
-- **`ResourceNotFoundException` / table missing:** run `npm run dynamo:create-table` (idempotent).
+- **Health check / Mongo errors:** confirm `MONGODB_URI` and Atlas Network Access (your IP or `0.0.0.0/0` for testing).
 - **Provider not listed in the UI:** its API key isn't set in `.env`. Add the key and restart `npm run dev`.
-- **Docker not running:** start Docker Desktop before `npm run dynamo:init`.
+- **Wrong data / empty app:** check `DB_NAME` — evals should use `decision-copilot-evals`, not the original `decision-copilot` database.
 
 ### Environment
 
@@ -151,25 +137,18 @@ Full list of variables for `.env` at the repo root:
 | `GEMINI_API_KEY` | Optional. Same as above for Google Gemini. |
 | `XAI_API_KEY` | Optional. When set, you can choose xAI (Grok) as the AI provider. |
 | `OPENAI_MODEL` | Optional. OpenAI chat model (default `gpt-5.6-sol`; e.g. `gpt-5.6-terra` for lower cost). |
+| `OPENAI_WEB_SEARCH_MODEL` | Optional. Model for research / live-web turns via Responses `web_search` (defaults to `OPENAI_MODEL`). |
 | `ANTHROPIC_MODEL` | Optional. Anthropic chat model (default `claude-fable-5`). |
 | `XAI_MODEL` | Optional. xAI chat model (default `grok-4.5`). |
-| `PROJECT_KEY` / `PROJECT_ENV` | Used in container and table names (default `decision-copilot` / `local`). |
-| `APP_TABLE_NAME` | Optional. Single-table name (default `${PROJECT_KEY}-${PROJECT_ENV}-app`). |
-| `DYNAMODB_ENDPOINT` | DynamoDB endpoint URL. Set for local Docker (`http://127.0.0.1:8010`); leave unset in prod to use real AWS. |
-| `DYNAMODB_PORT` / `DYNAMODB_ADMIN_PORT` | Host ports for the DynamoDB and admin UI containers (defaults `8000` / `8001`; the repo ships with `8010` / `8011` to avoid clashing with other local DynamoDB stacks). |
-| `AWS_REGION` | AWS region (default `us-east-1`). |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | DynamoDB Local ignores credentials but the SDK requires *something*; use `local` / `local`. In prod, leave unset and the SDK will use the default credential chain (IAM role, env vars, etc.). |
+| `MONGODB_URI` | Atlas (or local) Mongo connection string. |
+| `DB_NAME` | Database name on that cluster (default `decision-copilot-evals`). |
 
 ### Other scripts
 
 - `npm run build` — Build all workspaces.
 - `npm run typecheck` — Type-check all workspaces.
-- `npm run dynamo:init` — Bring up DynamoDB Local + create the **`…-app`** table.
-- `npm run dynamo:migrate-legacy` — Copy rows from legacy **`…-runs`** and **`…-auth`** into **`…-app`** (optional; use when upgrading from the two-table layout). Idempotent; does not delete legacy tables.
-- `npm run dynamo:snapshot` — Clone live `…-runs` / `…-auth` into `…-archive` tables (frozen copy; originals unchanged). Override with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME`.
-- `npm run dynamo:start` / `dynamo:stop` — Start/stop the containers (data persists).
-- `npm run dynamo:remove` — Stop and delete the data volume.
-- `npm run dynamo:create-table` — Just (re)run the create-table script for **`…-app`**; safe to re-run, idempotent.
+- `npm run db:smoke` — Round-trip smoke test for runs/users against Mongo.
+- `npm run harness:meridian-ic` / `harness:civitas` — Eval harnesses (see `EVALS.md`).
 
 ## API
 
