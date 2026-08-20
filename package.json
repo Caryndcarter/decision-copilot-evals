@@ -25,6 +25,7 @@
     "harness:civitas:moral": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/civitas-moral-coding.ts",
     "harness:meridian-ic": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/meridian-ic-voice-harness.ts",
     "harness:meridian-ic:moral": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/meridian-ic-moral-coding.ts",
+    "invite:create": "cd packages/nextjs && env-cmd --file ../../.env -- npx tsx scripts/create-invite.ts",
     "start": "npm run dev",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces"

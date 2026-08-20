@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createUserWithPassword, UserAlreadyExistsError } from "@/lib/db/users";
+import { inviteErrorMessage, verifyInviteToken } from "@/lib/invite-token";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body as { email?: string; password?: string; name?: string };
+    const { email, password, name, invite } = body as {
+      email?: string;
+      password?: string;
+      name?: string;
+      invite?: string;
+    };
+
+    const inviteResult = verifyInviteToken(invite);
+    if (!inviteResult.ok) {
+      return NextResponse.json(
+        { error: inviteErrorMessage(inviteResult.reason) },
+        { status: 403 }
+      );
+    }
 
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return NextResponse.json({ error: "Valid email is required" }, { status: 400 });

@@ -20,6 +20,7 @@ function GoogleIcon() {
 function SignInForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/runs";
+  const invite = searchParams.get("invite");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -154,10 +155,19 @@ function SignInForm() {
             </form>
 
             <p className="mt-6 text-center text-sm text-zinc-500">
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Sign up
-              </Link>
+              {invite ? (
+                <>
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href={`/auth/signup?invite=${encodeURIComponent(invite)}`}
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Sign up with your invite
+                  </Link>
+                </>
+              ) : (
+                <>Need an account? Ask for an invite.</>
+              )}
             </p>
           </div>
         </div>

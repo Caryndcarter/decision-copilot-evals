@@ -159,11 +159,18 @@ Full list of variables for `.env` at the repo root:
 | `DYNAMODB_PORT` / `DYNAMODB_ADMIN_PORT` | Host ports for the DynamoDB and admin UI containers (defaults `8000` / `8001`; the repo ships with `8010` / `8011` to avoid clashing with other local DynamoDB stacks). |
 | `AWS_REGION` | AWS region (default `us-east-1`). |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | DynamoDB Local ignores credentials but the SDK requires *something*; use `local` / `local`. In prod, leave unset and the SDK will use the default credential chain (IAM role, env vars, etc.). |
+| `AUTH_SECRET` | Required for Auth.js sessions and for signing invite links. Generate with `openssl rand -base64 32`. |
+| `INVITE_SECRET` | Optional. If set, used instead of `AUTH_SECRET` to sign invite tokens. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional. Enable Google sign-in (and first-time Google signup via invite). |
+| `AUTH_URL` / `NEXTAUTH_URL` | Optional. Public app origin used when minting invite URLs (default `http://localhost:3001`). |
+
+Signup is **invite-only**: mint a link with `npm run invite:create` (optional `--days 7`). Existing users can still sign in without an invite.
 
 ### Other scripts
 
 - `npm run build` — Build all workspaces.
 - `npm run typecheck` — Type-check all workspaces.
+- `npm run invite:create` — Print an expiring signup invite URL (`--days`, `--base-url`).
 - `npm run dynamo:init` — Bring up DynamoDB Local + create the **`…-app`** table.
 - `npm run dynamo:migrate-legacy` — Copy rows from legacy **`…-runs`** and **`…-auth`** into **`…-app`** (optional; use when upgrading from the two-table layout). Idempotent; does not delete legacy tables.
 - `npm run dynamo:snapshot` — Clone live `…-runs` / `…-auth` into `…-archive` tables (frozen copy; originals unchanged). Override with `SNAPSHOT_RUNS_TABLE_NAME` / `SNAPSHOT_AUTH_TABLE_NAME`.

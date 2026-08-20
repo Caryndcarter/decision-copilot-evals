@@ -3,8 +3,10 @@ import Google from "next-auth/providers/google";
 import { DynamoDBAdapter } from "@auth/dynamodb-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { dynamo, AUTH_TABLE } from "@/server/config/dynamodb";
 import { findUserByEmail } from "@/lib/db/users";
+import { INVITE_COOKIE_NAME, verifyInviteToken } from "@/lib/invite-token";
 import { authConfig } from "@/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -38,6 +40,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return true;
+      const email = user.email;
+      if (!email) return false;
+
+      const existing = await findUserByEmail(email);
+      if (existing) return true;
+
+      const jar = await cookies();
+      const invite = jar.get(INVITE_COOKIE_NAME)?.value;
+      const verified = verifyInviteToken(invite);
+      if (!verified.ok) {
+        return "/auth/signup?error=invite_required";
+      }
+      jar.delete(INVITE_COOKIE_NAME);
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
