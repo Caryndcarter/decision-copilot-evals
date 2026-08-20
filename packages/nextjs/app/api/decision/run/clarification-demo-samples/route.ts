@@ -16,6 +16,7 @@ const DEMO_SCENARIO_LABELS: Partial<Record<DemoScenarioId, string>> = {
   "hybrid-office-lease": "Hybrid office lease (demo)",
   "legacy-core-modernization": "Legacy core modernization (demo)",
   "hubspot-crm-fintech": "HubSpot CRM for white-label fintech (demo)",
+  "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
 };
 
 /**

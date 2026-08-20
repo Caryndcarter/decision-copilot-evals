@@ -157,6 +157,27 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
       },
     ],
   },
+  {
+    scenarioId: "meridian-civitas-saas-rollup",
+    title: "Civitas modernization",
+    items: [
+      {
+        label: "Risk vs savings matrix",
+        prompt:
+          "I'd like a variant that is a **pace × risk × margin matrix** comparing the five Civitas options (aggressive 9-month cut, phased retention, hybrid tribal-knowledge team, sell-as-is, capped cut + reinvest). Outline the table, then suggest the format for the variant.",
+      },
+      {
+        label: "Municipal failure scenario",
+        prompt:
+          "Propose a variant: **one concrete failure scenario** (town can't issue permits for N days) with financial, reputational, and LP/pension optics cost bands vs the savings of moving faster. Describe the section, then suggest the format tag.",
+      },
+      {
+        label: "Retention & severance plan",
+        prompt:
+          "Create a variant idea: **knowledge-retention and severance playbook** for the 5–6 senior engineers and remaining org (communication sequence, incentives to stay through validation, WARN timing). Brief outline, then format suggestion.",
+      },
+    ],
+  },
 ];
 
 const GENERIC_VARIANT_GROUP: VariantStarterGroup = {

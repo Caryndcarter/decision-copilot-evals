@@ -146,6 +146,27 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
       },
     ],
   },
+  {
+    scenarioId: "meridian-civitas-saas-rollup",
+    title: "Civitas AI modernization / PE roll-up",
+    items: [
+      {
+        label: "WARN & multi-entity layoffs",
+        prompt:
+          "Summarize how the US WARN Act treats plant closings/mass layoffs when a PE operating company has multiple portfolio employers in related entities—aggregation, notice periods, common pitfalls. Link DOL guidance or reputable employment-law summaries.",
+      },
+      {
+        label: "Govtech migration failures",
+        prompt:
+          "Find 2–3 public case studies or news investigations of failed or painful municipal/state software migrations (permitting, ERP, or similar) that disrupted services. Link each; note what broke for residents and how long recovery took.",
+      },
+      {
+        label: "AI code migration risk",
+        prompt:
+          "What do credible engineering or risk sources say about LLM-assisted legacy modernization (especially undocumented config/edge cases) and validation strategies before cutting over production systems? Cite 2–3 linked sources.",
+      },
+    ],
+  },
 ];
 
 const GENERIC_RESEARCH_GROUP: ResearchStarterGroup = {
