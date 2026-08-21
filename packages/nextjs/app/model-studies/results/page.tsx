@@ -28,17 +28,19 @@ export default function ResultsPage() {
       <SiteNav />
 
       <section className="bg-zinc-950 pt-16 pb-10 lg:pt-20">
-        <div className="mx-auto max-w-3xl px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
-            Full rollup
-          </p>
-          <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-            Every study, every finding
-          </h1>
-          <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-            One continuous view across all live studies. As new case batteries are coded, they
-            extend this page — they don&apos;t replace it.
-          </p>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="max-w-3xl ml-auto">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+              Full rollup
+            </p>
+            <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
+              Every study, every finding
+            </h1>
+            <p className="mt-5 text-base text-zinc-300 leading-relaxed">
+              One continuous view across all live studies. As new case batteries are coded, they
+              extend this page — they don&apos;t replace it.
+            </p>
+          </div>
         </div>
         <div className="mx-auto max-w-6xl px-6 mt-10">
           <StatStrip stats={stats} />

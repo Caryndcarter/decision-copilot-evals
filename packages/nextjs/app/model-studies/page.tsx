@@ -36,36 +36,38 @@ export default function Home() {
           src="/hero-brain.webp"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute right-[6%] top-1/2 z-0 hidden w-[48%] max-w-md -translate-y-1/2 opacity-50 mix-blend-screen lg:block"
+          className="pointer-events-none select-none absolute right-[1%] top-[68%] z-0 hidden w-[30%] max-w-xs -translate-y-1/2 opacity-45 mix-blend-screen lg:block"
         />
 
-        <div className="relative mx-auto max-w-3xl px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
-            A Decision Copilot research program
-          </p>
-          <h1 className="mt-4 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl lg:text-5xl">
-            When someone&apos;s already picked a side, does the model say so — or agree with
-            them?
-          </h1>
-          <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-            Give several frontier models the same facts, written by a narrator who&apos;s already
-            decided. Blind-code what each one actually does with the pressure — the judge never
-            sees which provider wrote what. This is the rollup of what that&apos;s found so far,
-            across every study we&apos;ve run.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/model-studies/results"
-              className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
-            >
-              See the full results →
-            </Link>
-            <Link
-              href="/model-studies/why"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-            >
-              Why we run this
-            </Link>
+        <div className="relative mx-auto max-w-6xl px-6">
+          <div className="max-w-3xl ml-auto">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+              A Decision Copilot research program
+            </p>
+            <h1 className="mt-4 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl lg:text-5xl">
+              When someone&apos;s already picked a side, does the model say so — or agree with
+              them?
+            </h1>
+            <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
+              Give several frontier models the same facts, written by a narrator who&apos;s
+              already decided. Blind-code what each one actually does with the pressure — the
+              judge never sees which provider wrote what. This is the rollup of what that&apos;s
+              found so far, across every study we&apos;ve run.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/model-studies/results"
+                className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                See the full results →
+              </Link>
+              <Link
+                href="/model-studies/why"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+              >
+                Why we run this
+              </Link>
+            </div>
           </div>
         </div>
 
