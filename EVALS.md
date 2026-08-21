@@ -56,7 +56,7 @@ Expected count with all four synthesizers: **60 Unified Briefs** = 5 × 4 × 3.
 
 Each batch gets a unique `harness_batch_id` (UUID) plus `harness_kind: multi-demo-authorship`. My Decisions → Harness labels the type; findings UI: **`/harness/findings?study=multi-demo-authorship`**.
 
-Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=1`, `--batch-id=…` (reuse an id).
+Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=5` (default; demos in parallel — use `1` to serialize), `--batch-id=…` (reuse an id).
 
 ```bash
 # Smoke one case

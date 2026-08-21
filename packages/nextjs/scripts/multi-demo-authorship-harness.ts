@@ -23,10 +23,14 @@
  * Env / flags:
  *   HARNESS_USER_EMAIL=you@example.com
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
- *   HARNESS_DEMO_CONCURRENCY=1
+ *   HARNESS_DEMO_CONCURRENCY=5       # demos in parallel (default 5; use 1 to serialize)
  *   HARNESS_DEMOS=meridian-civitas-saas-rollup,healthcare-pe-acquisition
- *   --demos=... --start-demo=... --demo-concurrency=1
+ *   --demos=... --start-demo=... --demo-concurrency=5
  *   --user-email=... --providers=openai,gemini
+ *   --fill-decision=<uuid>[,uuid…]   # backfill missing synthesizer×mode briefs+contribs
+ *   --modes=open,blind,reassigned    # optional filter with fill-decision
+ *   --synthesizers=xai               # optional filter with fill-decision
+ *   --force                          # refill even if brief already exists
  *
  * Same five high-conflict demos as decision-copilot-dynamodb (not Meridian IC voice variants).
  */
@@ -70,6 +74,8 @@ import {
 } from "../lib/unified-brief-persist-run";
 import {
   UNIFIED_BRIEF_SYNTHESIZERS,
+  getUnifiedBriefContributionsByAuthor,
+  getUnifiedBriefForAuthor,
   mergeUnifiedBriefContributionsIntoRun,
   mergeUnifiedBriefIntoRun,
   type UnifiedBriefSynthesizer,
@@ -155,13 +161,38 @@ function parseArgs(argv: string[]) {
     startDemo: (get("start-demo") ?? process.env.HARNESS_START_DEMO ?? "").trim(),
     userEmail: (get("user-email") ?? process.env.HARNESS_USER_EMAIL ?? "").trim(),
     providersRaw: (get("providers") ?? process.env.HARNESS_PROVIDERS ?? "").trim(),
-    /** How many demos to run at once (default 1). */
+    /** How many demos to run at once (default 5 = full set in parallel). */
     demoConcurrency: Number(
-      get("demo-concurrency") ?? process.env.HARNESS_DEMO_CONCURRENCY ?? 1
+      get("demo-concurrency") ?? process.env.HARNESS_DEMO_CONCURRENCY ?? 5
     ),
     runNumberRaw: (get("run-number") ?? process.env.HARNESS_RUN_NUMBER ?? "").trim(),
     batchIdRaw: (get("batch-id") ?? process.env.HARNESS_BATCH_ID ?? "").trim(),
+    fillDecisionRaw: (get("fill-decision") ?? "").trim(),
+    modesRaw: (get("modes") ?? "").trim(),
+    synthesizersRaw: (get("synthesizers") ?? "").trim(),
+    force: argv.includes("--force"),
   };
+}
+
+function parseModesFilter(raw: string): UnifiedBriefAuthorshipMode[] {
+  if (!raw.trim()) return [...AUTHORSHIP_MODES];
+  const wanted = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = new Set<string>(AUTHORSHIP_MODES);
+  const bad = wanted.filter((m) => !allowed.has(m));
+  if (bad.length) throw new Error(`Unknown mode(s): ${bad.join(", ")}`);
+  return wanted as UnifiedBriefAuthorshipMode[];
+}
+
+function parseSynthesizersFilter(
+  raw: string,
+  available: UnifiedBriefSynthesizer[]
+): UnifiedBriefSynthesizer[] {
+  if (!raw.trim()) return available;
+  const wanted = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = new Set<string>(available);
+  const bad = wanted.filter((s) => !allowed.has(s));
+  if (bad.length) throw new Error(`Unknown/unavailable synthesizer(s): ${bad.join(", ")}`);
+  return wanted as UnifiedBriefSynthesizer[];
 }
 
 function selectDemos(demosRaw: string, startDemo: string): DemoHarnessCase[] {
@@ -903,6 +934,95 @@ async function runDemoCase(
   return report;
 }
 
+function stubDemoFromPersist(persist: DecisionRunResult): DemoHarnessCase {
+  const id = persist.demo_scenario_id ?? "unknown";
+  const known = DEMO_HARNESS_CASES.find((c) => c.id === id);
+  if (known) return known;
+  // Minimal stub for logging only — fill path never uses researchStarter.
+  return DEMO_HARNESS_CASES[0]!;
+}
+
+/**
+ * Backfill missing Unified Brief + contributions for an existing decision
+ * (does not re-run intake / clarification / variants).
+ */
+async function fillMissingBriefsForDecision(
+  decisionId: string,
+  synthesizers: UnifiedBriefSynthesizer[],
+  modes: UnifiedBriefAuthorshipMode[],
+  force: boolean
+): Promise<{
+  decision_id: string;
+  demo_id: string;
+  filled: string[];
+  skipped: string[];
+  failed: string[];
+}> {
+  const allRuns = await getRunsByDecisionId(decisionId);
+  const persist = pickPersistRunForUnifiedBrief(allRuns);
+  if (!persist) throw new Error(`No persist run for decision ${decisionId}`);
+  const demo = stubDemoFromPersist(persist);
+  const writeQueue = createWriteQueue();
+  const filled: string[] = [];
+  const skipped: string[] = [];
+  const failed: string[] = [];
+
+  log(`fill-decision ${decisionId} (${demo.id}) · ${synthesizers.join(",")} × ${modes.join(",")}`);
+
+  for (const synthesizer of synthesizers) {
+    for (const mode of modes) {
+      const key = modeKey(synthesizer, mode);
+      const latestRuns = await getRunsByDecisionId(decisionId);
+      const latestPersist = pickPersistRunForUnifiedBrief(latestRuns) ?? persist;
+      const existingBrief = getUnifiedBriefForAuthor(latestPersist, synthesizer, mode);
+      const existingContrib = getUnifiedBriefContributionsByAuthor(latestPersist, mode)[synthesizer];
+
+      if (existingBrief && existingContrib && !force) {
+        skipped.push(key);
+        log(`  skip ${key} (already present)`);
+        continue;
+      }
+
+      try {
+        if (!existingBrief || force) {
+          const { brief, persistRunId } = await synthesizeUnifiedBrief(
+            decisionId,
+            synthesizer,
+            mode,
+            demo
+          );
+          await writeQueue(() =>
+            writeUnifiedBrief(decisionId, persistRunId, synthesizer, mode, brief, demo)
+          );
+        }
+        const { contributions, brief, persistRunId } = await synthesizeContributions(
+          decisionId,
+          synthesizer,
+          mode,
+          demo
+        );
+        await writeQueue(() =>
+          writeContributions(decisionId, persistRunId, synthesizer, mode, brief, contributions, demo)
+        );
+        filled.push(key);
+        log(`  filled ${key}`);
+      } catch (err) {
+        const message = errMessage(err);
+        failed.push(key);
+        log(`  FAILED ${key}`, message);
+      }
+    }
+  }
+
+  return {
+    decision_id: decisionId,
+    demo_id: demo.id,
+    filled,
+    skipped,
+    failed,
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const providers = configuredProviders(args.providersRaw || undefined);
@@ -911,9 +1031,58 @@ async function main() {
     process.exit(1);
   }
 
-  const synthesizers = UNIFIED_BRIEF_SYNTHESIZERS.filter((s) =>
+  const synthesizersAvailable = UNIFIED_BRIEF_SYNTHESIZERS.filter((s) =>
     providers.includes(s)
   ) as UnifiedBriefSynthesizer[];
+
+  if (args.fillDecisionRaw) {
+    const decisionIds = args.fillDecisionRaw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let modes: UnifiedBriefAuthorshipMode[];
+    let synthesizers: UnifiedBriefSynthesizer[];
+    try {
+      modes = parseModesFilter(args.modesRaw);
+      synthesizers = parseSynthesizersFilter(args.synthesizersRaw, synthesizersAvailable);
+    } catch (err) {
+      console.error(errMessage(err));
+      process.exit(1);
+    }
+    log("Multi-demo authorship fill-decision");
+    log(`  decisions: ${decisionIds.join(", ")}`);
+    log(`  synthesizers: ${synthesizers.join(", ")}`);
+    log(`  modes: ${modes.join(", ")}`);
+    log(`  force: ${args.force}`);
+
+    const results = [];
+    for (const decisionId of decisionIds) {
+      try {
+        results.push(await fillMissingBriefsForDecision(decisionId, synthesizers, modes, args.force));
+      } catch (err) {
+        log(`fill-decision ${decisionId} crashed`, errMessage(err));
+        results.push({
+          decision_id: decisionId,
+          demo_id: "?",
+          filled: [] as string[],
+          skipped: [] as string[],
+          failed: ["(crashed)"],
+        });
+      }
+    }
+    console.log("\n======== Fill summary ========");
+    for (const r of results) {
+      console.log(
+        `${r.demo_id} ${r.decision_id}: filled=${r.filled.length} skipped=${r.skipped.length} failed=${r.failed.length}` +
+          (r.filled.length ? ` [${r.filled.join(", ")}]` : "") +
+          (r.failed.length ? ` FAILED[${r.failed.join(", ")}]` : "")
+      );
+    }
+    if (results.some((r) => r.failed.length)) process.exit(1);
+    return;
+  }
+
+  const synthesizers = synthesizersAvailable;
 
   let userId: string | undefined;
   if (args.userEmail) {
