@@ -32,6 +32,12 @@ export default function Home() {
         />
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl" />
+        <img
+          src="/hero-brain.webp"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute right-[-4%] top-1/2 z-0 hidden w-[38%] max-w-sm -translate-y-1/2 opacity-30 mix-blend-screen lg:block"
+        />
 
         <div className="relative mx-auto max-w-3xl px-6">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
