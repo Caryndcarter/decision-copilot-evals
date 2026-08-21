@@ -17,7 +17,7 @@ export default function HowItWorksPage() {
 
       <section className="bg-zinc-950 py-16 lg:py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-3xl ml-auto">
+          <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               Method
             </p>
