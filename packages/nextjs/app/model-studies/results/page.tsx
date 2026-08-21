@@ -13,7 +13,7 @@ import {
 } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
-  title: "Results — Decision Copilot",
+  title: "Results — Model Studies",
   description: "Every study, every finding — the full rollup of blind-coded model behavior.",
 };
 

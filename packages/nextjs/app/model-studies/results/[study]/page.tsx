@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SiteNav } from "@/app/_components/site-nav";
-import { StatStrip } from "@/app/_components/stat-strip";
-import { FindingCardGrid } from "@/app/_components/finding-card";
-import { DimensionScoreboard } from "@/app/_components/scoreboard-dimension-coded";
-import { InfluenceMatrixPlaceholder } from "@/app/_components/scoreboard-influence-matrix";
+import { SiteNav } from "@/app/model-studies/_components/site-nav";
+import { StatStrip } from "@/app/model-studies/_components/stat-strip";
+import { FindingCardGrid } from "@/app/model-studies/_components/finding-card";
+import { DimensionScoreboard } from "@/app/model-studies/_components/scoreboard-dimension-coded";
+import { InfluenceMatrixPlaceholder } from "@/app/model-studies/_components/scoreboard-influence-matrix";
 import { FINDINGS_STUDIES, getFindingsStudy } from "@/lib/findings-registry";
 
 export function generateStaticParams() {
@@ -43,7 +43,7 @@ export default async function StudyResultsPage({
       <section className="bg-zinc-950">
         <div className="mx-auto max-w-3xl px-6 pt-16 pb-10 lg:pt-20">
           <Link
-            href="/results"
+            href="/model-studies/results"
             className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             ← All results
@@ -129,7 +129,7 @@ export default async function StudyResultsPage({
               </Link>
             )}
             <Link
-              href="/results"
+              href="/model-studies/results"
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
               See other studies

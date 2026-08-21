@@ -13,7 +13,7 @@ export function RollupFindingGrid({ findings }: { findings: RollupFinding[] }) {
       {findings.map((f) => (
         <Link
           key={`${f.studyId}-${f.headline}`}
-          href={`/results/${f.studyId}`}
+          href={`/model-studies/results/${f.studyId}`}
           className="block rounded-xl border border-zinc-200 bg-white p-5 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
         >
           <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600">

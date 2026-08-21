@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 
 export const metadata: Metadata = {
-  title: "Why it matters — Decision Copilot",
+  title: "Why it matters — Model Studies",
   description: "Why we publish blind-coded model behavior instead of just claiming it.",
 };
 
@@ -68,7 +68,7 @@ export default function WhyPage() {
               Start a decision →
             </Link>
             <Link
-              href="/results"
+              href="/model-studies/results"
               className="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors"
             >
               Back to results

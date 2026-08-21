@@ -4,7 +4,7 @@ import { SiteNav } from "../_components/site-nav";
 import { getLiveStudies } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
-  title: "How it works — Decision Copilot",
+  title: "How it works — Model Studies",
   description: "The shared method behind every study: blind coding against a fixed rubric.",
 };
 
