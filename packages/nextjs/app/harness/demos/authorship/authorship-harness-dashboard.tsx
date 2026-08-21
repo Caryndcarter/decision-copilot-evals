@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { AuthorshipBatchSummary, AuthorshipMoralCell } from "@/lib/authorship-harness-summary";
+import type {
+  AuthorshipBatchSummary,
+  AuthorshipInfluenceShift,
+  AuthorshipMoralCell,
+  AuthorshipRollupMatrix,
+} from "@/lib/authorship-harness-summary";
 import { AUTHORSHIP_SUMMARY_MODES } from "@/lib/authorship-harness-summary";
 import {
   AUDIT_DIMENSION_LABELS,
@@ -12,8 +17,9 @@ import {
   type AuditValueTone,
   type UnifiedBriefAuditDimension,
 } from "@/lib/unified-brief-audit/rubric";
+import { influenceLabel } from "@/lib/unified-brief-influence-matrix";
 import { UNIFIED_BRIEF_SYNTHESIZERS } from "@/lib/unified-briefs";
-import type { UnifiedBriefAuthorshipMode } from "@/types/decision";
+import type { ContributionInfluence, UnifiedBriefAuthorshipMode } from "@/types/decision";
 
 const MODE_LABEL: Record<(typeof AUTHORSHIP_SUMMARY_MODES)[number], string> = {
   open: "Standard",
@@ -28,6 +34,13 @@ const SYNTH_LABEL: Record<(typeof UNIFIED_BRIEF_SYNTHESIZERS)[number], string> =
   xai: "Grok",
 };
 
+const RATED_LABEL: Record<string, string> = {
+  openai: "ChatGPT",
+  anthropic: "Fable",
+  gemini: "Gemini",
+  xai: "Grok",
+};
+
 const TONE_CHIP: Record<AuditValueTone, string> = {
   positive: "bg-emerald-100 text-emerald-900 border-emerald-200",
   caution: "bg-amber-100 text-amber-950 border-amber-200",
@@ -35,25 +48,12 @@ const TONE_CHIP: Record<AuditValueTone, string> = {
   muted: "bg-zinc-50 text-zinc-500 border-zinc-200",
 };
 
-function coverageCell(briefs: number, contribs: number, audits: number, expectedSynth: number) {
-  const briefOk = briefs >= expectedSynth;
-  const contribOk = contribs >= expectedSynth;
-  return (
-    <span
-      className={
-        briefOk && contribOk
-          ? "tabular-nums text-emerald-800"
-          : briefs > 0
-            ? "tabular-nums text-amber-800"
-            : "tabular-nums text-zinc-400"
-      }
-      title={`${briefs}/${expectedSynth} briefs · ${contribs}/${expectedSynth} contributions · ${audits}/${expectedSynth} moral audits`}
-    >
-      {briefs}/{contribs}
-      {audits > 0 ? <span className="text-zinc-400"> · {audits}a</span> : null}
-    </span>
-  );
-}
+const HEATMAP_CELL: Record<ContributionInfluence, string> = {
+  high: "bg-indigo-600 text-white",
+  medium: "bg-indigo-400 text-white",
+  low: "bg-indigo-200 text-indigo-950",
+  minimal: "bg-zinc-100 text-zinc-600 border border-zinc-200",
+};
 
 function AuditChip({
   dim,
@@ -131,17 +131,74 @@ function MoralDetailDrawer({
   );
 }
 
+function RollupHeatmap({ matrix }: { matrix: AuthorshipRollupMatrix }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full border-separate border-spacing-1 text-left">
+        <thead>
+          <tr>
+            <th className="px-2 py-1 text-[11px] font-medium text-zinc-500">Author → rated</th>
+            {matrix.rated.map((rated) => (
+              <th
+                key={rated}
+                className="px-1 py-1 text-center text-[11px] font-medium text-zinc-600 whitespace-nowrap"
+              >
+                {RATED_LABEL[rated] ?? rated}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {matrix.raters.map((rater) => (
+            <tr key={rater}>
+              <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-800 whitespace-nowrap">
+                {SYNTH_LABEL[rater]}
+              </th>
+              {matrix.rated.map((rated) => {
+                const cell = matrix.cells[rater]?.[rated];
+                if (!cell) {
+                  return (
+                    <td key={rated} className="p-0">
+                      <div className="flex min-h-[3rem] min-w-[4.5rem] items-center justify-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 text-[11px] text-zinc-400">
+                        —
+                      </div>
+                    </td>
+                  );
+                }
+                return (
+                  <td key={rated} className="p-0">
+                    <div
+                      title={`Mean ${cell.mean} across ${cell.n} case cell(s)`}
+                      className={`flex min-h-[3rem] min-w-[4.5rem] flex-col items-center justify-center rounded-md px-2 py-1.5 text-center ${HEATMAP_CELL[cell.influence]}`}
+                    >
+                      <span className="text-xs font-semibold leading-tight">
+                        {influenceLabel(cell.influence)}
+                      </span>
+                      <span className="mt-0.5 text-[10px] opacity-90">
+                        {cell.mean.toFixed(1)} · n={cell.n}
+                      </span>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function AuthorshipHarnessDashboard({
   batches,
-  expectedSynthesizers = 4,
   compactHeader = false,
 }: {
   batches: AuthorshipBatchSummary[];
   expectedSynthesizers?: number;
-  /** When embedded in the findings hub */
   compactHeader?: boolean;
 }) {
   const [batchId, setBatchId] = useState(batches[0]?.batch_id ?? "");
+  const [rollupMode, setRollupMode] = useState<UnifiedBriefAuthorshipMode>("open");
   const [moralMode, setMoralMode] = useState<UnifiedBriefAuthorshipMode | "all">("open");
   const [selected, setSelected] = useState<{ demoLabel: string; cell: AuthorshipMoralCell } | null>(
     null
@@ -151,6 +208,20 @@ export function AuthorshipHarnessDashboard({
     () => batches.find((b) => b.batch_id === batchId) ?? batches[0] ?? null,
     [batches, batchId]
   );
+
+  const rollup = useMemo(() => {
+    if (!batch?.rollup_matrices?.length) return null;
+    return (
+      batch.rollup_matrices.find((m) => m.mode === rollupMode) ?? batch.rollup_matrices[0] ?? null
+    );
+  }, [batch, rollupMode]);
+
+  const demosByShifts = useMemo(() => {
+    if (!batch) return [];
+    return [...batch.demos].sort(
+      (a, b) => b.influence_shift_count - a.influence_shift_count || a.demo_label.localeCompare(b.demo_label)
+    );
+  }, [batch]);
 
   if (batches.length === 0 || !batch) {
     return (
@@ -179,8 +250,8 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
             Multi-demo authorship
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-            Cross-case coverage, branding credit shifts, and generic moral audits (Standard / Blind /
-            Reassigned Unified Briefs).
+            Rollup of contribution heatmaps across cases, then per-case branding shifts and moral
+            audits.
           </p>
         </header>
       ) : null}
@@ -203,76 +274,149 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
             ))}
           </select>
         </label>
-        <div className="text-xs text-zinc-500">
-          <p>
-            <span className="font-medium text-zinc-700">Batch ID</span>{" "}
-            <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-800">
-              {batch.batch_id}
-            </code>
-          </p>
-          <p className="mt-1">
-            Briefs {batch.total_briefs}/{batch.expected_briefs} · Contributions{" "}
-            {batch.total_contributions}/{batch.expected_briefs} · Audits {batch.total_audits}/
-            {batch.expected_briefs} · {batch.decision_count} demos
-          </p>
-        </div>
+        <p className="text-xs text-zinc-500">
+          {batch.decision_count} cases · {batch.total_influence_shifts ?? 0} branding shifts ·{" "}
+          {batch.total_audits} audits
+        </p>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-100 px-4 py-3">
-          <h2 className="text-sm font-semibold text-zinc-900">Case × authorship coverage</h2>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Cells show briefs/contributions (and audit count when present) out of {expectedSynthesizers}{" "}
-            synthesizers.
-          </p>
+      <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">Cross-case influence rollup</h2>
+            <p className="mt-0.5 max-w-2xl text-xs text-zinc-500">
+              Mean weight each Unified Brief author gave each think-tank member, averaged across
+              cases that have that cell. Same scale as the per-case heatmaps (high → minimal).
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Rollup authorship mode">
+            {AUTHORSHIP_SUMMARY_MODES.map((mode) => {
+              const available = batch.rollup_matrices?.some((m) => m.mode === mode);
+              const active = rollupMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  disabled={!available}
+                  onClick={() => setRollupMode(mode)}
+                  className={`rounded-md border px-2.5 py-1 text-xs font-medium ${
+                    active
+                      ? "border-indigo-300 bg-indigo-50 text-indigo-950"
+                      : available
+                        ? "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"
+                        : "cursor-not-allowed border-zinc-100 bg-zinc-50 text-zinc-400"
+                  }`}
+                >
+                  {MODE_LABEL[mode]}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
-              <tr>
-                <th className="px-4 py-2 font-medium">Case</th>
-                {AUTHORSHIP_SUMMARY_MODES.map((m) => (
-                  <th key={m} className="px-3 py-2 font-medium">
-                    {MODE_LABEL[m]}
-                  </th>
-                ))}
-                <th className="px-3 py-2 font-medium">Shifts</th>
-                <th className="px-4 py-2 font-medium">Open</th>
-              </tr>
-            </thead>
-            <tbody>
-              {batch.demos.map((d) => (
-                <tr key={d.decision_id} className="border-t border-zinc-100 align-top">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-zinc-900">
-                      {typeof d.harness_trial === "number" ? `${d.harness_trial}. ` : ""}
-                      {d.demo_label}
-                    </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-zinc-400">{d.demo_id}</p>
-                  </td>
-                  {AUTHORSHIP_SUMMARY_MODES.map((m) => (
-                    <td key={m} className="px-3 py-3">
-                      {coverageCell(
-                        d.modes[m].briefs,
-                        d.modes[m].contributions,
-                        d.modes[m].audits,
-                        expectedSynthesizers
-                      )}
-                    </td>
-                  ))}
-                  <td className="px-3 py-3 tabular-nums text-zinc-700">{d.influence_shift_count}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/run/best-of-worlds?decision_id=${encodeURIComponent(d.decision_id)}`}
-                      className="text-sm font-medium text-teal-800 hover:text-teal-950"
-                    >
-                      Unified Brief →
-                    </Link>
-                  </td>
-                </tr>
+
+        {!rollup ? (
+          <p className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
+            No contribution matrices to roll up yet.
+          </p>
+        ) : (
+          <>
+            <p className="text-[11px] text-zinc-500">
+              Averaged over {rollup.case_count} case
+              {rollup.case_count === 1 ? "" : "s"} · cell shows mean score and how many cases
+              contributed
+            </p>
+            <RollupHeatmap matrix={rollup} />
+            <div className="flex flex-wrap gap-2 pt-1">
+              {(["high", "medium", "low", "minimal"] as ContributionInfluence[]).map((level) => (
+                <span
+                  key={level}
+                  className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold ${HEATMAP_CELL[level]}`}
+                >
+                  {influenceLabel(level)}
+                </span>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-zinc-900">Cases by shift volume</h2>
+        <p className="text-xs text-zinc-500">
+          How many Standard → Blind / Standard → Reassigned weight changes each case produced (|Δ| ≥
+          1).
+        </p>
+        <ol className="space-y-2">
+          {demosByShifts.map((d, i) => (
+            <li
+              key={d.decision_id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-zinc-900">
+                  <span className="mr-2 tabular-nums text-zinc-400">{i + 1}.</span>
+                  {d.demo_label}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-zinc-700">
+                  {d.influence_shift_count} shifts
+                </span>
+                <Link
+                  href={`/run/best-of-worlds?decision_id=${encodeURIComponent(d.decision_id)}`}
+                  className="text-xs font-medium text-teal-800 hover:text-teal-950"
+                >
+                  Heatmaps →
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-zinc-900">Branding credit shifts by case</h2>
+        <p className="text-xs text-zinc-500">
+          Open → Blind / Open → Reassigned influence deltas from each case’s contribution matrices.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {batch.demos.map((d) => (
+            <article
+              key={`shifts-${d.decision_id}`}
+              className="rounded-xl border border-zinc-200 bg-white px-4 py-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-semibold text-zinc-900">{d.demo_label}</h3>
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
+                  {d.influence_shift_count} shifts
+                </span>
+              </div>
+              {d.top_shifts.length === 0 ? (
+                <p className="mt-2 text-xs text-zinc-500">
+                  No shifts (same weights across modes, or missing contribution matrices).
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {d.top_shifts.map((s: AuthorshipInfluenceShift, i: number) => (
+                    <li key={`${d.decision_id}-${i}`} className="text-xs leading-snug text-zinc-700">
+                      <span className="mr-1.5 rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-medium text-zinc-600">
+                        {s.badge}
+                      </span>
+                      {s.title}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Link
+                href={`/run/best-of-worlds?decision_id=${encodeURIComponent(d.decision_id)}`}
+                className="mt-3 inline-block text-xs font-medium text-teal-800 hover:text-teal-950"
+              >
+                Open heatmaps →
+              </Link>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -329,8 +473,14 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
                   key={`moral-${d.decision_id}`}
                   className="overflow-hidden rounded-xl border border-zinc-200 bg-white"
                 >
-                  <div className="border-b border-zinc-100 px-4 py-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 px-4 py-2.5">
                     <h3 className="text-sm font-semibold text-zinc-900">{d.demo_label}</h3>
+                    <Link
+                      href={`/run/best-of-worlds?decision_id=${encodeURIComponent(d.decision_id)}`}
+                      className="text-xs font-medium text-teal-800 hover:text-teal-950"
+                    >
+                      Unified Brief →
+                    </Link>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-xs">
@@ -381,44 +531,6 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
             })}
           </div>
         )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-zinc-900">Largest branding credit shifts</h2>
-        <p className="text-xs text-zinc-500">
-          Open → Blind / Open → Reassigned influence deltas (|Δ| ≥ 2) from contribution matrices.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {batch.demos.map((d) => (
-            <article
-              key={`shifts-${d.decision_id}`}
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-semibold text-zinc-900">{d.demo_label}</h3>
-                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600">
-                  {d.influence_shift_count} shifts
-                </span>
-              </div>
-              {d.top_shifts.length === 0 ? (
-                <p className="mt-2 text-xs text-zinc-500">
-                  No large shifts yet (need contributions in multiple authorship modes).
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-2">
-                  {d.top_shifts.map((s, i) => (
-                    <li key={`${d.decision_id}-${i}`} className="text-xs leading-snug text-zinc-700">
-                      <span className="mr-1.5 rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 font-medium text-zinc-600">
-                        {s.badge}
-                      </span>
-                      {s.title}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </article>
-          ))}
-        </div>
       </section>
 
       {selected ? (

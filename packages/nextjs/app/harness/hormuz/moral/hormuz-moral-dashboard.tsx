@@ -10,7 +10,9 @@ import {
   HORMUZ_PROVIDER_LABELS,
   itemFor,
   leanFor,
+  leanSharesByProvider,
   providerLabel,
+  type HormuzLeanShare,
   type HormuzMoralBatch,
   type HormuzMoralDimension,
   type HormuzMoralItem,
@@ -100,6 +102,73 @@ function DetailDrawer({
   );
 }
 
+function LeanBars({ shares }: { shares: HormuzLeanShare[] }) {
+  return (
+    <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div>
+        <h2 className="text-sm font-semibold text-zinc-900">Directional lean by model</h2>
+        <p className="mt-0.5 text-xs text-zinc-500">
+          Share of crew-protective vs commercial-continuity codes across all dimensions × cases.
+          Neutral codes (silent, unclear, balanced, filer alignment, etc.) are excluded from the %.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {shares.map((s) => {
+          const crewPct = s.crewPct ?? 0;
+          const commercialPct = s.commercialPct ?? 0;
+          const hasDirectional = s.crew + s.commercial > 0;
+          return (
+            <div key={s.provider} className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-3">
+              <p className="text-sm font-semibold text-zinc-900">
+                {HORMUZ_PROVIDER_LABELS[s.provider]}
+              </p>
+              <div
+                className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-zinc-200"
+                role="img"
+                aria-label={
+                  hasDirectional
+                    ? `${crewPct}% crew, ${commercialPct}% commercial`
+                    : "No directional codes"
+                }
+              >
+                {hasDirectional ? (
+                  <>
+                    <span
+                      className="bg-emerald-600"
+                      style={{ width: `${crewPct}%` }}
+                      title={`${s.crew} crew`}
+                    />
+                    <span
+                      className="bg-amber-600"
+                      style={{ width: `${commercialPct}%` }}
+                      title={`${s.commercial} commercial`}
+                    />
+                  </>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs text-zinc-600">
+                {hasDirectional ? (
+                  <>
+                    <span className="font-semibold text-emerald-800">{crewPct}% crew</span>
+                    {" · "}
+                    <span className="font-semibold text-amber-900">{commercialPct}% commercial</span>
+                  </>
+                ) : (
+                  <span className="text-zinc-400">No directional codes</span>
+                )}
+              </p>
+              <p className="mt-0.5 text-[11px] text-zinc-400">
+                {s.crew} vs {s.commercial} directional
+                {s.neutral > 0 ? ` · ${s.neutral} neutral` : ""}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function CountsTable({
   title,
   data,
@@ -180,6 +249,10 @@ export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean 
   >;
 
   const cases = useMemo(() => [1, 2, 3, 4, 5], []);
+  const leanShares = useMemo(
+    () => (report ? leanSharesByProvider(report) : []),
+    [report]
+  );
 
   if (!hasBatches || !report || !batch) {
     return (
@@ -248,15 +321,23 @@ export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean 
         </ul>
       ) : null}
 
+      <LeanBars shares={leanShares} />
+
       <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
         <table className="min-w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50">
-              <th className="sticky left-0 z-10 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">
+              <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">
                 Dimension
               </th>
               {cases.map((c) => (
-                <th key={c} colSpan={4} className="border-l border-zinc-200 px-2 py-2 text-center">
+                <th
+                  key={c}
+                  colSpan={4}
+                  className={`border-l-[3px] border-zinc-400 px-2 py-2 text-center ${
+                    c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"
+                  }`}
+                >
                   <div className="text-xs font-semibold text-zinc-900">
                     {HORMUZ_CASE_LABELS[c]?.short}
                   </div>
@@ -267,12 +348,14 @@ export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean 
               ))}
             </tr>
             <tr className="border-b border-zinc-200 bg-zinc-50">
-              <th className="sticky left-0 z-10 bg-zinc-50 px-3 py-1" />
+              <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
               {cases.flatMap((c) =>
-                HORMUZ_MORAL_PROVIDERS.map((p) => (
+                HORMUZ_MORAL_PROVIDERS.map((p, pi) => (
                   <th
                     key={`${c}-${p}`}
-                    className="border-l border-zinc-100 px-1 py-1 text-center text-[10px] font-medium text-zinc-500"
+                    className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
+                      pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
+                    } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
                   >
                     {HORMUZ_PROVIDER_LABELS[p]}
                   </th>
@@ -283,16 +366,18 @@ export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean 
           <tbody>
             {HORMUZ_MORAL_DIMENSIONS.map((dim) => (
               <tr key={dim} className="border-t border-zinc-100">
-                <th className="sticky left-0 z-10 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
+                <th className="sticky left-0 z-10 border-r border-zinc-300 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
                   {HORMUZ_DIMENSION_LABELS[dim]}
                 </th>
                 {cases.flatMap((c) =>
-                  HORMUZ_MORAL_PROVIDERS.map((p) => {
+                  HORMUZ_MORAL_PROVIDERS.map((p, pi) => {
                     const item = itemFor(report, c, p);
                     return (
                       <td
                         key={`${c}-${p}-${dim}`}
-                        className="border-l border-zinc-50 px-1 py-1 text-center"
+                        className={`px-1 py-1 text-center ${
+                          pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
+                        } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`}
                       >
                         <Chip
                           dimension={dim}

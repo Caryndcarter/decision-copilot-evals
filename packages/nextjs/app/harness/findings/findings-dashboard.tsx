@@ -22,7 +22,7 @@ const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
   {
     id: "multi-demo-authorship",
     label: "Multi-demo authorship",
-    blurb: "Live five-case batches — branding + generic moral audits on Unified Briefs",
+    blurb: "Live five-case batches — cross-case heatmap rollup, branding shifts, moral audits",
   },
 ];
 

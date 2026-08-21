@@ -10,7 +10,9 @@ import {
   MERIDIAN_PROVIDER_LABELS,
   itemFor,
   leanFor,
+  leanSharesByProvider,
   providerLabel,
+  type MeridianLeanShare,
   type MeridianMoralBatch,
   type MeridianMoralDimension,
   type MeridianMoralItem,
@@ -99,6 +101,73 @@ function DetailDrawer({
   );
 }
 
+function LeanBars({ shares }: { shares: MeridianLeanShare[] }) {
+  return (
+    <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div>
+        <h2 className="text-sm font-semibold text-zinc-900">Directional lean by model</h2>
+        <p className="mt-0.5 text-xs text-zinc-500">
+          Share of people/customer-protective vs LP/PE-protective codes across all dimensions × cases.
+          Neutral codes (silent, unclear, balanced, filer alignment, etc.) are excluded from the %.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {shares.map((s) => {
+          const peoplePct = s.peoplePct ?? 0;
+          const lpPct = s.lpPct ?? 0;
+          const hasDirectional = s.people + s.lp > 0;
+          return (
+            <div key={s.provider} className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-3">
+              <p className="text-sm font-semibold text-zinc-900">
+                {MERIDIAN_PROVIDER_LABELS[s.provider]}
+              </p>
+              <div
+                className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-zinc-200"
+                role="img"
+                aria-label={
+                  hasDirectional
+                    ? `${peoplePct}% people/customer, ${lpPct}% LP/PE`
+                    : "No directional codes"
+                }
+              >
+                {hasDirectional ? (
+                  <>
+                    <span
+                      className="bg-emerald-600"
+                      style={{ width: `${peoplePct}%` }}
+                      title={`${s.people} people/customer`}
+                    />
+                    <span
+                      className="bg-amber-600"
+                      style={{ width: `${lpPct}%` }}
+                      title={`${s.lp} LP/PE`}
+                    />
+                  </>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs text-zinc-600">
+                {hasDirectional ? (
+                  <>
+                    <span className="font-semibold text-emerald-800">{peoplePct}% people/customer</span>
+                    {" · "}
+                    <span className="font-semibold text-amber-900">{lpPct}% LP/PE</span>
+                  </>
+                ) : (
+                  <span className="text-zinc-400">No directional codes</span>
+                )}
+              </p>
+              <p className="mt-0.5 text-[11px] text-zinc-400">
+                {s.people} vs {s.lp} directional
+                {s.neutral > 0 ? ` · ${s.neutral} neutral` : ""}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function CountsTable({
   title,
   data,
@@ -153,6 +222,7 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
   const summary = report.summary as Record<string, Record<string, Record<string, number>>>;
 
   const cases = useMemo(() => [1, 2, 3, 4, 5], []);
+  const leanShares = useMemo(() => leanSharesByProvider(report), [report]);
 
   return (
     <div className="space-y-8">
@@ -206,27 +276,37 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
         </ul>
       ) : null}
 
+      <LeanBars shares={leanShares} />
+
       <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
         <table className="min-w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50">
-              <th className="sticky left-0 z-10 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">
+              <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">
                 Dimension
               </th>
               {cases.map((c) => (
-                <th key={c} colSpan={4} className="border-l border-zinc-200 px-2 py-2 text-center">
+                <th
+                  key={c}
+                  colSpan={4}
+                  className={`border-l-[3px] border-zinc-400 px-2 py-2 text-center ${
+                    c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"
+                  }`}
+                >
                   <div className="text-xs font-semibold text-zinc-900">{MERIDIAN_CASE_LABELS[c]?.short}</div>
                   <div className="text-[10px] font-normal text-zinc-500">{MERIDIAN_CASE_LABELS[c]?.sub}</div>
                 </th>
               ))}
             </tr>
             <tr className="border-b border-zinc-200 bg-zinc-50">
-              <th className="sticky left-0 z-10 bg-zinc-50 px-3 py-1" />
+              <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
               {cases.flatMap((c) =>
-                MERIDIAN_MORAL_PROVIDERS.map((p) => (
+                MERIDIAN_MORAL_PROVIDERS.map((p, pi) => (
                   <th
                     key={`${c}-${p}`}
-                    className="border-l border-zinc-100 px-1 py-1 text-center text-[10px] font-medium text-zinc-500"
+                    className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
+                      pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
+                    } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
                   >
                     {MERIDIAN_PROVIDER_LABELS[p]}
                   </th>
@@ -237,14 +317,19 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
           <tbody>
             {MERIDIAN_MORAL_DIMENSIONS.map((dim) => (
               <tr key={dim} className="border-t border-zinc-100">
-                <th className="sticky left-0 z-10 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
+                <th className="sticky left-0 z-10 border-r border-zinc-300 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
                   {MERIDIAN_DIMENSION_LABELS[dim]}
                 </th>
                 {cases.flatMap((c) =>
-                  MERIDIAN_MORAL_PROVIDERS.map((p) => {
+                  MERIDIAN_MORAL_PROVIDERS.map((p, pi) => {
                     const item = itemFor(report, c, p);
                     return (
-                      <td key={`${c}-${p}-${dim}`} className="border-l border-zinc-50 px-1 py-1 text-center">
+                      <td
+                        key={`${c}-${p}-${dim}`}
+                        className={`px-1 py-1 text-center ${
+                          pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
+                        } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`}
+                      >
                         <Chip
                           dimension={dim}
                           value={item?.codes?.[dim]}

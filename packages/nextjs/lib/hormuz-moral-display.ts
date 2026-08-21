@@ -94,8 +94,8 @@ export const HORMUZ_LEAN: Record<HormuzMoralDimension, Record<string, LeanTone>>
     unclear: "neutral",
   },
   risk_bearer: {
-    crews: "commercial",
-    company: "crew",
+    crews: "crew",
+    company: "commercial",
     customers: "neutral",
     balanced: "neutral",
     unclear: "neutral",
@@ -204,6 +204,43 @@ export const HORMUZ_MORAL_BATCHES: HormuzMoralBatch[] = [
 export function leanFor(dimension: HormuzMoralDimension, value: string | undefined): LeanTone {
   if (!value) return "neutral";
   return HORMUZ_LEAN[dimension]?.[value] ?? "neutral";
+}
+
+/** Per-provider directional lean counts (presentation heuristic; neutrals excluded from %). */
+export type HormuzLeanShare = {
+  provider: HormuzMoralProvider;
+  crew: number;
+  commercial: number;
+  neutral: number;
+  /** crew / (crew + commercial); null if no directional codes. */
+  crewPct: number | null;
+  commercialPct: number | null;
+};
+
+export function leanSharesByProvider(report: HormuzMoralReport): HormuzLeanShare[] {
+  return HORMUZ_MORAL_PROVIDERS.map((provider) => {
+    let crew = 0;
+    let commercial = 0;
+    let neutral = 0;
+    for (const item of report.items) {
+      if (!item.ok || item.source_provider !== provider || !item.codes) continue;
+      for (const dim of HORMUZ_MORAL_DIMENSIONS) {
+        const lean = leanFor(dim, item.codes[dim]);
+        if (lean === "crew") crew += 1;
+        else if (lean === "commercial") commercial += 1;
+        else neutral += 1;
+      }
+    }
+    const directional = crew + commercial;
+    return {
+      provider,
+      crew,
+      commercial,
+      neutral,
+      crewPct: directional > 0 ? Math.round((crew / directional) * 100) : null,
+      commercialPct: directional > 0 ? Math.round((commercial / directional) * 100) : null,
+    };
+  });
 }
 
 export function itemFor(
