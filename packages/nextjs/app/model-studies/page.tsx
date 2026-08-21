@@ -36,7 +36,7 @@ export default function Home() {
           src="/hero-brain.webp"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute right-[-4%] top-1/2 z-0 hidden w-[38%] max-w-sm -translate-y-1/2 opacity-30 mix-blend-screen lg:block"
+          className="pointer-events-none select-none absolute right-[6%] top-1/2 z-0 hidden w-[48%] max-w-md -translate-y-1/2 opacity-50 mix-blend-screen lg:block"
         />
 
         <div className="relative mx-auto max-w-3xl px-6">
