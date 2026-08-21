@@ -11,11 +11,18 @@ export function SessionNav() {
       </Link>
     );
   }
+  const isAdmin = Boolean((session.user as { is_admin?: boolean } | undefined)?.is_admin);
+
   return (
     <div className="flex items-center gap-3">
       <Link href="/runs" className="text-sm text-zinc-300 hover:text-white transition-colors">
         My decisions
       </Link>
+      {isAdmin && (
+        <Link href="/admin" className="text-sm text-zinc-300 hover:text-white transition-colors">
+          Admin
+        </Link>
+      )}
       <span className="text-sm text-zinc-400">{session.user?.email}</span>
       <button
         onClick={() => signOut({ callbackUrl: "/" })}

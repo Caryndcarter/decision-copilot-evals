@@ -147,9 +147,9 @@ Full list of variables for `.env` at the repo root:
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional. Enable Google sign-in (and first-time Google signup via invite). |
 | `AUTH_URL` / `NEXTAUTH_URL` | Optional. Public app origin used when minting invite URLs (default `http://localhost:5001`). |
 
-Signup is **invite-only**: mint a link with `npm run invite:create` (optional `--days 7`). Existing users can still sign in without an invite.
+Signup is **invite-only**: mint a link with `npm run invite:create` (optional `--days 7`), or from **`/admin`** when signed in as an admin. Existing users can still sign in without an invite.
 
-**Admin is a flag, not a product.** `is_admin` is stored on the user record so admins can see more runs on `/runs` (including harness). There is no admin UI, no in-app grant flow, and no user management — grant or revoke with `npm run admin:set -- --email you@example.com` (add `--revoke` to clear). Sign out and back in after changing the flag so the JWT session updates.
+**Admin is a flag, not a product.** `is_admin` unlocks `/admin` (list users, toggle admin, mint invites) and broader run visibility on `/runs` (including harness). Bootstrap the first admin with `npm run admin:set -- --email you@example.com`, then use `/admin` for day-to-day grants. Sign out and back in after changing your own flag so the JWT session updates.
 
 ### Other scripts
 

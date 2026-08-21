@@ -14,6 +14,7 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isProtected =
+        nextUrl.pathname.startsWith("/admin") ||
         nextUrl.pathname.startsWith("/intake") ||
         nextUrl.pathname.startsWith("/run") ||
         nextUrl.pathname.startsWith("/runs");

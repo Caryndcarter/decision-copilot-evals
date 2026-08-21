@@ -108,10 +108,35 @@ export async function deleteUserById(id: string): Promise<boolean> {
   return res.deletedCount > 0;
 }
 
+/** Safe user fields for admin UI (never includes passwordHash). */
+export type AdminUserListItem = {
+  id: string;
+  email: string;
+  name: string | null;
+  is_admin: boolean;
+  created_at?: string;
+};
+
+export async function listUsers(options: { limit?: number } = {}): Promise<AdminUserListItem[]> {
+  await ensureMongoIndexes();
+  const limit = options.limit ?? 200;
+  const col = await getUsersCollection();
+  const docs = await col.find({}).sort({ created_at: -1 }).limit(limit).toArray();
+  return docs
+    .map((doc) => docToUser(doc))
+    .filter((u): u is UserRecord => u != null && Boolean(u.email))
+    .map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name ?? null,
+      is_admin: Boolean(u.is_admin),
+      created_at: u.created_at,
+    }));
+}
+
 /**
- * Set or clear the `is_admin` flag. Admin is a stored flag only (no admin product UI);
- * use the `admin:set` CLI to grant or revoke. Callers must re-sign-in for JWT sessions
- * to pick up the change.
+ * Set or clear the `is_admin` flag. Prefer the /admin UI or `admin:set` CLI.
+ * Callers must re-sign-in for JWT sessions to pick up the change on their own account.
  */
 export async function setUserAdminByEmail(
   email: string,
