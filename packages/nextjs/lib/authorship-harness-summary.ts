@@ -6,6 +6,11 @@ import { DEMO_HARNESS_CASES } from "@/lib/demo-harness-cases";
 import { HARNESS_KIND_LABELS, shortHarnessBatchId } from "@/lib/harness-meta";
 import { buildInfluenceMatrix, type InfluenceMatrix } from "@/lib/unified-brief-influence-matrix";
 import {
+  UNIFIED_BRIEF_AUDIT_DIMENSIONS,
+  type UnifiedBriefAuditDimension,
+} from "@/lib/unified-brief-audit/rubric";
+import {
+  getUnifiedBriefAuditForAuthor,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefsByAuthor,
   UNIFIED_BRIEF_SYNTHESIZERS,
@@ -25,6 +30,14 @@ export const AUTHORSHIP_SUMMARY_MODES: UnifiedBriefAuthorshipMode[] = ["open", "
 export type AuthorshipModeCoverage = {
   briefs: number;
   contributions: number;
+  audits: number;
+};
+
+export type AuthorshipMoralCell = {
+  synthesizer: UnifiedBriefSynthesizer;
+  mode: UnifiedBriefAuthorshipMode;
+  values: Partial<Record<UnifiedBriefAuditDimension, string>>;
+  quotes: Partial<Record<UnifiedBriefAuditDimension, string>>;
 };
 
 export type AuthorshipDemoSummary = {
@@ -35,6 +48,8 @@ export type AuthorshipDemoSummary = {
   modes: Record<UnifiedBriefAuthorshipMode, AuthorshipModeCoverage>;
   influence_shift_count: number;
   top_shifts: { badge: string; title: string; severity: number }[];
+  moral_cells: AuthorshipMoralCell[];
+  audit_count: number;
 };
 
 export type AuthorshipBatchSummary = {
@@ -48,6 +63,7 @@ export type AuthorshipBatchSummary = {
   demos: AuthorshipDemoSummary[];
   total_briefs: number;
   total_contributions: number;
+  total_audits: number;
   expected_briefs: number;
 };
 
@@ -60,9 +76,9 @@ function countModeCoverage(persistRun: DecisionRunResult | null): Record<
   AuthorshipModeCoverage
 > {
   const out = {
-    open: { briefs: 0, contributions: 0 },
-    blind: { briefs: 0, contributions: 0 },
-    reassigned: { briefs: 0, contributions: 0 },
+    open: { briefs: 0, contributions: 0, audits: 0 },
+    blind: { briefs: 0, contributions: 0, audits: 0 },
+    reassigned: { briefs: 0, contributions: 0, audits: 0 },
   } satisfies Record<UnifiedBriefAuthorshipMode, AuthorshipModeCoverage>;
   if (!persistRun) return out;
   for (const mode of AUTHORSHIP_SUMMARY_MODES) {
@@ -71,9 +87,32 @@ function countModeCoverage(persistRun: DecisionRunResult | null): Record<
     out[mode] = {
       briefs: UNIFIED_BRIEF_SYNTHESIZERS.filter((a) => briefs[a]).length,
       contributions: UNIFIED_BRIEF_SYNTHESIZERS.filter((a) => contribs[a]).length,
+      audits: UNIFIED_BRIEF_SYNTHESIZERS.filter((a) =>
+        getUnifiedBriefAuditForAuthor(persistRun, a, mode)
+      ).length,
     };
   }
   return out;
+}
+
+function collectMoralCells(persistRun: DecisionRunResult | null): AuthorshipMoralCell[] {
+  if (!persistRun) return [];
+  const cells: AuthorshipMoralCell[] = [];
+  for (const synthesizer of UNIFIED_BRIEF_SYNTHESIZERS) {
+    for (const mode of AUTHORSHIP_SUMMARY_MODES) {
+      const audit = getUnifiedBriefAuditForAuthor(persistRun, synthesizer, mode);
+      if (!audit?.codes) continue;
+      const values: Partial<Record<UnifiedBriefAuditDimension, string>> = {};
+      const quotes: Partial<Record<UnifiedBriefAuditDimension, string>> = {};
+      for (const dim of UNIFIED_BRIEF_AUDIT_DIMENSIONS) {
+        const field = audit.codes[dim];
+        if (field?.value) values[dim] = field.value;
+        if (field?.quote?.trim()) quotes[dim] = field.quote.trim();
+      }
+      cells.push({ synthesizer, mode, values, quotes });
+    }
+  }
+  return cells;
 }
 
 function matricesByMode(persistRun: DecisionRunResult | null): Record<
@@ -196,15 +235,18 @@ export function buildAuthorshipBatchSummaries(
     const demos: AuthorshipDemoSummary[] = [];
     let total_briefs = 0;
     let total_contributions = 0;
+    let total_audits = 0;
 
     for (const [decision_id, decisionRuns] of bag.byDecision) {
       const persist = pickPersistRunForUnifiedBrief(decisionRuns);
       const primary = persist ?? decisionRuns[0]!;
       const modes = countModeCoverage(persist);
       const shifts = influenceShifts(persist);
+      const moral_cells = collectMoralCells(persist);
       for (const mode of AUTHORSHIP_SUMMARY_MODES) {
         total_briefs += modes[mode].briefs;
         total_contributions += modes[mode].contributions;
+        total_audits += modes[mode].audits;
       }
       demos.push({
         demo_id: primary.demo_scenario_id ?? decision_id,
@@ -214,6 +256,8 @@ export function buildAuthorshipBatchSummaries(
         modes,
         influence_shift_count: shifts.count,
         top_shifts: shifts.top,
+        moral_cells,
+        audit_count: moral_cells.length,
       });
     }
 
@@ -230,6 +274,7 @@ export function buildAuthorshipBatchSummaries(
       demos,
       total_briefs,
       total_contributions,
+      total_audits,
       expected_briefs: demos.length * expectedPerDemo,
     });
   }

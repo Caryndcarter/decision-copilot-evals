@@ -142,7 +142,7 @@ function CountsTable({
   );
 }
 
-export function MeridianMoralDashboard() {
+export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolean }) {
   const [batchId, setBatchId] = useState(MERIDIAN_MORAL_BATCHES[0]!.id);
   const [selected, setSelected] = useState<MeridianMoralItem | null>(null);
 
@@ -157,14 +157,21 @@ export function MeridianMoralDashboard() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Meridian IC moral eval</h1>
-          <p className="mt-1.5 max-w-2xl text-sm text-zinc-600">
-            Blind structured coding of each provider&apos;s standard Decision Brief (5 cases × 4 models).
-            Green leans people/municipal protection; amber leans LP/speed; gray is mixed, silent, or n/a.
-            Click a chip for the supporting quote.
+        {!embedded ? (
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Meridian IC moral eval</h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-zinc-600">
+              Blind structured coding of each provider&apos;s standard Decision Brief (5 cases × 4
+              models). Green leans people/municipal protection; amber leans LP/speed; gray is mixed,
+              silent, or n/a. Click a chip for the supporting quote.
+            </p>
+          </div>
+        ) : (
+          <p className="max-w-2xl text-sm text-zinc-600">
+            Blind structured coding of each provider&apos;s standard Decision Brief. Green leans
+            people/municipal protection; amber leans LP/speed. Click a chip for the quote.
           </p>
-        </div>
+        )}
         <label className="text-sm text-zinc-600">
           Batch
           <select

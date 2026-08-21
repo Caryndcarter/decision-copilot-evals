@@ -286,26 +286,20 @@ export function RunsClient({
         Harness batches from <code className="text-xs">harness:demos:authorship</code>,{" "}
         <code className="text-xs">harness:civitas</code>, or <code className="text-xs">harness:meridian-ic</code>.
         Badges show type, run #, and batch id.{" "}
-        <Link href="/harness/demos/authorship" className="font-medium text-teal-800 hover:text-teal-950">
-          Authorship summary
+        <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
+          Harness findings
         </Link>
-        {" · "}
-        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
-          Meridian IC moral
-        </Link>
+        {" "}
+        (authorship + Meridian IC moral)
       </p>
     )}
 
     {tab === "harness" && harnessGroups.length === 0 ? (
       <p className="mb-4 text-sm text-zinc-500">
-        <Link href="/harness/demos/authorship" className="font-medium text-teal-800 hover:text-teal-950">
-          Authorship summary
-        </Link>
-        {" · "}
-        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
-          Meridian IC moral
+        <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
+          Harness findings
         </Link>{" "}
-        (committed snapshots need no live harness).
+        — multi-demo authorship (live) and Meridian IC moral (committed snapshots).
       </p>
     ) : null}
 

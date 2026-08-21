@@ -18,11 +18,16 @@ Production Dynamo app lives in [`decision-copilot-dynamodb`](https://github.com/
 
 **Meridian IC Cases 1–5** (voice / posture variants of Civitas) remain available for the moral dashboard and `harness:meridian-ic`.
 
-## Meridian moral eval UI
+## Harness findings UI
 
-Open **`/harness/meridian-ic/moral`** (also linked from My Decisions → Harness).
+Open **`/harness/findings`** (linked from My Decisions → Harness). Legacy routes `/harness/meridian-ic/moral` and `/harness/demos/authorship` redirect here.
 
-Read-only dashboard over committed snapshot batches:
+Study switcher:
+
+1. **Meridian IC moral** — committed snapshot batches (provider Decision Briefs, Civitas-specific 14 dims)
+2. **Multi-demo authorship** — live five-case batches (coverage, branding influence shifts, generic 8-dim moral audits when coded)
+
+### Meridian IC committed batches
 
 | Batch | Cases | Files |
 |---|---|---|
@@ -40,6 +45,7 @@ npm run harness:meridian-ic:moral -- --report=packages/nextjs/scripts/output/mer
 npm run harness:civitas
 npm run harness:civitas:moral -- --report=packages/nextjs/scripts/output/civitas-harness-….json
 npm run harness:demos:authorship
+npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-id=<uuid>
 ```
 
 ### Multi-demo authorship (`harness:demos:authorship`)
@@ -48,7 +54,7 @@ Runs the **five high-conflict demos** once each with Standard / Blind / Reassign
 
 Expected count with all four synthesizers: **60 Unified Briefs** = 5 × 4 × 3.
 
-Each batch gets a unique `harness_batch_id` (UUID) plus `harness_kind: multi-demo-authorship`. My Decisions → Harness labels the type; summary UI: **`/harness/demos/authorship`**.
+Each batch gets a unique `harness_batch_id` (UUID) plus `harness_kind: multi-demo-authorship`. My Decisions → Harness labels the type; findings UI: **`/harness/findings?study=multi-demo-authorship`**.
 
 Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=1`, `--batch-id=…` (reuse an id).
 
@@ -58,6 +64,9 @@ npm run harness:demos:authorship -- --demos=vp-sales-underperforming --user-emai
 
 # Full five-case batch
 npm run harness:demos:authorship -- --user-email=you@example.com
+
+# Blind moral audits on Unified Briefs (persists + report JSON)
+npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-id=<uuid>
 ```
 
-Generic Unified Brief **Audit** tab (8 dimensions) is also present for any generated Unified Brief.
+Generic Unified Brief **Audit** tab (same 8 dimensions) is also available per brief on the Unified Brief page.

@@ -20,6 +20,7 @@
     "harness:meridian-ic": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/meridian-ic-voice-harness.ts",
     "harness:meridian-ic:moral": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/meridian-ic-moral-coding.ts",
     "harness:demos:authorship": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/multi-demo-authorship-harness.ts",
+    "harness:demos:authorship:moral": "cd packages/nextjs && NODE_OPTIONS='--require ./scripts/server-only-shim.cjs' env-cmd --file ../../.env -- npx tsx scripts/multi-demo-authorship-moral-coding.ts",
     "start": "npm run dev",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces"
