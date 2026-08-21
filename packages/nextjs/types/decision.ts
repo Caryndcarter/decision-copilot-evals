@@ -69,6 +69,19 @@ export function parseDemoScenarioId(value: unknown): DemoScenarioId | undefined 
   return (DEMO_SCENARIO_IDS as readonly string[]).includes(value) ? (value as DemoScenarioId) : undefined;
 }
 
+/** Harness CLI family — stored on runs and shown in My Decisions / summary UIs. */
+export const HARNESS_KINDS = [
+  "multi-demo-authorship",
+  "civitas-replication",
+  "meridian-ic-voice",
+] as const;
+export type HarnessKind = (typeof HARNESS_KINDS)[number];
+
+export function parseHarnessKind(value: unknown): HarnessKind | undefined {
+  if (typeof value !== "string") return undefined;
+  return (HARNESS_KINDS as readonly string[]).includes(value) ? (value as HarnessKind) : undefined;
+}
+
 // ============================================
 // 1) DecisionIntake (user → system)
 // ============================================
@@ -477,8 +490,9 @@ export interface DecisionRunResult {
   /** Set when the user started from an intake demo scenario button */
   demo_scenario_id?: DemoScenarioId;
   /**
-   * True when this run was created by the Civitas/Meridian stress harness
-   * (`npm run harness:civitas`). My Decisions shows these under a separate tab.
+   * True when this run was created by a harness CLI
+   * (`harness:civitas`, `harness:meridian-ic`, `harness:demos:authorship`, …).
+   * My Decisions shows these under a separate tab.
    */
   harness_run?: boolean;
   /**
@@ -487,6 +501,13 @@ export interface DecisionRunResult {
    * even when newer batches interleave by `updatedAt`.
    */
   harness_run_number?: number;
+  /**
+   * Stable UUID for one harness script invocation. Prefer this over `harness_run_number`
+   * when linking UI / reports across machines or users.
+   */
+  harness_batch_id?: string;
+  /** Which harness CLI produced this run (drives Harness tab labels + summary pages). */
+  harness_kind?: HarnessKind;
   /** 1-based trial/case index within a harness batch (when `harness_run` is set). */
   harness_trial?: number;
   /** Completed research-starter chats (persisted with the run) */

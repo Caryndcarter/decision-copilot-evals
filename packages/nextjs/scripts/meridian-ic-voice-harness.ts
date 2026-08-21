@@ -251,7 +251,8 @@ async function buildIntakeRun(
   userId: string | undefined,
   caseDef: MeridianIcVoiceCase,
   caseIndex: number,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
   caseLog(caseIndex, caseDef.id, `intake lenses → ${provider}`);
@@ -284,6 +285,8 @@ async function buildIntakeRun(
     demo_scenario_id: caseDef.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,
+    harness_batch_id: harnessBatchId,
+    harness_kind: "meridian-ic-voice",
     harness_trial: caseIndex,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -567,7 +570,8 @@ async function runCase(
   caseIndex: number,
   providers: LLMProviderName[],
   userId: string | undefined,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<CaseReport> {
   const decision_id = randomUUID();
   const report: CaseReport = {
@@ -592,7 +596,7 @@ async function runCase(
   const intake = buildIntakeFromCase(caseDef, decision_id);
 
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, caseDef, caseIndex, harnessRunNumber)
+    buildIntakeRun(intake, p, userId, caseDef, caseIndex, harnessRunNumber, harnessBatchId)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -799,7 +803,15 @@ async function fillDecision(
   };
 
   const { runs, failed_providers } = await runForProviders(missing, (p) =>
-    buildIntakeRun(intake, p, userId ?? primary.user_id, caseDef, caseIndex, harnessRunNumber)
+    buildIntakeRun(
+      intake,
+      p,
+      userId ?? primary.user_id,
+      caseDef,
+      caseIndex,
+      harnessRunNumber,
+      primary.harness_batch_id ?? randomUUID()
+    )
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -1043,13 +1055,16 @@ async function main() {
     Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
       ? Math.floor(parsedRunNumber)
       : await nextHarnessRunNumber(userId);
+  const harnessBatchId = randomUUID();
   log(`  harness run number: ${harnessRunNumber}`);
+  log(`  harness batch id: ${harnessBatchId}`);
+  log(`  harness kind: meridian-ic-voice`);
 
   const reports = await mapPool(cases, caseConcurrency, async (c, i) => {
     const caseIndex =
       MERIDIAN_IC_VOICE_CASES.findIndex((x) => x.id === c.id) + 1 || i + 1;
     try {
-      return await runCase(c, caseIndex, providers, userId, harnessRunNumber);
+      return await runCase(c, caseIndex, providers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
       const message = errMessage(err);
       log(`Case ${caseIndex} ${c.id} crashed`, message);

@@ -42,6 +42,8 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         isHarness: false,
         harnessTrial: undefined,
         harnessRunNumber: undefined,
+        harnessBatchId: undefined,
+        harnessKind: undefined,
       });
     }
     const group = map.get(id)!;
@@ -54,6 +56,12 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       }
       if (typeof run.harness_run_number === "number") {
         group.harnessRunNumber = run.harness_run_number;
+      }
+      if (run.harness_batch_id?.trim()) {
+        group.harnessBatchId = run.harness_batch_id.trim();
+      }
+      if (run.harness_kind) {
+        group.harnessKind = run.harness_kind;
       }
     }
     // Track unified brief: prefer the run that already has one

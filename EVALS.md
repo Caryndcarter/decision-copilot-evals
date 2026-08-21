@@ -47,6 +47,16 @@ Runs the **five high-conflict demos** once each with Standard / Blind / Reassign
 
 Expected count with all four synthesizers: **60 Unified Briefs** = 5 × 4 × 3.
 
-Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=1` (default). Built but not run until you execute the npm script.
+Each batch gets a unique `harness_batch_id` (UUID) plus `harness_kind: multi-demo-authorship`. My Decisions → Harness labels the type; summary UI: **`/harness/demos/authorship`**.
+
+Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=1`, `--batch-id=…` (reuse an id).
+
+```bash
+# Smoke one case
+npm run harness:demos:authorship -- --demos=vp-sales-underperforming --user-email=you@example.com
+
+# Full five-case batch
+npm run harness:demos:authorship -- --user-email=you@example.com
+```
 
 Generic Unified Brief **Audit** tab (8 dimensions) is also present for any generated Unified Brief.

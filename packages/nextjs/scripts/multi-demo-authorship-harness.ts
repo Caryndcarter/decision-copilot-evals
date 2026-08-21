@@ -160,6 +160,7 @@ function parseArgs(argv: string[]) {
       get("demo-concurrency") ?? process.env.HARNESS_DEMO_CONCURRENCY ?? 1
     ),
     runNumberRaw: (get("run-number") ?? process.env.HARNESS_RUN_NUMBER ?? "").trim(),
+    batchIdRaw: (get("batch-id") ?? process.env.HARNESS_BATCH_ID ?? "").trim(),
   };
 }
 
@@ -259,7 +260,8 @@ async function buildIntakeRun(
   userId: string | undefined,
   demo: DemoHarnessCase,
   demoIndex: number,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
   demoLog(demo, `intake lenses → ${provider}`);
@@ -292,6 +294,8 @@ async function buildIntakeRun(
     demo_scenario_id: demo.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,
+    harness_batch_id: harnessBatchId,
+    harness_kind: "multi-demo-authorship",
     harness_trial: demoIndex,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -695,7 +699,8 @@ async function runDemoCase(
   providers: LLMProviderName[],
   synthesizers: UnifiedBriefSynthesizer[],
   userId: string | undefined,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<DemoReport> {
   const decision_id = randomUUID();
   const report: DemoReport = {
@@ -720,7 +725,7 @@ async function runDemoCase(
 
   // 1) Intake (providers already parallel via runForProviders)
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, demo, demoIndex, harnessRunNumber)
+    buildIntakeRun(intake, p, userId, demo, demoIndex, harnessRunNumber, harnessBatchId)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -952,11 +957,14 @@ async function main() {
     Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
       ? Math.floor(parsedRunNumber)
       : await nextHarnessRunNumber(userId);
+  const harnessBatchId = args.batchIdRaw || randomUUID();
   log(`  harness run number: ${harnessRunNumber}`);
+  log(`  harness batch id: ${harnessBatchId}`);
+  log(`  harness kind: multi-demo-authorship`);
 
   const reports = await mapPool(demos, demoConcurrency, async (demo, i) => {
     try {
-      return await runDemoCase(demo, i + 1, providers, synthesizers, userId, harnessRunNumber);
+      return await runDemoCase(demo, i + 1, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
       const message = errMessage(err);
       log(`Demo ${demo.id} crashed`, message);
@@ -991,6 +999,9 @@ async function main() {
       {
         generated_at: new Date().toISOString(),
         harness: "multi-demo-authorship",
+        harness_kind: "multi-demo-authorship",
+        harness_batch_id: harnessBatchId,
+        harness_run_number: harnessRunNumber,
         demos: demos.map((d) => ({ id: d.id, label: d.label })),
         providers,
         synthesizers,

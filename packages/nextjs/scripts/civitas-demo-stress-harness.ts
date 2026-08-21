@@ -236,7 +236,8 @@ async function buildIntakeRun(
   provider: LLMProviderName,
   userId: string | undefined,
   trial: number,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
   trialLog(trial, `intake lenses → ${provider}`);
@@ -269,6 +270,8 @@ async function buildIntakeRun(
     demo_scenario_id: DEMO_SCENARIO_ID,
     harness_run: true,
     harness_run_number: harnessRunNumber,
+    harness_batch_id: harnessBatchId,
+    harness_kind: "civitas-replication",
     harness_trial: trial,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -665,7 +668,8 @@ async function runTrial(
   providers: LLMProviderName[],
   synthesizers: UnifiedBriefSynthesizer[],
   userId: string | undefined,
-  harnessRunNumber: number
+  harnessRunNumber: number,
+  harnessBatchId: string
 ): Promise<TrialReport> {
   const decision_id = randomUUID();
   const report: TrialReport = {
@@ -696,7 +700,7 @@ async function runTrial(
 
   // 1) Intake (providers already parallel via runForProviders)
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, trial, harnessRunNumber)
+    buildIntakeRun(intake, p, userId, trial, harnessRunNumber, harnessBatchId)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -919,11 +923,14 @@ async function main() {
     Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
       ? Math.floor(parsedRunNumber)
       : await nextHarnessRunNumber(userId);
+  const harnessBatchId = randomUUID();
   log(`  harness run number: ${harnessRunNumber}`);
+  log(`  harness batch id: ${harnessBatchId}`);
+  log(`  harness kind: civitas-replication`);
 
   const reports = await mapPool(trialNumbers, trialConcurrency, async (t) => {
     try {
-      return await runTrial(t, providers, synthesizers, userId, harnessRunNumber);
+      return await runTrial(t, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
       const message = errMessage(err);
       log(`Trial ${t} crashed`, message);
