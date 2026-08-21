@@ -145,11 +145,22 @@ Full list of variables for `.env` at the repo root:
 | `AUTH_SECRET` | Required for Auth.js sessions and for signing invite links. Generate with `openssl rand -base64 32`. |
 | `INVITE_SECRET` | Optional. If set, used instead of `AUTH_SECRET` to sign invite tokens. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional. Enable Google sign-in (and first-time Google signup via invite). |
-| `AUTH_URL` / `NEXTAUTH_URL` | Optional. Public app origin used when minting invite URLs (default `http://localhost:5001`). |
+| `AUTH_URL` / `NEXTAUTH_URL` | Public app origin for Auth.js and invite URLs (local default `http://localhost:5001`; on Vercel set to `https://your-deployment.vercel.app`). |
 
 Signup is **invite-only**: mint a link with `npm run invite:create` (optional `--days 7`), or from **`/admin`** when signed in as an admin. Existing users can still sign in without an invite.
 
 **Admin is a flag, not a product.** `is_admin` unlocks `/admin` (list users, toggle admin, mint invites) and broader run visibility on `/runs` (including harness). Bootstrap the first admin with `npm run admin:set -- --email you@example.com`, then use `/admin` for day-to-day grants. Sign out and back in after changing your own flag so the JWT session updates.
+
+Unauthenticated visitors are redirected to sign-in for `/`, `/harness`, product pages, and all `/api/decision/*` / `/api/admin/*` routes. Public: `/auth/*`, `/api/auth/*`, `/api/health`.
+
+### Deploying on Vercel
+
+1. Import the repo; set **Root Directory** to `packages/nextjs` (or configure a monorepo build that targets that package).
+2. Set env vars: `AUTH_SECRET`, `MONGODB_URI`, `DB_NAME`, `AUTH_URL` (production URL), LLM keys, and optionally `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `INVITE_SECRET`.
+3. In Google Cloud OAuth, add redirect URI `https://<your-domain>/api/auth/callback/google`.
+4. Atlas Network Access must allow Vercel egress (often `0.0.0.0/0` unless using private networking).
+5. Turn on **Vercel Deployment Protection** (password or Vercel Authentication) so strangers cannot hit the URL even before app auth.
+6. Bootstrap the first admin against the production DB: `npm run admin:set -- --email you@example.com` with prod `MONGODB_URI` / `DB_NAME` loaded.
 
 ### Other scripts
 

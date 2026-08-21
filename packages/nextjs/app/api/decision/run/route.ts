@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { auth } from "@/auth";
+import { requireUserId } from "@/lib/require-user";
 
 // Extend timeout for LLM-heavy operations (lenses + brief synthesis).
 // "All providers" runs three full pipelines in parallel — allow extra wall-clock time.
@@ -370,6 +371,9 @@ const RUN_GET_NO_STORE_HEADERS = {
 
 /** GET /api/decision/run?run_id=xxx — fetch one run. GET /api/decision/run?decision_id=xxx — list runs for that decision (for posture dropdown). */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const gate = await requireUserId();
+  if (!gate.ok) return gate.response;
+
   const { searchParams } = new URL(request.url);
   const run_id = searchParams.get("run_id");
   const decision_id = searchParams.get("decision_id");
@@ -391,6 +395,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(request: NextRequest) {
+  const gate = await requireUserId();
+  if (!gate.ok) return gate.response;
+
   try {
     const body = (await request.json()) as RunRequest;
 
@@ -508,11 +515,14 @@ async function handleIntake(req: InitialRunRequest): Promise<NextResponse> {
 
   const session = await auth();
   const user_id = session?.user?.id;
+  if (!user_id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const decision_id = req.intake.decision_id || randomUUID();
   const intake: DecisionIntake = { ...req.intake, decision_id } as DecisionIntake;
   const demo_scenario_id = parseDemoScenarioId(req.demo_scenario_id);
-  const runOptions = { ...(demo_scenario_id ? { demo_scenario_id } : {}), ...(user_id ? { user_id } : {}) };
+  const runOptions = { ...(demo_scenario_id ? { demo_scenario_id } : {}), user_id };
 
   const selection = parseIntakeLlmSelection(req);
   if (!selection.ok) {
