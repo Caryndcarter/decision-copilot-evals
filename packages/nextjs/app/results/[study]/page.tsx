@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { FindingsNav } from "../_components/findings-nav";
-import { StatStrip } from "../_components/stat-strip";
-import { FindingCardGrid } from "../_components/finding-card";
-import { DimensionScoreboard } from "../_components/scoreboard-dimension-coded";
-import { InfluenceMatrixPlaceholder } from "../_components/scoreboard-influence-matrix";
+import { SiteNav } from "@/app/_components/site-nav";
+import { StatStrip } from "@/app/_components/stat-strip";
+import { FindingCardGrid } from "@/app/_components/finding-card";
+import { DimensionScoreboard } from "@/app/_components/scoreboard-dimension-coded";
+import { InfluenceMatrixPlaceholder } from "@/app/_components/scoreboard-influence-matrix";
 import { FINDINGS_STUDIES, getFindingsStudy } from "@/lib/findings-registry";
 
 export function generateStaticParams() {
@@ -21,12 +21,12 @@ export async function generateMetadata({
   const study = getFindingsStudy(studyId);
   if (!study) return {};
   return {
-    title: `${study.name} — Findings — Decision Copilot`,
+    title: `${study.name} — Results — Decision Copilot`,
     description: study.heroQuestion,
   };
 }
 
-export default async function FindingsStudyPage({
+export default async function StudyResultsPage({
   params,
 }: {
   params: Promise<{ study: string }>;
@@ -37,16 +37,16 @@ export default async function FindingsStudyPage({
 
   return (
     <div className="min-h-screen bg-white">
-      <FindingsNav />
+      <SiteNav />
 
       {/* Hero + stats */}
       <section className="bg-zinc-950">
         <div className="mx-auto max-w-3xl px-6 pt-16 pb-10 lg:pt-20">
           <Link
-            href="/findings"
+            href="/results"
             className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
           >
-            ← All studies
+            ← All results
           </Link>
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
             {study.eyebrow}
@@ -129,7 +129,7 @@ export default async function FindingsStudyPage({
               </Link>
             )}
             <Link
-              href="/findings"
+              href="/results"
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
               See other studies

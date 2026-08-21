@@ -38,7 +38,7 @@ export function StudyCard({ study }: { study: FindingsStudyMeta }) {
   if (comingSoon) return card;
 
   return (
-    <Link href={`/findings/${study.id}`} className="block h-full">
+    <Link href={`/results/${study.id}`} className="block h-full">
       {card}
     </Link>
   );

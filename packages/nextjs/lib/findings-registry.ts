@@ -11,8 +11,13 @@
  * `kind` picks which scoreboard renderer a study page uses:
  *  - "dimension-coded"  → case × provider chip table (Meridian IC, Hormuz)
  *  - "influence-matrix" → synthesizer × mode rollup (multi-demo authorship)
- * Add a new kind + renderer under app/findings/_components/ if a future study
- * doesn't fit either shape.
+ * Add a new kind + renderer under app/_components/ if a future study doesn't
+ * fit either shape.
+ *
+ * This registry drives the whole public site: the homepage ("/") shows a
+ * cross-study rollup (getRollupStats / getRollupFindings), and /results
+ * shows every study's full scoreboard together on one page. Adding a study
+ * here is the only step needed for it to appear in both places.
  */
 
 export type FindingsStudyKind = "dimension-coded" | "influence-matrix";
@@ -52,7 +57,18 @@ export type FindingsStudyMeta = {
   /** Where the full quote-level dataset lives, for the "go deeper" link (sign-in required). */
   deepDiveHref?: string;
   sourceNote: string;
+  /**
+   * Structured counts for the cross-study rollup (home page + /results totals).
+   * Optional: a study with genuinely-open-ended scope (e.g. live authorship
+   * batches) can omit these rather than force a number that isn't real yet.
+   */
+  caseCount?: number;
+  modelCount?: number;
+  briefCount?: number;
 };
+
+/** A finding tagged with which study it came from, for the cross-study rollup. */
+export type RollupFinding = FindingsCard & { studyId: string; studyName: string };
 
 export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
   {
@@ -72,6 +88,9 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       { value: "40", label: "blind-coded briefs" },
       { value: "1 of 20", label: "fully reinforced the filer" },
     ],
+    caseCount: 5,
+    modelCount: 4,
+    briefCount: 40,
     findings: [
       {
         headline: "Full agreement was rare",
@@ -149,6 +168,9 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       { value: "20 of 20", label: "chose the same route" },
       { value: "0", label: "treated the premium as safety proof" },
     ],
+    caseCount: 5,
+    modelCount: 4,
+    briefCount: 20,
     findings: [
       {
         headline: "Every model, every case, chose the same route",
@@ -223,6 +245,8 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       { value: "4", label: "provider synthesizers" },
       { value: "live", label: "updated every harness run" },
     ],
+    caseCount: 5,
+    modelCount: 4,
     findings: [],
     methodology: [
       "Every demo case is synthesized into a Unified Brief three ways: standard (synthesizer sees real provider brands), blind (brands hidden), and reassigned (brands swapped).",
@@ -253,4 +277,46 @@ export function getFindingsStudy(id: string): FindingsStudyMeta | undefined {
 
 export function getLiveStudies(): FindingsStudyMeta[] {
   return FINDINGS_STUDIES.filter((s) => s.status === "live");
+}
+
+export function getUpcomingStudies(): FindingsStudyMeta[] {
+  return FINDINGS_STUDIES.filter((s) => s.status === "coming-soon");
+}
+
+/**
+ * Rollup totals across every live study, for the homepage and /results
+ * headline strip. Sums cases and briefs (each study's are independent);
+ * takes the max of modelCount rather than summing, since the same four
+ * providers are re-tested per study, not four new ones each time.
+ */
+export function getRollupStats(): FindingsStat[] {
+  const live = getLiveStudies();
+  const cases = live.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+  const briefs = live.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+  const models = live.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
+
+  return [
+    { value: String(live.length), label: "studies live" },
+    { value: String(cases), label: "case files" },
+    { value: String(models), label: "models tested" },
+    { value: String(briefs), label: "blind-coded briefs" },
+  ];
+}
+
+/**
+ * Curated cross-study findings for the homepage — a hand-picked subset, not
+ * every finding from every study (that full list lives on /results). `limit`
+ * caps how many are pulled per study, in registry order.
+ */
+export function getRollupFindings(perStudyLimit = 2): RollupFinding[] {
+  return getLiveStudies().flatMap((s) =>
+    s.findings.slice(0, perStudyLimit).map((f) => ({ ...f, studyId: s.id, studyName: s.name }))
+  );
+}
+
+/** Every finding from every live study, tagged and grouped — for /results. */
+export function getAllRollupFindings(): RollupFinding[] {
+  return getLiveStudies().flatMap((s) =>
+    s.findings.map((f) => ({ ...f, studyId: s.id, studyName: s.name }))
+  );
 }
