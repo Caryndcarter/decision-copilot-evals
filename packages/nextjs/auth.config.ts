@@ -9,7 +9,7 @@ export const authConfig: NextAuthConfig = {
       // Port-suffixed locally to avoid collisions; stable name in production (e.g. Vercel).
       name: isProd
         ? "next-auth.session-token"
-        : `next-auth.session-token.${process.env.PORT || "5001"}`,
+        : `next-auth.session-token.${process.env.PORT || "5002"}`,
       options: {
         httpOnly: true,
         sameSite: "lax",
