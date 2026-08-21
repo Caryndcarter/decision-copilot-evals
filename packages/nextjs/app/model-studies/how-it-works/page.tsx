@@ -16,20 +16,18 @@ export default function HowItWorksPage() {
       <SiteNav />
 
       <section className="bg-zinc-950 py-16 lg:py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
-              Method
-            </p>
-            <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-              One method, run on a different scenario each time
-            </h1>
-            <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-              Every study on this site follows the same shape. What changes is the scenario, the
-              cases, and the rubric dimensions specific to it — not the process that produces the
-              numbers.
-            </p>
-          </div>
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+            Method
+          </p>
+          <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
+            One method, run on a different scenario each time
+          </h1>
+          <p className="mt-5 text-base text-zinc-300 leading-relaxed">
+            Every study on this site follows the same shape. What changes is the scenario, the
+            cases, and the rubric dimensions specific to it — not the process that produces the
+            numbers.
+          </p>
         </div>
       </section>
 

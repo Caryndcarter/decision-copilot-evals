@@ -13,15 +13,13 @@ export default function WhyPage() {
       <SiteNav />
 
       <section className="bg-zinc-950 py-16 lg:py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
-              The pitch
-            </p>
-            <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-              An AI that agrees with you isn&apos;t the same as an AI that&apos;s right
-            </h1>
-          </div>
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+            The pitch
+          </p>
+          <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
+            An AI that agrees with you isn&apos;t the same as an AI that&apos;s right
+          </h1>
         </div>
       </section>
 

@@ -29,7 +29,7 @@ export default function ResultsPage() {
 
       <section className="bg-zinc-950 pt-16 pb-10 lg:pt-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl ml-auto">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               Full rollup
             </p>

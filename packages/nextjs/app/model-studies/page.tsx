@@ -36,11 +36,11 @@ export default function Home() {
           src="/hero-brain.webp"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none select-none absolute right-[1%] top-[68%] z-0 hidden w-[30%] max-w-xs -translate-y-1/2 opacity-45 mix-blend-screen lg:block"
+          className="pointer-events-none select-none absolute right-[6%] top-1/2 z-0 hidden w-[48%] max-w-md -translate-y-1/2 opacity-50 mix-blend-screen lg:block"
         />
 
         <div className="relative mx-auto max-w-6xl px-6">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl ml-auto">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               A Decision Copilot research program
             </p>
