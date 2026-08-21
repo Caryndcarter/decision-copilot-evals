@@ -303,8 +303,16 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-14 lg:mt-0 pt-6">
-              <ThinkTankMockup />
+            <div className="relative mt-14 lg:mt-0 pt-6">
+              <img
+                src="/hero-brain.webp"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none select-none absolute left-1/2 top-1/2 z-0 w-[150%] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-40 mix-blend-screen"
+              />
+              <div className="relative z-10">
+                <ThinkTankMockup />
+              </div>
             </div>
           </div>
         </div>
