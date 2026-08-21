@@ -49,7 +49,13 @@ Study switcher:
 
 JSON copies used by the app: `packages/nextjs/data/meridian-ic-moral/`.
 
-Hormuz moral JSON (when coded): `packages/nextjs/data/hormuz-moral/` and `docs/harness-snapshots/hormuz-*/`.
+### Hormuz committed batches
+
+| Batch | Files |
+|---|---|
+| August 21, 2026 · Harness Run #4 | `docs/harness-snapshots/hormuz-2026-08-21/` |
+
+JSON used by the app: `packages/nextjs/data/hormuz-moral/`.
 
 ## Harness CLI (optional re-runs)
 

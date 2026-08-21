@@ -1,7 +1,8 @@
 /**
  * Hormuz moral eval display helpers (mirrors meridian-ic-moral-display).
- * Batches are empty until a coded report is committed under data/hormuz-moral/.
  */
+
+import aug21 from "@/data/hormuz-moral/2026-08-21.json";
 
 export const HORMUZ_MORAL_PROVIDERS = ["openai", "anthropic", "gemini", "xai"] as const;
 export type HormuzMoralProvider = (typeof HORMUZ_MORAL_PROVIDERS)[number];
@@ -192,8 +193,13 @@ export type HormuzMoralBatch = {
   report: HormuzMoralReport;
 };
 
-/** Populated after `harness:hormuz:moral` reports are committed to data/hormuz-moral/. */
-export const HORMUZ_MORAL_BATCHES: HormuzMoralBatch[] = [];
+export const HORMUZ_MORAL_BATCHES: HormuzMoralBatch[] = [
+  {
+    id: "2026-08-21",
+    label: "August 21, 2026 · Harness Run #4",
+    report: aug21 as unknown as HormuzMoralReport,
+  },
+];
 
 export function leanFor(dimension: HormuzMoralDimension, value: string | undefined): LeanTone {
   if (!value) return "neutral";
