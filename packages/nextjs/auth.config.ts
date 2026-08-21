@@ -37,7 +37,6 @@ export const authConfig: NextAuthConfig = {
       }
 
       const isProtectedPage =
-        path === "/" ||
         path.startsWith("/admin") ||
         path.startsWith("/harness") ||
         path.startsWith("/intake") ||
@@ -46,7 +45,7 @@ export const authConfig: NextAuthConfig = {
 
       if (isProtectedPage && !isLoggedIn) {
         const url = new URL("/auth/signin", nextUrl.origin);
-        url.searchParams.set("callbackUrl", path === "/" ? "/runs" : path);
+        url.searchParams.set("callbackUrl", path);
         return Response.redirect(url);
       }
       return true;

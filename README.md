@@ -151,7 +151,7 @@ Signup is **invite-only**: mint a link with `npm run invite:create` (optional `-
 
 **Admin is a flag, not a product.** `is_admin` unlocks `/admin` (list users, toggle admin, mint invites) and broader run visibility on `/runs` (including harness). Bootstrap the first admin with `npm run admin:set -- --email you@example.com`, then use `/admin` for day-to-day grants. Sign out and back in after changing your own flag so the JWT session updates.
 
-Unauthenticated visitors are redirected to sign-in for `/`, `/harness`, product pages, and all `/api/decision/*` / `/api/admin/*` routes. Public: `/auth/*`, `/api/auth/*`, `/api/health`.
+Unauthenticated visitors are redirected to sign-in for `/harness`, product pages (`/intake`, `/run`, `/runs`, `/admin`), and all `/api/decision/*` / `/api/admin/*` routes. Public: `/` (homepage), `/auth/*`, `/api/auth/*`, `/api/health`.
 
 ### Deploying on Vercel
 

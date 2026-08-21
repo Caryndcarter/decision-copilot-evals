@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { LogoLockup } from "@/app/components/logo-icon";
 import { SessionNav } from "@/app/components/session-nav";
 import { auth } from "@/auth";
+import { findUserByEmail } from "@/lib/db/users";
 import { AdminPanel } from "./admin-panel";
 
 export const dynamic = "force-dynamic";
@@ -14,12 +15,15 @@ export default async function AdminPage() {
     redirect("/auth/signin?callbackUrl=/admin");
   }
 
-  const isAdmin = Boolean((session.user as { is_admin?: boolean }).is_admin);
+  const email = session.user.email ?? "";
+  // Prefer DB over JWT so a fresh admin:set works even before the next full re-login.
+  const dbUser = email ? await findUserByEmail(email) : null;
+  const isAdmin = Boolean(
+    dbUser?.is_admin ?? (session.user as { is_admin?: boolean }).is_admin
+  );
   if (!isAdmin) {
     redirect("/runs");
   }
-
-  const email = session.user.email ?? "";
 
   return (
     <main className="min-h-screen bg-zinc-50">

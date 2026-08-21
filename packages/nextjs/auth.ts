@@ -62,14 +62,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        if (user.email) token.email = user.email;
+      }
+
+      const email =
+        (typeof token.email === "string" && token.email) ||
+        (typeof user?.email === "string" ? user.email : undefined);
+
+      // Always refresh is_admin from Mongo so CLI /admin grants apply without a stale JWT
+      // (Auth.js adapter user objects do not include our custom is_admin field).
+      if (email) {
+        try {
+          const dbUser = await findUserByEmail(email);
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.is_admin = Boolean(dbUser.is_admin);
+          } else if (user) {
+            token.is_admin = (user as { is_admin?: boolean }).is_admin ?? false;
+          }
+        } catch {
+          if (user) {
+            token.is_admin = (user as { is_admin?: boolean }).is_admin ?? false;
+          }
+        }
+      } else if (user) {
         token.is_admin = (user as { is_admin?: boolean }).is_admin ?? false;
       }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        (session.user as { is_admin?: boolean }).is_admin = token.is_admin as boolean;
+        (session.user as { is_admin?: boolean }).is_admin = Boolean(token.is_admin);
       }
       return session;
     },
