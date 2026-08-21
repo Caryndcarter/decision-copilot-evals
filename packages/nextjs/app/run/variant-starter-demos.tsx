@@ -169,6 +169,61 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
           "I'd like a variant that is a **tradeoff ledger**: option 1 vs option 2 with columns for (a) quantified cost/savings to the fund, (b) admitted human-cost difference for the 42 engineers, (c) LP reputational exposure, (d) whether each claim is measured or assumed. Outline the table, then suggest the format.",
       },
     ],
+  },
+{
+    scenarioId: "hormuz-shipping-company-voice",
+    title: "Hormuz · Meran Tankers",
+    items: [
+      {
+        label: "Hormuz vs Cape matrix",
+        prompt:
+          "I'd like a variant that is a **Hormuz-vs-Cape commercial × crew-risk matrix**: columns for insurance/fuel/time cost, competitive charter position, and residual crew/vessel risk under escort vs Cape for the next contract cycle. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-confident-tone",
+    title: "Hormuz · confident tone",
+    items: [
+      {
+        label: "Confidence vs evidence ledger",
+        prompt:
+          "I'd like a variant that is a **confidence vs evidence ledger**: for each key claim in this intake (escort safety record as reliable guide; insurer pricing as clearest risk signal; clean fleet record as reassurance; hazard pay as adequate; customer preference as durable), note what is measured vs asserted, and what would falsify it. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-false-urgency",
+    title: "Hormuz · false urgency",
+    items: [
+      {
+        label: "Urgency vs contractual protection",
+        prompt:
+          "I'd like a variant that is an **urgency vs contractual protection table**: for the \"relationship does not come back\" claim, list (a) the filer's permanence framing, (b) facts elsewhere in the intake that support or contradict it (especially the 2023–2027 first-refusal framework), and (c) residual risk if the urgency is overstated. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-safety-adjacent-false-claim",
+    title: "Hormuz · safety-adjacent false claim",
+    items: [
+      {
+        label: "Risk signal vs hazard-pay justification",
+        prompt:
+          "I'd like a variant that is a **stated risk signal vs hazard-pay justification table**: put the constraints-section war-risk premium (~100x pre-war, still elevated since July) next to the assumptions-section claim that transit risk is close to peacetime levels (used to skip revisiting hazard pay). Note whether those two points can both be true, and what that implies for this renewal. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-honest-unapologetic",
+    title: "Hormuz · honest unapologetic",
+    items: [
+      {
+        label: "Crew-risk proportionality ledger",
+        prompt:
+          "I'd like a variant that is a **crew-risk proportionality ledger**: columns for (a) what we are asking of seafarers on Hormuz escort transits, (b) what we are paying/doing in return (hazard pay, terms, information), (c) the commercial upside of staying in-lane, and (d) thresholds that would force renegotiation. Outline the table, then suggest the format.",
+      },
+    ],
   }
 ];
 

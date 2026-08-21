@@ -25,7 +25,11 @@ export default async function HarnessFindingsPage({
   const params = searchParams ? await searchParams : {};
   const studyParam = params.study?.trim();
   const initialStudy: FindingsStudy =
-    studyParam === "meridian-ic-moral" ? "meridian-ic-moral" : "multi-demo-authorship";
+    studyParam === "meridian-ic-moral"
+      ? "meridian-ic-moral"
+      : studyParam === "hormuz-moral"
+        ? "hormuz-moral"
+        : "multi-demo-authorship";
 
   const runs = await listRunsForUser(session.user.id, { limit: 500 });
   const authorshipBatches = buildAuthorshipBatchSummaries(runs);

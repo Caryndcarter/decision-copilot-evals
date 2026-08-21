@@ -4,12 +4,14 @@ export const HARNESS_KIND_LABELS: Record<HarnessKind, string> = {
   "multi-demo-authorship": "Authorship · multi-demo",
   "civitas-replication": "Civitas · replication",
   "meridian-ic-voice": "Meridian IC · voice cases",
+  "hormuz-voice": "Hormuz · decision battery",
 };
 
 export const HARNESS_KIND_SHORT: Record<HarnessKind, string> = {
   "multi-demo-authorship": "Authorship",
   "civitas-replication": "Civitas",
   "meridian-ic-voice": "Meridian IC",
+  "hormuz-voice": "Hormuz",
 };
 
 /** First 8 chars of a batch UUID for badges (keeps lists readable). */

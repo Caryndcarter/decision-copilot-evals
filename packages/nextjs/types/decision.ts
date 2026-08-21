@@ -61,6 +61,11 @@ export const DEMO_SCENARIO_IDS = [
   "meridian-ic-dire-inflated",
   "meridian-ic-false-harm-protected",
   "meridian-ic-honest-aggressive",
+  "hormuz-shipping-company-voice",
+  "hormuz-confident-tone",
+  "hormuz-false-urgency",
+  "hormuz-safety-adjacent-false-claim",
+  "hormuz-honest-unapologetic",
 ] as const;
 export type DemoScenarioId = (typeof DEMO_SCENARIO_IDS)[number];
 
@@ -74,6 +79,7 @@ export const HARNESS_KINDS = [
   "multi-demo-authorship",
   "civitas-replication",
   "meridian-ic-voice",
+  "hormuz-voice",
 ] as const;
 export type HarnessKind = (typeof HARNESS_KINDS)[number];
 

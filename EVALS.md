@@ -1,6 +1,7 @@
 # Decision Copilot — evals
 
-Research copy of Decision Copilot for Meridian IC moral evaluation and multi-demo authorship studies. Not the production app.
+Research copy of Decision Copilot for Meridian IC moral evaluation, Hormuz battery,
+and multi-demo authorship studies. Not the production app.
 
 Persistence: **MongoDB Atlas**, database `decision-copilot-evals` (same cluster as the original app, separate DB).
 
@@ -18,6 +19,16 @@ Production Dynamo app lives in [`decision-copilot-dynamodb`](https://github.com/
 
 **Meridian IC Cases 1–5** (voice / posture variants of Civitas) remain available for the moral dashboard and `harness:meridian-ic`.
 
+**Hormuz Decision Battery (Cases 1–5)** — Meridian-style isolation on a fictional tanker operator against the mid-August 2026 Strait of Hormuz crisis (`lib/hormuz-voice-cases.ts`; source drafts in `docs/harness-snapshots/hormuz-cases/`):
+
+| Case | Id | Mechanism |
+|---|---|---|
+| 1 | `hormuz-shipping-company-voice` | Provisional commercial lean; no false premises; epistemic contrast with C2 |
+| 2 | `hormuz-confident-tone` | Same facts as C1; hedging → confident register |
+| 3 | `hormuz-false-urgency` | Permanence claim vs in-doc first-refusal |
+| 4 | `hormuz-safety-adjacent-false-claim` | Near-peacetime risk vs ~100x premium |
+| 5 | `hormuz-honest-unapologetic` | Names crew-risk tradeoff openly; no false premises |
+
 ## Harness findings UI
 
 Open **`/harness/findings`** (linked from My Decisions → Harness). Legacy routes `/harness/meridian-ic/moral` and `/harness/demos/authorship` redirect here.
@@ -25,7 +36,8 @@ Open **`/harness/findings`** (linked from My Decisions → Harness). Legacy rout
 Study switcher:
 
 1. **Meridian IC moral** — committed snapshot batches (provider Decision Briefs, Civitas-specific 14 dims)
-2. **Multi-demo authorship** — live five-case batches (coverage, branding influence shifts, generic 8-dim moral audits when coded)
+2. **Hormuz moral** — Hormuz battery provider Decision Briefs (Hormuz-specific dims; committed snapshots when available)
+3. **Multi-demo authorship** — live five-case batches (coverage, branding influence shifts, generic 8-dim moral audits when coded)
 
 ### Meridian IC committed batches
 
@@ -37,15 +49,34 @@ Study switcher:
 
 JSON copies used by the app: `packages/nextjs/data/meridian-ic-moral/`.
 
+Hormuz moral JSON (when coded): `packages/nextjs/data/hormuz-moral/` and `docs/harness-snapshots/hormuz-*/`.
+
 ## Harness CLI (optional re-runs)
 
 ```bash
 npm run harness:meridian-ic
 npm run harness:meridian-ic:moral -- --report=packages/nextjs/scripts/output/meridian-ic-harness-….json
+npm run harness:hormuz
+npm run harness:hormuz:moral -- --report=packages/nextjs/scripts/output/hormuz-harness-….json
 npm run harness:civitas
 npm run harness:civitas:moral -- --report=packages/nextjs/scripts/output/civitas-harness-….json
 npm run harness:demos:authorship
 npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-id=<uuid>
+```
+
+### Hormuz battery (`harness:hormuz`)
+
+Runs Hormuz Cases 1–5 once each across configured providers (standard Decision Briefs only — same shape as `harness:meridian-ic`).
+
+```bash
+# Smoke one case
+npm run harness:hormuz -- --cases=hormuz-shipping-company-voice --user-email=you@example.com
+
+# Full five-case batch
+npm run harness:hormuz -- --user-email=you@example.com
+
+# Blind moral coding on provider briefs
+npm run harness:hormuz:moral -- --report=packages/nextjs/scripts/output/hormuz-harness-….json
 ```
 
 ### Multi-demo authorship (`harness:demos:authorship`)

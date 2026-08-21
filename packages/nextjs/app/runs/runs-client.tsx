@@ -284,7 +284,8 @@ export function RunsClient({
     {tab === "harness" && harnessGroups.length > 0 && (
       <p className="mb-4 text-sm text-zinc-500">
         Harness batches from <code className="text-xs">harness:demos:authorship</code>,{" "}
-        <code className="text-xs">harness:civitas</code>, or <code className="text-xs">harness:meridian-ic</code>.
+        <code className="text-xs">harness:civitas</code>, <code className="text-xs">harness:meridian-ic</code>, or{" "}
+        <code className="text-xs">harness:hormuz</code>.
         Badges show type, run #, and batch id.{" "}
         <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
           Harness findings

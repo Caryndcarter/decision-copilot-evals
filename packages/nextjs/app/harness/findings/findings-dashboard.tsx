@@ -2,16 +2,22 @@
 
 import { useState } from "react";
 import { AuthorshipHarnessDashboard } from "@/app/harness/demos/authorship/authorship-harness-dashboard";
+import { HormuzMoralDashboard } from "@/app/harness/hormuz/moral/hormuz-moral-dashboard";
 import { MeridianMoralDashboard } from "@/app/harness/meridian-ic/moral/meridian-moral-dashboard";
 import type { AuthorshipBatchSummary } from "@/lib/authorship-harness-summary";
 
-export type FindingsStudy = "meridian-ic-moral" | "multi-demo-authorship";
+export type FindingsStudy = "meridian-ic-moral" | "hormuz-moral" | "multi-demo-authorship";
 
 const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
   {
     id: "meridian-ic-moral",
     label: "Meridian IC moral",
     blurb: "Committed IC voice batches — provider Decision Briefs, 14 Civitas-specific dims",
+  },
+  {
+    id: "hormuz-moral",
+    label: "Hormuz moral",
+    blurb: "Hormuz battery — provider Decision Briefs, Hormuz-specific route/crew dims",
   },
   {
     id: "multi-demo-authorship",
@@ -37,8 +43,9 @@ export function HarnessFindingsDashboard({
         </p>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Harness findings</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-          Switch among harness studies. Meridian IC uses committed moral snapshots; multi-demo
-          authorship pulls live batches (coverage, influence shifts, and moral lean when audited).
+          Switch among harness studies. Meridian IC and Hormuz use committed moral snapshots when
+          available; multi-demo authorship pulls live batches (coverage, influence shifts, and moral
+          lean when audited).
         </p>
       </header>
 
@@ -69,6 +76,8 @@ export function HarnessFindingsDashboard({
 
       {study === "meridian-ic-moral" ? (
         <MeridianMoralDashboard embedded />
+      ) : study === "hormuz-moral" ? (
+        <HormuzMoralDashboard embedded />
       ) : (
         <AuthorshipHarnessDashboard batches={authorshipBatches} compactHeader />
       )}
