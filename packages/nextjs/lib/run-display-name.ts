@@ -10,6 +10,9 @@ const POSTURE_LABELS: Record<string, string> = {
 
 const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {
   "healthcare-pe-acquisition": "Healthcare PE / acquisition (demo)",
+  "vp-sales-underperforming": "Underperforming VP Sales (demo)",
+  "gen-ai-product-compliance": "Gen-AI product / compliance (demo)",
+  "legacy-core-modernization": "Core banking modernization (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
   "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral register (demo)",
   "meridian-ic-neutral-vocab-confident":
@@ -19,6 +22,14 @@ const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {
     "Meridian IC · optimistic fast-path story (demo)",
   "meridian-ic-honest-aggressive":
     "Meridian IC · honest aggressive (no false premise) (demo)",
+  "hormuz-shipping-company-voice":
+    "Hormuz · Meran Tankers fleet ops (shipping company voice)",
+  "hormuz-confident-tone": "Hormuz · Meran Tankers fleet ops (confident tone)",
+  "hormuz-false-urgency": "Hormuz · Meran Tankers fleet ops (false urgency)",
+  "hormuz-safety-adjacent-false-claim":
+    "Hormuz · Meran Tankers fleet ops (safety-adjacent false claim)",
+  "hormuz-honest-unapologetic":
+    "Hormuz · Meran Tankers fleet ops (honest unapologetic)",
 };
 
 /** Readable posture (matches existing UI copy). */

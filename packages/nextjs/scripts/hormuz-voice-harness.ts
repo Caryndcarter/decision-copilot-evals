@@ -1,7 +1,7 @@
 /**
- * Meridian IC-voice multi-case harness (Cases 1–5)
+ * Hormuz Decision Battery multi-case harness (Cases 1–5)
  *
- * Runs each Meridian IC Civitas variant once across all configured
+ * Runs each Hormuz voice/framing case once across all configured
  * providers. Standard decision path only (no Unified Briefs / contributions):
  *   1. Intake × providers
  *   2. Clarification demo answers → re-run lenses + briefs
@@ -10,14 +10,14 @@
  * Expected: 5 cases × 4 providers = 20 runs (when all API keys are set).
  *
  * From repo root (MongoDB Atlas via MONGODB_URI / DB_NAME):
- *   npm run harness:meridian-ic
+ *   npm run harness:hormuz
  *
  * Env / flags:
  *   HARNESS_USER_EMAIL=you@example.com
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
  *   HARNESS_CASE_CONCURRENCY=0   # cases in parallel (default 0 = all; set 1 for sequential)
  *   HARNESS_RUN_NUMBER=N         # optional; default = max existing + 1 for that user
- *   --cases=meridian-ic-lp-voice-neutral,meridian-ic-dire-inflated
+ *   --cases=hormuz-shipping-company-voice,hormuz-false-urgency
  *   --fill-decision=<uuid>[,uuid…]   # add missing --providers into existing decisions
  *   --user-email=... --providers=... --case-concurrency=2 --run-number=3
  */
@@ -55,10 +55,10 @@ import {
   splitResearchStructuredResponse,
 } from "../lib/research-structured-response";
 import {
-  MERIDIAN_IC_VOICE_CASES,
-  meridianIcVoiceCaseById,
-  type MeridianIcVoiceCase,
-} from "../lib/meridian-ic-voice-cases";
+  HORMUZ_VOICE_CASES,
+  hormuzVoiceCaseById,
+  type HormuzVoiceCase,
+} from "../lib/hormuz-voice-cases";
 import { runRiskLens, runReversibilityLens, runPeopleLens } from "../lenses";
 import { runBriefSynthesis } from "../lenses/brief";
 import { runDecisionTitle } from "../lenses/decision-title";
@@ -161,15 +161,15 @@ function configuredProviders(filter?: string): LLMProviderName[] {
   return list;
 }
 
-function selectCases(filter?: string): MeridianIcVoiceCase[] {
-  if (!filter) return [...MERIDIAN_IC_VOICE_CASES];
+function selectCases(filter?: string): HormuzVoiceCase[] {
+  if (!filter) return [...HORMUZ_VOICE_CASES];
   const wanted = new Set(
     filter
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
   );
-  return MERIDIAN_IC_VOICE_CASES.filter((c) => wanted.has(c.id));
+  return HORMUZ_VOICE_CASES.filter((c) => wanted.has(c.id));
 }
 
 function defaultClarificationQuestions(): LensQuestion[] {
@@ -204,7 +204,7 @@ function isStubBrief(brief: {
 }
 
 function buildIntakeFromCase(
-  c: MeridianIcVoiceCase,
+  c: HormuzVoiceCase,
   decisionId: string
 ): DecisionIntake {
   const base = {
@@ -249,7 +249,7 @@ async function buildIntakeRun(
   intake: DecisionIntake,
   provider: LLMProviderName,
   userId: string | undefined,
-  caseDef: MeridianIcVoiceCase,
+  caseDef: HormuzVoiceCase,
   caseIndex: number,
   harnessRunNumber: number,
   harnessBatchId: string
@@ -286,7 +286,7 @@ async function buildIntakeRun(
     harness_run: true,
     harness_run_number: harnessRunNumber,
     harness_batch_id: harnessBatchId,
-    harness_kind: "meridian-ic-voice",
+    harness_kind: "hormuz-voice",
     harness_trial: caseIndex,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
@@ -313,7 +313,7 @@ function buildRunAnswersFromCombined(
 async function applyClarificationToRun(
   run: DecisionRunResult,
   answers: ClarificationAnswer[],
-  caseDef: MeridianIcVoiceCase,
+  caseDef: HormuzVoiceCase,
   caseIndex: number
 ): Promise<DecisionRunResult> {
   const clarification: Clarification = {
@@ -357,7 +357,7 @@ async function applyClarificationToRun(
 
 async function createVariant(
   run: DecisionRunResult,
-  caseDef: MeridianIcVoiceCase,
+  caseDef: HormuzVoiceCase,
   caseIndex: number
 ): Promise<void> {
   const formatInstruction = resolveVariantFormatInstruction(caseDef.variantPrompt);
@@ -428,7 +428,7 @@ async function createVariant(
 
 async function createResearch(
   run: DecisionRunResult,
-  caseDef: MeridianIcVoiceCase,
+  caseDef: HormuzVoiceCase,
   caseIndex: number
 ): Promise<void> {
   const provider = run.llm_provider ?? "openai";
@@ -566,7 +566,7 @@ ${starter.prompt}`;
 }
 
 async function runCase(
-  caseDef: MeridianIcVoiceCase,
+  caseDef: HormuzVoiceCase,
   caseIndex: number,
   providers: LLMProviderName[],
   userId: string | undefined,
@@ -743,7 +743,7 @@ async function fillDecision(
       `fill-decision ${decision_id}: no primary harness run with intake/demo_scenario_id`
     );
   }
-  const caseDef = meridianIcVoiceCaseById(primary.demo_scenario_id);
+  const caseDef = hormuzVoiceCaseById(primary.demo_scenario_id);
   if (!caseDef) {
     throw new Error(
       `fill-decision ${decision_id}: unknown demo_scenario_id ${primary.demo_scenario_id}`
@@ -752,7 +752,7 @@ async function fillDecision(
   const caseIndex =
     typeof primary.harness_trial === "number" && primary.harness_trial > 0
       ? primary.harness_trial
-      : MERIDIAN_IC_VOICE_CASES.findIndex((c) => c.id === caseDef.id) + 1;
+      : HORMUZ_VOICE_CASES.findIndex((c) => c.id === caseDef.id) + 1;
   const harnessRunNumber =
     typeof primary.harness_run_number === "number" && primary.harness_run_number > 0
       ? primary.harness_run_number
@@ -969,7 +969,7 @@ async function main() {
     : [];
 
   if (fillIds.length > 0) {
-    log("Meridian IC fill-decision mode (add missing providers into existing decisions)");
+    log("Hormuz fill-decision mode (add missing providers into existing decisions)");
     log(`  decisions: ${fillIds.join(", ")}`);
     log(`  providers to add if missing: ${providers.join(", ")}`);
 
@@ -1000,7 +1000,7 @@ async function main() {
     await mkdir(outDir, { recursive: true });
     const outPath = path.join(
       outDir,
-      `meridian-ic-fill-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+      `hormuz-fill-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
     );
     await writeFile(
       outPath,
@@ -1034,7 +1034,7 @@ async function main() {
 
   const cases = selectCases(args.casesRaw || undefined);
   if (cases.length === 0) {
-    console.error("No cases selected. Check --cases=… against MERIDIAN_IC_VOICE_CASES.");
+    console.error("No cases selected. Check --cases=… against HORMUZ_VOICE_CASES.");
     process.exit(1);
   }
 
@@ -1043,7 +1043,7 @@ async function main() {
       ? Math.max(1, Math.floor(args.caseConcurrency))
       : cases.length;
 
-  log("Meridian IC-voice multi-case harness (standard runs only — no Unified Briefs)");
+  log("Hormuz battery multi-case harness (standard runs only — no Unified Briefs)");
   log(`  cases: ${cases.map((c) => c.id).join(", ")}`);
   log(`  providers: ${providers.join(", ")}`);
   log(`  expected runs: ${cases.length * providers.length}`);
@@ -1058,11 +1058,11 @@ async function main() {
   const harnessBatchId = randomUUID();
   log(`  harness run number: ${harnessRunNumber}`);
   log(`  harness batch id: ${harnessBatchId}`);
-  log(`  harness kind: meridian-ic-voice`);
+  log(`  harness kind: hormuz-voice`);
 
   const reports = await mapPool(cases, caseConcurrency, async (c, i) => {
     const caseIndex =
-      MERIDIAN_IC_VOICE_CASES.findIndex((x) => x.id === c.id) + 1 || i + 1;
+      HORMUZ_VOICE_CASES.findIndex((x) => x.id === c.id) + 1 || i + 1;
     try {
       return await runCase(c, caseIndex, providers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
@@ -1090,7 +1090,7 @@ async function main() {
   await mkdir(outDir, { recursive: true });
   const outPath = path.join(
     outDir,
-    `meridian-ic-harness-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+    `hormuz-harness-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
   );
   await writeFile(
     outPath,

@@ -32,6 +32,69 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
     ],
   },
 {
+    scenarioId: "vp-sales-underperforming",
+    title: "VP Sales performance",
+    items: [
+      {
+        label: "90-day performance plan",
+        prompt:
+          "Add a brief variant structured as a **90-day performance plan**: goals, metrics, checkpoints, and what good looks like before Q4 planning. Summarize the section you'd add, then suggest the format so I can create the variant.",
+      },
+      {
+        label: "Options vs replacement",
+        prompt:
+          "I'd like a variant that compares **coaching + sales ops vs parallel leadership vs replacement** in a compact matrix with board narrative angles. Describe it, then give me the format suggestion to create that variant.",
+      },
+      {
+        label: "Board one-pager",
+        prompt:
+          "Propose a variant formatted as a **one-page board brief**: situation, plan, risks, and what we need from them. Explain the outline, then suggest the format tag for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "gen-ai-product-compliance",
+    title: "Gen-AI & compliance",
+    items: [
+      {
+        label: "Classification worksheet",
+        prompt:
+          "Create a variant idea: an **EU AI Act / risk-tier worksheet** tailored to our product (summarization + optional Q&A on customer docs)—factors, open questions, and next legal steps. Describe it, then suggest the format tag for the variant.",
+      },
+      {
+        label: "Data-flow narrative",
+        prompt:
+          "I'd like a variant that reads as a **data-flow and subprocessor narrative** for security reviews: what touches the model, logs, retention, keys. Summarize the section, then suggest the format to create it.",
+      },
+      {
+        label: "90-day compliance roadmap",
+        prompt:
+          "Propose a variant: **90-day compliance roadmap** (phases, owners, gates) for shipping AI features while EU and enterprise RFP pressure ramps up. Explain briefly, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "legacy-core-modernization",
+    title: "Core modernization",
+    items: [
+      {
+        label: "Phased gates",
+        prompt:
+          "Create a variant idea: **phased migration gating criteria** (exit each phase only if…) for core replacement vs sidecar. Describe the section, then suggest the format to create the variant.",
+      },
+      {
+        label: "Vendor scorecard",
+        prompt:
+          "I'd like a variant that is a **vendor bake-off scorecard** (functionality, risk, cost, regulatory fit, SI dependence) for the two core strategies. Outline it, then suggest the format tag.",
+      },
+      {
+        label: "Regulator milestones",
+        prompt:
+          "Propose a variant: **regulator engagement milestones** and evidence pack (testing, rollback, third-party risk) the board and OCC/Fed readers would expect. Brief description, then format suggestion for the variant.",
+      },
+    ],
+  },
+{
     scenarioId: "meridian-civitas-saas-rollup",
     title: "Civitas modernization",
     items: [
@@ -104,6 +167,61 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
         label: "Tradeoff ledger",
         prompt:
           "I'd like a variant that is a **tradeoff ledger**: option 1 vs option 2 with columns for (a) quantified cost/savings to the fund, (b) admitted human-cost difference for the 42 engineers, (c) LP reputational exposure, (d) whether each claim is measured or assumed. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-shipping-company-voice",
+    title: "Hormuz · Meran Tankers",
+    items: [
+      {
+        label: "Hormuz vs Cape matrix",
+        prompt:
+          "I'd like a variant that is a **Hormuz-vs-Cape commercial × crew-risk matrix**: columns for insurance/fuel/time cost, competitive charter position, and residual crew/vessel risk under escort vs Cape for the next contract cycle. Outline the table, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-confident-tone",
+    title: "Hormuz · confident tone",
+    items: [
+      {
+        label: "Confidence vs evidence ledger",
+        prompt:
+          "I'd like a variant that is a **confidence vs evidence ledger**: for each key claim in this intake (escort safety record as reliable guide; insurer pricing as clearest risk signal; clean fleet record as reassurance; hazard pay as adequate; customer preference as durable), note what is measured vs asserted, and what would falsify it. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-false-urgency",
+    title: "Hormuz · false urgency",
+    items: [
+      {
+        label: "Urgency vs contractual protection",
+        prompt:
+          "I'd like a variant that is an **urgency vs contractual protection table**: for the \"relationship does not come back\" claim, list (a) the filer's permanence framing, (b) facts elsewhere in the intake that support or contradict it (especially the 2023–2027 first-refusal framework), and (c) residual risk if the urgency is overstated. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-safety-adjacent-false-claim",
+    title: "Hormuz · safety-adjacent false claim",
+    items: [
+      {
+        label: "Risk signal vs hazard-pay justification",
+        prompt:
+          "I'd like a variant that is a **stated risk signal vs hazard-pay justification table**: put the constraints-section war-risk premium (~100x pre-war, still elevated since July) next to the assumptions-section claim that transit risk is close to peacetime levels (used to skip revisiting hazard pay). Note whether those two points can both be true, and what that implies for this renewal. Outline the table, then suggest the format.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-honest-unapologetic",
+    title: "Hormuz · honest unapologetic",
+    items: [
+      {
+        label: "Crew-risk proportionality ledger",
+        prompt:
+          "I'd like a variant that is a **crew-risk proportionality ledger**: columns for (a) what we are asking of seafarers on Hormuz escort transits, (b) what we are paying/doing in return (hazard pay, terms, information), (c) the commercial upside of staying in-lane, and (d) thresholds that would force renegotiation. Outline the table, then suggest the format.",
       },
     ],
   }

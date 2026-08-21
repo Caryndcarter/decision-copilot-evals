@@ -41,6 +41,9 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         unifiedBriefRunId: undefined,
         isHarness: false,
         harnessTrial: undefined,
+        harnessRunNumber: undefined,
+        harnessBatchId: undefined,
+        harnessKind: undefined,
       });
     }
     const group = map.get(id)!;
@@ -50,6 +53,15 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       group.isHarness = true;
       if (typeof run.harness_trial === "number") {
         group.harnessTrial = run.harness_trial;
+      }
+      if (typeof run.harness_run_number === "number") {
+        group.harnessRunNumber = run.harness_run_number;
+      }
+      if (run.harness_batch_id?.trim()) {
+        group.harnessBatchId = run.harness_batch_id.trim();
+      }
+      if (run.harness_kind) {
+        group.harnessKind = run.harness_kind;
       }
     }
     // Track unified brief: prefer the run that already has one
@@ -87,7 +99,7 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
     group.situation = sortedByNewest[0]?.intake?.situation ?? "";
   }
 
-  return Array.from(map.values()).sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  return Array.from(map.values());
 }
 
 async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMeta[]> {
@@ -138,10 +150,22 @@ export default async function RunsDashboard({
   const isAdmin = (session.user as { is_admin?: boolean }).is_admin ?? false;
   const runs = await getUserRuns(session.user.id, isAdmin);
   const groups = groupByDecision(runs);
-  const decisionGroups = groups.filter((g) => !g.isHarness);
-  const harnessGroups = groups.filter((g) => g.isHarness);
+  const decisionGroups = groups
+    .filter((g) => !g.isHarness)
+    .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  const harnessGroups = groups
+    .filter((g) => g.isHarness)
+    .sort((a, b) => {
+      const rn = (b.harnessRunNumber ?? 0) - (a.harnessRunNumber ?? 0);
+      if (rn !== 0) return rn;
+      const t = (a.harnessTrial ?? 0) - (b.harnessTrial ?? 0);
+      if (t !== 0) return t;
+      return b.latestAt.getTime() - a.latestAt.getTime();
+    });
+  // Stable list order for the client: decisions by recency, then harness by run/trial.
+  const orderedGroups = [...decisionGroups, ...harnessGroups];
   const newGroup = newDecisionId
-    ? groups.find((g) => g.decision_id === newDecisionId)
+    ? orderedGroups.find((g) => g.decision_id === newDecisionId)
     : undefined;
   const initialTab =
     tab === "harness" || newGroup?.isHarness ? "harness" : "decisions";
@@ -171,7 +195,7 @@ export default async function RunsDashboard({
         <div className="mx-auto max-w-4xl px-6 py-8">
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">My Decisions</h1>
           <p className="mt-1.5 text-sm text-zinc-500">
-            {groups.length === 0
+            {orderedGroups.length === 0
               ? "No decisions yet — brief your think tank to get started"
               : `${decisionGroups.length} decision${decisionGroups.length === 1 ? "" : "s"}${
                   harnessGroups.length > 0
@@ -185,7 +209,7 @@ export default async function RunsDashboard({
       {/* Groups */}
       <div className="mx-auto max-w-4xl px-6 py-8">
         <RunsClient
-          initialGroups={groups}
+          initialGroups={orderedGroups}
           newDecisionId={newDecisionId}
           initialTab={initialTab}
         />

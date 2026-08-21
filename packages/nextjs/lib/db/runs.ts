@@ -97,3 +97,24 @@ export async function deleteRun(run_id: string): Promise<boolean> {
   const res = await col.deleteOne({ run_id });
   return res.deletedCount > 0;
 }
+
+/**
+ * Next `harness_run_number` for a new harness batch.
+ * Scans existing harness runs (optionally scoped to `userId`) and returns max + 1.
+ */
+export async function nextHarnessRunNumber(userId?: string): Promise<number> {
+  await ensureMongoIndexes();
+  const col = await getRunsCollection();
+  const filter: Record<string, unknown> = {
+    harness_run: true,
+    harness_run_number: { $type: "number" },
+  };
+  if (userId) filter.user_id = userId;
+  const docs = (await col
+    .find(filter, { projection: { harness_run_number: 1 } })
+    .sort({ harness_run_number: -1 })
+    .limit(1)
+    .toArray()) as { harness_run_number?: number }[];
+  const max = docs[0]?.harness_run_number;
+  return typeof max === "number" && max > 0 ? Math.floor(max) + 1 : 1;
+}

@@ -14,6 +14,7 @@ import {
   isLLMProviderName,
 } from "@/lib/intake-llm-selection";
 import { MERIDIAN_IC_VOICE_CASES } from "@/lib/meridian-ic-voice-cases";
+import { HORMUZ_VOICE_CASES } from "@/lib/hormuz-voice-cases";
 
 const RUN_RESULT_KEY = "decisionRunResult";
 
@@ -104,6 +105,49 @@ const DEMO_SCENARIOS = [
       "True post-close capital needs and hidden liabilities (pensions, malpractice tail, IT debt). Whether regulators will require divestitures or behavioral remedies. How hard unions will fight and what precedents say about timing. If the community campaign could block certificate-of-need or other approvals. Whether our clinical leadership will support the deal publicly. If 'partnership instead of purchase' is realistic with the seller and creditors.",
   },
 {
+    id: "vp-sales-underperforming",
+    label: "Underperforming VP Sales",
+    situation:
+      "Our VP of Sales of 2 years is underperforming. Pipeline is down 30% year-over-year despite adding two reps. She's well-liked, has deep customer relationships, and was critical to landing our three largest accounts. The board is asking why we're missing targets.",
+    constraints:
+      "Q4 planning starts in 6 weeks. Sales team is already anxious about potential changes. We can't afford a long leadership gap.",
+    posture: "pressure_test" as const,
+    leaning_direction:
+      "Keeping her but adding a sales ops lead to handle process and accountability, letting her focus on strategic deals",
+    knowns_assumptions:
+      "She's great at relationships but weak on process and pipeline management. The two new reps aren't ramping well due to lack of structure. I assume adding ops support will fix the gap without losing her customer relationships.",
+    unknowns:
+      "Whether she'll accept an ops hire as support vs. see it as undermining her. If the real problem is her or the reps she hired. How the board will react to anything short of replacement.",
+  },
+{
+    id: "gen-ai-product-compliance",
+    label: "Gen-AI features + compliance",
+    situation:
+      "We're a B2B analytics SaaS (~200 employees, US HQ) shipping assistant-style features: summarization over customer-uploaded reports, suggested chart titles, and optional 'ask your data' Q&A. Sales is hearing that enterprise RFPs now ask about AI governance, training data, and EU compliance. Legal is nervous; security wants everything on our VPC with no third-party inference if possible; product wants to ship in one quarter using a hosted model API to move fast.",
+    constraints:
+      "We sell to US mid-market and a growing EU segment (Germany and France first). Two anchor customers are in regulated industries (healthcare and financial services) but we are not their processor for clinical or core banking data—still, their security reviews are brutal. No dedicated AI governance hire yet. Engineering capacity is one senior ML engineer and two backend engineers part-time.",
+    posture: "surface_risks" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "Current product is SOC 2 Type II. We assume most EU customers can accept standard DPA + SCCs. We believe we can add opt-out of model improvement/training in vendor contracts. I assume 'EU AI Act' obligations depend heavily on how we classify the system (high-risk or not) and I'm not sure we've done that analysis rigorously.",
+    unknowns:
+      "Whether our use cases count as high-risk under the EU AI Act or UK/EU national implementations. What large-enterprise RFPs actually require vs what is negotiable. If on-prem or VPC-only inference is feasible on our timeline and budget. How much we must disclose about prompts, logging, and retention. Whether we need human-in-the-loop for certain workflows. Cross-border transfer implications if we use US-hosted APIs. What breaks if a customer demands zero subprocessors for AI.",
+  },
+{
+    id: "legacy-core-modernization",
+    label: "Core banking modernization",
+    situation:
+      "We're a regional bank (~$18B assets) on a 20-year-old core with heavy customization. Mobile and digital teams want real-time balances, better product bundling, and faster feature shipping; core batch windows and rigid APIs are the bottleneck. The board approved a 'strategic modernization' budget but not a specific vendor or greenfield vs incremental approach. Two large vendors are courting us with different models: rip-and-replace over 3+ years vs incremental 'sidecar' services with phased migration.",
+    constraints:
+      "Regulators expect a credible program plan, testing evidence, and rollback—we've been told informally that a big-bang weekend cutover would face scrutiny. Internal IT is stretched; we'd need SI partners. Cyber and fraud teams worry about expanded attack surface. CFO wants predictable opex and clear break-even vs status quo within five years.",
+    posture: "surface_risks" as const,
+    leaning_direction: "",
+    knowns_assumptions:
+      "We assume some degree of vendor lock-in is inevitable. We believe our risk and audit teams can absorb additional control work if the roadmap is phased. I assume cloud for non-core workloads is acceptable to regulators if we document resilience—I'm less sure about core ledger in cloud within three years.",
+    unknowns:
+      "Which vendor references are comparable to our size and charter complexity. Hidden integration cost with mortgage, treasury, and card systems. True regulatory posture on cloud core vs on-prem in our district. Whether incremental approaches actually reduce risk or just spread it over longer timelines. Talent market for mainframe and core skills during transition. What we'd do if a phase fails mid-program—contractual exits, data repatriation, customer communication.",
+  },
+{
     id: "meridian-civitas-saas-rollup",
     label: "Meridian / Civitas SaaS roll-up",
     situation:
@@ -119,6 +163,16 @@ const DEMO_SCENARIOS = [
       "What do the 5–6 tribal-knowledge seniors actually say if asked candidly about staying through validation with no guaranteed long-term role? Real local demand for their skill set? Does Civitas+Meridian aggregation trip WARN (60-day notice etc.) forcing a slower path? What is enforceable in key-personnel clauses—can towns demand continuity or exit? Have we modeled the cost of one real failure (e.g. town can’t issue permits for two weeks) vs savings from the faster timeline? Would IC actually reject a lower-margin humane path if shown full downside—or is that resistance assumed? What do a sample of the 340 customers say about phased transition risk vs vendor stability?",
   },
   ...MERIDIAN_IC_VOICE_CASES.map((c) => ({
+    id: c.id,
+    label: c.label,
+    situation: c.situation,
+    constraints: c.constraints,
+    posture: c.posture,
+    leaning_direction: c.leaning_direction ?? "",
+    knowns_assumptions: c.knowns_assumptions,
+    unknowns: c.unknowns,
+  })),
+  ...HORMUZ_VOICE_CASES.map((c) => ({
     id: c.id,
     label: c.label,
     situation: c.situation,

@@ -736,10 +736,18 @@ export async function runBriefSynthesis(
     (clarifications.length > 0 && !formatInstruction?.trim()) ||
     Boolean(promptOpts?.priorPublishedBrief);
 
-  // Gemini 2.5 thinking shares maxOutputTokens with visible JSON; variant/matrix briefs
-  // often truncate at 8192 (MAX_TOKENS) mid-object. Give Gemini (and retries) more room.
+  // Gemini thinking shares maxOutputTokens with visible JSON — needs headroom.
+  // OpenAI at low effort still needs more than 1k or reasoning can empty the brief JSON.
   const briefMaxTokens =
-    provider === "gemini" ? 16_384 : largeBriefPayload ? 8192 : 1024;
+    provider === "gemini"
+      ? 16_384
+      : provider === "openai"
+        ? largeBriefPayload
+          ? 16_384
+          : 8192
+        : largeBriefPayload
+          ? 8192
+          : 1024;
 
   const requestOpts = {
     schema: BRIEF_OUTPUT_SCHEMA as unknown as Record<string, unknown>,

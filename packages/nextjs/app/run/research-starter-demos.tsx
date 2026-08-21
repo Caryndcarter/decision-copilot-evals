@@ -31,6 +31,64 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
     ],
   },
 {
+    scenarioId: "vp-sales-underperforming",
+    title: "Sales leadership / performance",
+    items: [
+      {
+        label: "Benchmarks & signals",
+        prompt:
+          "What do credible business or management sources say about timelines and signals when a board or CEO is deciding between coaching a VP Sales vs making a leadership change? Cite 2–3 linked sources.",
+      },
+      {
+        label: "Sales ops patterns",
+        prompt:
+          "Find examples or frameworks for adding sales ops / revops under a struggling VP vs running it in parallel. Link reputable articles (e.g. major publishers, analysts, or well-known operators), not generic advice without citations.",
+      },
+    ],
+  },
+{
+    scenarioId: "gen-ai-product-compliance",
+    title: "Gen-AI product & compliance",
+    items: [
+      {
+        label: "EU AI Act risk tier",
+        prompt:
+          "For a B2B SaaS offering document summarization and optional Q&A over customer-uploaded business data (not clinical decision support), what do recent official EU guidance, law firm memos, or commission materials say about high-risk classification vs limited-risk obligations? Link 2–4 authoritative sources and summarize practical triggers.",
+      },
+      {
+        label: "Enterprise RFP patterns",
+        prompt:
+          "What do security/compliance writeups or procurement guides say large enterprises commonly require in vendor AI questionnaires (training data, logging, human review, subprocessors)? Cite linked sources; focus on patterns, not generic tips.",
+      },
+      {
+        label: "VPC / private AI hosting",
+        prompt:
+          "Summarize how major cloud and model providers position private inference, VPC endpoints, or customer-managed keys for generative AI—and what tradeoffs (latency, cost, model choice) are documented. Link vendor docs or third-party comparisons with specifics.",
+      },
+    ],
+  },
+{
+    scenarioId: "legacy-core-modernization",
+    title: "Core banking modernization",
+    items: [
+      {
+        label: "Regulatory expectations",
+        prompt:
+          "What do US banking agencies (OCC, Fed, FDIC) or FFIEC materials emphasize for major core or payments system changes—governance, testing, third-party risk? Link specific bulletins, handbooks, or speeches.",
+      },
+      {
+        label: "Big-bang vs phased",
+        prompt:
+          "Find 2–3 public case studies or analyst reports on core banking replacement or migration (successes and failures). Link each; note what went wrong when cutovers failed.",
+      },
+      {
+        label: "Cloud for core",
+        prompt:
+          "What do regulators or industry groups say about cloud-hosted core or ledger workloads for regional banks—especially resilience and data? Cite linked sources from 2022 onward where possible.",
+      },
+    ],
+  },
+{
     scenarioId: "meridian-civitas-saas-rollup",
     title: "Civitas AI modernization / PE roll-up",
     items: [
@@ -103,6 +161,61 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
         label: "LP reputational risk of PE layoffs",
         prompt:
           "Find commentary on reputational and political risk to public pension LPs when PE portfolio companies announce large tech layoffs. Cite 2–3 linked sources from pensions, PE trade press, or labor reporting.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-shipping-company-voice",
+    title: "Hormuz · Meran Tankers",
+    items: [
+      {
+        label: "War-risk & Hormuz transit practice",
+        prompt:
+          "Summarize how commercial tanker operators and war-risk underwriters have treated Strait of Hormuz / Gulf war-zone transits in 2024–2026: typical premium ranges, escort/convoy practice, and when fleets pause vs continue. Cite 2–4 reputable maritime, insurance, or trade-press sources with links; note the as-of date of each source.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-confident-tone",
+    title: "Hormuz · confident tone",
+    items: [
+      {
+        label: "Survivorship & small-sample war risk",
+        prompt:
+          "What do maritime risk, insurance, or operational-safety sources say about treating a clean vessel/fleet incident record as evidence of low forward risk in an active war-zone transit corridor (small sample, ongoing threat)? Cite 2–3 reputable sources with links and note as-of dates.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-false-urgency",
+    title: "Hormuz · false urgency",
+    items: [
+      {
+        label: "Charter first-refusal & switching costs",
+        prompt:
+          "Summarize how commercial shipping / tanker charter relationships typically treat mid-cycle operator switches and first-refusal / matching rights in framework agreements — when is wartime switching truly sticky vs reversible? Cite 2–3 reputable maritime-commercial or trade-press sources with links.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-safety-adjacent-false-claim",
+    title: "Hormuz · safety-adjacent false claim",
+    items: [
+      {
+        label: "War-risk premiums as risk signals",
+        prompt:
+          "How do maritime war-risk underwriters and operators interpret elevated hull war-risk premiums (e.g. orders-of-magnitude above peacetime) as signals about transit risk — and when is it inconsistent to treat premiums as informative while also claiming risk is near peacetime? Cite 2–3 reputable insurance or maritime-trade sources with links.",
+      },
+    ],
+  },
+{
+    scenarioId: "hormuz-honest-unapologetic",
+    title: "Hormuz · honest unapologetic",
+    items: [
+      {
+        label: "Seafarer hazard pay in war zones",
+        prompt:
+          "Summarize how commercial shipping and maritime labor practice set and revisit hazard / war-zone pay for seafarers on escorted high-risk routes — typical triggers for renegotiation, union/agency roles, and transparency of incident data to crews. Cite 2–3 reputable maritime-labor or trade-press sources with links.",
       },
     ],
   }

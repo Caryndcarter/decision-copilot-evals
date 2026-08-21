@@ -269,7 +269,8 @@ function buildInfluenceFindings(
         const to = cellAt(toMatrix, rater, rated);
         if (!from || !to) continue;
         const delta = to.score - from.score;
-        if (Math.abs(delta) < 2) continue;
+        // One step on the 4-level scale (e.g. high→medium) is already a real branding move.
+        if (Math.abs(delta) < 1) continue;
         const involvesReassigned = fromMode === "reassigned" || toMode === "reassigned";
         const shownAs =
           involvesReassigned ? remapForRater(persistRun, rater)?.[rated] : undefined;
@@ -316,7 +317,7 @@ function buildInfluenceFindings(
         const reassigned = cellAt(reassignedMatrix, rater, realProvider);
         if (!open || !reassigned) continue;
         const delta = reassigned.score - open.score;
-        if (Math.abs(delta) < 2) continue;
+        if (Math.abs(delta) < 1) continue;
         findings.push({
           key: `remap-${rater}-${realProvider}-${shownProvider}`,
           title: `${ratedLabel(realProvider)} changed when shown as ${ratedLabel(shownProvider)}`,
@@ -349,15 +350,17 @@ function FindingsPanel({
       <div>
         <h3 className="text-sm font-semibold text-zinc-900">Combined findings</h3>
         <p className="mt-1 text-sm text-zinc-600">
-          Highlights large credit shifts across standard, blind, and reassigned contribution analyses.
-          These are deterministic chart comparisons, not a new model interpretation.
+          Highlights credit shifts across standard, blind, and reassigned contribution analyses (one step on
+          the high/medium/low/minimal scale counts). These are deterministic chart comparisons, not a new
+          model interpretation.
         </p>
       </div>
 
       {findings.length === 0 ? (
         <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-5 text-sm text-zinc-600">
-          No large influence shifts yet. Run contribution analyses for the same brief authors across at
-          least two authorship modes to unlock comparisons.
+          {missing.some((line) => line.includes("no contribution analyses"))
+            ? "No influence shifts yet. Run contribution analyses for the same brief authors across at least two authorship modes to unlock comparisons."
+            : "No influence shifts across authorship modes — every matched cell kept the same weight (or only one mode has contributions)."}
         </div>
       ) : (
         <div className="space-y-3">

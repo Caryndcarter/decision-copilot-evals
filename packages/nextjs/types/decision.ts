@@ -52,18 +52,40 @@ export type LLMProviderName = "openai" | "anthropic" | "gemini" | "xai";
 /** Intake demo buttons on `/intake`; stored on the run for UI such as chat research starters. */
 export const DEMO_SCENARIO_IDS = [
   "healthcare-pe-acquisition",
+  "vp-sales-underperforming",
+  "gen-ai-product-compliance",
+  "legacy-core-modernization",
   "meridian-civitas-saas-rollup",
   "meridian-ic-lp-voice-neutral",
   "meridian-ic-neutral-vocab-confident",
   "meridian-ic-dire-inflated",
   "meridian-ic-false-harm-protected",
   "meridian-ic-honest-aggressive",
+  "hormuz-shipping-company-voice",
+  "hormuz-confident-tone",
+  "hormuz-false-urgency",
+  "hormuz-safety-adjacent-false-claim",
+  "hormuz-honest-unapologetic",
 ] as const;
 export type DemoScenarioId = (typeof DEMO_SCENARIO_IDS)[number];
 
 export function parseDemoScenarioId(value: unknown): DemoScenarioId | undefined {
   if (typeof value !== "string") return undefined;
   return (DEMO_SCENARIO_IDS as readonly string[]).includes(value) ? (value as DemoScenarioId) : undefined;
+}
+
+/** Harness CLI family — stored on runs and shown in My Decisions / summary UIs. */
+export const HARNESS_KINDS = [
+  "multi-demo-authorship",
+  "civitas-replication",
+  "meridian-ic-voice",
+  "hormuz-voice",
+] as const;
+export type HarnessKind = (typeof HARNESS_KINDS)[number];
+
+export function parseHarnessKind(value: unknown): HarnessKind | undefined {
+  if (typeof value !== "string") return undefined;
+  return (HARNESS_KINDS as readonly string[]).includes(value) ? (value as HarnessKind) : undefined;
 }
 
 // ============================================
@@ -474,11 +496,25 @@ export interface DecisionRunResult {
   /** Set when the user started from an intake demo scenario button */
   demo_scenario_id?: DemoScenarioId;
   /**
-   * True when this run was created by the Civitas/Meridian stress harness
-   * (`npm run harness:civitas`). My Decisions shows these under a separate tab.
+   * True when this run was created by a harness CLI
+   * (`harness:civitas`, `harness:meridian-ic`, `harness:demos:authorship`, …).
+   * My Decisions shows these under a separate tab.
    */
   harness_run?: boolean;
-  /** 1-based trial index within a harness batch (when `harness_run` is set). */
+  /**
+   * Monotonic id for one harness script invocation (batch). Shared by all cases/trials
+   * created in that run so My Decisions can group “Harness · Run 3 · Trial 2” stably
+   * even when newer batches interleave by `updatedAt`.
+   */
+  harness_run_number?: number;
+  /**
+   * Stable UUID for one harness script invocation. Prefer this over `harness_run_number`
+   * when linking UI / reports across machines or users.
+   */
+  harness_batch_id?: string;
+  /** Which harness CLI produced this run (drives Harness tab labels + summary pages). */
+  harness_kind?: HarnessKind;
+  /** 1-based trial/case index within a harness batch (when `harness_run` is set). */
   harness_trial?: number;
   /** Completed research-starter chats (persisted with the run) */
   research_completions?: ResearchCompletion[];

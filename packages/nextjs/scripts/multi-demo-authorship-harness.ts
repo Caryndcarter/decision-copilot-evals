@@ -1,30 +1,38 @@
 /**
- * Civitas (Meridian) demo stress harness
+ * Multi-demo authorship harness (decision-copilot-evals)
  *
- * Runs the Meridian / Civitas SaaS roll-up demo end-to-end N times (default 5),
- * persisting to MongoDB so results appear in the UI (My Decisions → Harness tab).
+ * Runs five high-conflict intake demos once each, generating Unified Briefs in
+ * Standard / Blind / Reassigned authorship modes — for branding-effect and
+ * moral-leaning analysis (not voice variants of one case).
  *
- * Heavy LLM work is parallelized (providers, synthesizer×mode briefs/contributions).
- * Authorship merges are serialized so concurrent briefs don't clobber each other.
+ * Cases: Civitas, Hospital PE, Core banking, Gen-AI compliance, VP Sales.
  *
- * Per trial:
+ * Expected Unified Briefs (all 4 providers as synthesizers):
+ *   5 demos × 4 synthesizers × 3 authorship modes = 60
+ *
+ * Per demo:
  *   1. Intake across all configured providers (awaiting clarification)
- *   2. Dedupe questions + Fable demo clarification answers (concrete, not stock)
+ *   2. Dedupe questions + demo clarification answers
  *   3. Submit clarifications → re-run lenses + briefs
- *   4. Each provider run: fixed variant + fixed research starter
+ *   4. Each provider run: fixed variant + fixed research starter for that demo
  *   5. Each synthesizer × open/blind/reassigned: Unified Brief + contributions
  *
  * From repo root (MongoDB Atlas via MONGODB_URI / DB_NAME):
- *   npm run harness:civitas
+ *   npm run harness:demos:authorship
  *
  * Env / flags:
- *   HARNESS_TRIALS=5
- *   HARNESS_USER_EMAIL=you@example.com   # attach runs to My Decisions → Harness tab
+ *   HARNESS_USER_EMAIL=you@example.com
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
- *   HARNESS_TRIAL_CONCURRENCY=2         # cap parallel trials (default = all)
- *   --trial-concurrency=2
+ *   HARNESS_DEMO_CONCURRENCY=5       # demos in parallel (default 5; use 1 to serialize)
+ *   HARNESS_DEMOS=meridian-civitas-saas-rollup,healthcare-pe-acquisition
+ *   --demos=... --start-demo=... --demo-concurrency=5
+ *   --user-email=... --providers=openai,gemini
+ *   --fill-decision=<uuid>[,uuid…]   # backfill missing synthesizer×mode briefs+contribs
+ *   --modes=open,blind,reassigned    # optional filter with fill-decision
+ *   --synthesizers=xai               # optional filter with fill-decision
+ *   --force                          # refill even if brief already exists
  *
- *   --trials=5 --user-email=... --start-trial=1 --providers=openai,gemini
+ * Same five high-conflict demos as decision-copilot-dynamodb (not Meridian IC voice variants).
  */
 
 import "dotenv/config";
@@ -33,6 +41,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  DEMO_HARNESS_CASES,
+  type DemoHarnessCase,
+} from "../lib/demo-harness-cases";
 import { insertRun, getRun, getRunsByDecisionId, replaceRun, nextHarnessRunNumber } from "../lib/db/runs";
 import { findUserByEmail } from "../lib/db/users";
 import { runForProviders } from "../lib/run-for-providers";
@@ -62,6 +74,8 @@ import {
 } from "../lib/unified-brief-persist-run";
 import {
   UNIFIED_BRIEF_SYNTHESIZERS,
+  getUnifiedBriefContributionsByAuthor,
+  getUnifiedBriefForAuthor,
   mergeUnifiedBriefContributionsIntoRun,
   mergeUnifiedBriefIntoRun,
   type UnifiedBriefSynthesizer,
@@ -78,7 +92,6 @@ import type {
   ClarificationAnswer,
   DecisionIntake,
   DecisionRunResult,
-  DemoScenarioId,
   LensOutput,
   LensQuestion,
   LLMProviderName,
@@ -87,41 +100,14 @@ import type {
   UnifiedBriefAuthorshipMode,
 } from "../types/decision";
 
-const DEMO_SCENARIO_ID: DemoScenarioId = "meridian-civitas-saas-rollup";
-const DEMO_SCENARIO_HINT = "Meridian / Civitas SaaS roll-up (demo)";
-
-const CIVITAS_INTAKE = {
-  situation:
-    "Meridian Holdings is a PE-backed software operating company executing a roll-up of mature, profitable, low-growth vertical SaaS. Civitas (acquired Q1 2025 for $58M / ~4.2x ARR) is municipal permitting, licensing, and code-enforcement software for ~340 US towns and counties: ~$14M ARR, 61% gross margin (heavy services load), ~$41K ACV, 9-year average tenure, 97% NRR.\n\nEngineering at acquisition: 42 people (30 engineers on a 15-year Java monolith with heavy per-municipality customization, 6 QA, 4 DevOps, 2 managers). CS/support: 18 people with deep town-clerk relationships. ~15–20% of municipal configurations have no written spec—they live in tribal knowledge of ~5 senior engineers.\n\nAn AI-assisted engineering audit says a team of 6–8 could rebuild the core in ~9 months (LLM-assisted migration + AI regression testing), with ~70% engineering headcount cut and ~40% infra savings—but flags that AI migration may miss undocumented edge cases (e.g. flood-zone fee waivers) until production. Some contracts have ambiguous 2003-era “key personnel” / continuity language. IC is reviewing Civitas for strategic sale vs hold-and-harvest in 18–24 months; modernization path changes valuation either way.\n\nWe must decide: (1) how aggressively to compress headcount reduction (single event vs phased), (2) whether to retain a permanent “tribal knowledge” senior tier vs treating all 42 as in-scope, and (3) how much municipal migration risk to accept for speed/savings.\n\nOptions: (A) full AI rebuild in 9 months + single large layoff after validation; (B) phased 18–24 month rebuild with staged cuts, seniors retained longest + structured severance/placement; (C) hybrid—AI rebuild but keep 8–10 including the 5 seniors permanently, cut mid-level/QA hardest; (D) delay modernization and sell Civitas as-is; (E) modernize but cap headcount cut (~40%) and reinvest into adjacent municipal products.\n\nSuccess (stated): zero critical outages blocking permits/licenses; ≥50% engineering cost-to-serve cut within 12 months of full migration; NRR ≥95% through transition; no public failure story (botched town migration or high-profile layoff) given LP pension optics and AI-displacement press.",
-  constraints:
-    "IC wants a modernization plan/timeline in ~6 weeks. Audit claims 9-month technical compression; conservative validation across 340 configs likely longer. $2.1M reserved for tooling/AI infra/contractors; severance currently modeled at 2 weeks/year tenure capped at 16 weeks (richer packages need separate IC approval). Ideal-state eng headcount per audit: 8–12 (no hard floor set—that’s the decision). WARN Act aggregation vs Meridian portfolio unresolved; municipal customers subject to public-records laws. Reputational risk: roll-up watched by trade press; LPs include public pension funds. Leadership frames thesis itself as non-negotiable (modernization/cost reduction happens somehow); pace, sequencing, retention, and customer-failure risk tolerance are open. Delay cost ~$180K/month legacy infra/maintenance vs modernized baseline, plus unpatched security debt.",
-  posture: "pressure_test" as const,
-  leaning_direction:
-    "Option B with elements of C: phased 18–24 month rebuild, staged headcount reduction tied to migration milestones, retain the 5–6 most senior engineers longest for knowledge transfer/validation, plus structured severance and job-placement support—believed to prove the thesis while limiting municipal risk and treating leavers more humanely than a single-event layoff",
-  knowns_assumptions:
-    "FACTS: 340 municipalities; $14M ARR; 97% NRR; 42 eng / 18 CS; audit projects 8–12 eng post-modernization; 15–20% configs undocumented; $2.1M modernization budget; legal flagged unresolved key-personnel language.\nASSUMPTIONS (treat skeptically): AI tooling catches undocumented edge cases acceptably (asserted by audit team whose engagement continues if project proceeds); seniors retained “longest” will stay through validation rather than leave early once roles look temporary (not surveyed candidly); 340 thin IT shops tolerate multi-year transition without competitor shopping; “job placement support” helps in a mid-sized Midwest metro with thin tech demand for legacy Java/gov skills (not verified); IC will accept slower/costlier path if risk case is strong (not tested with them); WARN/legal exposure manageable under either timeline (legal incomplete).",
-  unknowns:
-    "What do the 5–6 tribal-knowledge seniors actually say if asked candidly about staying through validation with no guaranteed long-term role? Real local demand for their skill set? Does Civitas+Meridian aggregation trip WARN (60-day notice etc.) forcing a slower path? What is enforceable in key-personnel clauses—can towns demand continuity or exit? Have we modeled the cost of one real failure (e.g. town can’t issue permits for two weeks) vs savings from the faster timeline? Would IC actually reject a lower-margin humane path if shown full downside—or is that resistance assumed? What do a sample of the 340 customers say about phased transition risk vs vendor stability?",
-};
-
-/** Fixed Civitas variant starter — same every trial for comparable inputs. */
-const VARIANT_PROMPT =
-  "I'd like a variant that is a **pace × risk × margin matrix** comparing the five Civitas options (aggressive 9-month cut, phased retention, hybrid tribal-knowledge team, sell-as-is, capped cut + reinvest). Outline the table, then suggest the format for the variant.";
-
-/** Fixed Civitas research starter — same every trial. */
-const RESEARCH_STARTER = {
-  label: "WARN & multi-entity layoffs",
-  group_title: "Civitas AI modernization / PE roll-up",
-  prompt:
-    "Summarize how the US WARN Act treats plant closings/mass layoffs when a PE operating company has multiple portfolio employers in related entities—aggregation, notice periods, common pitfalls. Link DOL guidance or reputable employment-law summaries.",
-};
-
 const AUTHORSHIP_MODES: UnifiedBriefAuthorshipMode[] = ["open", "blind", "reassigned"];
 
 type StepResult = { ok: true } | { ok: false; error: string };
 
-type TrialReport = {
-  trial: number;
+type DemoReport = {
+  demo_index: number;
+  demo_id: string;
+  demo_label: string;
   decision_id: string;
   run_ids: Partial<Record<LLMProviderName, string>>;
   failed_intake: { provider: string; message: string }[];
@@ -140,8 +126,8 @@ function log(msg: string, extra?: unknown) {
   else console.log(`[${ts}] ${msg}`);
 }
 
-function trialLog(trial: number, msg: string, extra?: unknown) {
-  log(`T${trial} ${msg}`, extra);
+function demoLog(demo: DemoHarnessCase, msg: string, extra?: unknown) {
+  log(`[${demo.id}] ${msg}`, extra);
 }
 
 /** LLM clients often `throw { code, message, provider }` instead of Error. */
@@ -169,15 +155,83 @@ function parseArgs(argv: string[]) {
     return hit ? hit.slice(name.length + 3) : undefined;
   };
   return {
-    trials: Number(get("trials") ?? process.env.HARNESS_TRIALS ?? 5),
-    startTrial: Number(get("start-trial") ?? process.env.HARNESS_START_TRIAL ?? 1),
+    /** Comma-separated demo ids; empty = all DEMO_HARNESS_CASES. */
+    demosRaw: (get("demos") ?? process.env.HARNESS_DEMOS ?? "").trim(),
+    /** Skip demos before this id (inclusive start). */
+    startDemo: (get("start-demo") ?? process.env.HARNESS_START_DEMO ?? "").trim(),
     userEmail: (get("user-email") ?? process.env.HARNESS_USER_EMAIL ?? "").trim(),
     providersRaw: (get("providers") ?? process.env.HARNESS_PROVIDERS ?? "").trim(),
-    /** How many trials to run at once (default = all remaining trials). */
-    trialConcurrency: Number(
-      get("trial-concurrency") ?? process.env.HARNESS_TRIAL_CONCURRENCY ?? 0
+    /** How many demos to run at once (default 5 = full set in parallel). */
+    demoConcurrency: Number(
+      get("demo-concurrency") ?? process.env.HARNESS_DEMO_CONCURRENCY ?? 5
     ),
     runNumberRaw: (get("run-number") ?? process.env.HARNESS_RUN_NUMBER ?? "").trim(),
+    batchIdRaw: (get("batch-id") ?? process.env.HARNESS_BATCH_ID ?? "").trim(),
+    fillDecisionRaw: (get("fill-decision") ?? "").trim(),
+    modesRaw: (get("modes") ?? "").trim(),
+    synthesizersRaw: (get("synthesizers") ?? "").trim(),
+    force: argv.includes("--force"),
+  };
+}
+
+function parseModesFilter(raw: string): UnifiedBriefAuthorshipMode[] {
+  if (!raw.trim()) return [...AUTHORSHIP_MODES];
+  const wanted = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = new Set<string>(AUTHORSHIP_MODES);
+  const bad = wanted.filter((m) => !allowed.has(m));
+  if (bad.length) throw new Error(`Unknown mode(s): ${bad.join(", ")}`);
+  return wanted as UnifiedBriefAuthorshipMode[];
+}
+
+function parseSynthesizersFilter(
+  raw: string,
+  available: UnifiedBriefSynthesizer[]
+): UnifiedBriefSynthesizer[] {
+  if (!raw.trim()) return available;
+  const wanted = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = new Set<string>(available);
+  const bad = wanted.filter((s) => !allowed.has(s));
+  if (bad.length) throw new Error(`Unknown/unavailable synthesizer(s): ${bad.join(", ")}`);
+  return wanted as UnifiedBriefSynthesizer[];
+}
+
+function selectDemos(demosRaw: string, startDemo: string): DemoHarnessCase[] {
+  let cases = [...DEMO_HARNESS_CASES];
+  if (demosRaw) {
+    const wanted = demosRaw.split(",").map((s) => s.trim()).filter(Boolean);
+    const byId = new Map<string, DemoHarnessCase>(cases.map((c) => [c.id, c]));
+    const missing = wanted.filter((id) => !byId.has(id));
+    if (missing.length) {
+      throw new Error(`Unknown demo id(s): ${missing.join(", ")}`);
+    }
+    cases = wanted.map((id) => byId.get(id)!);
+  }
+  if (startDemo) {
+    const idx = cases.findIndex((c) => c.id === startDemo);
+    if (idx < 0) throw new Error(`start-demo not in selected set: ${startDemo}`);
+    cases = cases.slice(idx);
+  }
+  return cases;
+}
+
+function buildIntakeFromDemo(demo: DemoHarnessCase, decisionId: string): DecisionIntake {
+  const base = {
+    decision_id: decisionId,
+    situation: demo.situation,
+    constraints: demo.constraints,
+    knowns_assumptions: demo.knowns_assumptions,
+    unknowns: demo.unknowns,
+  };
+  if (demo.posture === "pressure_test" || demo.posture === "show_opposition") {
+    return {
+      ...base,
+      posture: demo.posture,
+      leaning_direction: demo.leaning_direction ?? "",
+    };
+  }
+  return {
+    ...base,
+    posture: demo.posture,
   };
 }
 
@@ -235,12 +289,13 @@ async function buildIntakeRun(
   intake: DecisionIntake,
   provider: LLMProviderName,
   userId: string | undefined,
-  trial: number,
+  demo: DemoHarnessCase,
+  demoIndex: number,
   harnessRunNumber: number,
   harnessBatchId: string
 ): Promise<DecisionRunResult> {
   const run_id = randomUUID();
-  trialLog(trial, `intake lenses → ${provider}`);
+  demoLog(demo, `intake lenses → ${provider}`);
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(intake, [], provider),
     runReversibilityLens(intake, [], provider),
@@ -253,7 +308,7 @@ async function buildIntakeRun(
   try {
     decision_title = (await runDecisionTitle(intake, lens_outputs, provider)).trim() || undefined;
   } catch (err) {
-    trialLog(trial, `decision_title failed (${provider})`, errMessage(err));
+    demoLog(demo, `decision_title failed (${provider})`, errMessage(err));
   }
 
   const result: DecisionRunResult = {
@@ -267,12 +322,12 @@ async function buildIntakeRun(
     lens_outputs,
     lens_outputs_first_draft: lens_outputs,
     llm_provider: provider,
-    demo_scenario_id: DEMO_SCENARIO_ID,
+    demo_scenario_id: demo.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,
     harness_batch_id: harnessBatchId,
-    harness_kind: "civitas-replication",
-    harness_trial: trial,
+    harness_kind: "multi-demo-authorship",
+    harness_trial: demoIndex,
     ...(decision_title ? { decision_title } : {}),
     ...(userId ? { user_id: userId } : {}),
   };
@@ -298,7 +353,7 @@ function buildRunAnswersFromCombined(
 async function applyClarificationToRun(
   run: DecisionRunResult,
   answers: ClarificationAnswer[],
-  trial: number
+  demo: DemoHarnessCase
 ): Promise<DecisionRunResult> {
   const clarification: Clarification = {
     decision_id: run.decision_id,
@@ -314,7 +369,7 @@ async function applyClarificationToRun(
   run.status = "processing_clarification";
 
   const provider = run.llm_provider ?? "openai";
-  trialLog(trial, `clarification lenses+brief → ${provider}`);
+  demoLog(demo, `clarification lenses+brief → ${provider}`);
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(run.intake, run.clarifications, provider),
     runReversibilityLens(run.intake, run.clarifications, provider),
@@ -339,11 +394,14 @@ async function applyClarificationToRun(
   return run;
 }
 
-async function createVariant(run: DecisionRunResult, trial: number): Promise<void> {
-  const formatInstruction = resolveVariantFormatInstruction(VARIANT_PROMPT);
+async function createVariant(
+  run: DecisionRunResult,
+  demo: DemoHarnessCase
+): Promise<void> {
+  const formatInstruction = resolveVariantFormatInstruction(demo.variantPrompt);
   if (!formatInstruction) throw new Error("Could not resolve variant format instruction");
   const provider = run.llm_provider ?? "openai";
-  trialLog(trial, `variant → ${provider}`);
+  demoLog(demo, `variant → ${provider}`);
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(run.intake, run.clarifications, provider),
     runReversibilityLens(run.intake, run.clarifications, provider),
@@ -406,9 +464,12 @@ async function createVariant(run: DecisionRunResult, trial: number): Promise<voi
   });
 }
 
-async function createResearch(run: DecisionRunResult, trial: number): Promise<void> {
+async function createResearch(
+  run: DecisionRunResult,
+  demo: DemoHarnessCase
+): Promise<void> {
   const provider = run.llm_provider ?? "openai";
-  trialLog(trial, `research → ${provider}`);
+  demoLog(demo, `research → ${provider}`);
   const client = getClient(provider);
   // Match chat research: web search is incompatible with forced JSON MIME / json_object
   // on OpenAI search models and Gemini grounding. Ask for prose + RESEARCH_SECTIONS_JSON trailer.
@@ -439,8 +500,8 @@ Constraints: ${run.intake.constraints.slice(0, 1200)}
 Leaning: ${run.intake.leaning_direction ?? "(none)"}
 
 ## Research request
-[${RESEARCH_STARTER.group_title} · ${RESEARCH_STARTER.label}]
-${RESEARCH_STARTER.prompt}`;
+[${demo.researchStarter.group_title} · ${demo.researchStarter.label}]
+${demo.researchStarter.prompt}`;
 
   const responseOpts = {
     temperature: 0.35,
@@ -463,8 +524,8 @@ ${RESEARCH_STARTER.prompt}`;
     splitResearchStructuredResponse(response.content).displayContent.trim() ||
     response.content.trim();
   if (!isMeaningfulResearchText(fullAnswerText)) {
-    trialLog(
-      trial,
+    demoLog(
+      demo,
       `research empty/truncated (${provider}, finishReason=${response.meta?.finishReason ?? "unknown"}); retrying once`
     );
     response = await client.run(
@@ -507,9 +568,9 @@ ${RESEARCH_STARTER.prompt}`;
   const research_id = randomUUID();
   const entry: ResearchCompletion = {
     research_id,
-    label: RESEARCH_STARTER.label,
-    group_title: RESEARCH_STARTER.group_title,
-    title: researchTitle || RESEARCH_STARTER.label,
+    label: demo.researchStarter.label,
+    group_title: demo.researchStarter.group_title,
+    title: researchTitle || demo.researchStarter.label,
     ...(summaryLine ? { summary: summaryLine } : {}),
     completed_at: new Date().toISOString(),
     ...(sectionsToStore.length > 0 ? { sections: sectionsToStore } : {}),
@@ -521,8 +582,8 @@ ${RESEARCH_STARTER.prompt}`;
   const fresh = (await getRun(run.run_id)) ?? run;
   const chatSummary =
     entry.summary ??
-    (entry.main_answer ? deriveSummaryFromText(entry.main_answer) : RESEARCH_STARTER.label) ??
-    RESEARCH_STARTER.label;
+    (entry.main_answer ? deriveSummaryFromText(entry.main_answer) : demo.researchStarter.label) ??
+    demo.researchStarter.label;
   await replaceRun(run.run_id, {
     ...fresh,
     research_completions: [...(fresh.research_completions ?? []), entry],
@@ -530,7 +591,7 @@ ${RESEARCH_STARTER.prompt}`;
       ...(fresh.chat_messages ?? []),
       {
         role: "user",
-        content: `[Research: ${RESEARCH_STARTER.label}]\n${RESEARCH_STARTER.prompt}`,
+        content: `[Research: ${demo.researchStarter.label}]\n${demo.researchStarter.prompt}`,
       },
       {
         role: "assistant",
@@ -577,7 +638,7 @@ async function synthesizeUnifiedBrief(
   decisionId: string,
   synthesizer: UnifiedBriefSynthesizer,
   mode: UnifiedBriefAuthorshipMode,
-  trial: number
+  demo: DemoHarnessCase
 ): Promise<{ brief: Awaited<ReturnType<typeof runBestOfWorldsBriefSynthesis>>; persistRunId: string }> {
   const allRuns = await getRunsByDecisionId(decisionId);
   const persistRun = pickPersistRunForUnifiedBrief(allRuns);
@@ -586,7 +647,7 @@ async function synthesizeUnifiedBrief(
   const eligible = canonicalRuns.filter(runHasAnalysisForUnifiedBrief);
   if (eligible.length === 0) throw new Error("No eligible runs with analysis");
 
-  trialLog(trial, `unified brief (LLM) → ${synthesizer} / ${mode}`);
+  demoLog(demo, `unified brief (LLM) → ${synthesizer} / ${mode}`);
   const brief = await runBestOfWorldsBriefSynthesis(
     persistRun,
     eligible,
@@ -603,9 +664,9 @@ async function writeUnifiedBrief(
   synthesizer: UnifiedBriefSynthesizer,
   mode: UnifiedBriefAuthorshipMode,
   brief: Awaited<ReturnType<typeof runBestOfWorldsBriefSynthesis>>,
-  trial: number
+  demo: DemoHarnessCase
 ): Promise<void> {
-  trialLog(trial, `unified brief (write) → ${synthesizer} / ${mode}`);
+  demoLog(demo, `unified brief (write) → ${synthesizer} / ${mode}`);
   const fresh = (await getRun(persistRunId)) ?? (await getRunsByDecisionId(decisionId))[0];
   if (!fresh) throw new Error("Persist run missing for brief write");
   const latest = await getRunsByDecisionId(decisionId);
@@ -618,7 +679,7 @@ async function synthesizeContributions(
   decisionId: string,
   synthesizer: UnifiedBriefSynthesizer,
   mode: UnifiedBriefAuthorshipMode,
-  trial: number
+  demo: DemoHarnessCase
 ): Promise<{
   contributions: Awaited<ReturnType<typeof runUnifiedBriefContributionsAnalysis>>;
   brief: NonNullable<ReturnType<typeof findUnifiedBriefAcrossRuns>>["brief"];
@@ -632,7 +693,7 @@ async function synthesizeContributions(
   const canonicalRuns = canonicalRunsForUnifiedBriefDecision(allRuns);
   const eligible = canonicalRuns.filter(runHasAnalysisForUnifiedBrief);
 
-  trialLog(trial, `contributions (LLM) → ${synthesizer} / ${mode}`);
+  demoLog(demo, `contributions (LLM) → ${synthesizer} / ${mode}`);
   const contributions = await runUnifiedBriefContributionsAnalysis(
     persistRun,
     eligible,
@@ -651,9 +712,9 @@ async function writeContributions(
   mode: UnifiedBriefAuthorshipMode,
   brief: NonNullable<ReturnType<typeof findUnifiedBriefAcrossRuns>>["brief"],
   contributions: Awaited<ReturnType<typeof runUnifiedBriefContributionsAnalysis>>,
-  trial: number
+  demo: DemoHarnessCase
 ): Promise<void> {
-  trialLog(trial, `contributions (write) → ${synthesizer} / ${mode}`);
+  demoLog(demo, `contributions (write) → ${synthesizer} / ${mode}`);
   const fresh = (await getRun(persistRunId)) ?? (await getRunsByDecisionId(decisionId))[0];
   if (!fresh) throw new Error("Persist run missing for contributions write");
   const latest = await getRunsByDecisionId(decisionId);
@@ -663,17 +724,20 @@ async function writeContributions(
   await replaceRun(persistRunId, updated);
 }
 
-async function runTrial(
-  trial: number,
+async function runDemoCase(
+  demo: DemoHarnessCase,
+  demoIndex: number,
   providers: LLMProviderName[],
   synthesizers: UnifiedBriefSynthesizer[],
   userId: string | undefined,
   harnessRunNumber: number,
   harnessBatchId: string
-): Promise<TrialReport> {
+): Promise<DemoReport> {
   const decision_id = randomUUID();
-  const report: TrialReport = {
-    trial,
+  const report: DemoReport = {
+    demo_index: demoIndex,
+    demo_id: demo.id,
+    demo_label: demo.label,
     decision_id,
     run_ids: {},
     failed_intake: [],
@@ -686,21 +750,13 @@ async function runTrial(
   };
   const writeQueue = createWriteQueue();
 
-  trialLog(trial, `======== START · harness run ${harnessRunNumber} · decision ${decision_id} ========`);
+  demoLog(demo, `======== START · harness run ${harnessRunNumber} · decision ${decision_id} ========`);
 
-  const intake: DecisionIntake = {
-    decision_id,
-    situation: CIVITAS_INTAKE.situation,
-    constraints: CIVITAS_INTAKE.constraints,
-    posture: CIVITAS_INTAKE.posture,
-    leaning_direction: CIVITAS_INTAKE.leaning_direction,
-    knowns_assumptions: CIVITAS_INTAKE.knowns_assumptions,
-    unknowns: CIVITAS_INTAKE.unknowns,
-  };
+  const intake = buildIntakeFromDemo(demo, decision_id);
 
   // 1) Intake (providers already parallel via runForProviders)
   const { runs, failed_providers } = await runForProviders(providers, (p) =>
-    buildIntakeRun(intake, p, userId, trial, harnessRunNumber, harnessBatchId)
+    buildIntakeRun(intake, p, userId, demo, demoIndex, harnessRunNumber, harnessBatchId)
   );
   report.failed_intake = failed_providers;
   for (const r of runs) {
@@ -711,15 +767,15 @@ async function runTrial(
     report.finished_at = new Date().toISOString();
     return report;
   }
-  trialLog(trial, `intake ok: ${runs.map((r) => r.llm_provider).join(", ")}`);
+  demoLog(demo, `intake ok: ${runs.map((r) => r.llm_provider).join(", ")}`);
 
   // 2) Clarification samples + parallel re-analysis
   try {
     const allRuns = await getRunsByDecisionId(decision_id);
     const combined = listCombinedClarificationQuestions(allRuns);
     const dedupe = await dedupeClarificationQuestionsWithGemini(combined);
-    trialLog(
-      trial,
+    demoLog(
+      demo,
       `clarification dedupe: ${dedupe.original_count} → ${dedupe.unique_count} (${dedupe.dedupe_method})`
     );
 
@@ -737,14 +793,13 @@ async function runTrial(
         situation: intake.situation,
         constraints: intake.constraints,
         posture: intake.posture,
-        leaning_direction: intake.leaning_direction,
         knowns_assumptions: intake.knowns_assumptions,
         unknowns: intake.unknowns,
       },
       demoQuestions,
-      DEMO_SCENARIO_HINT
+      demo.clarificationHint
     );
-    trialLog(trial, `clarification samples: ${samples.demo_method} via ${samples.demo_model}`);
+    demoLog(demo, `clarification samples: ${samples.demo_method} via ${samples.demo_model}`);
 
     const answersByEntryId: Record<string, string | number | boolean> = {};
     for (const g of dedupe.unique) {
@@ -758,11 +813,11 @@ async function runTrial(
     }
 
     const awaiting = getAwaitingClarificationRuns(await getRunsByDecisionId(decision_id));
-    trialLog(trial, `clarification re-analysis × ${awaiting.length} providers (parallel)`);
+    demoLog(demo, `clarification re-analysis × ${awaiting.length} providers (parallel)`);
     const clarifySettled = await Promise.allSettled(
       awaiting.map(async (run) => {
         const answers = buildRunAnswersFromCombined(run, answersByEntryId);
-        await applyClarificationToRun(run, answers, trial);
+        await applyClarificationToRun(run, answers, demo);
       })
     );
     const clarifyFail = clarifySettled.find((s) => s.status === "rejected");
@@ -779,7 +834,7 @@ async function runTrial(
   } catch (err) {
     const message = errMessage(err);
     report.clarification = { ok: false, error: message };
-    trialLog(trial, `clarification FAILED`, message);
+    demoLog(demo, `clarification FAILED`, message);
     report.finished_at = new Date().toISOString();
     return report;
   }
@@ -792,26 +847,26 @@ async function runTrial(
       r.llm_provider &&
       providers.includes(r.llm_provider)
   );
-  trialLog(trial, `variants + research × ${completed.length} providers (parallel)`);
+  demoLog(demo, `variants + research × ${completed.length} providers (parallel)`);
   await Promise.all(
     completed.map(async (run) => {
       const p = run.llm_provider!;
       try {
-        await createVariant(run, trial);
+        await createVariant(run, demo);
         report.variants[p] = { ok: true };
       } catch (err) {
         const message = errMessage(err);
         report.variants[p] = { ok: false, error: message };
-        trialLog(trial, `variant FAILED (${p})`, message);
+        demoLog(demo, `variant FAILED (${p})`, message);
       }
       try {
         const fresh = (await getRun(run.run_id)) ?? run;
-        await createResearch(fresh, trial);
+        await createResearch(fresh, demo);
         report.research[p] = { ok: true };
       } catch (err) {
         const message = errMessage(err);
         report.research[p] = { ok: false, error: message };
-        trialLog(trial, `research FAILED (${p})`, message);
+        demoLog(demo, `research FAILED (${p})`, message);
       }
     })
   );
@@ -820,13 +875,18 @@ async function runTrial(
   const briefJobs = AUTHORSHIP_MODES.flatMap((mode) =>
     synthesizers.map((synthesizer) => ({ synthesizer, mode, key: modeKey(synthesizer, mode) }))
   );
-  trialLog(trial, `unified briefs LLM × ${briefJobs.length} (parallel); Dynamo writes queued`);
+  demoLog(demo, `unified briefs LLM × ${briefJobs.length} (parallel); writes queued`);
   const briefSettled = await Promise.all(
     briefJobs.map(async ({ synthesizer, mode, key }) => {
       try {
-        const { brief, persistRunId } = await synthesizeUnifiedBrief(decision_id, synthesizer, mode, trial);
+        const { brief, persistRunId } = await synthesizeUnifiedBrief(
+          decision_id,
+          synthesizer,
+          mode,
+          demo
+        );
         await writeQueue(() =>
-          writeUnifiedBrief(decision_id, persistRunId, synthesizer, mode, brief, trial)
+          writeUnifiedBrief(decision_id, persistRunId, synthesizer, mode, brief, demo)
         );
         report.briefs[key] = { ok: true };
         return { key, ok: true as const };
@@ -834,7 +894,7 @@ async function runTrial(
         const message = errMessage(err);
         report.briefs[key] = { ok: false, error: message };
         report.contributions[key] = { ok: false, error: "skipped (brief failed)" };
-        trialLog(trial, `brief FAILED (${key})`, message);
+        demoLog(demo, `brief FAILED (${key})`, message);
         return { key, ok: false as const };
       }
     })
@@ -847,7 +907,7 @@ async function runTrial(
       const [synthesizer, mode] = r.key.split(":") as [UnifiedBriefSynthesizer, UnifiedBriefAuthorshipMode];
       return { synthesizer, mode, key: r.key };
     });
-  trialLog(trial, `contributions LLM × ${contribJobs.length} (parallel); Dynamo writes queued`);
+  demoLog(demo, `contributions LLM × ${contribJobs.length} (parallel); writes queued`);
   await Promise.all(
     contribJobs.map(async ({ synthesizer, mode, key }) => {
       try {
@@ -855,23 +915,112 @@ async function runTrial(
           decision_id,
           synthesizer,
           mode,
-          trial
+          demo
         );
         await writeQueue(() =>
-          writeContributions(decision_id, persistRunId, synthesizer, mode, brief, contributions, trial)
+          writeContributions(decision_id, persistRunId, synthesizer, mode, brief, contributions, demo)
         );
         report.contributions[key] = { ok: true };
       } catch (err) {
         const message = errMessage(err);
         report.contributions[key] = { ok: false, error: message };
-        trialLog(trial, `contributions FAILED (${key})`, message);
+        demoLog(demo, `contributions FAILED (${key})`, message);
       }
     })
   );
 
   report.finished_at = new Date().toISOString();
-  trialLog(trial, `======== DONE · open UI: /run/best-of-worlds?decision_id=${decision_id}`);
+  demoLog(demo, `======== DONE · open UI: /run/best-of-worlds?decision_id=${decision_id}`);
   return report;
+}
+
+function stubDemoFromPersist(persist: DecisionRunResult): DemoHarnessCase {
+  const id = persist.demo_scenario_id ?? "unknown";
+  const known = DEMO_HARNESS_CASES.find((c) => c.id === id);
+  if (known) return known;
+  // Minimal stub for logging only — fill path never uses researchStarter.
+  return DEMO_HARNESS_CASES[0]!;
+}
+
+/**
+ * Backfill missing Unified Brief + contributions for an existing decision
+ * (does not re-run intake / clarification / variants).
+ */
+async function fillMissingBriefsForDecision(
+  decisionId: string,
+  synthesizers: UnifiedBriefSynthesizer[],
+  modes: UnifiedBriefAuthorshipMode[],
+  force: boolean
+): Promise<{
+  decision_id: string;
+  demo_id: string;
+  filled: string[];
+  skipped: string[];
+  failed: string[];
+}> {
+  const allRuns = await getRunsByDecisionId(decisionId);
+  const persist = pickPersistRunForUnifiedBrief(allRuns);
+  if (!persist) throw new Error(`No persist run for decision ${decisionId}`);
+  const demo = stubDemoFromPersist(persist);
+  const writeQueue = createWriteQueue();
+  const filled: string[] = [];
+  const skipped: string[] = [];
+  const failed: string[] = [];
+
+  log(`fill-decision ${decisionId} (${demo.id}) · ${synthesizers.join(",")} × ${modes.join(",")}`);
+
+  for (const synthesizer of synthesizers) {
+    for (const mode of modes) {
+      const key = modeKey(synthesizer, mode);
+      const latestRuns = await getRunsByDecisionId(decisionId);
+      const latestPersist = pickPersistRunForUnifiedBrief(latestRuns) ?? persist;
+      const existingBrief = getUnifiedBriefForAuthor(latestPersist, synthesizer, mode);
+      const existingContrib = getUnifiedBriefContributionsByAuthor(latestPersist, mode)[synthesizer];
+
+      if (existingBrief && existingContrib && !force) {
+        skipped.push(key);
+        log(`  skip ${key} (already present)`);
+        continue;
+      }
+
+      try {
+        if (!existingBrief || force) {
+          const { brief, persistRunId } = await synthesizeUnifiedBrief(
+            decisionId,
+            synthesizer,
+            mode,
+            demo
+          );
+          await writeQueue(() =>
+            writeUnifiedBrief(decisionId, persistRunId, synthesizer, mode, brief, demo)
+          );
+        }
+        const { contributions, brief, persistRunId } = await synthesizeContributions(
+          decisionId,
+          synthesizer,
+          mode,
+          demo
+        );
+        await writeQueue(() =>
+          writeContributions(decisionId, persistRunId, synthesizer, mode, brief, contributions, demo)
+        );
+        filled.push(key);
+        log(`  filled ${key}`);
+      } catch (err) {
+        const message = errMessage(err);
+        failed.push(key);
+        log(`  FAILED ${key}`, message);
+      }
+    }
+  }
+
+  return {
+    decision_id: decisionId,
+    demo_id: demo.id,
+    filled,
+    skipped,
+    failed,
+  };
 }
 
 async function main() {
@@ -882,9 +1031,58 @@ async function main() {
     process.exit(1);
   }
 
-  const synthesizers = UNIFIED_BRIEF_SYNTHESIZERS.filter((s) =>
+  const synthesizersAvailable = UNIFIED_BRIEF_SYNTHESIZERS.filter((s) =>
     providers.includes(s)
   ) as UnifiedBriefSynthesizer[];
+
+  if (args.fillDecisionRaw) {
+    const decisionIds = args.fillDecisionRaw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    let modes: UnifiedBriefAuthorshipMode[];
+    let synthesizers: UnifiedBriefSynthesizer[];
+    try {
+      modes = parseModesFilter(args.modesRaw);
+      synthesizers = parseSynthesizersFilter(args.synthesizersRaw, synthesizersAvailable);
+    } catch (err) {
+      console.error(errMessage(err));
+      process.exit(1);
+    }
+    log("Multi-demo authorship fill-decision");
+    log(`  decisions: ${decisionIds.join(", ")}`);
+    log(`  synthesizers: ${synthesizers.join(", ")}`);
+    log(`  modes: ${modes.join(", ")}`);
+    log(`  force: ${args.force}`);
+
+    const results = [];
+    for (const decisionId of decisionIds) {
+      try {
+        results.push(await fillMissingBriefsForDecision(decisionId, synthesizers, modes, args.force));
+      } catch (err) {
+        log(`fill-decision ${decisionId} crashed`, errMessage(err));
+        results.push({
+          decision_id: decisionId,
+          demo_id: "?",
+          filled: [] as string[],
+          skipped: [] as string[],
+          failed: ["(crashed)"],
+        });
+      }
+    }
+    console.log("\n======== Fill summary ========");
+    for (const r of results) {
+      console.log(
+        `${r.demo_id} ${r.decision_id}: filled=${r.filled.length} skipped=${r.skipped.length} failed=${r.failed.length}` +
+          (r.filled.length ? ` [${r.filled.join(", ")}]` : "") +
+          (r.failed.length ? ` FAILED[${r.failed.join(", ")}]` : "")
+      );
+    }
+    if (results.some((r) => r.failed.length)) process.exit(1);
+    return;
+  }
+
+  const synthesizers = synthesizersAvailable;
 
   let userId: string | undefined;
   if (args.userEmail) {
@@ -899,43 +1097,50 @@ async function main() {
     log("No HARNESS_USER_EMAIL — runs will persist but may not appear under My Decisions.");
   }
 
-  const trials = Math.max(1, Math.floor(args.trials) || 5);
-  const startTrial = Math.max(1, Math.floor(args.startTrial) || 1);
-  const trialNumbers: number[] = [];
-  for (let t = startTrial; t <= trials; t++) trialNumbers.push(t);
-  const trialConcurrency =
-    args.trialConcurrency > 0
-      ? Math.max(1, Math.floor(args.trialConcurrency))
-      : trialNumbers.length;
+  let demos: DemoHarnessCase[];
+  try {
+    demos = selectDemos(args.demosRaw, args.startDemo);
+  } catch (err) {
+    console.error(errMessage(err));
+    process.exit(1);
+  }
+  if (demos.length === 0) {
+    console.error("No demos selected. Aborting.");
+    process.exit(1);
+  }
 
-  log("Civitas demo stress harness");
-  log(`  trials: ${trials} (start at ${startTrial}; ${trialNumbers.length} to run)`);
-  log(`  trial concurrency: ${trialConcurrency}`);
+  const demoConcurrency = Math.max(1, Math.floor(args.demoConcurrency) || 1);
+  const expectedBriefs = demos.length * synthesizers.length * AUTHORSHIP_MODES.length;
+
+  log("Multi-demo authorship harness");
+  log(`  demos: ${demos.length} — ${demos.map((d) => d.id).join(", ")}`);
+  log(`  demo concurrency: ${demoConcurrency}`);
   log(`  providers: ${providers.join(", ")}`);
   log(`  synthesizers: ${synthesizers.join(", ")}`);
   log(`  authorship modes: ${AUTHORSHIP_MODES.join(", ")}`);
-  log(`  parallelism: trials + providers + briefs/contribs; Dynamo writes queued per trial`);
-  log(`  variant: Risk vs savings matrix (fixed)`);
-  log(`  research: WARN & multi-entity layoffs (fixed)`);
+  log(`  expected Unified Briefs: ${expectedBriefs} (${demos.length}×${synthesizers.length}×${AUTHORSHIP_MODES.length})`);
+  log(`  parallelism: demos×${demoConcurrency} + providers + briefs/contribs; writes queued per demo`);
 
   const parsedRunNumber = Number(args.runNumberRaw);
   const harnessRunNumber =
     Number.isFinite(parsedRunNumber) && parsedRunNumber >= 1
       ? Math.floor(parsedRunNumber)
       : await nextHarnessRunNumber(userId);
-  const harnessBatchId = randomUUID();
+  const harnessBatchId = args.batchIdRaw || randomUUID();
   log(`  harness run number: ${harnessRunNumber}`);
   log(`  harness batch id: ${harnessBatchId}`);
-  log(`  harness kind: civitas-replication`);
+  log(`  harness kind: multi-demo-authorship`);
 
-  const reports = await mapPool(trialNumbers, trialConcurrency, async (t) => {
+  const reports = await mapPool(demos, demoConcurrency, async (demo, i) => {
     try {
-      return await runTrial(t, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
+      return await runDemoCase(demo, i + 1, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
       const message = errMessage(err);
-      log(`Trial ${t} crashed`, message);
+      log(`Demo ${demo.id} crashed`, message);
       return {
-        trial: t,
+        demo_index: i + 1,
+        demo_id: demo.id,
+        demo_label: demo.label,
         decision_id: "(crashed)",
         run_ids: {},
         failed_intake: [],
@@ -946,25 +1151,31 @@ async function main() {
         contributions: {},
         started_at: new Date().toISOString(),
         finished_at: new Date().toISOString(),
-      } satisfies TrialReport;
+      } satisfies DemoReport;
     }
   });
-  reports.sort((a, b) => a.trial - b.trial);
+  reports.sort((a, b) => a.demo_index - b.demo_index);
 
   const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "output");
   await mkdir(outDir, { recursive: true });
   const outPath = path.join(
     outDir,
-    `civitas-harness-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+    `multi-demo-authorship-harness-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
   );
   await writeFile(
     outPath,
     JSON.stringify(
       {
         generated_at: new Date().toISOString(),
+        harness: "multi-demo-authorship",
+        harness_kind: "multi-demo-authorship",
+        harness_batch_id: harnessBatchId,
+        harness_run_number: harnessRunNumber,
+        demos: demos.map((d) => ({ id: d.id, label: d.label })),
         providers,
         synthesizers,
         authorship_modes: AUTHORSHIP_MODES,
+        expected_unified_briefs: expectedBriefs,
         reports,
       },
       null,
@@ -974,18 +1185,23 @@ async function main() {
   );
 
   console.log("\n======== Summary ========");
+  let briefOkTotal = 0;
+  let briefTotalAll = 0;
   for (const r of reports) {
     const briefOk = Object.values(r.briefs).filter((x) => x.ok).length;
     const briefTotal = Object.keys(r.briefs).length;
+    briefOkTotal += briefOk;
+    briefTotalAll += briefTotal;
     const contribOk = Object.values(r.contributions).filter((x) => x.ok).length;
     console.log(
-      `Trial ${r.trial}: decision_id=${r.decision_id}  clarification=${r.clarification.ok ? "ok" : "FAIL"}  briefs=${briefOk}/${briefTotal}  contrib=${contribOk}/${briefTotal}`
+      `${r.demo_index}. ${r.demo_id}: decision_id=${r.decision_id}  clarification=${r.clarification.ok ? "ok" : "FAIL"}  briefs=${briefOk}/${briefTotal}  contrib=${contribOk}/${briefTotal}`
     );
     if (r.decision_id !== "(crashed)") {
       console.log(`  → http://localhost:5001/run/best-of-worlds?decision_id=${r.decision_id}`);
     }
   }
-  console.log(`\nWrote ${outPath}`);
+  console.log(`\nUnified Briefs: ${briefOkTotal}/${briefTotalAll} (expected ${expectedBriefs})`);
+  console.log(`Wrote ${outPath}`);
 }
 
 main().catch((err) => {

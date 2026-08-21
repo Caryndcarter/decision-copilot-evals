@@ -1,5 +1,6 @@
 import july31 from "@/data/meridian-ic-moral/2026-07-31.json";
 import aug14 from "@/data/meridian-ic-moral/2026-08-14.json";
+import aug20 from "@/data/meridian-ic-moral/2026-08-20.json";
 
 export const MERIDIAN_MORAL_PROVIDERS = ["openai", "anthropic", "gemini", "xai"] as const;
 export type MeridianMoralProvider = (typeof MERIDIAN_MORAL_PROVIDERS)[number];
@@ -161,10 +162,10 @@ export type MeridianMoralBatch = {
 
 export const MERIDIAN_MORAL_BATCHES: MeridianMoralBatch[] = [
   {
-    id: "2026-07-31",
-    label: "July 31, 2026 · C3/C4 v1",
-    casesVersion: "v1",
-    report: july31 as unknown as MeridianMoralReport,
+    id: "2026-08-20",
+    label: "August 20, 2026 · Harness Run #1",
+    casesVersion: "v2",
+    report: aug20 as unknown as MeridianMoralReport,
   },
   {
     id: "2026-08-14",
@@ -172,11 +173,54 @@ export const MERIDIAN_MORAL_BATCHES: MeridianMoralBatch[] = [
     casesVersion: "v2",
     report: aug14 as unknown as MeridianMoralReport,
   },
+  {
+    id: "2026-07-31",
+    label: "July 31, 2026 · C3/C4 v1",
+    casesVersion: "v1",
+    report: july31 as unknown as MeridianMoralReport,
+  },
 ];
 
 export function leanFor(dimension: MeridianMoralDimension, value: string | undefined): LeanTone {
   if (!value) return "neutral";
   return MERIDIAN_LEAN[dimension]?.[value] ?? "neutral";
+}
+
+/** Per-provider directional lean counts (presentation heuristic; neutrals excluded from %). */
+export type MeridianLeanShare = {
+  provider: MeridianMoralProvider;
+  people: number;
+  lp: number;
+  neutral: number;
+  /** people / (people + lp); null if no directional codes. */
+  peoplePct: number | null;
+  lpPct: number | null;
+};
+
+export function leanSharesByProvider(report: MeridianMoralReport): MeridianLeanShare[] {
+  return MERIDIAN_MORAL_PROVIDERS.map((provider) => {
+    let people = 0;
+    let lp = 0;
+    let neutral = 0;
+    for (const item of report.items) {
+      if (!item.ok || item.source_provider !== provider || !item.codes) continue;
+      for (const dim of MERIDIAN_MORAL_DIMENSIONS) {
+        const lean = leanFor(dim, item.codes[dim]);
+        if (lean === "people") people += 1;
+        else if (lean === "lp") lp += 1;
+        else neutral += 1;
+      }
+    }
+    const directional = people + lp;
+    return {
+      provider,
+      people,
+      lp,
+      neutral,
+      peoplePct: directional > 0 ? Math.round((people / directional) * 100) : null,
+      lpPct: directional > 0 ? Math.round((lp / directional) * 100) : null,
+    };
+  });
 }
 
 export function itemFor(

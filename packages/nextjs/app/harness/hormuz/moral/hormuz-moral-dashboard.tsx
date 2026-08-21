@@ -2,26 +2,26 @@
 
 import { useMemo, useState } from "react";
 import {
-  MERIDIAN_CASE_LABELS,
-  MERIDIAN_DIMENSION_LABELS,
-  MERIDIAN_MORAL_BATCHES,
-  MERIDIAN_MORAL_DIMENSIONS,
-  MERIDIAN_MORAL_PROVIDERS,
-  MERIDIAN_PROVIDER_LABELS,
+  HORMUZ_CASE_LABELS,
+  HORMUZ_DIMENSION_LABELS,
+  HORMUZ_MORAL_BATCHES,
+  HORMUZ_MORAL_DIMENSIONS,
+  HORMUZ_MORAL_PROVIDERS,
+  HORMUZ_PROVIDER_LABELS,
   itemFor,
   leanFor,
   leanSharesByProvider,
   providerLabel,
-  type MeridianLeanShare,
-  type MeridianMoralBatch,
-  type MeridianMoralDimension,
-  type MeridianMoralItem,
-  type MeridianMoralProvider,
-} from "@/lib/meridian-ic-moral-display";
+  type HormuzLeanShare,
+  type HormuzMoralBatch,
+  type HormuzMoralDimension,
+  type HormuzMoralItem,
+  type HormuzMoralProvider,
+} from "@/lib/hormuz-moral-display";
 
-const LEAN_CHIP: Record<"people" | "lp" | "neutral", string> = {
-  people: "bg-emerald-100 text-emerald-900 border-emerald-200",
-  lp: "bg-amber-100 text-amber-950 border-amber-200",
+const LEAN_CHIP: Record<"crew" | "commercial" | "neutral", string> = {
+  crew: "bg-emerald-100 text-emerald-900 border-emerald-200",
+  commercial: "bg-amber-100 text-amber-950 border-amber-200",
   neutral: "bg-zinc-100 text-zinc-700 border-zinc-200",
 };
 
@@ -31,7 +31,7 @@ function Chip({
   quote,
   onClick,
 }: {
-  dimension: MeridianMoralDimension;
+  dimension: HormuzMoralDimension;
   value: string | undefined;
   quote?: string;
   onClick?: () => void;
@@ -54,10 +54,10 @@ function DetailDrawer({
   item,
   onClose,
 }: {
-  item: MeridianMoralItem;
+  item: HormuzMoralItem;
   onClose: () => void;
 }) {
-  const caseMeta = MERIDIAN_CASE_LABELS[item.case_index];
+  const caseMeta = HORMUZ_CASE_LABELS[item.case_index];
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-black/30" onClick={onClose}>
       <aside
@@ -68,7 +68,8 @@ function DetailDrawer({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
-                {caseMeta?.short ?? `C${item.case_index}`} · {MERIDIAN_PROVIDER_LABELS[item.source_provider]}
+                {caseMeta?.short ?? `C${item.case_index}`} ·{" "}
+                {HORMUZ_PROVIDER_LABELS[item.source_provider]}
               </p>
               <p className="mt-1 text-sm text-zinc-600">{caseMeta?.sub}</p>
             </div>
@@ -78,13 +79,13 @@ function DetailDrawer({
           </div>
         </div>
         <div className="space-y-3 px-5 py-4">
-          {MERIDIAN_MORAL_DIMENSIONS.map((dim) => {
+          {HORMUZ_MORAL_DIMENSIONS.map((dim) => {
             const value = item.codes?.[dim];
             const quote = item.quotes?.[dim];
             return (
               <div key={dim} className="rounded-lg border border-zinc-200 p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-zinc-900">{MERIDIAN_DIMENSION_LABELS[dim]}</p>
+                  <p className="text-sm font-medium text-zinc-900">{HORMUZ_DIMENSION_LABELS[dim]}</p>
                   <Chip dimension={dim} value={value} />
                 </div>
                 {quote ? (
@@ -101,32 +102,32 @@ function DetailDrawer({
   );
 }
 
-function LeanBars({ shares }: { shares: MeridianLeanShare[] }) {
+function LeanBars({ shares }: { shares: HormuzLeanShare[] }) {
   return (
     <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div>
         <h2 className="text-sm font-semibold text-zinc-900">Directional lean by model</h2>
         <p className="mt-0.5 text-xs text-zinc-500">
-          Share of people/customer-protective vs LP/PE-protective codes across all dimensions × cases.
+          Share of crew-protective vs commercial-continuity codes across all dimensions × cases.
           Neutral codes (silent, unclear, balanced, filer alignment, etc.) are excluded from the %.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {shares.map((s) => {
-          const peoplePct = s.peoplePct ?? 0;
-          const lpPct = s.lpPct ?? 0;
-          const hasDirectional = s.people + s.lp > 0;
+          const crewPct = s.crewPct ?? 0;
+          const commercialPct = s.commercialPct ?? 0;
+          const hasDirectional = s.crew + s.commercial > 0;
           return (
             <div key={s.provider} className="rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 py-3">
               <p className="text-sm font-semibold text-zinc-900">
-                {MERIDIAN_PROVIDER_LABELS[s.provider]}
+                {HORMUZ_PROVIDER_LABELS[s.provider]}
               </p>
               <div
                 className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-zinc-200"
                 role="img"
                 aria-label={
                   hasDirectional
-                    ? `${peoplePct}% people/customer, ${lpPct}% LP/PE`
+                    ? `${crewPct}% crew, ${commercialPct}% commercial`
                     : "No directional codes"
                 }
               >
@@ -134,13 +135,13 @@ function LeanBars({ shares }: { shares: MeridianLeanShare[] }) {
                   <>
                     <span
                       className="bg-emerald-600"
-                      style={{ width: `${peoplePct}%` }}
-                      title={`${s.people} people/customer`}
+                      style={{ width: `${crewPct}%` }}
+                      title={`${s.crew} crew`}
                     />
                     <span
                       className="bg-amber-600"
-                      style={{ width: `${lpPct}%` }}
-                      title={`${s.lp} LP/PE`}
+                      style={{ width: `${commercialPct}%` }}
+                      title={`${s.commercial} commercial`}
                     />
                   </>
                 ) : null}
@@ -148,16 +149,16 @@ function LeanBars({ shares }: { shares: MeridianLeanShare[] }) {
               <p className="mt-2 text-xs text-zinc-600">
                 {hasDirectional ? (
                   <>
-                    <span className="font-semibold text-emerald-800">{peoplePct}% people/customer</span>
+                    <span className="font-semibold text-emerald-800">{crewPct}% crew</span>
                     {" · "}
-                    <span className="font-semibold text-amber-900">{lpPct}% LP/PE</span>
+                    <span className="font-semibold text-amber-900">{commercialPct}% commercial</span>
                   </>
                 ) : (
                   <span className="text-zinc-400">No directional codes</span>
                 )}
               </p>
               <p className="mt-0.5 text-[11px] text-zinc-400">
-                {s.people} vs {s.lp} directional
+                {s.crew} vs {s.commercial} directional
                 {s.neutral > 0 ? ` · ${s.neutral} neutral` : ""}
               </p>
             </div>
@@ -211,35 +212,81 @@ function CountsTable({
   );
 }
 
-export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolean }) {
-  const [batchId, setBatchId] = useState(MERIDIAN_MORAL_BATCHES[0]!.id);
-  const [selected, setSelected] = useState<MeridianMoralItem | null>(null);
+function EmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-sm text-zinc-600">
+      <p className="font-semibold text-zinc-900">No Hormuz moral batches committed yet</p>
+      <p className="mt-2 max-w-2xl leading-relaxed">
+        Run the battery, then blind-code provider Decision Briefs. After a report lands, copy the
+        JSON into <code className="text-xs">packages/nextjs/data/hormuz-moral/</code> and register
+        it in <code className="text-xs">lib/hormuz-moral-display.ts</code>.
+      </p>
+      <pre className="mt-4 overflow-x-auto rounded-lg bg-zinc-950 px-4 py-3 text-xs text-zinc-100">
+{`npm run harness:hormuz -- --user-email=you@example.com
+npm run harness:hormuz:moral -- --report=packages/nextjs/scripts/output/hormuz-harness-….json`}
+      </pre>
+      <p className="mt-4 text-zinc-500">
+        Rubric dims: route, commercial-over-crew, filer alignment, risk bearer, crew recenter,
+        survivorship, insurance clearance, hazard pay, dignity, uncertainty, power, premise audit
+        (C3–C4), tradeoff honesty (C5).
+      </p>
+    </div>
+  );
+}
 
-  const batch: MeridianMoralBatch =
-    MERIDIAN_MORAL_BATCHES.find((b) => b.id === batchId) ?? MERIDIAN_MORAL_BATCHES[0]!;
-  const report = batch.report;
+export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean }) {
+  const hasBatches = HORMUZ_MORAL_BATCHES.length > 0;
+  const [batchId, setBatchId] = useState(HORMUZ_MORAL_BATCHES[0]?.id ?? "");
+  const [selected, setSelected] = useState<HormuzMoralItem | null>(null);
 
-  const summary = report.summary as Record<string, Record<string, Record<string, number>>>;
+  const batch: HormuzMoralBatch | undefined =
+    HORMUZ_MORAL_BATCHES.find((b) => b.id === batchId) ?? HORMUZ_MORAL_BATCHES[0];
+  const report = batch?.report;
+
+  const summary = (report?.summary ?? {}) as Record<
+    string,
+    Record<string, Record<string, number>>
+  >;
 
   const cases = useMemo(() => [1, 2, 3, 4, 5], []);
-  const leanShares = useMemo(() => leanSharesByProvider(report), [report]);
+  const leanShares = useMemo(
+    () => (report ? leanSharesByProvider(report) : []),
+    [report]
+  );
+
+  if (!hasBatches || !report || !batch) {
+    return (
+      <div className="space-y-6">
+        {!embedded ? (
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Hormuz moral eval</h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-zinc-600">
+              Blind structured coding of each provider&apos;s standard Decision Brief across the
+              five Hormuz cases.
+            </p>
+          </div>
+        ) : null}
+        <EmptyState />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         {!embedded ? (
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Meridian IC moral eval</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Hormuz moral eval</h1>
             <p className="mt-1.5 max-w-2xl text-sm text-zinc-600">
               Blind structured coding of each provider&apos;s standard Decision Brief (5 cases × 4
-              models). Green leans people/municipal protection; amber leans LP/speed; gray is mixed,
-              silent, or n/a. Click a chip for the supporting quote.
+              models). Green leans crew/people protection; amber leans commercial continuity; gray
+              is mixed, silent, or n/a. Click a chip for the supporting quote.
             </p>
           </div>
         ) : (
           <p className="max-w-2xl text-sm text-zinc-600">
-            Blind structured coding of each provider&apos;s standard Decision Brief. Green leans
-            people/municipal protection; amber leans LP/speed. Click a chip for the quote.
+            Blind structured coding of Hormuz Decision Briefs. Green leans crew protection; amber
+            leans commercial continuity. Click a chip for the quote.
           </p>
         )}
         <label className="text-sm text-zinc-600">
@@ -249,7 +296,7 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
             onChange={(e) => setBatchId(e.target.value)}
             className="ml-2 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900"
           >
-            {MERIDIAN_MORAL_BATCHES.map((b) => (
+            {HORMUZ_MORAL_BATCHES.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.label}
               </option>
@@ -262,8 +309,6 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
         Judge: <span className="font-medium text-zinc-800">{providerLabel(report.judge)}</span>
         {" · "}
         {report.summary.ok}/{report.summary.total_jobs} coded
-        {" · "}
-        cases {batch.casesVersion}
         {" · "}
         {new Date(report.generated_at).toLocaleString()}
       </p>
@@ -293,35 +338,39 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
                     c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"
                   }`}
                 >
-                  <div className="text-xs font-semibold text-zinc-900">{MERIDIAN_CASE_LABELS[c]?.short}</div>
-                  <div className="text-[10px] font-normal text-zinc-500">{MERIDIAN_CASE_LABELS[c]?.sub}</div>
+                  <div className="text-xs font-semibold text-zinc-900">
+                    {HORMUZ_CASE_LABELS[c]?.short}
+                  </div>
+                  <div className="text-[10px] font-normal text-zinc-500">
+                    {HORMUZ_CASE_LABELS[c]?.sub}
+                  </div>
                 </th>
               ))}
             </tr>
             <tr className="border-b border-zinc-200 bg-zinc-50">
               <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
               {cases.flatMap((c) =>
-                MERIDIAN_MORAL_PROVIDERS.map((p, pi) => (
+                HORMUZ_MORAL_PROVIDERS.map((p, pi) => (
                   <th
                     key={`${c}-${p}`}
                     className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
                       pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
                     } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
                   >
-                    {MERIDIAN_PROVIDER_LABELS[p]}
+                    {HORMUZ_PROVIDER_LABELS[p]}
                   </th>
                 ))
               )}
             </tr>
           </thead>
           <tbody>
-            {MERIDIAN_MORAL_DIMENSIONS.map((dim) => (
+            {HORMUZ_MORAL_DIMENSIONS.map((dim) => (
               <tr key={dim} className="border-t border-zinc-100">
                 <th className="sticky left-0 z-10 border-r border-zinc-300 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
-                  {MERIDIAN_DIMENSION_LABELS[dim]}
+                  {HORMUZ_DIMENSION_LABELS[dim]}
                 </th>
                 {cases.flatMap((c) =>
-                  MERIDIAN_MORAL_PROVIDERS.map((p, pi) => {
+                  HORMUZ_MORAL_PROVIDERS.map((p, pi) => {
                     const item = itemFor(report, c, p);
                     return (
                       <td
@@ -347,12 +396,23 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <CountsTable title="Pace by provider" data={summary.pace_by_provider} />
-        <CountsTable title="Pace by case" data={summary.pace_by_case} />
-        <CountsTable title="Filer alignment by provider" data={summary.filer_alignment_by_provider} />
+        <CountsTable title="Route by provider" data={summary.route_choice_by_provider} />
+        <CountsTable title="Route by case" data={summary.route_choice_by_case} />
+        <CountsTable
+          title="Filer alignment by provider"
+          data={summary.filer_alignment_by_provider}
+        />
         <CountsTable title="Filer alignment by case" data={summary.filer_alignment_by_case} />
+        <CountsTable title="Crew recenter by case" data={summary.crew_recenter_by_case} />
+        <CountsTable
+          title="Survivorship check by case"
+          data={summary.survivorship_check_by_case}
+        />
         <CountsTable title="Premise audit by case" data={summary.premise_audit_by_case} />
-        <CountsTable title="Tradeoff honesty by provider" data={summary.tradeoff_honesty_by_provider} />
+        <CountsTable
+          title="Tradeoff honesty by provider"
+          data={summary.tradeoff_honesty_by_provider}
+        />
       </div>
 
       {selected ? <DetailDrawer item={selected} onClose={() => setSelected(null)} /> : null}

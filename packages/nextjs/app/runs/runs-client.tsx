@@ -2,6 +2,8 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { harnessBadgeLabel } from "@/lib/harness-meta";
+import type { HarnessKind } from "@/types/decision";
 
 interface ConfirmState {
   title: string;
@@ -135,9 +137,15 @@ export interface DecisionGroup {
   runs: RunRow[];
   hasUnifiedBrief: boolean;
   unifiedBriefRunId?: string;
-  /** Stress-harness decisions (Civitas demo batch) — shown on the Harness tab. */
+  /** Stress-harness decisions — shown on the Harness tab. */
   isHarness?: boolean;
   harnessTrial?: number;
+  /** Batch id for one harness script invocation (groups Trials 1–N). */
+  harnessRunNumber?: number;
+  /** Stable UUID for the harness invocation. */
+  harnessBatchId?: string;
+  /** Which harness CLI produced these runs. */
+  harnessKind?: HarnessKind;
 }
 
 type RunsTab = "decisions" | "harness";
@@ -275,20 +283,24 @@ export function RunsClient({
 
     {tab === "harness" && harnessGroups.length > 0 && (
       <p className="mb-4 text-sm text-zinc-500">
-        Harness trials from <code className="text-xs">npm run harness:civitas</code> or{" "}
-        <code className="text-xs">npm run harness:meridian-ic</code>.{" "}
-        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
-          View Meridian IC moral eval
+        Harness batches from <code className="text-xs">harness:demos:authorship</code>,{" "}
+        <code className="text-xs">harness:civitas</code>, <code className="text-xs">harness:meridian-ic</code>, or{" "}
+        <code className="text-xs">harness:hormuz</code>.
+        Badges show type, run #, and batch id.{" "}
+        <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
+          Harness findings
         </Link>
+        {" "}
+        (authorship + Meridian IC moral)
       </p>
     )}
 
     {tab === "harness" && harnessGroups.length === 0 ? (
       <p className="mb-4 text-sm text-zinc-500">
-        <Link href="/harness/meridian-ic/moral" className="font-medium text-indigo-700 hover:text-indigo-900">
-          View Meridian IC moral eval
+        <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
+          Harness findings
         </Link>{" "}
-        (committed snapshot batches — no live harness required).
+        — multi-demo authorship (live) and Meridian IC moral (committed snapshots).
       </p>
     ) : null}
 
@@ -298,7 +310,7 @@ export function RunsClient({
           <>
             <p className="text-zinc-500 text-sm">No harness trials yet.</p>
             <p className="mt-2 text-xs text-zinc-400">
-              Run <code className="rounded bg-zinc-100 px-1 py-0.5">npm run harness:civitas</code> with{" "}
+              Run <code className="rounded bg-zinc-100 px-1 py-0.5">npm run harness:demos:authorship</code> with{" "}
               <code className="rounded bg-zinc-100 px-1 py-0.5">HARNESS_USER_EMAIL</code> set to your
               account.
             </p>
@@ -349,9 +361,12 @@ export function RunsClient({
                     )}
                     {group.isHarness && (
                       <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-white shrink-0">
-                        {typeof group.harnessTrial === "number"
-                          ? `Harness · Trial ${group.harnessTrial}`
-                          : "Harness"}
+                        {harnessBadgeLabel({
+                          kind: group.harnessKind,
+                          runNumber: group.harnessRunNumber,
+                          trial: group.harnessTrial,
+                          batchId: group.harnessBatchId,
+                        })}
                       </span>
                     )}
                     <p className="text-sm font-semibold text-zinc-900 leading-snug">
