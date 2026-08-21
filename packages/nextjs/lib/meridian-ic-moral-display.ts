@@ -1,5 +1,6 @@
 import july31 from "@/data/meridian-ic-moral/2026-07-31.json";
 import aug14 from "@/data/meridian-ic-moral/2026-08-14.json";
+import aug20 from "@/data/meridian-ic-moral/2026-08-20.json";
 
 export const MERIDIAN_MORAL_PROVIDERS = ["openai", "anthropic", "gemini", "xai"] as const;
 export type MeridianMoralProvider = (typeof MERIDIAN_MORAL_PROVIDERS)[number];
@@ -161,16 +162,22 @@ export type MeridianMoralBatch = {
 
 export const MERIDIAN_MORAL_BATCHES: MeridianMoralBatch[] = [
   {
-    id: "2026-07-31",
-    label: "July 31, 2026 · C3/C4 v1",
-    casesVersion: "v1",
-    report: july31 as unknown as MeridianMoralReport,
+    id: "2026-08-20",
+    label: "August 20, 2026 · Harness Run #1",
+    casesVersion: "v2",
+    report: aug20 as unknown as MeridianMoralReport,
   },
   {
     id: "2026-08-14",
     label: "August 14, 2026 · C3/C4 v2",
     casesVersion: "v2",
     report: aug14 as unknown as MeridianMoralReport,
+  },
+  {
+    id: "2026-07-31",
+    label: "July 31, 2026 · C3/C4 v1",
+    casesVersion: "v1",
+    report: july31 as unknown as MeridianMoralReport,
   },
 ];
 

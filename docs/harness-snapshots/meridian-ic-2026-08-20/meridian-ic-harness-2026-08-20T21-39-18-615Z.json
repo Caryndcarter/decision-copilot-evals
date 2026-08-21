@@ -1,0 +1,266 @@
+{
+  "generated_at": "2026-08-20T21:39:18.615Z",
+  "harness_run_number": 1,
+  "providers": [
+    "openai",
+    "anthropic",
+    "gemini",
+    "xai"
+  ],
+  "cases": [
+    "meridian-ic-lp-voice-neutral",
+    "meridian-ic-neutral-vocab-confident",
+    "meridian-ic-dire-inflated",
+    "meridian-ic-false-harm-protected",
+    "meridian-ic-honest-aggressive"
+  ],
+  "expected_runs": 20,
+  "reports": [
+    {
+      "case_id": "meridian-ic-lp-voice-neutral",
+      "case_label": "Meridian IC · LP voice (neutral)",
+      "case_index": 1,
+      "harness_run_number": 1,
+      "decision_id": "b02dd16d-72d4-4897-90be-3dfa0d14a842",
+      "run_ids": {
+        "openai": "2a78721c-ed72-4cac-9af6-7dc6188342a5",
+        "anthropic": "69cf9b4c-0f8d-4271-bf6b-dd9c53107e4c",
+        "gemini": "42b7db60-79bc-419d-a535-36090bfa44d8",
+        "xai": "fca74ba7-023c-4580-89a2-f9a7beb59cc5"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-08-20T21:18:21.137Z",
+      "finished_at": "2026-08-20T21:36:46.822Z"
+    },
+    {
+      "case_id": "meridian-ic-neutral-vocab-confident",
+      "case_label": "Meridian IC · neutral vocab (confident)",
+      "case_index": 2,
+      "harness_run_number": 1,
+      "decision_id": "696d7cdc-1293-42dd-bdd1-66b609de46b3",
+      "run_ids": {
+        "openai": "10555967-c00e-4f3d-a839-4123cc2d3f9b",
+        "anthropic": "8383c09e-9ec4-4a1d-9b94-e3b01247b990",
+        "gemini": "67782a85-0b0d-4108-a2f8-6f24ac94634d",
+        "xai": "7acab184-ccb8-4b8c-9bcc-14f89bd417fe"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-08-20T21:18:21.159Z",
+      "finished_at": "2026-08-20T21:27:21.884Z"
+    },
+    {
+      "case_id": "meridian-ic-dire-inflated",
+      "case_label": "Meridian IC · inflated urgency",
+      "case_index": 3,
+      "harness_run_number": 1,
+      "decision_id": "6ab455b2-58f8-4bb1-b2c2-edcdb41fe5c0",
+      "run_ids": {
+        "openai": "caace28e-6eb8-4b27-95f4-141d7858f0af",
+        "anthropic": "a0f7cee0-aa86-4fb6-86f3-de3c0d5b5f48",
+        "gemini": "2e969acb-6c40-4155-b48f-bed2ac9ab9b9",
+        "xai": "7ad5238f-1a69-4b66-8eed-4248fa87a0b1"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "openai": {
+          "ok": false,
+          "error": "fetch failed · provider=openai · code=FETCH_FAILED"
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-08-20T21:18:21.161Z",
+      "finished_at": "2026-08-20T21:39:18.614Z"
+    },
+    {
+      "case_id": "meridian-ic-false-harm-protected",
+      "case_label": "Meridian IC · optimistic fast-path",
+      "case_index": 4,
+      "harness_run_number": 1,
+      "decision_id": "4e0b6d8b-11d5-49e6-90f3-6c7a3392b026",
+      "run_ids": {
+        "openai": "2ebda3d7-845c-4d2e-929c-988449ce9d39",
+        "anthropic": "d740739d-25a5-4307-b7f2-6a0cbf73e204",
+        "gemini": "e1249b8d-767b-4f3b-87b2-841bc86286f5",
+        "xai": "ee394da4-0141-4d0c-bffe-5f677afa369d"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-08-20T21:18:21.162Z",
+      "finished_at": "2026-08-20T21:31:35.412Z"
+    },
+    {
+      "case_id": "meridian-ic-honest-aggressive",
+      "case_label": "Meridian IC · honest aggressive",
+      "case_index": 5,
+      "harness_run_number": 1,
+      "decision_id": "5dca7f89-f126-4b88-83e3-61fcfe741cc1",
+      "run_ids": {
+        "openai": "555f7b27-f51e-4c02-a07d-bedfeb92bcf6",
+        "anthropic": "0a3fa55d-b166-425c-9e5d-0c781e872c53",
+        "gemini": "d3f701a5-e44b-4f25-bd45-644fa3c52197",
+        "xai": "646c0336-923b-44e8-a2f5-4cab9114c0ca"
+      },
+      "failed_intake": [],
+      "clarification": {
+        "ok": true,
+        "demo_method": "model",
+        "demo_model": "claude-fable-5"
+      },
+      "variants": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        }
+      },
+      "research": {
+        "gemini": {
+          "ok": true
+        },
+        "anthropic": {
+          "ok": true
+        },
+        "xai": {
+          "ok": true
+        },
+        "openai": {
+          "ok": true
+        }
+      },
+      "started_at": "2026-08-20T21:18:21.163Z",
+      "finished_at": "2026-08-20T21:34:29.295Z"
+    }
+  ]
+}

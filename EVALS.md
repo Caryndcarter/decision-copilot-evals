@@ -26,8 +26,9 @@ Read-only dashboard over committed snapshot batches:
 
 | Batch | Cases | Files |
 |---|---|---|
-| July 31, 2026 | C3/C4 **v1** | `docs/harness-snapshots/meridian-ic-2026-07-31/` |
+| August 20, 2026 · Harness Run #1 | C3/C4 **v2** | `docs/harness-snapshots/meridian-ic-2026-08-20/` |
 | August 14, 2026 | C3/C4 **v2** | `docs/harness-snapshots/meridian-ic-2026-08-14/` |
+| July 31, 2026 | C3/C4 **v1** | `docs/harness-snapshots/meridian-ic-2026-07-31/` |
 
 JSON copies used by the app: `packages/nextjs/data/meridian-ic-moral/`.
 

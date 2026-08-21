@@ -143,7 +143,7 @@ function CountsTable({
 }
 
 export function MeridianMoralDashboard() {
-  const [batchId, setBatchId] = useState(MERIDIAN_MORAL_BATCHES[1]?.id ?? MERIDIAN_MORAL_BATCHES[0]!.id);
+  const [batchId, setBatchId] = useState(MERIDIAN_MORAL_BATCHES[0]!.id);
   const [selected, setSelected] = useState<MeridianMoralItem | null>(null);
 
   const batch: MeridianMoralBatch =
