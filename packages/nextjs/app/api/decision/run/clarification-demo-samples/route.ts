@@ -9,6 +9,9 @@ export const maxDuration = 60;
 
 const DEMO_SCENARIO_LABELS: Partial<Record<DemoScenarioId, string>> = {
   "healthcare-pe-acquisition": "Healthcare PE acquisition (demo)",
+  "vp-sales-underperforming": "Underperforming VP Sales (demo)",
+  "gen-ai-product-compliance": "Gen-AI product compliance (demo)",
+  "legacy-core-modernization": "Legacy core modernization (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
   "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral (demo)",
   "meridian-ic-neutral-vocab-confident":

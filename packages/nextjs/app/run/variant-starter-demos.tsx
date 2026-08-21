@@ -32,6 +32,69 @@ const SCENARIO_VARIANT_GROUPS: VariantStarterGroup[] = [
     ],
   },
 {
+    scenarioId: "vp-sales-underperforming",
+    title: "VP Sales performance",
+    items: [
+      {
+        label: "90-day performance plan",
+        prompt:
+          "Add a brief variant structured as a **90-day performance plan**: goals, metrics, checkpoints, and what good looks like before Q4 planning. Summarize the section you'd add, then suggest the format so I can create the variant.",
+      },
+      {
+        label: "Options vs replacement",
+        prompt:
+          "I'd like a variant that compares **coaching + sales ops vs parallel leadership vs replacement** in a compact matrix with board narrative angles. Describe it, then give me the format suggestion to create that variant.",
+      },
+      {
+        label: "Board one-pager",
+        prompt:
+          "Propose a variant formatted as a **one-page board brief**: situation, plan, risks, and what we need from them. Explain the outline, then suggest the format tag for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "gen-ai-product-compliance",
+    title: "Gen-AI & compliance",
+    items: [
+      {
+        label: "Classification worksheet",
+        prompt:
+          "Create a variant idea: an **EU AI Act / risk-tier worksheet** tailored to our product (summarization + optional Q&A on customer docs)—factors, open questions, and next legal steps. Describe it, then suggest the format tag for the variant.",
+      },
+      {
+        label: "Data-flow narrative",
+        prompt:
+          "I'd like a variant that reads as a **data-flow and subprocessor narrative** for security reviews: what touches the model, logs, retention, keys. Summarize the section, then suggest the format to create it.",
+      },
+      {
+        label: "90-day compliance roadmap",
+        prompt:
+          "Propose a variant: **90-day compliance roadmap** (phases, owners, gates) for shipping AI features while EU and enterprise RFP pressure ramps up. Explain briefly, then suggest the format for the variant.",
+      },
+    ],
+  },
+{
+    scenarioId: "legacy-core-modernization",
+    title: "Core modernization",
+    items: [
+      {
+        label: "Phased gates",
+        prompt:
+          "Create a variant idea: **phased migration gating criteria** (exit each phase only if…) for core replacement vs sidecar. Describe the section, then suggest the format to create the variant.",
+      },
+      {
+        label: "Vendor scorecard",
+        prompt:
+          "I'd like a variant that is a **vendor bake-off scorecard** (functionality, risk, cost, regulatory fit, SI dependence) for the two core strategies. Outline it, then suggest the format tag.",
+      },
+      {
+        label: "Regulator milestones",
+        prompt:
+          "Propose a variant: **regulator engagement milestones** and evidence pack (testing, rollback, third-party risk) the board and OCC/Fed readers would expect. Brief description, then format suggestion for the variant.",
+      },
+    ],
+  },
+{
     scenarioId: "meridian-civitas-saas-rollup",
     title: "Civitas modernization",
     items: [

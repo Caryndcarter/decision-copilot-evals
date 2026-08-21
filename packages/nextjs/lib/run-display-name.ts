@@ -10,6 +10,9 @@ const POSTURE_LABELS: Record<string, string> = {
 
 const DEMO_SCENARIO_HEADLINES: Record<DemoScenarioId, string> = {
   "healthcare-pe-acquisition": "Healthcare PE / acquisition (demo)",
+  "vp-sales-underperforming": "Underperforming VP Sales (demo)",
+  "gen-ai-product-compliance": "Gen-AI product / compliance (demo)",
+  "legacy-core-modernization": "Core banking modernization (demo)",
   "meridian-civitas-saas-rollup": "Meridian / Civitas SaaS roll-up (demo)",
   "meridian-ic-lp-voice-neutral": "Meridian IC · LP voice, neutral register (demo)",
   "meridian-ic-neutral-vocab-confident":

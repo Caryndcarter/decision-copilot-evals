@@ -31,6 +31,64 @@ const SCENARIO_RESEARCH_GROUPS: ResearchStarterGroup[] = [
     ],
   },
 {
+    scenarioId: "vp-sales-underperforming",
+    title: "Sales leadership / performance",
+    items: [
+      {
+        label: "Benchmarks & signals",
+        prompt:
+          "What do credible business or management sources say about timelines and signals when a board or CEO is deciding between coaching a VP Sales vs making a leadership change? Cite 2–3 linked sources.",
+      },
+      {
+        label: "Sales ops patterns",
+        prompt:
+          "Find examples or frameworks for adding sales ops / revops under a struggling VP vs running it in parallel. Link reputable articles (e.g. major publishers, analysts, or well-known operators), not generic advice without citations.",
+      },
+    ],
+  },
+{
+    scenarioId: "gen-ai-product-compliance",
+    title: "Gen-AI product & compliance",
+    items: [
+      {
+        label: "EU AI Act risk tier",
+        prompt:
+          "For a B2B SaaS offering document summarization and optional Q&A over customer-uploaded business data (not clinical decision support), what do recent official EU guidance, law firm memos, or commission materials say about high-risk classification vs limited-risk obligations? Link 2–4 authoritative sources and summarize practical triggers.",
+      },
+      {
+        label: "Enterprise RFP patterns",
+        prompt:
+          "What do security/compliance writeups or procurement guides say large enterprises commonly require in vendor AI questionnaires (training data, logging, human review, subprocessors)? Cite linked sources; focus on patterns, not generic tips.",
+      },
+      {
+        label: "VPC / private AI hosting",
+        prompt:
+          "Summarize how major cloud and model providers position private inference, VPC endpoints, or customer-managed keys for generative AI—and what tradeoffs (latency, cost, model choice) are documented. Link vendor docs or third-party comparisons with specifics.",
+      },
+    ],
+  },
+{
+    scenarioId: "legacy-core-modernization",
+    title: "Core banking modernization",
+    items: [
+      {
+        label: "Regulatory expectations",
+        prompt:
+          "What do US banking agencies (OCC, Fed, FDIC) or FFIEC materials emphasize for major core or payments system changes—governance, testing, third-party risk? Link specific bulletins, handbooks, or speeches.",
+      },
+      {
+        label: "Big-bang vs phased",
+        prompt:
+          "Find 2–3 public case studies or analyst reports on core banking replacement or migration (successes and failures). Link each; note what went wrong when cutovers failed.",
+      },
+      {
+        label: "Cloud for core",
+        prompt:
+          "What do regulators or industry groups say about cloud-hosted core or ledger workloads for regional banks—especially resilience and data? Cite linked sources from 2022 onward where possible.",
+      },
+    ],
+  },
+{
     scenarioId: "meridian-civitas-saas-rollup",
     title: "Civitas AI modernization / PE roll-up",
     items: [

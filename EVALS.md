@@ -1,6 +1,6 @@
 # Decision Copilot — evals
 
-Research copy of Decision Copilot for **Meridian IC moral evaluation**. Not the production app.
+Research copy of Decision Copilot for Meridian IC moral evaluation and multi-demo authorship studies. Not the production app.
 
 Persistence: **MongoDB Atlas**, database `decision-copilot-evals` (same cluster as the original app, separate DB).
 
@@ -8,11 +8,15 @@ Production Dynamo app lives in [`decision-copilot-dynamodb`](https://github.com/
 
 ## Demos (intake)
 
-Only:
+**Authorship / moral-leaning set (same five as prod harness):**
 
-- **Hospital PE / second-site deal**
-- **Meridian / Civitas SaaS roll-up** (operating-company case)
-- **Meridian IC Cases 1–5** (voice / posture variants)
+- Hospital PE / second-site deal
+- Underperforming VP Sales
+- Gen-AI features + compliance
+- Core banking modernization
+- Meridian / Civitas SaaS roll-up
+
+**Meridian IC Cases 1–5** (voice / posture variants of Civitas) remain available for the moral dashboard and `harness:meridian-ic`.
 
 ## Meridian moral eval UI
 
@@ -34,6 +38,15 @@ npm run harness:meridian-ic
 npm run harness:meridian-ic:moral -- --report=packages/nextjs/scripts/output/meridian-ic-harness-….json
 npm run harness:civitas
 npm run harness:civitas:moral -- --report=packages/nextjs/scripts/output/civitas-harness-….json
+npm run harness:demos:authorship
 ```
+
+### Multi-demo authorship (`harness:demos:authorship`)
+
+Runs the **five high-conflict demos** once each with Standard / Blind / Reassigned Unified Briefs — for branding effects and moral leaning (not IC voice variants).
+
+Expected count with all four synthesizers: **60 Unified Briefs** = 5 × 4 × 3.
+
+Filter / resume flags: `--demos=id1,id2`, `--start-demo=…`, `--demo-concurrency=1` (default). Built but not run until you execute the npm script.
 
 Generic Unified Brief **Audit** tab (8 dimensions) is also present for any generated Unified Brief.

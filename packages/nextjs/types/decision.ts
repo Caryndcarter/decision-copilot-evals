@@ -52,6 +52,9 @@ export type LLMProviderName = "openai" | "anthropic" | "gemini" | "xai";
 /** Intake demo buttons on `/intake`; stored on the run for UI such as chat research starters. */
 export const DEMO_SCENARIO_IDS = [
   "healthcare-pe-acquisition",
+  "vp-sales-underperforming",
+  "gen-ai-product-compliance",
+  "legacy-core-modernization",
   "meridian-civitas-saas-rollup",
   "meridian-ic-lp-voice-neutral",
   "meridian-ic-neutral-vocab-confident",
