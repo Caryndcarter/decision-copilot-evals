@@ -24,7 +24,7 @@ export type ListRunsOptions = {
   authorshipOnly?: boolean;
 };
 
-/** Minimal fields for /runs grouping — not full provider payloads. */
+/** List metadata only — no brief bodies, variants, research, or unified-brief maps. */
 const DASHBOARD_RUN_PROJECTION = {
   run_id: 1,
   decision_id: 1,
@@ -41,12 +41,6 @@ const DASHBOARD_RUN_PROJECTION = {
   decision_title: 1,
   "intake.situation": 1,
   "intake.posture": 1,
-  "decision_brief.title": 1,
-  "decision_brief.summary": 1,
-  "decision_brief.recommendation": 1,
-  "decision_brief.key_considerations": 1,
-  "decision_brief.next_steps": 1,
-  decision_brief_best_of_worlds: 1,
   createdAt: 1,
   updatedAt: 1,
 } as const;

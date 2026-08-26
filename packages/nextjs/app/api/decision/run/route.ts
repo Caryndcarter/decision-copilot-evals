@@ -832,6 +832,9 @@ async function handleDeleteRun(req: DeleteRunRequest): Promise<NextResponse> {
   if (!removed) {
     return NextResponse.json({ error: "Run not found" }, { status: 404 });
   }
+  if (existing.user_id) {
+    revalidateTag(`runs-dashboard-${existing.user_id}`);
+  }
   return NextResponse.json({ ok: true as const, decision_id: existing.decision_id });
 }
 
