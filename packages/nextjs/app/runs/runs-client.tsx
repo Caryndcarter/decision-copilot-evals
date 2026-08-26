@@ -20,6 +20,11 @@ import {
   formatHarnessBatchModelsDescription,
   resolveHarnessBatchModels,
 } from "@/lib/harness-provider-models";
+import {
+  coerceLatestAt,
+  compareLatestAtDesc,
+  latestAtMs,
+} from "@/lib/decision-group-dates";
 import type { HarnessKind, LLMProviderName } from "@/types/decision";
 
 interface ConfirmState {
@@ -150,7 +155,7 @@ export interface DecisionGroup {
   decision_id: string;
   title: string;
   situation: string;
-  latestAt: Date;
+  latestAt: Date | string;
   runs: RunRow[];
   hasUnifiedBrief: boolean;
   unifiedBriefRunId?: string;
@@ -176,9 +181,13 @@ type HarnessBatchSection = {
   batchId: string;
   kind?: HarnessKind;
   runNumber?: number;
-  latestAt: Date;
+  latestAt: Date | string;
   trials: DecisionGroup[];
 };
+
+function normalizeDecisionGroups(groups: DecisionGroup[]): DecisionGroup[] {
+  return groups.map((g) => ({ ...g, latestAt: coerceLatestAt(g.latestAt) }));
+}
 
 function groupHarnessByBatch(groups: DecisionGroup[]): HarnessBatchSection[] {
   const map = new Map<string, HarnessBatchSection>();
@@ -201,7 +210,9 @@ function groupHarnessByBatch(groups: DecisionGroup[]): HarnessBatchSection[] {
       };
       map.set(batchKey, section);
     }
-    if (group.latestAt > section.latestAt) section.latestAt = group.latestAt;
+    if (latestAtMs(group.latestAt) > latestAtMs(section.latestAt)) {
+      section.latestAt = group.latestAt;
+    }
     if (group.harnessKind) section.kind = group.harnessKind;
     if (typeof group.harnessRunNumber === "number") {
       section.runNumber = group.harnessRunNumber;
@@ -228,10 +239,10 @@ function groupHarnessByBatch(groups: DecisionGroup[]): HarnessBatchSection[] {
       const bIdx =
         harnessCanonicalCaseIndex(b.demoScenarioId) ?? b.harnessTrial ?? Number.MAX_SAFE_INTEGER;
       if (aIdx !== bIdx) return aIdx - bIdx;
-      return b.latestAt.getTime() - a.latestAt.getTime();
+      return compareLatestAtDesc(a, b);
     });
   }
-  return [...map.values()].sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  return [...map.values()].sort(compareLatestAtDesc);
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -296,7 +307,7 @@ export function RunsClient({
   initialHarnessStudy?: HarnessStudyTab;
 }) {
   const router = useRouter();
-  const [groups, setGroups] = useState(initialGroups);
+  const [groups, setGroups] = useState(() => normalizeDecisionGroups(initialGroups));
   const [tab, setTab] = useState<RunsTab>(initialTab);
   const [pending, startTransition] = useTransition();
   const [deletingRunId, setDeletingRunId] = useState<string | null>(null);
@@ -305,7 +316,7 @@ export function RunsClient({
 
   // Keep local optimistic state aligned with server refreshes (pagination / new runs).
   useEffect(() => {
-    setGroups(initialGroups);
+    setGroups(normalizeDecisionGroups(initialGroups));
   }, [initialGroups]);
 
   useEffect(() => {
@@ -742,8 +753,8 @@ export function RunsClient({
         {activeHarnessBatches.map((batch) => {
           const isOpen = expandedBatches.has(batch.batchKey);
           const batchDate =
-            batch.latestAt.getTime() > 0
-              ? batch.latestAt.toLocaleDateString("en-US", {
+            latestAtMs(batch.latestAt) > 0
+              ? coerceLatestAt(batch.latestAt).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",

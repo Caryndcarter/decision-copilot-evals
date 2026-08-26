@@ -5,6 +5,7 @@ import type { DecisionGroup } from "@/app/runs/runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { inferHarnessKindFromDemoScenario } from "@/lib/harness-meta";
 import { listRunsForUser } from "@/lib/db/runs";
+import { coerceLatestAt } from "@/lib/decision-group-dates";
 
 type RunWithMeta = DecisionRunResult & { createdAt?: Date | string; updatedAt?: Date | string };
 
@@ -117,13 +118,18 @@ async function fetchDashboardDecisionGroups(
 }
 
 /** Cached dashboard list — 45s TTL avoids hammering Atlas on every navigation. */
+function rehydrateGroupDates(groups: DecisionGroup[]): DecisionGroup[] {
+  return groups.map((g) => ({ ...g, latestAt: coerceLatestAt(g.latestAt) }));
+}
+
 export async function getDashboardDecisionGroups(
   userId: string,
   isAdmin: boolean
 ): Promise<{ groups: DecisionGroup[]; runCount: number }> {
-  return unstable_cache(
+  const cached = await unstable_cache(
     () => fetchDashboardDecisionGroups(userId, isAdmin),
     ["runs-dashboard", userId, isAdmin ? "admin" : "user"],
     { revalidate: 45, tags: [`runs-dashboard-${userId}`] }
   )();
+  return { ...cached, groups: rehydrateGroupDates(cached.groups) };
 }

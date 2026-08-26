@@ -5,6 +5,7 @@ import {
   parseRunsTab,
   type RunsStudyTab,
 } from "@/lib/harness-meta";
+import { compareLatestAtDesc } from "@/lib/decision-group-dates";
 import { getDashboardDecisionGroups } from "@/lib/runs-dashboard";
 
 export async function RunsList({
@@ -23,9 +24,7 @@ export async function RunsList({
   const initialHarnessStudy = parseHarnessStudyTab(studyParam);
   const { groups, runCount } = await getDashboardDecisionGroups(userId, isAdmin);
 
-  const decisionGroups = groups
-    .filter((g) => !g.isHarness)
-    .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  const decisionGroups = groups.filter((g) => !g.isHarness).sort(compareLatestAtDesc);
   const harnessGroups = groups
     .filter((g) => g.isHarness)
     .sort((a, b) => {
@@ -33,7 +32,7 @@ export async function RunsList({
       if (rn !== 0) return rn;
       const t = (a.harnessTrial ?? 0) - (b.harnessTrial ?? 0);
       if (t !== 0) return t;
-      return b.latestAt.getTime() - a.latestAt.getTime();
+      return compareLatestAtDesc(a, b);
     });
   const harnessBatchCount = new Set(
     harnessGroups.map((g) =>
