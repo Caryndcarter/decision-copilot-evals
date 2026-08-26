@@ -65,16 +65,17 @@ import { runDecisionTitle } from "../lenses/decision-title";
 import { generateClarificationDemoSamplesWithGemini } from "../lenses/clarification-demo-samples";
 import { dedupeClarificationQuestionsWithGemini } from "../lenses/clarification-dedupe";
 import { getClient } from "../llm";
-import type {
-  Clarification,
-  ClarificationAnswer,
-  DecisionIntake,
-  DecisionRunResult,
-  LensOutput,
-  LensQuestion,
-  LLMProviderName,
-  ResearchCompletion,
-  RunVariant,
+import {
+  postureRequiresLeaning,
+  type Clarification,
+  type ClarificationAnswer,
+  type DecisionIntake,
+  type DecisionRunResult,
+  type LensOutput,
+  type LensQuestion,
+  type LLMProviderName,
+  type ResearchCompletion,
+  type RunVariant,
 } from "../types/decision";
 
 type StepResult = { ok: true } | { ok: false; error: string };
@@ -214,10 +215,10 @@ function buildIntakeFromCase(
     knowns_assumptions: c.knowns_assumptions,
     unknowns: c.unknowns,
   };
-  if (c.posture === "pressure_test") {
+  if (postureRequiresLeaning(c.posture)) {
     return {
       ...base,
-      posture: "pressure_test",
+      posture: c.posture,
       leaning_direction: c.leaning_direction ?? "",
     };
   }
