@@ -13,6 +13,13 @@ import {
   MAX_REQUESTS_PER_IP,
   MIN_ELAPSED_MS,
 } from "@/lib/invite-request-guard";
+import { notifyInviteRequest } from "@/lib/slack-alert";
+
+function resolveBaseUrl(request: NextRequest): string {
+  const fromEnv = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || "").replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  return request.nextUrl.origin;
+}
 
 // Generic response for every "soft" rejection (honeypot, timing) so a bot
 // gets no signal about which check it tripped. Real validation errors
@@ -75,6 +82,15 @@ export async function POST(request: NextRequest) {
       }
       throw err;
     }
+
+    // Only fires for a genuine new request — not on the honeypot/timing/
+    // duplicate paths above, which return early. A Slack outage or missing
+    // webhook config never affects this response either way.
+    await notifyInviteRequest({
+      email,
+      reason,
+      adminUrl: `${resolveBaseUrl(request)}/admin`,
+    });
 
     return genericOk();
   } catch (err) {
