@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LogoLockup } from "@/app/components/logo-icon";
+import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { SessionNav } from "@/app/components/session-nav";
 import { auth } from "@/auth";
 import { buildAuthorshipBatchSummaries } from "@/lib/authorship-harness-summary";
@@ -36,23 +36,42 @@ export default async function HarnessFindingsPage({
 
   return (
     <main className="min-h-screen bg-zinc-50">
-      <nav className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoLockup />
-          </Link>
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <AppNavBrand />
           <div className="flex items-center gap-3">
             <Link
               href="/runs?tab=studies"
-              className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+              className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
             >
-              Studies
+              My studies
+            </Link>
+            <Link
+              href="/intake"
+              className="inline-flex items-center rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+            >
+              New decision
             </Link>
             <SessionNav />
           </div>
         </div>
       </nav>
-      <div className="mx-auto max-w-7xl px-6 py-8">
+
+      <div className="border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">
+            AI behavior studies
+          </p>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900">Study findings</h1>
+          <p className="mt-1.5 max-w-2xl text-sm text-zinc-500">
+            Switch among studies by test type and scenario. Voice-influence batches use committed
+            moral snapshots when available; authorship-influence pulls live batches with coverage,
+            influence shifts, and moral lean when audited.
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <HarnessFindingsDashboard
           authorshipBatches={authorshipBatches}
           initialStudy={initialStudy}

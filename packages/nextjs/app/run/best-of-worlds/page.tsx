@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { LogoLockup } from "@/app/components/logo-icon";
+import { AppNavBrand } from "@/app/components/app-nav-brand";
 import type { DecisionRunResult } from "@/types/decision";
 import { ResearchMarkdown, ResearchMarkdownInline } from "../research-markdown";
 import { listIncompleteRunsForBestOfWorlds } from "@/lib/best-of-worlds-incomplete";
@@ -401,9 +401,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm print:hidden">
         <div className="mx-auto max-w-7xl px-6 py-3 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2">
-              <LogoLockup />
-            </Link>
+            <AppNavBrand />
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
             {navRunId ? (

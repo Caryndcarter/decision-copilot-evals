@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogoLockup } from "@/app/components/logo-icon";
+import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { HONEYPOT_FIELD_NAME } from "@/lib/invite-request-guard";
 
 function AuthShell({ children }: { children: React.ReactNode }) {
@@ -10,9 +10,7 @@ function AuthShell({ children }: { children: React.ReactNode }) {
     <main className="min-h-screen bg-zinc-50">
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoLockup />
-          </Link>
+          <AppNavBrand />
         </div>
       </nav>
       <div className="flex min-h-[calc(100vh-65px)] items-center justify-center px-6 py-12">
@@ -71,7 +69,8 @@ export function RequestAccessForm() {
         <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm text-center">
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Request sent</h1>
           <p className="mt-3 text-sm text-zinc-500">
-            If it&apos;s approved, you&apos;ll get an invitation link at that email address.
+            If it&apos;s approved, you&apos;ll get an invitation link at that email address from
+            Finlayson Studio.
           </p>
           <Link
             href="/"

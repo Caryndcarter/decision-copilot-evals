@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, useMemo, Suspense } from "react";
-import { LogoLockup } from "@/app/components/logo-icon";
+import { AppNavBrand } from "@/app/components/app-nav-brand";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SessionNav } from "@/app/components/session-nav";
@@ -719,9 +719,7 @@ export function ChatContent() {
       <main className="min-h-screen bg-zinc-50">
         <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
           <div className="mx-auto max-w-7xl px-6 py-3 flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
-              <LogoLockup />
-            </Link>
+            <AppNavBrand />
           </div>
         </nav>
         <div className="mx-auto max-w-2xl px-6 py-12">
@@ -743,9 +741,7 @@ export function ChatContent() {
       <main className="min-h-screen bg-zinc-50">
         <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
           <div className="mx-auto max-w-7xl px-6 py-3 flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
-              <LogoLockup />
-            </Link>
+            <AppNavBrand />
           </div>
         </nav>
         <div className="mx-auto max-w-2xl px-6 py-12">
@@ -1041,9 +1037,7 @@ export function ChatContent() {
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2">
-              <LogoLockup />
-            </Link>
+            <AppNavBrand />
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Link

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogoLockup } from "@/app/components/logo-icon";
+import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { DemoScenarioId, LLMProviderName } from "@/types/decision";
@@ -520,9 +520,7 @@ export default function IntakePage() {
       {/* Nav — matches landing page */}
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoLockup />
-          </Link>
+          <AppNavBrand />
           <SessionNav />
         </div>
       </nav>

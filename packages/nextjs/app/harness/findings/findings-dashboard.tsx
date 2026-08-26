@@ -37,18 +37,6 @@ export function HarnessFindingsDashboard({
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-800">
-          AI behavior studies
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Study findings</h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-          Switch among studies by test type and scenario. Voice-influence batches (Meridian IC,
-          Hormuz) use committed moral snapshots when available; authorship-influence pulls live batches
-          (coverage, influence shifts, and moral lean when audited).
-        </p>
-      </header>
-
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Study">
         {STUDIES.map((s) => {
           const active = study === s.id;
