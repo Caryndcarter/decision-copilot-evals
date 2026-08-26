@@ -19,8 +19,17 @@ export function inferHarnessKindFromDemoScenario(demoScenarioId?: string): Harne
   return undefined;
 }
 
-/** UI grouping for My Decisions → Harness (test type families). */
+/** UI grouping for My Decisions → Studies tab (test type families). */
 export type HarnessStudyTab = "voice-influence" | "authorship-influence" | "replication";
+
+/** Top-level My Decisions tab for structured AI-behavior study runs. */
+export type RunsStudyTab = "decisions" | "studies";
+
+/** Accept `tab=studies` (preferred) and legacy `tab=harness`. */
+export function parseRunsTab(tab?: string): RunsStudyTab {
+  if (tab === "studies" || tab === "harness") return "studies";
+  return "decisions";
+}
 
 export const HARNESS_STUDY_TABS: {
   id: HarnessStudyTab;
@@ -76,7 +85,7 @@ export function resolveHarnessBatchKind(opts: {
   return opts.kind ?? inferHarnessKindFromDemoScenario(opts.demoScenarioId);
 }
 
-/** What the harness is measuring (methodology — shared across scenarios). */
+/** What each study type measures (methodology — shared across scenarios). */
 export const HARNESS_TEST_TYPE: Record<HarnessKind, string> = {
   "meridian-ic-voice": "Voice influence",
   "hormuz-voice": "Voice influence",
@@ -92,7 +101,7 @@ export const HARNESS_SCENARIO_LABEL: Record<HarnessKind, string> = {
   "civitas-replication": "Civitas",
 };
 
-/** Full batch name: test type · scenario (shown on My Decisions → Harness). */
+/** Full batch name: test type · scenario (shown on My Decisions → Studies). */
 export const HARNESS_KIND_LABELS: Record<HarnessKind, string> = {
   "multi-demo-authorship": "Authorship influence · five demos",
   "civitas-replication": "Replication · Civitas",
@@ -108,7 +117,7 @@ export const HARNESS_KIND_SHORT: Record<HarnessKind, string> = {
   "hormuz-voice": "Voice · Hormuz",
 };
 
-/** What each harness batch is designed to test (shown on My Decisions → Harness). */
+/** What each study batch is designed to test (shown on My Decisions → Studies). */
 export const HARNESS_KIND_PURPOSE: Record<HarnessKind, string> = {
   "meridian-ic-voice":
     "Voice influence — same Civitas layoff decision framed five ways by a PE investment committee (neutral LP voice, confident tone, inflated urgency, optimistic fast-path, honest aggressive). Compares provider Decision Briefs for filer alignment, premise handling, and people-vs-speed coding.",
@@ -122,10 +131,10 @@ export const HARNESS_KIND_PURPOSE: Record<HarnessKind, string> = {
 
 export function harnessBatchPurpose(kind?: HarnessKind): string {
   if (kind) return HARNESS_KIND_PURPOSE[kind];
-  return "Harness eval batch. Older runs may not record which study produced them.";
+  return "Behavior study batch. Older runs may not record which test type produced them.";
 }
 
-/** Keys for grouping harness decisions into one eval batch on the dashboard. */
+/** Keys for grouping study runs into one batch on the dashboard. */
 export function harnessBatchKey(opts: {
   harnessBatchId?: string;
   harnessRunNumber?: number;
@@ -147,7 +156,7 @@ export function harnessBatchTitle(opts: {
   kind?: HarnessKind;
   runNumber?: number;
 }): string {
-  const kindLabel = opts.kind ? HARNESS_KIND_LABELS[opts.kind] : "Harness eval";
+  const kindLabel = opts.kind ? HARNESS_KIND_LABELS[opts.kind] : "Behavior study";
   if (typeof opts.runNumber === "number") {
     return `${kindLabel} · Run ${opts.runNumber}`;
   }
@@ -168,7 +177,7 @@ export function harnessBadgeLabel(opts: {
   trial?: number;
   batchId?: string;
 }): string {
-  const kind = opts.kind ? HARNESS_KIND_SHORT[opts.kind] : "Harness";
+  const kind = opts.kind ? HARNESS_KIND_SHORT[opts.kind] : "Study";
   const shortId = shortHarnessBatchId(opts.batchId);
   const parts = [kind];
   if (typeof opts.runNumber === "number") parts.push(`Run ${opts.runNumber}`);
@@ -287,7 +296,7 @@ export function harnessCaseNote(opts: {
     if (hIdx >= 0) return HORMUZ_CASE_NOTES[hIdx + 1];
   }
   if (opts.kind === "civitas-replication") {
-    return "Same Civitas modernization scenario — full harness path repeated for replication.";
+    return "Same Civitas modernization scenario — full study path repeated for replication.";
   }
   if (opts.kind === "multi-demo-authorship" && opts.demoScenarioId) {
     return "Unified Brief authorship modes (Standard / Blind / Reassigned) on this demo.";

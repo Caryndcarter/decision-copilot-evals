@@ -9,7 +9,7 @@ import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
 import type { DecisionGroup } from "./runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
-import { harnessBatchKey, inferHarnessKindFromDemoScenario, parseHarnessStudyTab } from "@/lib/harness-meta";
+import { harnessBatchKey, inferHarnessKindFromDemoScenario, parseHarnessStudyTab, parseRunsTab, type RunsStudyTab } from "@/lib/harness-meta";
 import { runHasAnyUnifiedBrief } from "@/lib/unified-briefs";
 
 // Per-user dashboard: always render fresh so newly created sibling runs (e.g. a
@@ -203,8 +203,8 @@ export default async function RunsDashboard({
   const newGroup = newDecisionId
     ? orderedGroups.find((g) => g.decision_id === newDecisionId)
     : undefined;
-  const initialTab =
-    tab === "harness" || newGroup?.isHarness ? "harness" : "decisions";
+  const initialTab: RunsStudyTab =
+    newGroup?.isHarness ? "studies" : parseRunsTab(tab);
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -235,7 +235,7 @@ export default async function RunsDashboard({
               ? "No decisions yet — brief your think tank to get started"
               : `${decisionGroups.length} decision${decisionGroups.length === 1 ? "" : "s"}${
                   harnessGroups.length > 0
-                    ? ` · ${harnessBatchCount} harness batch${harnessBatchCount === 1 ? "" : "es"} (${harnessGroups.length} case${harnessGroups.length === 1 ? "" : "s"})`
+                    ? ` · ${harnessBatchCount} study batch${harnessBatchCount === 1 ? "" : "es"} (${harnessGroups.length} case${harnessGroups.length === 1 ? "" : "s"})`
                     : ""
                 }, ${runs.length} run${runs.length === 1 ? "" : "s"} across your think tank`}
           </p>

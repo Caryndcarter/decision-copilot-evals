@@ -2,7 +2,7 @@
  * Civitas (Meridian) demo stress harness
  *
  * Runs the Meridian / Civitas SaaS roll-up demo end-to-end N times (default 5),
- * persisting to MongoDB so results appear in the UI (My Decisions → Harness tab).
+ * persisting to MongoDB so results appear in the UI (My Decisions → Studies tab).
  *
  * Heavy LLM work is parallelized (providers, synthesizer×mode briefs/contributions).
  * Authorship merges are serialized so concurrent briefs don't clobber each other.
@@ -19,7 +19,7 @@
  *
  * Env / flags:
  *   HARNESS_TRIALS=5
- *   HARNESS_USER_EMAIL=you@example.com   # attach runs to My Decisions → Harness tab
+ *   HARNESS_USER_EMAIL=you@example.com   # attach runs to My Decisions → Studies tab
  *   HARNESS_PROVIDERS=openai,anthropic,gemini,xai
  *   HARNESS_TRIAL_CONCURRENCY=2         # cap parallel trials (default = all)
  *   --trial-concurrency=2

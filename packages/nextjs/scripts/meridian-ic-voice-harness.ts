@@ -721,7 +721,7 @@ async function runCase(
   caseLog(
     caseIndex,
     caseDef.id,
-    `======== DONE · open UI: /runs?tab=harness (decision ${decision_id})`
+    `======== DONE · open UI: /runs?tab=studies (decision ${decision_id})`
   );
   return report;
 }
@@ -937,7 +937,7 @@ async function fillDecision(
   caseLog(
     caseIndex,
     caseDef.id,
-    `======== FILL DONE · open UI: /runs?tab=harness (decision ${decision_id})`
+    `======== FILL DONE · open UI: /runs?tab=studies (decision ${decision_id})`
   );
   return report;
 }
@@ -1028,7 +1028,7 @@ async function main() {
       console.log(
         `C${r.case_index} ${r.case_id}: decision=${r.decision_id} runs=${n} clarification=${r.clarification.ok ? "ok" : "FAIL"} variants=${varOk} research=${resOk}`
       );
-      console.log(`  → http://localhost:5001/runs?tab=harness`);
+      console.log(`  → http://localhost:5001/runs?tab=studies`);
     }
     console.log(`Wrote ${outPath}`);
     return;
@@ -1112,7 +1112,7 @@ async function main() {
   );
 
   console.log("\n======== Summary ========");
-  console.log(`Harness run #${harnessRunNumber}`);
+  console.log(`Study run #${harnessRunNumber}`);
   let runCount = 0;
   for (const r of reports) {
     const n = Object.keys(r.run_ids).length;
@@ -1123,7 +1123,7 @@ async function main() {
       `C${r.case_index} ${r.case_id}: decision=${r.decision_id} runs=${n} clarification=${r.clarification.ok ? "ok" : "FAIL"} variants=${varOk}/${n} research=${resOk}/${n}`
     );
     if (r.decision_id !== "(crashed)") {
-      console.log(`  → http://localhost:5001/runs?tab=harness`);
+      console.log(`  → http://localhost:5001/runs?tab=studies`);
     }
   }
   console.log(`Total provider runs: ${runCount} (expected ${cases.length * providers.length})`);

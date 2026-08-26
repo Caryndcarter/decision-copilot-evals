@@ -163,7 +163,7 @@ export type MeridianMoralBatch = {
 export const MERIDIAN_MORAL_BATCHES: MeridianMoralBatch[] = [
   {
     id: "2026-08-20",
-    label: "August 20, 2026 · Harness Run #1",
+    label: "August 20, 2026 · Study run #1",
     casesVersion: "v2",
     report: aug20 as unknown as MeridianMoralReport,
   },

@@ -14,6 +14,7 @@ import {
   resolveHarnessBatchKind,
   shortHarnessBatchId,
   type HarnessStudyTab,
+  type RunsStudyTab,
 } from "@/lib/harness-meta";
 import {
   formatHarnessBatchModelsDescription,
@@ -153,7 +154,7 @@ export interface DecisionGroup {
   runs: RunRow[];
   hasUnifiedBrief: boolean;
   unifiedBriefRunId?: string;
-  /** Stress-harness decisions — shown on the Harness tab. */
+  /** Structured AI-behavior study runs — shown on the Studies tab. */
   isHarness?: boolean;
   harnessTrial?: number;
   /** Batch id for one harness script invocation (groups Trials 1–N). */
@@ -168,7 +169,7 @@ export interface DecisionGroup {
   providerModels?: Partial<Record<LLMProviderName, string[]>>;
 }
 
-type RunsTab = "decisions" | "harness";
+type RunsTab = RunsStudyTab;
 
 type HarnessBatchSection = {
   batchKey: string;
@@ -340,7 +341,7 @@ export function RunsClient({
     return harnessBatchesByStudy.get(effectiveHarnessStudy) ?? [];
   }, [effectiveHarnessStudy, harnessBatchesByStudy]);
   const activeStudyMeta = HARNESS_STUDY_TABS.find((t) => t.id === effectiveHarnessStudy);
-  const showTabs = harnessGroups.length > 0 || tab === "harness";
+  const showTabs = harnessGroups.length > 0 || tab === "studies";
 
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(() => new Set());
 
@@ -370,17 +371,17 @@ export function RunsClient({
   function selectTab(next: RunsTab) {
     setTab(next);
     const url =
-      next === "harness" && effectiveHarnessStudy
-        ? `/runs?tab=harness&study=${effectiveHarnessStudy}`
-        : next === "harness"
-          ? "/runs?tab=harness"
+      next === "studies" && effectiveHarnessStudy
+        ? `/runs?tab=studies&study=${effectiveHarnessStudy}`
+        : next === "studies"
+          ? "/runs?tab=studies"
           : "/runs";
     router.replace(url, { scroll: false });
   }
 
   function selectHarnessStudy(study: HarnessStudyTab) {
-    setTab("harness");
-    router.replace(`/runs?tab=harness&study=${study}`, { scroll: false });
+    setTab("studies");
+    router.replace(`/runs?tab=studies&study=${study}`, { scroll: false });
   }
 
   function removeRun(run_id: string) {
@@ -633,14 +634,14 @@ export function RunsClient({
         </button>
         <button
           type="button"
-          onClick={() => selectTab("harness")}
+          onClick={() => selectTab("studies")}
           className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-            tab === "harness"
+            tab === "studies"
               ? "border-indigo-600 text-indigo-700"
               : "border-transparent text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          Harness
+          Studies
           <span className="ml-1.5 tabular-nums text-zinc-400">
             {harnessBatches.length > 0
               ? `${harnessBatches.length} batch${harnessBatches.length === 1 ? "" : "es"}`
@@ -650,12 +651,12 @@ export function RunsClient({
       </div>
     )}
 
-    {tab === "harness" && harnessGroups.length > 0 && visibleHarnessStudies.length > 0 && (
+    {tab === "studies" && harnessGroups.length > 0 && visibleHarnessStudies.length > 0 && (
       <>
         <div
           className="mb-4 flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-px"
           role="tablist"
-          aria-label="Harness study type"
+          aria-label="Study type"
         >
           {visibleHarnessStudies.map((study) => {
             const count = harnessBatchesByStudy.get(study.id)?.length ?? 0;
@@ -698,26 +699,26 @@ export function RunsClient({
       </>
     )}
 
-    {tab === "harness" && harnessGroups.length > 0 && visibleHarnessStudies.length === 0 && (
+    {tab === "studies" && harnessGroups.length > 0 && visibleHarnessStudies.length === 0 && (
       <p className="mb-4 text-sm text-zinc-500">
-        Harness runs are present but could not be grouped by study type (missing metadata).
+        Study runs are present but could not be grouped by test type (missing metadata).
       </p>
     )}
 
-    {tab === "harness" && harnessGroups.length === 0 ? (
+    {tab === "studies" && harnessGroups.length === 0 ? (
       <p className="mb-4 text-sm text-zinc-500">
         <Link href="/harness/findings" className="font-medium text-indigo-700 hover:text-indigo-900">
-          Harness findings
+          Study findings
         </Link>{" "}
         — authorship influence (live) and voice influence · Meridian IC (committed snapshots).
       </p>
     ) : null}
 
-    {(tab === "harness" ? harnessGroups.length === 0 : decisionGroups.length === 0) ? (
+    {(tab === "studies" ? harnessGroups.length === 0 : decisionGroups.length === 0) ? (
       <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center">
-        {tab === "harness" ? (
+        {tab === "studies" ? (
           <>
-            <p className="text-zinc-500 text-sm">No harness trials yet.</p>
+            <p className="text-zinc-500 text-sm">No study trials yet.</p>
             <p className="mt-2 text-xs text-zinc-400">
               Run <code className="rounded bg-zinc-100 px-1 py-0.5">npm run harness:demos:authorship</code> with{" "}
               <code className="rounded bg-zinc-100 px-1 py-0.5">HARNESS_USER_EMAIL</code> set to your
@@ -736,7 +737,7 @@ export function RunsClient({
           </>
         )}
       </div>
-    ) : tab === "harness" ? (
+    ) : tab === "studies" ? (
       <div className="space-y-5">
         {activeHarnessBatches.map((batch) => {
           const isOpen = expandedBatches.has(batch.batchKey);
