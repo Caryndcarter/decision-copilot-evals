@@ -215,6 +215,35 @@ function Step({ n, title, desc }: { n: string; title: string; desc: string }) {
   );
 }
 
+/** Positioning vs general multi-model chat tools — no competitor names. */
+const MULTI_MODEL_DIFFERENCES = [
+  {
+    dim: "What disagreement means",
+    theirs: "Models catch each other's factual errors and hallucinations.",
+    ours: "Models are checked for whether they honestly pressure-test your plan — or reinforce what you already lean toward.",
+  },
+  {
+    dim: "Output consistency",
+    theirs: "Shape varies by conversation mode — debate, red-team, freeform.",
+    ours: "Every brief uses the same Risk / Reversibility / People rubric — comparable across models and over time.",
+  },
+  {
+    dim: "Unit of work",
+    theirs: "An open-ended conversation thread.",
+    ours: "A specific decision, with a brief you can point to later and defend.",
+  },
+  {
+    dim: "Irreversibility",
+    theirs: "Not a distinct concept.",
+    ours: "A first-class lens: what's safe to try, what's irreversible, and what must clear first.",
+  },
+  {
+    dim: "Evidence behind the claims",
+    theirs: "A feature description — AIs flag each other's inconsistencies.",
+    ours: "Case-based research: blind-coded dimensions with source quotes you can browse.",
+  },
+];
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -444,6 +473,54 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── vs multi-model chat tools ── */}
+      <section className="bg-zinc-950 py-20 border-b border-white/5">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+              Not another multi-model chat
+            </p>
+            <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight">
+              Built for a decision you have to defend — not a thread you browse.
+            </h2>
+            <p className="mt-4 text-base text-zinc-400 leading-relaxed">
+              Leading multi-model tools orchestrate several AIs in an open conversation.
+              Decision Copilot starts from a structured intake and a fixed analytical rubric,
+              so disagreement is measurable — and every brief is comparable.
+            </p>
+          </div>
+
+          <div className="mt-12 overflow-x-auto">
+            <div className="min-w-[36rem]">
+              <div className="grid grid-cols-[minmax(8rem,0.9fr)_1.1fr_1.2fr] gap-x-4 border-b border-white/10 pb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                <span>Dimension</span>
+                <span>Multi-model AI chat</span>
+                <span className="text-indigo-300">Decision Copilot</span>
+              </div>
+              {MULTI_MODEL_DIFFERENCES.map((row) => (
+                <div
+                  key={row.dim}
+                  className="grid grid-cols-[minmax(8rem,0.9fr)_1.1fr_1.2fr] gap-x-4 gap-y-2 border-b border-white/5 py-5"
+                >
+                  <h3 className="text-base font-semibold text-white sm:text-lg">{row.dim}</h3>
+                  <p className="text-sm leading-relaxed text-zinc-500">{row.theirs}</p>
+                  <p className="text-sm leading-relaxed text-indigo-100/90">{row.ours}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-10 max-w-2xl text-sm leading-relaxed text-zinc-500">
+            The fixed schema is what makes the research program possible: you can code cases
+            against the same dimensions because every run shares one skeleton — and compare
+            models on a brief you can defend later, not a thread that disappears into chat history.{" "}
+            <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
+              See the Model Studies research →
+            </Link>
+          </p>
         </div>
       </section>
 
