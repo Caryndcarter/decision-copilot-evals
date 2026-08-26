@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthorshipHarnessDashboard } from "@/app/harness/demos/authorship/authorship-harness-dashboard";
 import { CivitasMoralDashboard } from "@/app/harness/civitas/moral/civitas-moral-dashboard";
 import { HormuzMoralDashboard } from "@/app/harness/hormuz/moral/hormuz-moral-dashboard";
@@ -38,12 +38,18 @@ const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
 
 export function HarnessFindingsDashboard({
   authorshipBatches,
-  initialStudy = "multi-demo-authorship",
+  initialStudy = "meridian-ic-moral",
 }: {
   authorshipBatches: AuthorshipBatchSummary[];
   initialStudy?: FindingsStudy;
 }) {
-  const [study, setStudy] = useState<FindingsStudy>(initialStudy);
+  const router = useRouter();
+  const study = initialStudy;
+
+  function selectStudy(id: FindingsStudy) {
+    if (id === study) return;
+    router.push(`/harness/findings?study=${id}`);
+  }
 
   return (
     <div className="space-y-6">
@@ -56,7 +62,7 @@ export function HarnessFindingsDashboard({
               type="button"
               role="tab"
               aria-selected={active}
-              onClick={() => setStudy(s.id)}
+              onClick={() => selectStudy(s.id)}
               className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                 active
                   ? "border-indigo-300 bg-indigo-50 text-indigo-950"

@@ -31,10 +31,20 @@ export default async function HarnessFindingsPage({
         ? "hormuz-moral"
         : studyParam === "civitas-replication-moral"
           ? "civitas-replication-moral"
-          : "multi-demo-authorship";
+          : studyParam === "multi-demo-authorship"
+            ? "multi-demo-authorship"
+            : "meridian-ic-moral";
 
-  const runs = await listRunsForUser(session.user.id, { limit: 500 });
-  const authorshipBatches = buildAuthorshipBatchSummaries(runs);
+  // Moral studies use committed JSON snapshots — skip Mongo unless authorship tab.
+  const authorshipBatches =
+    initialStudy === "multi-demo-authorship"
+      ? buildAuthorshipBatchSummaries(
+          await listRunsForUser(session.user.id, {
+            limit: 500,
+            authorshipOnly: true,
+          })
+        )
+      : [];
 
   return (
     <main className="min-h-screen bg-zinc-50">

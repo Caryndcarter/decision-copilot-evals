@@ -341,7 +341,7 @@ export function RunsClient({
     return harnessBatchesByStudy.get(effectiveHarnessStudy) ?? [];
   }, [effectiveHarnessStudy, harnessBatchesByStudy]);
   const activeStudyMeta = HARNESS_STUDY_TABS.find((t) => t.id === effectiveHarnessStudy);
-  const showTabs = harnessGroups.length > 0 || tab === "studies";
+  const showTabs = true;
 
   const [expandedBatches, setExpandedBatches] = useState<Set<string>>(() => new Set());
 

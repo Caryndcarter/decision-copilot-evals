@@ -3,7 +3,7 @@ import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { listRunsForUser, getRunsByDecisionId } from "@/lib/db/runs";
+import { listRunsForUser } from "@/lib/db/runs";
 import { SessionNav } from "@/app/components/session-nav";
 import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
@@ -129,32 +129,13 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
 
 async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMeta[]> {
   try {
-    // 1) Runs the user owns (by-user GSI) establish which decisions to show.
-    const ownedRuns = (await listRunsForUser(userId, { asAdmin: isAdmin, limit: 200 })) as RunWithMeta[];
-
-    // 2) For each owned decision, pull the COMPLETE run set (by-decision GSI) so the
-    //    dashboard always mirrors the decision view. This guards against sibling runs
-    //    (e.g. a provider re-run) that are missing/mismatched on the by-user index and
-    //    would otherwise silently disappear from the list while still showing in-decision.
-    const decisionIds = [...new Set(ownedRuns.map((r) => r.decision_id).filter(Boolean))];
-    const decisionRunSets = await Promise.all(
-      decisionIds.map(async (decisionId) => {
-        try {
-          return (await getRunsByDecisionId(decisionId)) as RunWithMeta[];
-        } catch (err) {
-          console.error(`[runs page] Error fetching runs for decision ${decisionId}:`, err);
-          return [];
-        }
-      })
-    );
-
-    // 3) Merge + dedupe by run_id (owned runs first as the baseline).
-    const byRunId = new Map<string, RunWithMeta>();
-    for (const run of ownedRuns) byRunId.set(run.run_id, run);
-    for (const set of decisionRunSets) {
-      for (const run of set) byRunId.set(run.run_id, run);
-    }
-    return [...byRunId.values()];
+    // One lightweight query. The old N× getRunsByDecisionId fan-out pulled full documents
+    // (variants, research, lens_outputs) and timed out Mongo with ~144 harness runs.
+    return (await listRunsForUser(userId, {
+      asAdmin: isAdmin,
+      limit: 500,
+      dashboard: true,
+    })) as RunWithMeta[];
   } catch (err) {
     console.error("[runs page] Error fetching runs:", err);
     return [];
@@ -204,7 +185,11 @@ export default async function RunsDashboard({
     ? orderedGroups.find((g) => g.decision_id === newDecisionId)
     : undefined;
   const initialTab: RunsStudyTab =
-    newGroup?.isHarness ? "studies" : parseRunsTab(tab);
+    newGroup?.isHarness
+      ? "studies"
+      : decisionGroups.length === 0 && harnessGroups.length > 0
+        ? "studies"
+        : parseRunsTab(tab);
 
   return (
     <main className="min-h-screen bg-zinc-50">
