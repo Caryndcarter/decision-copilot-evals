@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { clientPromise, DB_NAME } from "@/server/config/mongodb";
 import { findUserByEmail } from "@/lib/db/users";
-import { INVITE_COOKIE_NAME, verifyInviteToken } from "@/lib/invite-token";
+import { INVITE_COOKIE_NAME, inviteAllowsEmail, verifyInviteToken } from "@/lib/invite-token";
 import { authConfig } from "@/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -53,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const jar = await cookies();
       const invite = jar.get(INVITE_COOKIE_NAME)?.value;
       const verified = verifyInviteToken(invite);
-      if (!verified.ok) {
+      if (!verified.ok || !inviteAllowsEmail(verified, email)) {
         return "/auth/signup?error=invite_required";
       }
       jar.delete(INVITE_COOKIE_NAME);

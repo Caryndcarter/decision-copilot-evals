@@ -166,7 +166,15 @@ function SignInForm() {
                   </Link>
                 </>
               ) : (
-                <>Need an account? Ask for an invite.</>
+                <>
+                  Need an account?{" "}
+                  <Link
+                    href="/request-access"
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Request access
+                  </Link>
+                </>
               )}
             </p>
           </div>

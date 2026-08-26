@@ -47,6 +47,15 @@ export function SignUpBlocked({ message }: { message: string }) {
             Sign in
           </Link>
         </p>
+        <p className="mt-2 text-center text-sm text-zinc-500">
+          Don&apos;t have an invite?{" "}
+          <Link
+            href="/request-access"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
+            Request access
+          </Link>
+        </p>
       </div>
     </AuthShell>
   );

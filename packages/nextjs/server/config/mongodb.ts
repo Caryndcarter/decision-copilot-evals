@@ -13,6 +13,7 @@ export const DB_NAME = process.env.DB_NAME?.trim() || "decision-copilot-evals";
 
 const RUNS_COLLECTION = "runs";
 const USERS_COLLECTION = "users";
+const INVITE_REQUESTS_COLLECTION = "invite_requests";
 
 type GlobalMongo = typeof globalThis & {
   _mongoClientPromise?: Promise<MongoClient>;
@@ -56,6 +57,11 @@ export async function getUsersCollection() {
   return db.collection(USERS_COLLECTION);
 }
 
+export async function getInviteRequestsCollection() {
+  const db = await getDb();
+  return db.collection(INVITE_REQUESTS_COLLECTION);
+}
+
 /** Idempotent indexes for run lookups used by the dashboard and harness. */
 export async function ensureMongoIndexes(): Promise<void> {
   if (!g._mongoIndexesEnsured) {
@@ -68,6 +74,15 @@ export async function ensureMongoIndexes(): Promise<void> {
       ]);
       const users = await getUsersCollection();
       await users.createIndex({ email: 1 }, { unique: true, name: "email_unique" });
+      const inviteRequests = await getInviteRequestsCollection();
+      await Promise.all([
+        inviteRequests.createIndex({ email: 1 }, { unique: true, name: "email_unique" }),
+        inviteRequests.createIndex(
+          { status: 1, created_at: -1 },
+          { name: "by_status_created" }
+        ),
+        inviteRequests.createIndex({ ip: 1, created_at: -1 }, { name: "by_ip_created" }),
+      ]);
     })();
   }
   await g._mongoIndexesEnsured;

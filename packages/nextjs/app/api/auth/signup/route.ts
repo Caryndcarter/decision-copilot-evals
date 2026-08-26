@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createUserWithPassword, UserAlreadyExistsError } from "@/lib/db/users";
-import { inviteErrorMessage, verifyInviteToken } from "@/lib/invite-token";
+import { inviteAllowsEmail, inviteErrorMessage, verifyInviteToken } from "@/lib/invite-token";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +23,12 @@ export async function POST(request: NextRequest) {
 
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    }
+    if (!inviteAllowsEmail(inviteResult, email)) {
+      return NextResponse.json(
+        { error: "This invitation is for a different email address." },
+        { status: 403 }
+      );
     }
     if (!password || typeof password !== "string" || password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
