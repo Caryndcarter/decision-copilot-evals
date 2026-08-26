@@ -9,6 +9,7 @@ import { RunsClient } from "./runs-client";
 import type { DecisionRunResult } from "@/types/decision";
 import type { DecisionGroup } from "./runs-client";
 import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
+import { harnessBatchKey, inferHarnessKindFromDemoScenario, parseHarnessStudyTab } from "@/lib/harness-meta";
 import { runHasAnyUnifiedBrief } from "@/lib/unified-briefs";
 
 // Per-user dashboard: always render fresh so newly created sibling runs (e.g. a
@@ -44,6 +45,7 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         harnessRunNumber: undefined,
         harnessBatchId: undefined,
         harnessKind: undefined,
+        demoScenarioId: undefined,
       });
     }
     const group = map.get(id)!;
@@ -63,6 +65,9 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       if (run.harness_kind) {
         group.harnessKind = run.harness_kind;
       }
+      if (run.demo_scenario_id?.trim()) {
+        group.demoScenarioId = run.demo_scenario_id.trim();
+      }
     }
     // Track unified brief: prefer the run that already has one
     if (runHasAnyUnifiedBrief(run)) {
@@ -81,6 +86,14 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       updatedAt: run.updatedAt,
       is_freeform: !!run.freeform_output,
     });
+  }
+
+  for (const group of map.values()) {
+    if (group.isHarness) {
+      if (!group.harnessKind && group.demoScenarioId) {
+        group.harnessKind = inferHarnessKindFromDemoScenario(group.demoScenarioId);
+      }
+    }
   }
 
   for (const group of map.values()) {
@@ -139,14 +152,15 @@ async function getUserRuns(userId: string, isAdmin: boolean): Promise<RunWithMet
 export default async function RunsDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ new?: string; tab?: string }>;
+  searchParams: Promise<{ new?: string; tab?: string; study?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/auth/signin?callbackUrl=/runs");
   }
 
-  const { new: newDecisionId, tab } = await searchParams;
+  const { new: newDecisionId, tab, study: studyParam } = await searchParams;
+  const initialHarnessStudy = parseHarnessStudyTab(studyParam);
   const isAdmin = (session.user as { is_admin?: boolean }).is_admin ?? false;
   const runs = await getUserRuns(session.user.id, isAdmin);
   const groups = groupByDecision(runs);
@@ -162,6 +176,16 @@ export default async function RunsDashboard({
       if (t !== 0) return t;
       return b.latestAt.getTime() - a.latestAt.getTime();
     });
+  const harnessBatchCount = new Set(
+    harnessGroups.map((g) =>
+      harnessBatchKey({
+        harnessBatchId: g.harnessBatchId,
+        harnessRunNumber: g.harnessRunNumber,
+        harnessKind: g.harnessKind,
+        decisionId: g.decision_id,
+      })
+    )
+  ).size;
   // Stable list order for the client: decisions by recency, then harness by run/trial.
   const orderedGroups = [...decisionGroups, ...harnessGroups];
   const newGroup = newDecisionId
@@ -199,7 +223,7 @@ export default async function RunsDashboard({
               ? "No decisions yet — brief your think tank to get started"
               : `${decisionGroups.length} decision${decisionGroups.length === 1 ? "" : "s"}${
                   harnessGroups.length > 0
-                    ? ` · ${harnessGroups.length} harness trial${harnessGroups.length === 1 ? "" : "s"}`
+                    ? ` · ${harnessBatchCount} harness batch${harnessBatchCount === 1 ? "" : "es"} (${harnessGroups.length} case${harnessGroups.length === 1 ? "" : "s"})`
                     : ""
                 }, ${runs.length} run${runs.length === 1 ? "" : "s"} across your think tank`}
           </p>
@@ -212,6 +236,7 @@ export default async function RunsDashboard({
           initialGroups={orderedGroups}
           newDecisionId={newDecisionId}
           initialTab={initialTab}
+          initialHarnessStudy={initialHarnessStudy}
         />
       </div>
     </main>
