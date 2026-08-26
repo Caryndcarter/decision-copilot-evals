@@ -10,11 +10,28 @@ export const MERIDIAN_IC_VOICE_RUN1_BATCH_ID = "8f2a0820-0820-41b0-9e11-00000000
 /** Earlier same-day Meridian IC parallel test before Run #1 (no run number stored). */
 export const MERIDIAN_IC_VOICE_EARLY_BATCH_ID = "e7430820-0820-41b0-9e11-000000000001";
 
+/** Dynamo import · Meridian IC voice · July 31, 2026 (pre–Sol/Fable defaults). */
+export const MERIDIAN_IC_VOICE_DYNAMO_JULY31_BATCH_ID =
+  "58b61818-cb9e-53a4-920b-ad2f7bfad740";
+
+/** Dynamo import · Meridian IC voice · August 14, 2026. */
+export const MERIDIAN_IC_VOICE_DYNAMO_AUG14_BATCH_ID =
+  "f84c32e7-99a3-5133-ab9b-6a06f0eb770f";
+
+/** Merged legacy import batch (superseded — split into July 31 + Aug 14). */
+export const MERIDIAN_IC_VOICE_DYNAMO_LEGACY_MERGED_BATCH_ID =
+  "aa7f373e-66d4-5ebf-912d-2193454b6a65";
+
+/** Dynamo import · Civitas replication · July 27, 2026. */
+export const CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID =
+  "db9445cf-ef02-5740-b69f-d34a1194e04a";
+
 /** Infer harness kind from demo scenario when older runs omit `harness_kind`. */
 export function inferHarnessKindFromDemoScenario(demoScenarioId?: string): HarnessKind | undefined {
   if (!demoScenarioId) return undefined;
   if (demoScenarioId.startsWith("meridian-ic-")) return "meridian-ic-voice";
   if (demoScenarioId.startsWith("hormuz-")) return "hormuz-voice";
+  if (demoScenarioId === "meridian-civitas-saas-rollup") return "civitas-replication";
   if (DEMO_HARNESS_CASES.some((c) => c.id === demoScenarioId)) return "multi-demo-authorship";
   return undefined;
 }

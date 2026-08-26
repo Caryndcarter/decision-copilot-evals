@@ -755,6 +755,7 @@ export function RunsClient({
           const modelLines = formatHarnessBatchModelsDescription(
             resolveHarnessBatchModels({
               batchId: batch.batchId,
+              harnessKind: batch.kind,
               trialModels: batch.trials.map((t) => t.providerModels),
             })
           );
