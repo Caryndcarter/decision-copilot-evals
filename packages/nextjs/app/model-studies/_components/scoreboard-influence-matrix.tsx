@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /**
  * Placeholder scoreboard for "influence-matrix" studies that pull from live
- * harness batches rather than a committed snapshot (e.g. multi-demo authorship).
+ * study batches rather than a committed snapshot (e.g. multi-demo authorship).
  * No numbers are fabricated here — once a batch is committed the same way
  * Meridian/Hormuz are, this can be swapped for a real rollup renderer.
  */
@@ -10,7 +10,7 @@ export function InfluenceMatrixPlaceholder({ deepDiveHref }: { deepDiveHref?: st
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
       <p className="text-sm font-medium text-zinc-700">
-        This study updates continuously against live harness batches.
+        This study updates continuously against live study batches.
       </p>
       <p className="mt-1 text-sm text-zinc-500">
         A committed scoreboard snapshot isn&apos;t published yet — the current rollup is in the

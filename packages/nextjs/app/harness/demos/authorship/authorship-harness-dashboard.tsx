@@ -228,7 +228,7 @@ export function AuthorshipHarnessDashboard({
       <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center">
         <h1 className="text-xl font-semibold text-zinc-900">Multi-demo authorship</h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-zinc-600">
-          No authorship harness batches yet. Run the five-case study, then return here for
+          No authorship study batches yet. Run the five-case study, then return here for
           cross-demo branding effects and moral lean.
         </p>
         <pre className="mx-auto mt-5 max-w-xl overflow-x-auto rounded-lg bg-zinc-900 px-4 py-3 text-left text-xs text-zinc-100">
@@ -244,7 +244,7 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
       {!compactHeader ? (
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-800">
-            Harness findings
+            Study findings
           </p>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             Multi-demo authorship

@@ -251,7 +251,7 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     methodology: [
       "Every demo case is synthesized into a Unified Brief three ways: standard (synthesizer sees real provider brands), blind (brands hidden), and reassigned (brands swapped).",
       "A rollup matrix tracks, per synthesizer and per rated provider, how much influence is credited under each mode — the delta between modes is what this study is measuring.",
-      "Because this pulls from live, ongoing harness batches rather than a committed snapshot, headline numbers aren't published here yet — the full rollup is in the signed-in dashboard.",
+      "Because this pulls from live, ongoing study batches rather than a committed snapshot, headline numbers aren't published here yet — the full rollup is in the signed-in dashboard.",
     ],
     deepDiveHref: "/auth/signin?callbackUrl=/harness/findings?study=multi-demo-authorship",
     sourceNote: "live — packages/nextjs/lib/authorship-harness-summary.ts",

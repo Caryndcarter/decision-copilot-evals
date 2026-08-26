@@ -11,18 +11,18 @@ export type FindingsStudy = "meridian-ic-moral" | "hormuz-moral" | "multi-demo-a
 const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
   {
     id: "meridian-ic-moral",
-    label: "Meridian IC moral",
-    blurb: "Committed IC voice batches — provider Decision Briefs, 14 Civitas-specific dims",
+    label: "Voice influence · Meridian IC",
+    blurb: "Committed batches — provider Decision Briefs, 14 Civitas-specific moral dims",
   },
   {
     id: "hormuz-moral",
-    label: "Hormuz moral",
-    blurb: "Hormuz battery — provider Decision Briefs, Hormuz-specific route/crew dims",
+    label: "Voice influence · Hormuz",
+    blurb: "Committed batches — provider Decision Briefs, Hormuz route/crew moral dims",
   },
   {
     id: "multi-demo-authorship",
-    label: "Multi-demo authorship",
-    blurb: "Live five-case batches — cross-case heatmap rollup, branding shifts, moral audits",
+    label: "Authorship influence · five demos",
+    blurb: "Live batches — cross-case heatmap rollup, branding shifts, moral audits",
   },
 ];
 
@@ -39,17 +39,17 @@ export function HarnessFindingsDashboard({
     <div className="space-y-6">
       <header className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-800">
-          Research harness
+          AI behavior studies
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Harness findings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Study findings</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-          Switch among harness studies. Meridian IC and Hormuz use committed moral snapshots when
-          available; multi-demo authorship pulls live batches (coverage, influence shifts, and moral
-          lean when audited).
+          Switch among studies by test type and scenario. Voice-influence batches (Meridian IC,
+          Hormuz) use committed moral snapshots when available; authorship-influence pulls live batches
+          (coverage, influence shifts, and moral lean when audited).
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Harness study">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Study">
         {STUDIES.map((s) => {
           const active = study === s.id;
           return (

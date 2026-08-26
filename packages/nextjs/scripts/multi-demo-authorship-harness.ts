@@ -45,6 +45,7 @@ import {
   DEMO_HARNESS_CASES,
   type DemoHarnessCase,
 } from "../lib/demo-harness-cases";
+import { modelIdForProvider } from "../lib/harness-provider-models";
 import { insertRun, getRun, getRunsByDecisionId, replaceRun, nextHarnessRunNumber } from "../lib/db/runs";
 import { findUserByEmail } from "../lib/db/users";
 import { runForProviders } from "../lib/run-for-providers";
@@ -214,6 +215,11 @@ function selectDemos(demosRaw: string, startDemo: string): DemoHarnessCase[] {
   return cases;
 }
 
+function canonicalDemoIndex(demo: DemoHarnessCase): number {
+  const idx = DEMO_HARNESS_CASES.findIndex((c) => c.id === demo.id);
+  return idx >= 0 ? idx + 1 : 1;
+}
+
 function buildIntakeFromDemo(demo: DemoHarnessCase, decisionId: string): DecisionIntake {
   const base = {
     decision_id: decisionId,
@@ -322,6 +328,7 @@ async function buildIntakeRun(
     lens_outputs,
     lens_outputs_first_draft: lens_outputs,
     llm_provider: provider,
+    llm_model: modelIdForProvider(provider),
     demo_scenario_id: demo.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,
@@ -1131,14 +1138,15 @@ async function main() {
   log(`  harness batch id: ${harnessBatchId}`);
   log(`  harness kind: multi-demo-authorship`);
 
-  const reports = await mapPool(demos, demoConcurrency, async (demo, i) => {
+  const reports = await mapPool(demos, demoConcurrency, async (demo) => {
+    const demoIndex = canonicalDemoIndex(demo);
     try {
-      return await runDemoCase(demo, i + 1, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
+      return await runDemoCase(demo, demoIndex, providers, synthesizers, userId, harnessRunNumber, harnessBatchId);
     } catch (err) {
       const message = errMessage(err);
       log(`Demo ${demo.id} crashed`, message);
       return {
-        demo_index: i + 1,
+        demo_index: demoIndex,
         demo_id: demo.id,
         demo_label: demo.label,
         decision_id: "(crashed)",

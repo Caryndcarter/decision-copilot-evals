@@ -43,10 +43,10 @@ export default async function HarnessFindingsPage({
           </Link>
           <div className="flex items-center gap-3">
             <Link
-              href="/runs?tab=harness"
+              href="/runs?tab=studies"
               className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
             >
-              Harness
+              Studies
             </Link>
             <SessionNav />
           </div>

@@ -196,7 +196,7 @@ export type HormuzMoralBatch = {
 export const HORMUZ_MORAL_BATCHES: HormuzMoralBatch[] = [
   {
     id: "2026-08-21",
-    label: "August 21, 2026 · Harness Run #4",
+    label: "August 21, 2026 · Study run #4",
     report: aug21 as unknown as HormuzMoralReport,
   },
 ];
