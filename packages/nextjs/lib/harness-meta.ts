@@ -55,6 +55,7 @@ export const HARNESS_STUDY_TABS: {
     id: "replication",
     label: "Replication",
     blurb: "Full Civitas modernization path repeated across trials for provider comparison.",
+    findingsStudy: "civitas-replication-moral",
   },
 ];
 

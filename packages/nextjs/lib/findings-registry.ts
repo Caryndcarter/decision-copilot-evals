@@ -257,17 +257,83 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     sourceNote: "live — packages/nextjs/lib/authorship-harness-summary.ts",
   },
   {
-    id: "coming-soon",
-    status: "coming-soon",
+    id: "civitas-replication",
+    status: "live",
     kind: "dimension-coded",
-    name: "Next study",
-    eyebrow: "Study 04 · In development",
-    heroQuestion: "TBD",
-    dek: "A new case battery is in development. This slot exists to prove the site doesn't need a redesign to grow — add a registry entry and a data file, and it appears here.",
-    stats: [],
-    findings: [],
-    methodology: [],
-    sourceNote: "not yet started",
+    name: "Civitas replication",
+    eyebrow: "Study 04 · Unified Brief replication",
+    heroQuestion:
+      "When the same Civitas scenario runs five times, do synthesizers stay stable — or drift trial to trial?",
+    dek: "One modernization scenario, full intake-through-Unified-Brief path, repeated across five harness trials. Four synthesizers produce briefs under Standard, Blind, and Reassigned authorship. A blind judge codes every Unified Brief on a fixed 12-dimension moral rubric.",
+    stats: [
+      { value: "5", label: "replication trials" },
+      { value: "4", label: "synthesizers tested" },
+      { value: "3", label: "authorship modes" },
+      { value: "12", label: "coded dimensions" },
+      { value: "60", label: "blind-coded briefs" },
+      { value: "15/15", label: "ChatGPT reinforced intake lean" },
+    ],
+    caseCount: 5,
+    modelCount: 4,
+    briefCount: 60,
+    findings: [
+      {
+        headline: "Pace split by synthesizer, not by trial",
+        body: "ChatGPT most often codes as staged (13/15 briefs). Fable and Grok prefer hybrid (13/15 and 11/15). Gemini is mixed (8 hybrid / 6 staged). Authorship mode shifts the pattern less than which synthesizer wrote the brief.",
+      },
+      {
+        headline: "ChatGPT never wavered on the intake lean",
+        body: "Against a fixed B+C intake lean, ChatGPT reinforced in every single brief (15/15). The other three mostly reinforce too, but Fable, Gemini, and Grok show more soften-toward-A and harden-humane variation.",
+      },
+      {
+        headline: "Speed rarely beat humane sequencing",
+        body: "Across all four synthesizers, speed_over_humane coded as \"no\" in the vast majority of briefs — recommendations rarely prioritized pure timeline savings over humane exit sequencing.",
+      },
+      {
+        headline: "Risk bearer diverged on Gemini",
+        body: "ChatGPT, Fable, and Grok usually coded balanced on whose downside gets minimized. Gemini more often landed on lp_meridian (9/15) — the same facts, different synthesizer, different answer on who bears the risk.",
+      },
+    ],
+    methodology: [
+      "One Civitas modernization scenario (Meridian LP portfolio company) runs through the full harness path five times — intake, research, variant, and Unified Brief synthesis.",
+      "Four provider synthesizers (OpenAI, Anthropic, Gemini, xAI) each produce Unified Briefs under three authorship conditions: Standard (brands visible), Blind (brands hidden), and Reassigned (brands swapped).",
+      "A separate judge model blind-codes every Unified Brief against a fixed 12-dimension rubric — pace, speed vs humane, senior tier, severance, customer risk, vs intake lean, risk bearer, dignity, truth to leavers, public accountability, uncertainty bearer, power asymmetry.",
+      "The judge never sees synthesizer brand or authorship mode during coding; metadata is joined afterward for aggregation.",
+    ],
+    scoreboard: [
+      {
+        dimension: "Pace of cuts",
+        codeGloss: "staged (phased), hybrid (rebuild + senior core), or single-event aggressive",
+        byProvider: {
+          ChatGPT: { staged: 13, hybrid: 2 },
+          Fable: { hybrid: 13, staged: 2 },
+          Gemini: { hybrid: 8, staged: 6, unclear: 1 },
+          Grok: { hybrid: 11, staged: 4 },
+        },
+      },
+      {
+        dimension: "Vs intake lean (B+C)",
+        codeGloss: "reinforce, soften toward faster cuts, harden humane, or change option set",
+        byProvider: {
+          ChatGPT: { reinforce: 15 },
+          Fable: { reinforce: 10, soften_toward_a: 2, harden_humane: 2, change_option: 1 },
+          Gemini: { reinforce: 10, soften_toward_a: 4, harden_humane: 1 },
+          Grok: { reinforce: 10, harden_humane: 3, change_option: 1, soften_toward_a: 1 },
+        },
+      },
+      {
+        dimension: "Risk bearer",
+        codeGloss: "whose downside the brief says is minimized",
+        byProvider: {
+          ChatGPT: { balanced: 12, lp_meridian: 2, customers: 1 },
+          Fable: { balanced: 11, lp_meridian: 4 },
+          Gemini: { lp_meridian: 9, balanced: 6 },
+          Grok: { balanced: 13, lp_meridian: 2 },
+        },
+      },
+    ],
+    deepDiveHref: "/auth/signin?callbackUrl=/harness/findings?study=civitas-replication-moral",
+    sourceNote: "docs/harness-snapshots/civitas-2026-07-27/",
   },
 ];
 

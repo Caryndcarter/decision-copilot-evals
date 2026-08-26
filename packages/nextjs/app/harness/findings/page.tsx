@@ -29,7 +29,9 @@ export default async function HarnessFindingsPage({
       ? "meridian-ic-moral"
       : studyParam === "hormuz-moral"
         ? "hormuz-moral"
-        : "multi-demo-authorship";
+        : studyParam === "civitas-replication-moral"
+          ? "civitas-replication-moral"
+          : "multi-demo-authorship";
 
   const runs = await listRunsForUser(session.user.id, { limit: 500 });
   const authorshipBatches = buildAuthorshipBatchSummaries(runs);

@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import { AuthorshipHarnessDashboard } from "@/app/harness/demos/authorship/authorship-harness-dashboard";
+import { CivitasMoralDashboard } from "@/app/harness/civitas/moral/civitas-moral-dashboard";
 import { HormuzMoralDashboard } from "@/app/harness/hormuz/moral/hormuz-moral-dashboard";
 import { MeridianMoralDashboard } from "@/app/harness/meridian-ic/moral/meridian-moral-dashboard";
 import type { AuthorshipBatchSummary } from "@/lib/authorship-harness-summary";
 
-export type FindingsStudy = "meridian-ic-moral" | "hormuz-moral" | "multi-demo-authorship";
+export type FindingsStudy =
+  | "meridian-ic-moral"
+  | "hormuz-moral"
+  | "civitas-replication-moral"
+  | "multi-demo-authorship";
 
 const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
   {
@@ -18,6 +23,11 @@ const STUDIES: { id: FindingsStudy; label: string; blurb: string }[] = [
     id: "hormuz-moral",
     label: "Voice influence · Hormuz",
     blurb: "Committed batches — provider Decision Briefs, Hormuz route/crew moral dims",
+  },
+  {
+    id: "civitas-replication-moral",
+    label: "Replication · Civitas",
+    blurb: "Committed batch — Unified Briefs across 5 trials × 3 authorship modes, 12 moral dims",
   },
   {
     id: "multi-demo-authorship",
@@ -66,6 +76,8 @@ export function HarnessFindingsDashboard({
         <MeridianMoralDashboard embedded />
       ) : study === "hormuz-moral" ? (
         <HormuzMoralDashboard embedded />
+      ) : study === "civitas-replication-moral" ? (
+        <CivitasMoralDashboard embedded />
       ) : (
         <AuthorshipHarnessDashboard batches={authorshipBatches} compactHeader />
       )}
