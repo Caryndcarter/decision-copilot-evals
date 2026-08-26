@@ -489,6 +489,8 @@ export interface DecisionRunResult {
   }[];
   /** LLM provider used for this run (lenses, brief, chat). Defaults to openai when missing. */
   llm_provider?: LLMProviderName;
+  /** Chat model id used for this run's provider (when recorded). */
+  llm_model?: string;
   /** Format variants of this analysis (same decision, different presentation) */
   variants?: RunVariant[];
   /** Cross-provider synthesis (stored when generated, shared across sibling runs) */

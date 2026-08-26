@@ -15,7 +15,11 @@ import {
   shortHarnessBatchId,
   type HarnessStudyTab,
 } from "@/lib/harness-meta";
-import type { HarnessKind } from "@/types/decision";
+import {
+  formatHarnessBatchModelsDescription,
+  resolveHarnessBatchModels,
+} from "@/lib/harness-provider-models";
+import type { HarnessKind, LLMProviderName } from "@/types/decision";
 
 interface ConfirmState {
   title: string;
@@ -160,6 +164,8 @@ export interface DecisionGroup {
   harnessKind?: HarnessKind;
   /** Voice/frame or demo scenario id when stored on harness runs. */
   demoScenarioId?: string;
+  /** Distinct llm_model ids seen on provider runs in this decision (harness). */
+  providerModels?: Partial<Record<LLMProviderName, string[]>>;
 }
 
 type RunsTab = "decisions" | "harness";
@@ -745,6 +751,12 @@ export function RunsClient({
           const runCount = batch.trials.reduce((n, t) => n + t.runs.length, 0);
           const shortId = shortHarnessBatchId(batch.batchId);
           const showFullId = batch.batchId.includes("-") && batch.batchId.length >= 32;
+          const modelLines = formatHarnessBatchModelsDescription(
+            resolveHarnessBatchModels({
+              batchId: batch.batchId,
+              trialModels: batch.trials.map((t) => t.providerModels),
+            })
+          );
 
           return (
             <section
@@ -780,6 +792,11 @@ export function RunsClient({
                   <p className="mt-1.5 text-xs text-zinc-600 leading-relaxed">
                     {harnessBatchPurpose(batch.kind)}
                   </p>
+                  {modelLines.map((line) => (
+                    <p key={line} className="mt-1.5 text-xs text-zinc-600 leading-relaxed">
+                      {line}
+                    </p>
+                  ))}
                   <p className="mt-1.5 text-xs text-zinc-500">
                     {batch.trials.length} case{batch.trials.length === 1 ? "" : "s"} · {runCount} provider
                     run{runCount === 1 ? "" : "s"}

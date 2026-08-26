@@ -45,6 +45,7 @@ import {
   DEMO_HARNESS_CASES,
   type DemoHarnessCase,
 } from "../lib/demo-harness-cases";
+import { modelIdForProvider } from "../lib/harness-provider-models";
 import { insertRun, getRun, getRunsByDecisionId, replaceRun, nextHarnessRunNumber } from "../lib/db/runs";
 import { findUserByEmail } from "../lib/db/users";
 import { runForProviders } from "../lib/run-for-providers";
@@ -327,6 +328,7 @@ async function buildIntakeRun(
     lens_outputs,
     lens_outputs_first_draft: lens_outputs,
     llm_provider: provider,
+    llm_model: modelIdForProvider(provider),
     demo_scenario_id: demo.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,

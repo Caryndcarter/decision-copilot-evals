@@ -59,6 +59,7 @@ import {
   meridianIcVoiceCaseById,
   type MeridianIcVoiceCase,
 } from "../lib/meridian-ic-voice-cases";
+import { modelIdForProvider } from "../lib/harness-provider-models";
 import { runRiskLens, runReversibilityLens, runPeopleLens } from "../lenses";
 import { runBriefSynthesis } from "../lenses/brief";
 import { runDecisionTitle } from "../lenses/decision-title";
@@ -282,6 +283,7 @@ async function buildIntakeRun(
     lens_outputs,
     lens_outputs_first_draft: lens_outputs,
     llm_provider: provider,
+    llm_model: modelIdForProvider(provider),
     demo_scenario_id: caseDef.id,
     harness_run: true,
     harness_run_number: harnessRunNumber,

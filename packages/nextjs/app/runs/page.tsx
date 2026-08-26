@@ -46,6 +46,7 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
         harnessBatchId: undefined,
         harnessKind: undefined,
         demoScenarioId: undefined,
+        providerModels: undefined,
       });
     }
     const group = map.get(id)!;
@@ -67,6 +68,17 @@ function groupByDecision(runs: RunWithMeta[]): DecisionGroup[] {
       }
       if (run.demo_scenario_id?.trim()) {
         group.demoScenarioId = run.demo_scenario_id.trim();
+      }
+      if (run.llm_provider && run.llm_model?.trim()) {
+        const provider = run.llm_provider;
+        const model = run.llm_model.trim();
+        const prev = group.providerModels?.[provider] ?? [];
+        if (!prev.includes(model)) {
+          group.providerModels = {
+            ...group.providerModels,
+            [provider]: [...prev, model],
+          };
+        }
       }
     }
     // Track unified brief: prefer the run that already has one

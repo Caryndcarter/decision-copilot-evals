@@ -11,6 +11,11 @@ import {
   MERIDIAN_IC_VOICE_EARLY_BATCH_ID,
   MERIDIAN_IC_VOICE_RUN1_BATCH_ID,
 } from "../lib/harness-meta";
+import {
+  HARNESS_BATCH_MODEL_SNAPSHOTS,
+  modelIdForProvider,
+} from "../lib/harness-provider-models";
+import type { LLMProviderName } from "../types/decision";
 
 async function backfillRun1(col: Awaited<ReturnType<typeof getRunsCollection>>) {
   const filter = {
@@ -81,9 +86,39 @@ async function backfillEarly(col: Awaited<ReturnType<typeof getRunsCollection>>)
   console.log(`  short id: e7430820`);
 }
 
+async function backfillModels(col: Awaited<ReturnType<typeof getRunsCollection>>) {
+  let total = 0;
+  for (const [batchId, snapshot] of Object.entries(HARNESS_BATCH_MODEL_SNAPSHOTS)) {
+    for (const [provider, models] of Object.entries(snapshot.provider_models)) {
+      const model = models?.[0];
+      if (!model) continue;
+      const result = await col.updateMany(
+        {
+          harness_batch_id: batchId,
+          llm_provider: provider as LLMProviderName,
+          $or: [{ llm_model: { $exists: false } }, { llm_model: "" }, { llm_model: null }],
+        },
+        { $set: { llm_model: model } }
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`  ${batchId.slice(0, 8)} · ${provider} → ${model}: ${result.modifiedCount}`);
+        total += result.modifiedCount;
+      }
+    }
+  }
+  console.log(`Models: backfilled llm_model on ${total} run(s).`);
+  console.log(`  (future harness runs record ${modelIdForProvider("openai")} via env at run time)`);
+}
+
 async function main() {
   const col = await getRunsCollection();
   const earlyOnly = process.argv.slice(2).includes("early");
+  const modelsOnly = process.argv.slice(2).includes("models");
+
+  if (modelsOnly) {
+    await backfillModels(col);
+    return;
+  }
 
   if (earlyOnly) {
     await backfillEarly(col);
@@ -92,6 +127,7 @@ async function main() {
 
   await backfillRun1(col);
   await backfillEarly(col);
+  await backfillModels(col);
 }
 
 main().catch((err) => {
