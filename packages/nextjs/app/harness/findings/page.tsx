@@ -76,8 +76,8 @@ export default async function HarnessFindingsPage({
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900">Study findings</h1>
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-500">
-            Each tab is a different behavior question we asked of the models. Pick a study to see
-            why we ran it, then the coded results. Voice and replication studies use committed moral
+            Choose a test type, then a scenario when the type has more than one. Each study explains
+            why we ran it, then shows the coded results. Voice and replication use committed moral
             snapshots; authorship pulls live batches.
           </p>
         </div>
