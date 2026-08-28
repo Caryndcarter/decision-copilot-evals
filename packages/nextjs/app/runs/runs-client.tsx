@@ -692,24 +692,26 @@ export function RunsClient({
           })}
         </div>
         {activeStudyMeta && (
-          <div className="mb-4 rounded-xl border border-zinc-200 bg-white px-4 py-3.5 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
-              Why this test
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
-              {activeStudyMeta.blurb}{" "}
-              {activeStudyMeta.findingsStudy ? (
-                <>
-                  <Link
-                    href={`/harness/findings?study=${activeStudyMeta.findingsStudy}`}
-                    className="font-medium text-indigo-700 hover:text-indigo-900"
-                  >
-                    View findings
-                  </Link>
-                  .
-                </>
-              ) : null}
-            </p>
+          <div className="mb-4 flex flex-col gap-4 rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 via-white to-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
+                Why this test
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
+                {activeStudyMeta.blurb}
+              </p>
+            </div>
+            {activeStudyMeta.findingsStudy ? (
+              <Link
+                href={`/harness/findings?study=${activeStudyMeta.findingsStudy}`}
+                className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 sm:self-center"
+              >
+                View findings
+                <span aria-hidden className="text-base leading-none">
+                  →
+                </span>
+              </Link>
+            ) : null}
           </div>
         )}
       </>
