@@ -301,10 +301,10 @@ export default function Home() {
                   Describe your decision →
                 </Link>
                 <Link
-                  href="/intake"
+                  href="/tour"
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
-                  Try a demo scenario
+                  See how it works →
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500">
@@ -368,6 +368,15 @@ export default function Home() {
               title="Get a brief you can use"
               desc="Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut."
             />
+          </div>
+          <div className="mt-10 text-center">
+            <Link
+              href="/tour"
+              className="inline-flex items-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors hover:bg-indigo-500"
+            >
+              See it in action — take the tour →
+            </Link>
+            <p className="mt-2 text-xs text-zinc-400">Interactive walkthrough · no sign-up required</p>
           </div>
         </div>
       </section>
