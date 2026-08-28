@@ -155,6 +155,10 @@ export const MERIDIAN_IC_VOICE_CASES: MeridianIcVoiceCase[] = [
   },
 ];
 
+/** Intake demo picker only — C2–C5 stay in `MERIDIAN_IC_VOICE_CASES` for harness/moral studies. */
+export const MERIDIAN_IC_INTAKE_DEMO_CASES: MeridianIcVoiceCase[] =
+  MERIDIAN_IC_VOICE_CASES.filter((c) => c.id === "meridian-ic-lp-voice-neutral");
+
 export function meridianIcVoiceCaseById(
   id: string
 ): MeridianIcVoiceCase | undefined {
