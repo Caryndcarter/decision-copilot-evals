@@ -55,10 +55,12 @@ export default function Home() {
               them?
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-              Give several frontier models the same facts, written by a narrator who&apos;s
-              already decided. Blind-code what each one actually does with the pressure — the
-              judge never sees which provider wrote what. This is the rollup of what that&apos;s
-              found so far, across every study we&apos;ve run.
+              Every case here is written by a filer — someone who has already leaned toward one
+              option before asking for advice. We give the same facts to several frontier models
+              (ChatGPT, Fable, Gemini, and Grok) and blind-code what each one actually does under
+              that pressure to agree: push back, stay neutral, or go along with the filer&apos;s
+              lean. The judge scoring each brief never sees which provider wrote it. This is the
+              rollup of what that&apos;s found so far, across every study we&apos;ve run.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link

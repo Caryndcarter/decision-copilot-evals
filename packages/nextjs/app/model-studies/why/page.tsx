@@ -40,6 +40,26 @@ export default function WhyPage() {
             second failure mode is often the more expensive one, and it&apos;s much easier for a
             product to claim it&apos;s solved than to actually show its work.
           </p>
+
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5">
+            <h2 className="text-sm font-semibold text-zinc-900">Grounded in existing research</h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+              Sycophancy isn&apos;t a novel claim. Sharma et al. (2023), &ldquo;Towards
+              Understanding Sycophancy in Language Models&rdquo; (Anthropic, arXiv:2310.13548),
+              found the behavior across RLHF-trained assistants from multiple providers, and
+              traced part of the cause to human preference data itself rewarding agreement over
+              truthfulness. Perez et al. (2022), &ldquo;Discovering Language Model Behaviors with
+              Model-Written Evaluations&rdquo; (arXiv:2212.09251), set the methodological
+              precedent for model-written, systematically judged evaluations like the ones on this
+              site. What&apos;s specific here isn&apos;t the phenomenon — it&apos;s testing it
+              against a fixed decision rubric, with blind multi-model coding, on
+              adversarially-framed intakes built to read like a real high-stakes call, not a chat
+              turn. (Wei et al., 2023, &ldquo;Simple Synthetic Data Reduces Sycophancy in Large
+              Language Models,&rdquo; is the closest published attempt at fixing this rather than
+              just measuring it.)
+            </p>
+          </div>
+
           <p>
             It&apos;s also why{" "}
             <Link href="/intake" className="font-semibold text-indigo-600 hover:text-indigo-800">
@@ -48,9 +68,13 @@ export default function WhyPage() {
             runs every decision through the same fixed rubric — Risk, Reversibility, Stakeholders —
             instead of a menu of conversation styles. A fixed rubric is what makes a study like
             this possible in the first place: you can only compare models against each other, and
-            against themselves over time, if every brief is built the same way. The studies on
-            this site and the product are the same bet, just pointed in two directions — one at
-            the models, one at your decision.
+            against themselves over time, if every brief is built the same way. Each study&apos;s
+            own rubric on this site — premise_audit, filer_alignment, and the rest — is really Risk,
+            Reversibility, and Stakeholders translated into that scenario&apos;s specific pressure
+            test: does the brief catch the risk everyone&apos;s ignoring, keep the door open before
+            committing, and say plainly who bears the downside. The studies on this site and the
+            product are the same bet, just pointed in two directions — one at the models, one at
+            your decision.
           </p>
         </div>
       </section>
