@@ -11,17 +11,65 @@
  * `kind` picks which scoreboard renderer a study page uses:
  *  - "dimension-coded"  → case × provider chip table (Meridian IC, Hormuz)
  *  - "influence-matrix" → synthesizer × mode rollup (multi-demo authorship)
- * Add a new kind + renderer under app/_components/ if a future study doesn't
- * fit either shape.
+ * Add a new kind + renderer under app/model-studies/_components/ if a future
+ * study doesn't fit either shape.
+ *
+ * Studies are grouped under a small set of TEST_TYPES — the durable,
+ * narratively stable unit — rather than standing as independent top-level
+ * entries. A study is one specific run of a test type; the type is the
+ * story ("does narrator voice change model behavior?"), and more studies
+ * land inside existing types over time rather than each becoming its own
+ * peer at the top level. Tag a new study with an existing `testTypeId`, or
+ * add a new TestTypeMeta entry if it's genuinely a new kind of test.
  *
  * This registry drives the whole public site: the homepage ("/") shows a
- * cross-study rollup (getRollupStats / getRollupFindings), and /results
- * shows every study's full scoreboard together on one page. Adding a study
- * here is the only step needed for it to appear in both places.
+ * cross-type rollup (getRollupStats / getRollupFindings), and /results
+ * groups every study's full scoreboard by type. Adding a study here is the
+ * only step needed for it to appear in both places.
  */
 
 export type FindingsStudyKind = "dimension-coded" | "influence-matrix";
 export type FindingsStudyStatus = "live" | "coming-soon";
+
+export type TestTypeMeta = {
+  id: string;
+  name: string;
+  eyebrow: string;
+  heroQuestion: string;
+  dek: string;
+};
+
+/**
+ * The narrative unit. A study belongs to exactly one of these via
+ * `testTypeId` — this is what a study card, results section, and rollup
+ * stat actually organize around.
+ */
+export const TEST_TYPES: TestTypeMeta[] = [
+  {
+    id: "voice-influence",
+    name: "Voice Influence",
+    eyebrow: "Test type · narrator framing",
+    heroQuestion:
+      "Does the story someone tells you change what the model does with the same facts?",
+    dek: "Same underlying facts, different narrator — confident, urgent, honest, or quietly resting on a premise that doesn't hold up. Each case holds the facts constant and varies only how it's told.",
+  },
+  {
+    id: "authorship",
+    name: "Authorship",
+    eyebrow: "Test type · Unified Brief attribution",
+    heroQuestion:
+      "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is hidden or swapped?",
+    dek: "Every brief synthesized three ways — standard, blind, and reassigned — to see whether attribution tracks the idea itself or just the brand attached to it.",
+  },
+  {
+    id: "replication",
+    name: "Replication",
+    eyebrow: "Test type · repeat at volume",
+    heroQuestion:
+      "Do the patterns from a handful of cases hold up when you run the same scenario over and over?",
+    dek: "The same scenario, repeated across many trials, at much higher volume than a single case file — a check on whether earlier findings were real or a fluke of small numbers.",
+  },
+];
 
 export type FindingsStat = {
   value: string;
@@ -44,6 +92,8 @@ export type ScoreboardRow = {
 
 export type FindingsStudyMeta = {
   id: string;
+  /** Which TEST_TYPES entry this study belongs to — the primary grouping. */
+  testTypeId: string;
   status: FindingsStudyStatus;
   kind: FindingsStudyKind;
   name: string;
@@ -67,16 +117,22 @@ export type FindingsStudyMeta = {
   briefCount?: number;
 };
 
-/** A finding tagged with which study it came from, for the cross-study rollup. */
-export type RollupFinding = FindingsCard & { studyId: string; studyName: string };
+/** A finding tagged with which study — and which test type — it came from. */
+export type RollupFinding = FindingsCard & {
+  studyId: string;
+  studyName: string;
+  testTypeId: string;
+  testTypeName: string;
+};
 
 export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
   {
     id: "meridian-ic",
+    testTypeId: "voice-influence",
     status: "live",
     kind: "dimension-coded",
     name: "Meridian IC",
-    eyebrow: "Study 01 · Investment committee voice",
+    eyebrow: "Investment committee voice",
     heroQuestion:
       "When the deal memo already picked a side, does the model say so — or go along with it?",
     dek: "Five IC case files, each written by a narrator who has already decided. Four models read the same facts and produce the same Decision Brief shape. A judge model — blind to which provider wrote what — codes every brief against a fixed rubric.",
@@ -153,10 +209,11 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
   },
   {
     id: "hormuz",
+    testTypeId: "voice-influence",
     status: "live",
     kind: "dimension-coded",
     name: "Hormuz",
-    eyebrow: "Study 02 · Shipping & crew-risk decisions",
+    eyebrow: "Shipping & crew-risk decisions",
     heroQuestion:
       "When the insurance premium is 100x normal, is that a safety signal — or a price signal?",
     dek: "Five cases about continuing shipping through the Strait of Hormuz under rising risk, each testing a different false premise or tone shift. Same blind-coding process as Meridian IC, on an eleven-dimension route and crew-risk rubric.",
@@ -232,10 +289,11 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
   },
   {
     id: "multi-demo-authorship",
+    testTypeId: "authorship",
     status: "live",
     kind: "influence-matrix",
     name: "Multi-demo authorship",
-    eyebrow: "Study 03 · Unified Brief attribution",
+    eyebrow: "Live batches · rotating demo cases",
     heroQuestion:
       "When a Unified Brief credits an idea to a model, does that credit survive if the model's identity is hidden — or reassigned?",
     dek: "Instead of a fixed case snapshot, this study runs continuously against live Unified Brief batches: the same underlying briefs, synthesized under three authorship conditions — standard, blind, and reassigned — to see whether attribution tracks the idea or the brand.",
@@ -258,10 +316,11 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
   },
   {
     id: "civitas-replication",
+    testTypeId: "replication",
     status: "live",
     kind: "dimension-coded",
     name: "Civitas replication",
-    eyebrow: "Study 04 · Unified Brief replication",
+    eyebrow: "One scenario, five trials",
     heroQuestion:
       "When the same Civitas scenario runs five times, do synthesizers stay stable — or drift trial to trial?",
     dek: "One modernization scenario, full intake-through-Unified-Brief path, repeated across five harness trials. Four synthesizers produce briefs under Standard, Blind, and Reassigned authorship. A blind judge codes every Unified Brief on a fixed 12-dimension moral rubric.",
@@ -349,6 +408,31 @@ export function getUpcomingStudies(): FindingsStudyMeta[] {
   return FINDINGS_STUDIES.filter((s) => s.status === "coming-soon");
 }
 
+export function getTestType(id: string): TestTypeMeta | undefined {
+  return TEST_TYPES.find((t) => t.id === id);
+}
+
+/** Live studies belonging to one test type, in registry order. */
+export function getStudiesForType(typeId: string): FindingsStudyMeta[] {
+  return getLiveStudies().filter((s) => s.testTypeId === typeId);
+}
+
+/** Test types that currently have at least one live study — what actually renders. */
+export function getLiveTestTypes(): TestTypeMeta[] {
+  return TEST_TYPES.filter((t) => getStudiesForType(t.id).length > 0);
+}
+
+function statTag(f: FindingsCard, s: FindingsStudyMeta): RollupFinding {
+  const type = getTestType(s.testTypeId);
+  return {
+    ...f,
+    studyId: s.id,
+    studyName: s.name,
+    testTypeId: s.testTypeId,
+    testTypeName: type?.name ?? s.testTypeId,
+  };
+}
+
 /**
  * Rollup totals across every live study, for the homepage and /results
  * headline strip. Sums cases and briefs (each study's are independent);
@@ -362,11 +446,27 @@ export function getRollupStats(): FindingsStat[] {
   const models = live.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
 
   return [
-    { value: String(live.length), label: "studies live" },
+    { value: String(getLiveTestTypes().length), label: "test types" },
     { value: String(cases), label: "case files" },
     { value: String(models), label: "models tested" },
     { value: String(briefs), label: "blind-coded briefs" },
   ];
+}
+
+/** Same shape as getRollupStats, scoped to the studies inside one test type. */
+export function getRollupStatsForType(typeId: string): FindingsStat[] {
+  const studies = getStudiesForType(typeId);
+  const cases = studies.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+  const briefs = studies.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+  const models = studies.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
+
+  const stats: FindingsStat[] = [
+    { value: String(studies.length), label: studies.length === 1 ? "study" : "studies" },
+  ];
+  if (cases > 0) stats.push({ value: String(cases), label: "case files" });
+  if (models > 0) stats.push({ value: String(models), label: "models tested" });
+  if (briefs > 0) stats.push({ value: String(briefs), label: "blind-coded briefs" });
+  return stats;
 }
 
 /**
@@ -375,14 +475,15 @@ export function getRollupStats(): FindingsStat[] {
  * caps how many are pulled per study, in registry order.
  */
 export function getRollupFindings(perStudyLimit = 2): RollupFinding[] {
-  return getLiveStudies().flatMap((s) =>
-    s.findings.slice(0, perStudyLimit).map((f) => ({ ...f, studyId: s.id, studyName: s.name }))
-  );
+  return getLiveStudies().flatMap((s) => s.findings.slice(0, perStudyLimit).map((f) => statTag(f, s)));
 }
 
-/** Every finding from every live study, tagged and grouped — for /results. */
+/** Every finding from every live study, tagged with study + test type — for /results. */
 export function getAllRollupFindings(): RollupFinding[] {
-  return getLiveStudies().flatMap((s) =>
-    s.findings.map((f) => ({ ...f, studyId: s.id, studyName: s.name }))
-  );
+  return getLiveStudies().flatMap((s) => s.findings.map((f) => statTag(f, s)));
+}
+
+/** Every finding for one test type only, tagged — for a type's own section. */
+export function getFindingsForType(typeId: string): RollupFinding[] {
+  return getStudiesForType(typeId).flatMap((s) => s.findings.map((f) => statTag(f, s)));
 }

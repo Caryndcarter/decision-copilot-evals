@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
-import { getLiveStudies } from "@/lib/findings-registry";
+import { getLiveTestTypes, getStudiesForType } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "How it works — Model Studies",
-  description: "The shared method behind every study: blind coding against a fixed rubric.",
+  description: "The shared method behind every test type: blind coding against a fixed rubric.",
 };
 
 export default function HowItWorksPage() {
-  const studies = getLiveStudies();
+  const testTypes = getLiveTestTypes();
 
   return (
     <div className="min-h-screen bg-white">
@@ -69,29 +69,37 @@ export default function HowItWorksPage() {
 
       <section className="bg-zinc-50 py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Per-study notes</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">By test type</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Each study's rubric is scenario-specific — here&apos;s what&apos;s particular to each
-            one.
+            Each type's rubric is scenario-specific — here&apos;s what&apos;s particular to every
+            study inside it.
           </p>
-          <div className="mt-8 space-y-8">
-            {studies.map((study) => (
-              <div key={study.id}>
-                <h3 className="text-sm font-semibold text-zinc-900">{study.name}</h3>
-                <ul className="mt-3 space-y-2">
-                  {study.methodology.map((m) => (
-                    <li key={m} className="flex gap-3 text-sm leading-relaxed text-zinc-600">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                      <span>{m}</span>
-                    </li>
+          <div className="mt-8 space-y-10">
+            {testTypes.map((type) => (
+              <div key={type.id}>
+                <h3 className="text-base font-semibold text-zinc-900">{type.name}</h3>
+                <p className="mt-1 text-sm text-zinc-500">{type.heroQuestion}</p>
+                <div className="mt-4 space-y-6">
+                  {getStudiesForType(type.id).map((study) => (
+                    <div key={study.id} className="border-l-2 border-zinc-200 pl-4">
+                      <h4 className="text-sm font-semibold text-zinc-800">{study.name}</h4>
+                      <ul className="mt-2 space-y-2">
+                        {study.methodology.map((m) => (
+                          <li key={m} className="flex gap-3 text-sm leading-relaxed text-zinc-600">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                            <span>{m}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Link
+                        href={`/model-studies/results/${study.id}`}
+                        className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        See {study.name} results →
+                      </Link>
+                    </div>
                   ))}
-                </ul>
-                <Link
-                  href={`/results/${study.id}`}
-                  className="mt-3 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                >
-                  See {study.name} results →
-                </Link>
+                </div>
               </div>
             ))}
           </div>

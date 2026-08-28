@@ -7,20 +7,22 @@ import { DimensionScoreboard } from "../_components/scoreboard-dimension-coded";
 import { InfluenceMatrixPlaceholder } from "../_components/scoreboard-influence-matrix";
 import {
   getAllRollupFindings,
-  getLiveStudies,
+  getLiveTestTypes,
   getRollupStats,
+  getRollupStatsForType,
+  getStudiesForType,
   getUpcomingStudies,
 } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "Results — Model Studies",
-  description: "Every study, every finding — the full rollup of blind-coded model behavior.",
+  description: "Every test type, every finding — the full rollup of blind-coded model behavior.",
 };
 
 export default function ResultsPage() {
   const stats = getRollupStats();
   const findings = getAllRollupFindings();
-  const liveStudies = getLiveStudies();
+  const testTypes = getLiveTestTypes();
   const upcoming = getUpcomingStudies();
 
   return (
@@ -34,11 +36,12 @@ export default function ResultsPage() {
               Full rollup
             </p>
             <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-              Every study, every finding
+              Every test type, every finding
             </h1>
             <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-              One continuous view across all live studies. As new case batteries are coded, they
-              extend this page — they don&apos;t replace it.
+              Grouped by what&apos;s actually being tested, not by case name. Each type holds one or
+              more studies — new studies land inside an existing type as it&apos;s coded, rather than
+              becoming a new peer at the top level.
             </p>
           </div>
         </div>
@@ -61,35 +64,63 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      {liveStudies.map((study) => (
-        <section key={study.id} className="bg-zinc-50 py-16 border-b border-zinc-100">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500">
-                  {study.eyebrow}
-                </span>
-                <h2 className="mt-1 text-xl font-bold text-zinc-900 tracking-tight">
-                  {study.name}
-                </h2>
+      {testTypes.map((type) => {
+        const studies = getStudiesForType(type.id);
+        const typeStats = getRollupStatsForType(type.id);
+        return (
+          <section
+            key={type.id}
+            id={type.id}
+            className="scroll-mt-20 bg-zinc-50 py-16 border-b border-zinc-100"
+          >
+            <div className="mx-auto max-w-6xl px-6">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500">
+                {type.eyebrow}
+              </span>
+              <h2 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">{type.name}</h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium text-zinc-700 leading-relaxed">
+                {type.heroQuestion}
+              </p>
+              <p className="mt-1.5 max-w-2xl text-sm text-zinc-500 leading-relaxed">{type.dek}</p>
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
+                {typeStats.map((s) => (
+                  <span key={s.label} className="text-xs text-zinc-500">
+                    <strong className="tabular-nums text-zinc-900">{s.value}</strong> {s.label}
+                  </span>
+                ))}
               </div>
-              <Link
-                href={`/results/${study.id}`}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-              >
-                Full study page →
-              </Link>
+
+              <div className="mt-8 space-y-8">
+                {studies.map((study) => (
+                  <div key={study.id} className="rounded-xl border border-zinc-200 bg-white p-6">
+                    <div className="flex flex-wrap items-baseline justify-between gap-3">
+                      <div>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                          {study.eyebrow}
+                        </span>
+                        <h3 className="mt-0.5 text-lg font-semibold text-zinc-900">{study.name}</h3>
+                      </div>
+                      <Link
+                        href={`/model-studies/results/${study.id}`}
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        Full study page →
+                      </Link>
+                    </div>
+                    <div className="mt-4">
+                      {study.kind === "dimension-coded" ? (
+                        <DimensionScoreboard rows={study.scoreboard ?? []} />
+                      ) : (
+                        <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-6">
-              {study.kind === "dimension-coded" ? (
-                <DimensionScoreboard rows={study.scoreboard ?? []} />
-              ) : (
-                <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />
-              )}
-            </div>
-          </div>
-        </section>
-      ))}
+          </section>
+        );
+      })}
 
       {upcoming.length > 0 && (
         <section className="bg-white py-16">
