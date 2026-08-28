@@ -337,6 +337,56 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Use cases ── */}
+      <section className="bg-white py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
+            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
+              Not hypotheticals. The kind of calls that keep you up at night — the ones that deserve more than one opinion.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <UseCaseCard
+              icon={<IconRisk />}
+              title="Infrastructure cost decisions"
+              scenario="Should we migrate from Vercel to self-hosted AWS to cut costs from $5k to $600/month — and what are we actually risking?"
+              posture="Surface risks"
+            />
+            <UseCaseCard
+              icon={<IconPeople />}
+              title="Leadership & people calls"
+              scenario="Our VP Sales is underperforming. Do we support them with ops, or make a change — and how do we protect the customer relationships?"
+              posture="Pressure test"
+            />
+            <UseCaseCard
+              icon={<IconResearch />}
+              title="Compliance & regulatory"
+              scenario="We're shipping AI features to EU enterprise customers. What's our EU AI Act exposure, and what do RFPs actually require?"
+              posture="Surface risks"
+            />
+            <UseCaseCard
+              icon={<IconCompare />}
+              title="Strategic M&A"
+              scenario="A PE-backed acquisition of a distressed hospital. What's the regulatory path, and can we secure the union agreements?"
+              posture="Pressure test"
+            />
+            <UseCaseCard
+              icon={<IconReversibility />}
+              title="Office & real estate"
+              scenario="Our downtown lease ends in 7 months and we need a hybrid policy. What are the realistic alternatives and hidden costs?"
+              posture="Generate alternatives"
+            />
+            <UseCaseCard
+              icon={<IconBrief />}
+              title="Tech modernization"
+              scenario="Rip-and-replace vs incremental sidecar approach for a 20-year-old core banking system. What's the regulator's likely stance?"
+              posture="Surface risks"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ── How it works ── */}
       <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
@@ -377,55 +427,6 @@ export default function Home() {
               See it in action — take the tour →
             </Link>
             <p className="mt-2 text-xs text-zinc-400">Interactive walkthrough · no sign-up required</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Why three lenses ── */}
-      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
-              Why Risk, Reversibility, and Stakeholders?
-            </h2>
-            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
-              Most AI answers focus on whether something is a good idea. Important decisions also need
-              you to ask what could go wrong, how hard it is to undo, and who has to live with the outcome.
-              Every analysis runs through three lenses so you don&apos;t get a technically correct answer
-              that ignores downside, lock-in, or the humans involved.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              {
-                icon: <IconRisk />,
-                title: "Risk",
-                question: "What could go wrong?",
-                desc: "Surfaces top risks, hidden assumptions, and blind spots — the things that look fine on paper until they aren't.",
-                color: "text-red-500 bg-red-50",
-              },
-              {
-                icon: <IconReversibility />,
-                title: "Reversibility",
-                question: "Can I undo this?",
-                desc: "Identifies which steps lock you in and what's safe to try first, before you commit fully.",
-                color: "text-amber-500 bg-amber-50",
-              },
-              {
-                icon: <IconPeople />,
-                title: "Stakeholders",
-                question: "Who does this affect?",
-                desc: "Maps stakeholder impacts, execution risks, and who needs to be brought along for this to actually work.",
-                color: "text-blue-500 bg-blue-50",
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-xl border border-zinc-200 bg-white p-6">
-                <div className={`inline-flex p-2.5 rounded-lg mb-4 ${item.color}`}>{item.icon}</div>
-                <h3 className="text-sm font-semibold text-zinc-900">{item.title}</h3>
-                <p className="mt-1 text-xs font-medium text-indigo-600">{item.question}</p>
-                <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -533,56 +534,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Use cases ── */}
-      <section className="bg-white py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
-            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Not hypotheticals. The kind of calls that keep you up at night — the ones that deserve more than one opinion.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <UseCaseCard
-              icon={<IconRisk />}
-              title="Infrastructure cost decisions"
-              scenario="Should we migrate from Vercel to self-hosted AWS to cut costs from $5k to $600/month — and what are we actually risking?"
-              posture="Surface risks"
-            />
-            <UseCaseCard
-              icon={<IconPeople />}
-              title="Leadership & people calls"
-              scenario="Our VP Sales is underperforming. Do we support them with ops, or make a change — and how do we protect the customer relationships?"
-              posture="Pressure test"
-            />
-            <UseCaseCard
-              icon={<IconResearch />}
-              title="Compliance & regulatory"
-              scenario="We're shipping AI features to EU enterprise customers. What's our EU AI Act exposure, and what do RFPs actually require?"
-              posture="Surface risks"
-            />
-            <UseCaseCard
-              icon={<IconCompare />}
-              title="Strategic M&A"
-              scenario="A PE-backed acquisition of a distressed hospital. What's the regulatory path, and can we secure the union agreements?"
-              posture="Pressure test"
-            />
-            <UseCaseCard
-              icon={<IconReversibility />}
-              title="Office & real estate"
-              scenario="Our downtown lease ends in 7 months and we need a hybrid policy. What are the realistic alternatives and hidden costs?"
-              posture="Generate alternatives"
-            />
-            <UseCaseCard
-              icon={<IconBrief />}
-              title="Tech modernization"
-              scenario="Rip-and-replace vs incremental sidecar approach for a 20-year-old core banking system. What's the regulator's likely stance?"
-              posture="Surface risks"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* ── CTA ── */}
       <section className="bg-zinc-950 py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
@@ -606,6 +557,55 @@ export default function Home() {
             >
               Try a demo
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why three lenses ── */}
+      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
+              Why Risk, Reversibility, and Stakeholders?
+            </h2>
+            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
+              Most AI answers focus on whether something is a good idea. Important decisions also need
+              you to ask what could go wrong, how hard it is to undo, and who has to live with the outcome.
+              Every analysis runs through three lenses so you don&apos;t get a technically correct answer
+              that ignores downside, lock-in, or the humans involved.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: <IconRisk />,
+                title: "Risk",
+                question: "What could go wrong?",
+                desc: "Surfaces top risks, hidden assumptions, and blind spots — the things that look fine on paper until they aren't.",
+                color: "text-red-500 bg-red-50",
+              },
+              {
+                icon: <IconReversibility />,
+                title: "Reversibility",
+                question: "Can I undo this?",
+                desc: "Identifies which steps lock you in and what's safe to try first, before you commit fully.",
+                color: "text-amber-500 bg-amber-50",
+              },
+              {
+                icon: <IconPeople />,
+                title: "Stakeholders",
+                question: "Who does this affect?",
+                desc: "Maps stakeholder impacts, execution risks, and who needs to be brought along for this to actually work.",
+                color: "text-blue-500 bg-blue-50",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-xl border border-zinc-200 bg-white p-6">
+                <div className={`inline-flex p-2.5 rounded-lg mb-4 ${item.color}`}>{item.icon}</div>
+                <h3 className="text-sm font-semibold text-zinc-900">{item.title}</h3>
+                <p className="mt-1 text-xs font-medium text-indigo-600">{item.question}</p>
+                <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
