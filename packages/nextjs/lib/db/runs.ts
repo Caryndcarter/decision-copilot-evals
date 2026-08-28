@@ -7,6 +7,7 @@
 
 import "server-only";
 import { ensureMongoIndexes, getRunsCollection } from "@/server/config/mongodb";
+import { normalizeRunLensFields } from "@/lib/normalize-lens";
 import type { DecisionRunResult } from "@/types/decision";
 
 type RunDoc = DecisionRunResult & {
@@ -66,7 +67,7 @@ const AUTHORSHIP_RUN_PROJECTION = {
 function stripMongoId(doc: RunDoc | null | undefined): DecisionRunResult | null {
   if (!doc) return null;
   const { _id: _ignored, ...rest } = doc;
-  return rest;
+  return normalizeRunLensFields(rest);
 }
 
 export async function getRun(run_id: string): Promise<DecisionRunResult | null> {

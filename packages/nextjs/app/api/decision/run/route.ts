@@ -24,7 +24,7 @@ import { parseDemoScenarioId, isValidPosture, postureRequiresLeaning } from "@/t
 import { runPostureLabel } from "@/lib/run-display-name";
 import { runRiskLens } from "@/lenses/risk";
 import { runReversibilityLens } from "@/lenses/reversibility";
-import { runPeopleLens } from "@/lenses/people";
+import { runStakeholdersLens } from "@/lenses/stakeholders";
 import { runBriefSynthesis, type BriefSynthesisPromptOptions } from "@/lenses/brief";
 import { BRIEF_PROFILE_IS_DELETE } from "@/lib/brief-profile";
 import { ensureBriefGeneratedAt } from "@/lib/ensure-brief-generated-at";
@@ -268,7 +268,7 @@ async function runLenses(
   const [riskOutput, reversibilityOutput, peopleOutput] = await Promise.all([
     runRiskLens(intake, clarifications, provider),
     runReversibilityLens(intake, clarifications, provider),
-    runPeopleLens(intake, clarifications, provider),
+    runStakeholdersLens(intake, clarifications, provider),
   ]);
   return [riskOutput, reversibilityOutput, peopleOutput];
 }

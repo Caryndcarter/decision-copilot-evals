@@ -14,11 +14,17 @@ export interface CombinedClarificationQuestion {
 }
 
 const PROVIDER_ORDER = ["openai", "anthropic", "gemini", "xai"] as const;
-export const LENS_THEME_ORDER: Record<string, number> = { risk: 0, people: 1, reversibility: 2 };
+export const LENS_THEME_ORDER: Record<string, number> = {
+  risk: 0,
+  stakeholders: 1,
+  people: 1, // legacy id
+  reversibility: 2,
+};
 
 export const LENS_THEME_LABELS: Record<string, string> = {
   risk: "Risk",
-  people: "People",
+  stakeholders: "Stakeholders",
+  people: "Stakeholders", // legacy id
   reversibility: "Reversibility",
 };
 

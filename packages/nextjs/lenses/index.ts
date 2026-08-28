@@ -12,4 +12,4 @@ export {
   buildReversibilityPrompt,
   parseReversibilityOutput,
 } from "./reversibility";
-export { runPeopleLens, buildPeoplePrompt, parsePeopleOutput } from "./people";
+export { runStakeholdersLens, buildStakeholdersPrompt, parseStakeholdersOutput, runPeopleLens, buildPeoplePrompt, parsePeopleOutput } from "./stakeholders";

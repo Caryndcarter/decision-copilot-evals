@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRun, replaceRun } from "@/lib/db/runs";
-import { runRiskLens, runReversibilityLens, runPeopleLens } from "@/lenses";
+import { runRiskLens, runReversibilityLens, runStakeholdersLens } from "@/lenses";
 import { runBriefSynthesis } from "@/lenses/brief";
 import type { DecisionRunResult, RunVariant, LensOutput, LLMProviderName } from "@/types/decision";
 import { resolveVariantFormatInstruction, sanitizeFormatSuggestionForDisplay } from "@/lib/suggest-format-tag";
@@ -16,7 +16,7 @@ async function runLensesForVariant(
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(run.intake, run.clarifications, provider),
     runReversibilityLens(run.intake, run.clarifications, provider),
-    runPeopleLens(run.intake, run.clarifications, provider),
+    runStakeholdersLens(run.intake, run.clarifications, provider),
   ]);
   return [risk, reversibility, people];
 }

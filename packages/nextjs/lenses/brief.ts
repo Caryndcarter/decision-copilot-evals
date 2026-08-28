@@ -205,9 +205,9 @@ export function formatLensOutputs(lensOutputs: LensOutput[]): string {
         parts.push(
           `- Tradeoffs: ${out.tradeoffs.map((t) => `${t.option} (↑ ${t.upside}, ↓ ${t.downside})`).join("; ")}`
         );
-    } else if (out.lens === "people") {
+    } else if (out.lens === "stakeholders") {
       parts.push(
-        `### People lens\n- Stakeholder impacts: ${(out.stakeholder_impacts ?? []).map((s) => `${s.stakeholder} (${s.sentiment}): ${s.impact}`).join("; ")}`
+        `### Stakeholders lens\n- Stakeholder impacts: ${(out.stakeholder_impacts ?? []).map((s) => `${s.stakeholder} (${s.sentiment}): ${s.impact}`).join("; ")}`
       );
       if (out.execution_risks?.length)
         parts.push(`- Execution risks: ${out.execution_risks.join("; ")}`);

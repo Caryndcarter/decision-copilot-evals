@@ -45,7 +45,7 @@ export default function WhyPage() {
             <Link href="/intake" className="font-semibold text-indigo-600 hover:text-indigo-800">
               Decision Copilot
             </Link>{" "}
-            runs every decision through the same fixed rubric — Risk, Reversibility, People —
+            runs every decision through the same fixed rubric — Risk, Reversibility, Stakeholders —
             instead of a menu of conversation styles. A fixed rubric is what makes a study like
             this possible in the first place: you can only compare models against each other, and
             against themselves over time, if every brief is built the same way. The studies on

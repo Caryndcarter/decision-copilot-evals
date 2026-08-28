@@ -1,6 +1,6 @@
 # Decision Copilot
 
-Turn AI models into **your own think tank** for high-stakes decisions. Describe your situation, run one model or many on the same brief through three analysis lenses (Risk, Reversibility, People), answer follow-up questions, and get structured briefs you can compare. When you're ready, synthesize a **Unified Brief** — best-of-all-worlds thinking that merges the strongest ideas across models — with attribution for whose ideas made the cut. Extend analysis with research and variants, and discuss results in streaming chat.
+Turn AI models into **your own think tank** for high-stakes decisions. Describe your situation, run one model or many on the same brief through three analysis lenses (Risk, Reversibility, Stakeholders), answer follow-up questions, and get structured briefs you can compare. When you're ready, synthesize a **Unified Brief** — best-of-all-worlds thinking that merges the strongest ideas across models — with attribution for whose ideas made the cut. Extend analysis with research and variants, and discuss results in streaming chat.
 
 This repo is the **evals deployment** of Decision Copilot: same product core, a separate MongoDB database (`DB_NAME`), plus a public **Model Studies** research site and authenticated **harness findings** dashboards for moral-eval work.
 
@@ -15,7 +15,7 @@ This repo is the **evals deployment** of Decision Copilot: same product core, a 
 2. **Three-lens analysis** — The app runs three lenses in parallel:
    - **Risk** — Top risks, assumptions, blind spots, tradeoffs, remaining uncertainty.
    - **Reversibility** — Irreversible steps, safe-to-try-first options.
-   - **People** — Stakeholder impacts (who’s affected, how, positive/negative/neutral), execution risks.
+   - **Stakeholders** — Stakeholder impacts (who’s affected, how, positive/negative/neutral), execution risks.
 
 3. **Clarification (optional)** — If a lens needs more information, it can ask follow-up questions. The answer control is inferred from the question wording (a question asking for an explanation renders as text, not a Yes/No dropdown). When multiple think-tank members are awaiting answers, similar follow-ups from different models are **de-duplicated and merged** into one combined form so you answer each distinct question once. The analysis is then re-run with your answers so the model doesn’t repeat the same questions.
 
@@ -56,7 +56,7 @@ Signup is **invite-only**. Existing users sign in with email/password or Google 
 
 ### Research surfaces
 
-- **Homepage (`/`)** — Product positioning plus a comparison table vs generic multi-model AI chat (structured brief vs open thread, fixed Risk/Reversibility/People rubric, link to Model Studies).
+- **Homepage (`/`)** — Product positioning plus a comparison table vs generic multi-model AI chat (structured brief vs open thread, fixed Risk/Reversibility/Stakeholders rubric, link to Model Studies).
 - **Model Studies (`/model-studies`)** — Public microsite: study overviews, rollup findings, methodology pages. No sign-in required.
 - **Harness findings (`/harness/findings`)** — Authenticated dashboard for moral-eval and authorship study batches (Meridian IC, Hormuz, multi-demo authorship). Linked from **My Decisions** when you have matching harness runs.
 
@@ -99,7 +99,7 @@ decision-copilot/
 │   │   │   ├── model-studies/        # Public research microsite
 │   │   │   ├── harness/findings/     # Authenticated eval findings dashboard
 │   │   │   └── api/                  # decision/*, admin/*, auth/*, invite-requests
-│   │   ├── lenses/                   # Risk, Reversibility, People, Brief, Synthesis
+│   │   ├── lenses/                   # Risk, Reversibility, Stakeholders, Brief, Synthesis
 │   │   ├── llm/                      # OpenAI, Anthropic, Gemini, xAI + streaming
 │   │   ├── lib/db/                   # MongoDB persistence (runs, users, invite_requests)
 │   │   ├── server/config/mongodb.ts  # Mongo client + DB_NAME

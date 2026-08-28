@@ -796,7 +796,7 @@ export default function IntakePage() {
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
             <p className="font-medium text-zinc-800">What happens next</p>
             <p className="mt-1 leading-relaxed">
-              Each model runs Risk, Reversibility, and People lenses on your brief, may ask targeted
+              Each model runs Risk, Reversibility, and Stakeholders lenses on your brief, may ask targeted
               follow-up questions, then produces a structured decision brief. Compare models side by side,
               merge them into a Unified Brief, or discuss the results.
             </p>

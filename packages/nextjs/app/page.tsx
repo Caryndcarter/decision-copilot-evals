@@ -145,7 +145,7 @@ function ThinkTankMockup() {
             {[
               { label: "Risk", value: "High", color: "text-red-400 bg-red-950/50 border-red-900/50" },
               { label: "Reversibility", value: "Low", color: "text-amber-400 bg-amber-950/50 border-amber-900/50" },
-              { label: "People", value: "Med", color: "text-blue-400 bg-blue-950/50 border-blue-900/50" },
+              { label: "Stakeholders", value: "Med", color: "text-blue-400 bg-blue-950/50 border-blue-900/50" },
             ].map((item) => (
               <div key={item.label} className={`rounded-lg border px-2 py-2 text-center ${item.color}`}>
                 <div className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{item.label}</div>
@@ -225,7 +225,7 @@ const MULTI_MODEL_DIFFERENCES = [
   {
     dim: "Output consistency",
     theirs: "Shape varies by conversation mode — debate, red-team, freeform.",
-    ours: "Every brief uses the same Risk / Reversibility / People rubric — comparable across models and over time.",
+    ours: "Every brief uses the same Risk / Reversibility / Stakeholders rubric — comparable across models and over time.",
   },
   {
     dim: "Unit of work",
@@ -377,7 +377,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
-              Why Risk, Reversibility, and People?
+              Why Risk, Reversibility, and Stakeholders?
             </h2>
             <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
               Most AI answers focus on whether something is a good idea. Important decisions also need
@@ -404,7 +404,7 @@ export default function Home() {
               },
               {
                 icon: <IconPeople />,
-                title: "People",
+                title: "Stakeholders",
                 question: "Who does this affect?",
                 desc: "Maps stakeholder impacts, execution risks, and who needs to be brought along for this to actually work.",
                 color: "text-blue-500 bg-blue-50",

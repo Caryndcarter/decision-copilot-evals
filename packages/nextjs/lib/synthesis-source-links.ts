@@ -11,7 +11,7 @@ function appendHighlightQuery(qs: string, ref: SynthesisSourceRef): string {
 const FRAGMENT: Record<SynthesisSourceRef["section"], string> = {
   risk: "rc-risk",
   reversibility: "rc-reversibility",
-  people: "rc-people",
+  stakeholders: "rc-stakeholders",
   brief: "rc-brief",
   variants: "rc-variant-sections",
   context: "rc-context",
@@ -44,8 +44,8 @@ export function synthesisSourceRefLabel(ref: SynthesisSourceRef): string {
       return "Risk lens";
     case "reversibility":
       return "Reversibility";
-    case "people":
-      return "People";
+    case "stakeholders":
+      return "Stakeholders";
     case "brief":
       return "Brief";
     case "variants":

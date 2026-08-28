@@ -63,7 +63,7 @@ function buildSourceRefsItemSchema(labelExamples: string) {
     },
     section: {
       type: "string",
-      enum: ["risk", "reversibility", "people", "brief", "variants", "context", "research"],
+      enum: ["risk", "reversibility", "stakeholders", "brief", "variants", "context", "research"],
       description:
         "Which subsection of that provider's run supports this point: lens names, brief, variants block, intake context, or research task",
     },
@@ -176,7 +176,7 @@ function formatRunForPrompt(entry: RunEntry, allRuns: DecisionRunResult[]): stri
   const draftNote = entry.isDraft ? " *(pre-clarification draft — clarification questions not yet answered)*" : "";
   const lines: string[] = [
     `## ${label}${draftNote}`,
-    "_Cite **source_refs** using section ∈ {risk, reversibility, people, brief, variants, context, research}. Match [research_id:…] and [variant_id:…] tags. When possible add **text_quote**: an exact contiguous copy from this block for that cite._",
+    "_Cite **source_refs** using section ∈ {risk, reversibility, stakeholders, brief, variants, context, research}. Match [research_id:…] and [variant_id:…] tags. When possible add **text_quote**: an exact contiguous copy from this block for that cite._",
   ];
 
   if (entry.brief) {
@@ -238,7 +238,7 @@ function formatRunForPrompt(entry: RunEntry, allRuns: DecisionRunResult[]): stri
         lines.push(`**Irreversible steps:**\n${out.irreversible_steps.map((s) => `- ${s}`).join("\n")}`);
       if (out.safe_to_try_first?.length)
         lines.push(`**Safe to try first:**\n${out.safe_to_try_first.map((s) => `- ${s}`).join("\n")}`);
-    } else if (out.lens === "people") {
+    } else if (out.lens === "stakeholders") {
       if (out.stakeholder_impacts?.length)
         lines.push(`**Stakeholder impacts:**\n${out.stakeholder_impacts.map((s) => `- ${s.stakeholder} (${s.sentiment}): ${s.impact}`).join("\n")}`);
       if (out.execution_risks?.length)
@@ -363,10 +363,10 @@ ${entries.map((e) => `- ${runProviderLabel(e.run.llm_provider)}`).join("\n")}
 
 ### Optional \`source_refs\` (deep links for the UI)
 When you can identify **where** the evidence lives, add \`source_refs\`: an array of up to 8 objects \`{ "provider": "<same label as ## header>", "section": "<one of the enum>", "research_id"?: "<uuid>", "variant_id"?: "<uuid>", "text_quote"?: "<verbatim substring from that section>" }\`.
-- **section** must be one of: \`risk\`, \`reversibility\`, \`people\`, \`brief\`, \`variants\`, \`context\`, \`research\`.
+- **section** must be one of: \`risk\`, \`reversibility\`, \`stakeholders\`, \`brief\`, \`variants\`, \`context\`, \`research\`.
 - For **research**, include \`research_id\` copied from the \`[research_id:…]\` line under that research heading for that provider.
 - For a **specific variant**, use \`section\`: \`variants\` and \`variant_id\` from \`[variant_id:…]\` in that provider's block or the Variant inventory.
-- **context** = intake / situation block (\`#rc-context\`). **risk** / **reversibility** / **people** = those lens panels; **brief** = decision brief; **variants** = extra variant sections on that run.
+- **context** = intake / situation block (\`#rc-context\`). **risk** / **reversibility** / **stakeholders** = those lens panels; **brief** = decision brief; **variants** = extra variant sections on that run.
 - **text_quote**: optional; must be an **exact** contiguous span from that provider's quoted material in this prompt for the cited section (helps the UI highlight the right sentence).
 - Omit \`source_refs\` or use \`[]\` if you are unsure.
 
@@ -413,8 +413,10 @@ function normalizeSourceRefSection(raw: string): SynthesisSourceRef["section"] |
     risk_lens: "risk",
     reversibility: "reversibility",
     reversibility_lens: "reversibility",
-    people: "people",
-    people_lens: "people",
+    people: "stakeholders",
+    people_lens: "stakeholders",
+    stakeholders: "stakeholders",
+    stakeholders_lens: "stakeholders",
     brief: "brief",
     decision_brief: "brief",
     variants: "variants",

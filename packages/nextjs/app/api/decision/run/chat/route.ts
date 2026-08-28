@@ -77,7 +77,7 @@ function buildRunContext(
         if (rev.irreversible_steps?.length) parts.push("Irreversible steps: " + rev.irreversible_steps.join("; "));
         if (rev.safe_to_try_first?.length) parts.push("Safe to try first: " + rev.safe_to_try_first.join("; "));
       }
-      if (lens.lens === "people") {
+      if (lens.lens === "stakeholders") {
         const p = lens as {
           stakeholder_impacts?: { stakeholder: string; impact: string; sentiment: string }[];
           execution_risks?: string[];

@@ -12,12 +12,13 @@ import {
 import type {
   DecisionRunResult,
   LensOutput,
-  PeopleLensOutput,
+  StakeholdersLensOutput,
   BlindSpot,
   Tradeoff,
   StakeholderImpact,
   DecisionBrief,
 } from "@/types/decision";
+import { normalizeRunLensFields } from "@/lib/normalize-lens";
 import {
   LensBoxEditor,
   ClarificationAnswerEditor,
@@ -352,7 +353,7 @@ function sectionKey(lens: string, field: string) {
 function getAnalysisChanges(result: DecisionRunResult): {
   risk: boolean;
   reversibility: boolean;
-  people: boolean;
+  stakeholders: boolean;
   brief: boolean;
   hasAny: boolean;
 } {
@@ -363,14 +364,14 @@ function getAnalysisChanges(result: DecisionRunResult): {
   const noFirstDraft = !first?.length;
   const noClarifications = !result.clarifications?.length;
   if (noFirstDraft || noClarifications) {
-    return { risk: false, reversibility: false, people: false, brief: false, hasAny: false };
+    return { risk: false, reversibility: false, stakeholders: false, brief: false, hasAny: false };
   }
   const riskFirst = first.find((o) => o.lens === "risk");
   const riskCurrent = current?.find((o) => o.lens === "risk");
   const revFirst = first.find((o) => o.lens === "reversibility");
   const revCurrent = current?.find((o) => o.lens === "reversibility");
-  const peopleFirst = first.find((o) => o.lens === "people");
-  const peopleCurrent = current?.find((o) => o.lens === "people");
+  const stakeholdersFirst = first.find((o) => o.lens === "stakeholders");
+  const stakeholdersCurrent = current?.find((o) => o.lens === "stakeholders");
   const risk =
     !!riskFirst &&
     !!riskCurrent &&
@@ -379,10 +380,10 @@ function getAnalysisChanges(result: DecisionRunResult): {
     !!revFirst &&
     !!revCurrent &&
     JSON.stringify(revFirst) !== JSON.stringify(revCurrent);
-  const people =
-    !!peopleFirst &&
-    !!peopleCurrent &&
-    JSON.stringify(peopleFirst) !== JSON.stringify(peopleCurrent);
+  const stakeholders =
+    !!stakeholdersFirst &&
+    !!stakeholdersCurrent &&
+    JSON.stringify(stakeholdersFirst) !== JSON.stringify(stakeholdersCurrent);
   const brief =
     !!briefFirst &&
     !!briefCurrent &&
@@ -390,14 +391,14 @@ function getAnalysisChanges(result: DecisionRunResult): {
       briefFirst.recommendation !== briefCurrent.recommendation ||
       JSON.stringify(briefFirst.key_considerations ?? []) !== JSON.stringify(briefCurrent.key_considerations ?? []) ||
       JSON.stringify(briefFirst.next_steps ?? []) !== JSON.stringify(briefCurrent.next_steps ?? []));
-  const hasAny = risk || reversibility || people || brief;
-  return { risk, reversibility, people, brief, hasAny };
+  const hasAny = risk || reversibility || stakeholders || brief;
+  return { risk, reversibility, stakeholders, brief, hasAny };
 }
 
 /** Build new lens_outputs with one list field updated (string[] or object[]) */
 function withUpdatedList(
   lensOutputs: LensOutput[],
-  lensName: "risk" | "reversibility" | "people",
+  lensName: "risk" | "reversibility" | "stakeholders",
   field: string,
   value: string[]
 ): LensOutput[] {
@@ -409,7 +410,7 @@ function withUpdatedList(
 
 function withUpdatedField(
   lensOutputs: LensOutput[],
-  lensName: "risk" | "reversibility" | "people",
+  lensName: "risk" | "reversibility" | "stakeholders",
   field: string,
   value: BlindSpot[] | Tradeoff[] | StakeholderImpact[]
 ): LensOutput[] {
@@ -444,7 +445,7 @@ export interface ResultContentHandle {
 
 export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>(function ResultContent(
   {
-    result,
+    result: resultRaw,
     className = "",
     onRunUpdate,
     variantId,
@@ -456,6 +457,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   },
   ref
 ) {
+  const result = useMemo(() => normalizeRunLensFields(resultRaw), [resultRaw]);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [draftBlindSpots, setDraftBlindSpots] = useState<BlindSpot[]>([]);
   const [draftTradeoffs, setDraftTradeoffs] = useState<Tradeoff[]>([]);
@@ -464,7 +466,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     riskAnalysis: false,
     reversibility: false,
-    people: false,
+    stakeholders: false,
     brief: false,
     variantAdditions: false,
   });
@@ -497,11 +499,12 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   /** Open the matching collapsible and scroll when the URL hash targets an analysis block (e.g. synthesis deep links). */
   useEffect(() => {
     if (typeof window === "undefined") return;
-    type CollapsibleKey = "riskAnalysis" | "reversibility" | "people" | "brief" | "variantAdditions";
+    type CollapsibleKey = "riskAnalysis" | "reversibility" | "stakeholders" | "brief" | "variantAdditions";
     const HASH_TO_SECTION: Record<string, CollapsibleKey | "__scroll_only"> = {
       "rc-risk": "riskAnalysis",
       "rc-reversibility": "reversibility",
-      "rc-people": "people",
+      "rc-stakeholders": "stakeholders",
+      "rc-people": "stakeholders", // legacy fragment
       "rc-brief": "brief",
       "rc-variant-sections": "variantAdditions",
       "rc-context": "__scroll_only",
@@ -590,9 +593,9 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   const reversibilityLens = result.lens_outputs?.find((o) => o.lens === "reversibility") as
     | (LensOutput & { irreversible_steps?: string[]; safe_to_try_first?: string[] })
     | undefined;
-  const peopleLens = result.lens_outputs?.find((o) => o.lens === "people") as PeopleLensOutput | undefined;
+  const stakeholdersLens = result.lens_outputs?.find((o) => o.lens === "stakeholders") as StakeholdersLensOutput | undefined;
   const hasCollapsibleLensOrBrief = Boolean(
-    riskLens || reversibilityLens || peopleLens || result.decision_brief,
+    riskLens || reversibilityLens || stakeholdersLens || result.decision_brief,
   );
   const showAnalysisSectionBar = hasCollapsibleLensOrBrief || Boolean(onJumpToResearch) || Boolean(onJumpToSynthesis);
   const statusLabel =
@@ -629,7 +632,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   }
 
   async function saveLensListUpdate(
-    lensName: "risk" | "reversibility" | "people",
+    lensName: "risk" | "reversibility" | "stakeholders",
     field: string,
     items: string[]
   ) {
@@ -652,7 +655,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     setEditError(null);
   }
   function startEditingStakeholderImpacts(current: StakeholderImpact[]) {
-    setEditingSection(sectionKey("people", "stakeholder_impacts"));
+    setEditingSection(sectionKey("stakeholders", "stakeholder_impacts"));
     setDraftStakeholderImpacts(
       current.length ? current.map((s) => ({ ...s })) : [{ stakeholder: "", impact: "", sentiment: "neutral" }]
     );
@@ -893,8 +896,8 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
               {analysisChanges.reversibility && (
                 <li className="rounded bg-emerald-100 px-2 py-0.5 font-medium">Reversibility</li>
               )}
-              {analysisChanges.people && (
-                <li className="rounded bg-emerald-100 px-2 py-0.5 font-medium">People</li>
+              {analysisChanges.stakeholders && (
+                <li className="rounded bg-emerald-100 px-2 py-0.5 font-medium">Stakeholders</li>
               )}
               {analysisChanges.brief && (
                 <li className="rounded bg-emerald-100 px-2 py-0.5 font-medium">Decision brief</li>
@@ -919,7 +922,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
               {([
                 ...(riskLens ? [{ key: "riskAnalysis", label: "Risk", href: "#rc-risk" }] : []),
                 ...(reversibilityLens ? [{ key: "reversibility", label: "Reversibility", href: "#rc-reversibility" }] : []),
-                ...(peopleLens ? [{ key: "people", label: "People", href: "#rc-people" }] : []),
+                ...(stakeholdersLens ? [{ key: "stakeholders", label: "Stakeholders", href: "#rc-stakeholders" }] : []),
                 ...(result.decision_brief ? [{ key: "brief", label: "Brief", href: "#rc-brief" }] : []),
                 ...(hasVariantSections
                   ? [{ key: "variantAdditions", label: "Extra sections", href: "#rc-variant-sections" }]
@@ -1205,34 +1208,34 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
         </CollapsibleBlock>
       )}
 
-      {/* People (violet tint) */}
-      {peopleLens && (
+      {/* Stakeholders (violet tint) */}
+      {stakeholdersLens && (
         <CollapsibleBlock
-          id="rc-people"
-          title="People & stakeholders"
+          id="rc-stakeholders"
+          title="Stakeholders"
           className="mt-6 border-violet-200 bg-violet-50/40"
-          open={openSections.people}
-          onOpenChange={(v) => toggleSection("people", v)}
+          open={openSections.stakeholders}
+          onOpenChange={(v) => toggleSection("stakeholders", v)}
           bodyClassName="space-y-4 px-3 pb-4 pt-1"
         >
-          {(peopleLens.stakeholder_impacts?.length ?? 0) > 0 && (
+          {(stakeholdersLens.stakeholder_impacts?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-violet-200 bg-violet-50/80 p-4 shadow-sm">
-              <Section title="Stakeholder impacts" updated={analysisChanges.people}>
+              <Section title="Stakeholder impacts" updated={analysisChanges.stakeholders}>
                 <p className="mb-3 text-sm text-zinc-600">Who is affected by this decision and how.</p>
-                {editingSection === sectionKey("people", "stakeholder_impacts") ? (
+                {editingSection === sectionKey("stakeholders", "stakeholder_impacts") ? (
                   <EditableStakeholderImpacts
                     items={draftStakeholderImpacts}
                     onChange={setDraftStakeholderImpacts}
-                    onSave={() => saveLensUpdate(withUpdatedField(result.lens_outputs, "people", "stakeholder_impacts", draftStakeholderImpacts.filter((s) => s.stakeholder.trim() || s.impact.trim())))}
+                    onSave={() => saveLensUpdate(withUpdatedField(result.lens_outputs, "stakeholders", "stakeholder_impacts", draftStakeholderImpacts.filter((s) => s.stakeholder.trim() || s.impact.trim())))}
                     onCancel={cancelEditing}
                     saving={saving}
                     error={editError}
                   />
                 ) : (
                   <>
-                    {peopleLens.stakeholder_impacts?.length ? (
+                    {stakeholdersLens.stakeholder_impacts?.length ? (
                       <ul className="space-y-3">
-                        {peopleLens.stakeholder_impacts.map((s, i) => (
+                        {stakeholdersLens.stakeholder_impacts.map((s, i) => (
                           <li key={i} className="flex flex-col gap-1">
                             <span className="font-medium text-zinc-800">
                               <ResearchMarkdownInline source={s.stakeholder} />
@@ -1258,7 +1261,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
                       <p className="text-zinc-500 text-sm">No items. Edit to add.</p>
                     )}
                     {canEdit && (
-                      <button type="button" onClick={() => startEditingStakeholderImpacts(peopleLens.stakeholder_impacts ?? [])} className="mt-2 text-sm text-indigo-600 hover:text-indigo-700">
+                      <button type="button" onClick={() => startEditingStakeholderImpacts(stakeholdersLens.stakeholder_impacts ?? [])} className="mt-2 text-sm text-indigo-600 hover:text-indigo-700">
                         Edit
                       </button>
                     )}
@@ -1267,7 +1270,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
               </Section>
             </div>
           )}
-          {(peopleLens.execution_risks?.length ?? 0) > 0 && (
+          {(stakeholdersLens.execution_risks?.length ?? 0) > 0 && (
             <div className="rounded-lg border border-violet-200 bg-violet-50/80 p-4 shadow-sm">
               <Section title="Execution risks">
                 <p className="mb-2 text-sm text-zinc-600">
@@ -1275,15 +1278,15 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
                 </p>
                 {canEdit ? (
                   <LensBoxEditor
-                    editorKey={sectionKey("people", "execution_risks")}
-                    items={peopleLens.execution_risks ?? []}
-                    onSave={(items) => saveLensListUpdate("people", "execution_risks", items)}
+                    editorKey={sectionKey("stakeholders", "execution_risks")}
+                    items={stakeholdersLens.execution_risks ?? []}
+                    onSave={(items) => saveLensListUpdate("stakeholders", "execution_risks", items)}
                     editable={true}
                     hideSaveHint
                   />
-                ) : peopleLens.execution_risks?.length ? (
+                ) : stakeholdersLens.execution_risks?.length ? (
                   <ul className="list-inside list-disc space-y-1.5 text-zinc-700">
-                    {peopleLens.execution_risks.map((r, i) => (
+                    {stakeholdersLens.execution_risks.map((r, i) => (
                       <li key={i}>
                         <ResearchMarkdownInline source={r} />
                       </li>

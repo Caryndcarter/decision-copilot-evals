@@ -32,7 +32,7 @@ export function postureRequiresLeaning(posture: Posture): posture is PostureWith
   return posture === "pressure_test" || posture === "show_opposition";
 }
 
-export type Lens = "risk" | "reversibility" | "people";
+export type Lens = "risk" | "reversibility" | "stakeholders";
 
 export type AnswerType = "enum" | "boolean" | "numeric" | "percentage" | "short_text";
 
@@ -195,16 +195,19 @@ export interface StakeholderImpact {
   sentiment: "positive" | "negative" | "neutral";
 }
 
-export interface PeopleLensOutput extends LensOutputBase {
-  lens: "people";
+export interface StakeholdersLensOutput extends LensOutputBase {
+  lens: "stakeholders";
   stakeholder_impacts: StakeholderImpact[];
   execution_risks: string[];
 }
 
+/** @deprecated Use StakeholdersLensOutput */
+export type PeopleLensOutput = StakeholdersLensOutput;
+
 export type LensOutput =
   | RiskLensOutput
   | ReversibilityLensOutput
-  | PeopleLensOutput;
+  | StakeholdersLensOutput;
 
 // ============================================
 // 5) DecisionRunResult (API response envelope)
@@ -326,7 +329,7 @@ export interface RunVariant {
 export interface SynthesisSourceRef {
   /** Display label matching synthesis ## headers (e.g. OpenAI, Anthropic, Google Gemini, xAI) */
   provider: string;
-  section: "risk" | "reversibility" | "people" | "brief" | "variants" | "context" | "research";
+  section: "risk" | "reversibility" | "stakeholders" | "brief" | "variants" | "context" | "research";
   /** When section is research — copy from [research_id:…] in the synthesis prompt */
   research_id?: string;
   /** When a specific saved variant is meant */

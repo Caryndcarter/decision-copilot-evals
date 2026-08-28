@@ -414,7 +414,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                 </Link>
                 <Link
                   href={`/run/result?run_id=${encodeURIComponent(navRunId)}`}
-                  title="This run only: risk, reversibility, people lenses and a single decision brief—not the unified multi-provider brief."
+                  title="This run only: risk, reversibility, stakeholders lenses and a single decision brief—not the unified multi-provider brief."
                   className="inline-flex items-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
                   Single brief

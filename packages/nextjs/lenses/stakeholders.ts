@@ -1,5 +1,5 @@
 /**
- * People Lens
+ * Stakeholders Lens
  *
  * Focuses on stakeholder impacts and execution risks for a decision.
  * SERVER-ONLY: Do not import from client/UI code.
@@ -11,7 +11,7 @@ import type { LLMMessage, LLMProvider } from "@/llm/types";
 import type {
   DecisionIntake,
   Posture,
-  PeopleLensOutput,
+  StakeholdersLensOutput,
   BlindSpot,
   Tradeoff,
   LensQuestion,
@@ -20,7 +20,7 @@ import type {
 } from "@/types/decision";
 import { postureRequiresLeaning } from "@/types/decision";
 
-const PEOPLE_OUTPUT_SCHEMA = {
+const STAKEHOLDERS_OUTPUT_SCHEMA = {
   type: "object",
   properties: {
     confidence: {
@@ -55,7 +55,7 @@ const PEOPLE_OUTPUT_SCHEMA = {
     assumptions_detected: {
       type: "array",
       items: { type: "string", description: "Plain sentence; no markdown" },
-      description: "Assumptions the decision-maker appears to be making about people and execution",
+      description: "Assumptions the decision-maker appears to be making about stakeholders and execution",
     },
     blind_spots: {
       type: "array",
@@ -82,7 +82,7 @@ const PEOPLE_OUTPUT_SCHEMA = {
         required: ["option", "upside", "downside"],
         additionalProperties: false,
       },
-      description: "Key tradeoffs involving people or execution",
+      description: "Key tradeoffs involving stakeholders or execution",
     },
     remaining_uncertainty: {
       type: "array",
@@ -96,7 +96,7 @@ const PEOPLE_OUTPUT_SCHEMA = {
         type: "object",
         properties: {
           question_id: { type: "string" },
-          lens: { type: "string", const: "people" },
+          lens: { type: "string", const: "stakeholders" },
           question_text: { type: "string" },
           answer_type: { type: "string", enum: ["enum", "boolean", "numeric", "percentage", "short_text"] },
           options: {
@@ -132,9 +132,9 @@ function getPostureInstruction(posture: Posture, leaningDirection?: string): str
     case "pressure_test":
       return `The user is leaning toward: "${leaningDirection}". Stress-test this by identifying who might resist, who is left out, and what could derail execution.`;
     case "show_opposition":
-      return `The user is leaning toward: "${leaningDirection}". Do not help them sell or soft-land that lean. Argue as a serious opponent would on the people and execution side: who would resist and why they're right to, whose interests the lean sacrifices, how opponents would frame stakeholder harm, and what alternative the opposition would prefer. Do not hedge back into defending the user's lean.`;
+      return `The user is leaning toward: "${leaningDirection}". Do not help them sell or soft-land that lean. Argue as a serious opponent would on the stakeholders and execution side: who would resist and why they're right to, whose interests the lean sacrifices, how opponents would frame stakeholder harm, and what alternative the opposition would prefer. Do not hedge back into defending the user's lean.`;
     case "surface_risks":
-      return "The user wants to understand risks. Be thorough on stakeholder impacts and execution risks; don't soften the people side.";
+      return "The user wants to understand risks. Be thorough on stakeholder impacts and execution risks; don't soften the stakeholder side.";
     case "generate_alternatives":
       return "The user wants to explore alternatives. For each stakeholder or execution risk, consider whether a different approach could reduce impact or risk.";
   }
@@ -154,10 +154,10 @@ function formatClarificationsForPrompt(clarifications: Clarification[]): string 
       return `- ${a.question_id} (${a.lens}): ${text}`;
     })
   );
-  return `\n\n## Follow-up answers from the user\n${lines.join("\n")}\n\nUse these answers to refine your people and execution analysis. Do not ask the same questions again.`;
+  return `\n\n## Follow-up answers from the user\n${lines.join("\n")}\n\nUse these answers to refine your stakeholders and execution analysis. Do not ask the same questions again.`;
 }
 
-export function buildPeoplePrompt(
+export function buildStakeholdersPrompt(
   intake: DecisionIntake,
   clarifications: Clarification[] = []
 ): LLMMessage[] {
@@ -166,8 +166,8 @@ export function buildPeoplePrompt(
     postureRequiresLeaning(intake.posture) ? intake.leaning_direction : undefined
   );
 
-  const systemPrompt = `You are an advisor helping someone think through the people and execution side of an important decision. Your job is to identify:
-1. Stakeholder impacts — who is affected (teams, roles, partners) and how (positive, negative, neutral).
+  const systemPrompt = `You are an advisor helping someone think through the stakeholders and execution side of an important decision. Your job is to identify:
+1. Stakeholder impacts — who is affected (teams, roles, partners, customers, communities) and how (positive, negative, neutral).
 2. Execution risks — what could derail or complicate implementation: adoption, resistance, capability gaps, coordination, dependencies.
 
 ${postureInstruction}
@@ -197,7 +197,7 @@ Analyze stakeholder impacts and execution risks for this decision.`;
   ];
 }
 
-interface RawPeopleOutput {
+interface RawStakeholdersOutput {
   confidence: "high" | "medium" | "low";
   stakeholder_impacts: Array<{ stakeholder: string; impact: string; sentiment: string }>;
   execution_risks: string[];
@@ -207,7 +207,7 @@ interface RawPeopleOutput {
   remaining_uncertainty: string[];
   questions_to_answer_next: Array<{
     question_id: string;
-    lens: "people";
+    lens: "stakeholders" | "people";
     question_text: string;
     answer_type: "enum" | "boolean" | "numeric" | "percentage" | "short_text";
     options: string[] | null;
@@ -215,11 +215,11 @@ interface RawPeopleOutput {
   }>;
 }
 
-export function parsePeopleOutput(parsed: unknown): PeopleLensOutput {
-  const raw = parsed as RawPeopleOutput;
+export function parseStakeholdersOutput(parsed: unknown): StakeholdersLensOutput {
+  const raw = parsed as RawStakeholdersOutput;
 
-  const output: PeopleLensOutput = {
-    lens: "people",
+  const output: StakeholdersLensOutput = {
+    lens: "stakeholders",
     confidence: raw.confidence ?? "medium",
     stakeholder_impacts: (raw.stakeholder_impacts ?? []).map(
       (s): StakeholderImpact => ({
@@ -243,7 +243,7 @@ export function parsePeopleOutput(parsed: unknown): PeopleLensOutput {
     questions_to_answer_next: (raw.questions_to_answer_next ?? []).map(
       (q): LensQuestion => ({
         question_id: q.question_id,
-        lens: "people",
+        lens: "stakeholders",
         question_text: q.question_text,
         answer_type: q.answer_type,
         options: q.options ?? undefined,
@@ -255,16 +255,16 @@ export function parsePeopleOutput(parsed: unknown): PeopleLensOutput {
   return output;
 }
 
-export async function runPeopleLens(
+export async function runStakeholdersLens(
   intake: DecisionIntake,
   clarifications: Clarification[] = [],
   provider: LLMProvider = "openai"
-): Promise<PeopleLensOutput> {
-  const messages = buildPeoplePrompt(intake, clarifications);
+): Promise<StakeholdersLensOutput> {
+  const messages = buildStakeholdersPrompt(intake, clarifications);
   // Dense stakeholder cases (e.g. PE / govtech roll-ups) need more headroom.
   // OpenAI GPT-5 reasoning + xAI Grok both truncate mid-JSON without it.
   const requestOpts = {
-    schema: PEOPLE_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
+    schema: STAKEHOLDERS_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
     temperature: 0.7,
     maxTokens: provider === "openai" ? 16_384 : provider === "xai" ? 8192 : 4096,
   };
@@ -273,7 +273,7 @@ export async function runPeopleLens(
   let response = await client.run(messages, requestOpts);
 
   if (!response.parsed) {
-    console.warn("[People] First attempt did not return parseable JSON; retrying once.", {
+    console.warn("[Stakeholders] First attempt did not return parseable JSON; retrying once.", {
       provider,
       finishReason: response.meta?.finishReason,
       contentLen: response.content.length,
@@ -298,16 +298,23 @@ export async function runPeopleLens(
   }
 
   if (!response.parsed) {
-    console.error("[People] People lens failed to produce parseable JSON after retry.", {
+    console.error("[Stakeholders] Stakeholders lens failed to produce parseable JSON after retry.", {
       provider,
       finishReason: response.meta?.finishReason,
       contentLen: response.content.length,
       contentPreview: response.content.slice(0, 500),
     });
     throw new Error(
-      `People lens did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
+      `Stakeholders lens did not return valid structured output (provider: ${provider}, finishReason: ${response.meta?.finishReason ?? "unknown"})`
     );
   }
 
-  return parsePeopleOutput(response.parsed);
+  return parseStakeholdersOutput(response.parsed);
 }
+
+/** @deprecated Use runStakeholdersLens */
+export const runPeopleLens = runStakeholdersLens;
+/** @deprecated Use buildStakeholdersPrompt */
+export const buildPeoplePrompt = buildStakeholdersPrompt;
+/** @deprecated Use parseStakeholdersOutput */
+export const parsePeopleOutput = parseStakeholdersOutput;

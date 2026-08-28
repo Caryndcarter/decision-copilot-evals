@@ -176,7 +176,7 @@ Examples that MUST be one group:
 - "What is your annual budget for this initiative?" and "What spending cap has been approved?" → same group.
 
 - "What are the specific requirements of large-enterprise RFPs related to AI governance and data security?" (OpenAI, risk lens)
-- "What are the specific requirements and negotiable points in the enterprise RFPs regarding AI governance and compliance?" (Gemini, people lens)
+- "What are the specific requirements and negotiable points in the enterprise RFPs regarding AI governance and compliance?" (Gemini, stakeholders lens)
 → Same group: enterprise RFP AI governance requirements — lens does NOT matter.
 
 Examples that stay SEPARATE:

@@ -46,7 +46,7 @@ function appendLensCompact(lines: string[], lensOutputs: LensOutput[]) {
       if (rev.safe_to_try_first?.length)
         lines.push("- Safe first: " + truncate(rev.safe_to_try_first.join("; "), 280));
     }
-    if (lens.lens === "people") {
+    if (lens.lens === "stakeholders") {
       const p = lens as {
         stakeholder_impacts?: { stakeholder: string; impact: string; sentiment: string }[];
         execution_risks?: string[];

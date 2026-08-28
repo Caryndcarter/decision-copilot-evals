@@ -11,7 +11,7 @@ const RESEARCH_HINT =
  * Often means "explain our run output," not a research task—unless research hints also appear.
  */
 const ANALYSIS_ONLY_HINT =
-  /\b(this analysis|the brief|the\s+lens|above analysis|risk lens|people lens|reversibility lens|what\s+does\s+the\s+analysis|why\s+did\s+you\s+list|summarize\s+(the|my)\s+(analysis|brief|risks)\b)/i;
+  /\b(this analysis|the brief|the\s+lens|above analysis|risk lens|stakeholders lens|reversibility lens|what\s+does\s+the\s+analysis|why\s+did\s+you\s+list|summarize\s+(the|my)\s+(analysis|brief|risks)\b)/i;
 
 export function looksLikeFreeFormResearchRequest(message: string): boolean {
   const t = message.trim();

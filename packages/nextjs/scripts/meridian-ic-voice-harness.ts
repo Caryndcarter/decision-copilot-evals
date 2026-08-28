@@ -60,7 +60,7 @@ import {
   type MeridianIcVoiceCase,
 } from "../lib/meridian-ic-voice-cases";
 import { modelIdForProvider } from "../lib/harness-provider-models";
-import { runRiskLens, runReversibilityLens, runPeopleLens } from "../lenses";
+import { runRiskLens, runReversibilityLens, runStakeholdersLens } from "../lenses";
 import { runBriefSynthesis } from "../lenses/brief";
 import { runDecisionTitle } from "../lenses/decision-title";
 import { generateClarificationDemoSamplesWithGemini } from "../lenses/clarification-demo-samples";
@@ -260,7 +260,7 @@ async function buildIntakeRun(
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(intake, [], provider),
     runReversibilityLens(intake, [], provider),
-    runPeopleLens(intake, [], provider),
+    runStakeholdersLens(intake, [], provider),
   ]);
   const lens_outputs: LensOutput[] = [risk, reversibility, people];
   const clarification_questions = extractClarificationQuestions(lens_outputs);
@@ -336,7 +336,7 @@ async function applyClarificationToRun(
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(run.intake, run.clarifications, provider),
     runReversibilityLens(run.intake, run.clarifications, provider),
-    runPeopleLens(run.intake, run.clarifications, provider),
+    runStakeholdersLens(run.intake, run.clarifications, provider),
   ]);
   const lens_outputs: LensOutput[] = [risk, reversibility, people];
   let decision_brief = await runBriefSynthesis(
@@ -369,7 +369,7 @@ async function createVariant(
   const [risk, reversibility, people] = await Promise.all([
     runRiskLens(run.intake, run.clarifications, provider),
     runReversibilityLens(run.intake, run.clarifications, provider),
-    runPeopleLens(run.intake, run.clarifications, provider),
+    runStakeholdersLens(run.intake, run.clarifications, provider),
   ]);
   const lensOutputs: LensOutput[] = [risk, reversibility, people];
   let brief = await runBriefSynthesis(
