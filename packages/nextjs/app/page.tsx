@@ -534,33 +534,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="bg-zinc-950 py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-            Have a decision worth thinking through?
-          </h2>
-          <p className="mt-3 text-zinc-400 max-w-lg mx-auto">
-            Describe your situation and get structured analysis back — from one model or your full
-            think tank, synthesized into a brief when you need it.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3 justify-center">
-            <Link
-              href="/intake"
-              className="rounded-lg bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
-            >
-              Start a decision →
-            </Link>
-            <Link
-              href="/intake"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-            >
-              Try a demo
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* ── Why three lenses ── */}
       <section className="bg-zinc-50 py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
@@ -606,6 +579,33 @@ export default function Home() {
                 <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="bg-zinc-950 py-20">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            Have a decision worth thinking through?
+          </h2>
+          <p className="mt-3 text-zinc-400 max-w-lg mx-auto">
+            Describe your situation and get structured analysis back — from one model or your full
+            think tank, synthesized into a brief when you need it.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3 justify-center">
+            <Link
+              href="/intake"
+              className="rounded-lg bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+            >
+              Start a decision →
+            </Link>
+            <Link
+              href="/intake"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            >
+              Try a demo
+            </Link>
           </div>
         </div>
       </section>
