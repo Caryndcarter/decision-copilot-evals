@@ -238,8 +238,8 @@ export function MeridianMoralDashboard({ embedded = false }: { embedded?: boolea
           </div>
         ) : (
           <p className="max-w-2xl text-sm text-zinc-600">
-            Blind structured coding of each provider&apos;s standard Decision Brief. Green leans
-            people/municipal protection; amber leans LP/speed. Click a chip for the quote.
+            How to read the grid: blind coding of each provider&apos;s Decision Brief. Green leans
+            people/municipal protection; amber leans LP/speed. Click a chip for the supporting quote.
           </p>
         )}
         <label className="text-sm text-zinc-600">

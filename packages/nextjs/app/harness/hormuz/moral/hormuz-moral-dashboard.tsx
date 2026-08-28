@@ -285,8 +285,8 @@ export function HormuzMoralDashboard({ embedded = false }: { embedded?: boolean 
           </div>
         ) : (
           <p className="max-w-2xl text-sm text-zinc-600">
-            Blind structured coding of Hormuz Decision Briefs. Green leans crew protection; amber
-            leans commercial continuity. Click a chip for the quote.
+            How to read the grid: blind coding of Hormuz Decision Briefs. Green leans crew
+            protection; amber leans commercial continuity. Click a chip for the supporting quote.
           </p>
         )}
         <label className="text-sm text-zinc-600">

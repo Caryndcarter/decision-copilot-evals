@@ -58,20 +58,21 @@ export const HARNESS_STUDY_TABS: {
     id: "voice-influence",
     label: "Voice influence",
     blurb:
-      "Same decision framed five ways (Meridian IC · Civitas, Hormuz tanker ops, …) — intake through variant and research, no Unified Briefs.",
+      "Users often write intake with a lean already baked into the framing. We hold the facts fixed and vary only narrator voice (Meridian IC · Civitas, Hormuz tanker ops) to see whether Decision Briefs rubber-stamp the filer, push back, or miss false premises.",
     findingsStudy: "meridian-ic-moral",
   },
   {
     id: "authorship-influence",
     label: "Authorship influence",
     blurb:
-      "Five high-conflict demo decisions — Standard, Blind, and Reassigned Unified Briefs per synthesizer.",
+      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship to see whether influence and moral posture track ideas or labels.",
     findingsStudy: "multi-demo-authorship",
   },
   {
     id: "replication",
     label: "Replication",
-    blurb: "Full Civitas modernization path repeated across trials for provider comparison.",
+    blurb:
+      "A single demo run can look decisive by chance. We re-run the full Civitas path (intake through Unified Brief) across trials to separate stable provider behavior from one-shot noise.",
     findingsStudy: "civitas-replication-moral",
   },
 ];

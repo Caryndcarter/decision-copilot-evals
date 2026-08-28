@@ -250,11 +250,17 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
             Multi-demo authorship
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-            Rollup of contribution heatmaps across cases, then per-case branding shifts and moral
-            audits.
+            How to read this: contribution heatmaps and moral audits across Standard / Blind /
+            Reassigned Unified Briefs. Compare modes to see whether credit and moral posture shift
+            when brand labels change.
           </p>
         </header>
-      ) : null}
+      ) : (
+        <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
+          How to read this: contribution heatmaps and moral audits across Standard / Blind /
+          Reassigned modes. Compare modes to see whether credit tracks ideas or brand labels.
+        </p>
+      )}
 
       <div className="flex flex-wrap items-end gap-4 rounded-xl border border-zinc-200 bg-white px-4 py-3">
         <label className="flex min-w-[16rem] flex-1 flex-col gap-1 text-xs font-medium text-zinc-600">

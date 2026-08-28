@@ -281,8 +281,9 @@ export function CivitasMoralDashboard({ embedded = false }: { embedded?: boolean
           </div>
         ) : (
           <p className="max-w-2xl text-sm text-zinc-600">
-            Blind coding of Civitas Unified Briefs across replication trials. Green leans
-            people/municipal protection; amber leans LP/speed. Click a chip for the quote.
+            How to read the grid: blind coding of Civitas Unified Briefs across replication trials.
+            Green leans people/municipal protection; amber leans LP/speed. Click a chip for the
+            supporting quote.
           </p>
         )}
         <div className="flex flex-wrap items-end gap-3">

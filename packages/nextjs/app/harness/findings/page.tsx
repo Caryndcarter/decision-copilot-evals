@@ -76,9 +76,9 @@ export default async function HarnessFindingsPage({
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900">Study findings</h1>
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-500">
-            Switch among studies by test type and scenario. Voice-influence batches use committed
-            moral snapshots when available; authorship-influence pulls live batches with coverage,
-            influence shifts, and moral lean when audited.
+            Each tab is a different behavior question we asked of the models. Pick a study to see
+            why we ran it, then the coded results. Voice and replication studies use committed moral
+            snapshots; authorship pulls live batches.
           </p>
         </div>
       </div>
