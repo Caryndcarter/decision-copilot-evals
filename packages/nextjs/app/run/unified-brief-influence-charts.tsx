@@ -41,13 +41,13 @@ type MatrixByMode = Record<UnifiedBriefAuthorshipMode, InfluenceMatrix | null>;
 function authorshipModeChartLabel(mode: UnifiedBriefAuthorshipMode): string {
   if (mode === "blind") return "Blind";
   if (mode === "reassigned") return "Reassigned";
-  return "Standard";
+  return "Revealed";
 }
 
 function authorshipModeDescription(mode: UnifiedBriefAuthorshipMode): string {
   if (mode === "blind") return "blind-authorship briefs";
   if (mode === "reassigned") return "reassigned-authorship briefs";
-  return "standard briefs";
+  return "revealed-authorship briefs";
 }
 
 function signedDelta(delta: number): string {
