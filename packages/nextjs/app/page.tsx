@@ -161,8 +161,8 @@ function ThinkTankMockup() {
         </div>
       </div>
 
-      {/* Floating contributions card */}
-      <div className="absolute -bottom-6 -left-4 w-44 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-2">
+      {/* Floating contributions card — narrow badge that hangs mostly below the brief card, only dipping into its empty bottom padding (never the recommendation text) */}
+      <div className="absolute -bottom-28 -left-8 w-52 rounded-xl border border-white/10 bg-zinc-900 shadow-xl p-3 space-y-2">
         <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Contributions</div>
         <div className="text-[11px] text-zinc-300 leading-snug">Whose ideas made the cut — attribution across every model in your think tank.</div>
         <div className="flex flex-wrap gap-1">
@@ -172,8 +172,8 @@ function ThinkTankMockup() {
         </div>
       </div>
 
-      {/* Floating research card */}
-      <div className="absolute -top-4 -right-4 w-40 rounded-xl border border-white/10 bg-zinc-900/90 shadow-xl p-3 space-y-1.5">
+      {/* Floating research card — hangs mostly past the brief card's right edge, in the empty gap between the advisor pills and the Situation text */}
+      <div className="absolute top-8 -right-16 w-40 rounded-xl border border-white/10 bg-zinc-900 shadow-xl p-3 space-y-1.5">
         <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Research</div>
         <div className="text-[11px] text-zinc-300 leading-snug">Live web search feeds back into your think tank&apos;s analysis.</div>
       </div>
