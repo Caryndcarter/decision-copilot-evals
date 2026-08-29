@@ -283,15 +283,14 @@ export default function Home() {
               </h1>
               <p className="mt-5 text-lg text-zinc-300 leading-relaxed max-w-lg">
                 You&apos;re facing a decision with real stakes — stay or migrate, hire or restructure,
-                build or buy. There&apos;s no obvious right answer, and one chatbot reply
+                build or buy. There&apos;s no obvious right answer, and one chatbot thread
                 usually isn&apos;t enough.
               </p>
               <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-lg">
-                Decision Copilot is built for that moment. You describe what&apos;s going on:
-                your situation, constraints, what you know and what you don&apos;t. Multiple AI
-                models analyze the same brief independently — and you get structured output you
-                can compare, refine, and act on together with your AI think tank — best-of-all-worlds
-                thinking that pulls the strongest ideas from every perspective into one recommendation.
+                Decision Copilot is built for that moment. You&apos;re guided through describing
+                your situation. Multiple AI models analyze it independently, so no single
+                model&apos;s framing quietly steers the outcome. The best ideas from your think
+                tank are combined into a unified recommendation with a plan you can refine and act on.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -301,10 +300,10 @@ export default function Home() {
                   Describe your decision →
                 </Link>
                 <Link
-                  href="/tour"
+                  href="/intake"
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
-                  See how it works →
+                  Try a demo scenario
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500">
@@ -343,7 +342,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Not hypotheticals. The kind of calls that keep you up at night — the ones that deserve more than one opinion.
+              Not hypotheticals. The kind of calls that keep you up at night — the ones where you can&apos;t afford any gaps in reasoning.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -393,15 +392,16 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              You bring the decision. Decision Copilot brings structure, follow-up questions, and — if you want —
-              more than one AI perspective on the same problem.
+              You bring the decision. Decision Copilot brings independent perspectives
+              pressure-testing the same problem, then a unified recommendation and plans
+              you can act on.
             </p>
           </div>
           <div className="space-y-8">
             <Step
               n="1"
               title="Describe what's on the table"
-              desc="Paste in your situation: what you're deciding, constraints, what you already know, and what's still unclear. Pick an analysis posture — compare options openly, challenge a leaning, hear the opposition case, focus on risks first, or widen the option set."
+              desc="Lay out the decision as you see it — situation, what you know, what's still unclear. Then set the frame: compare options, gut-check a favorite, hear the opposition case, surface risks, or widen the alternatives — so the analysis matches the kind of help you need."
             />
             <Step
               n="2"
@@ -411,7 +411,7 @@ export default function Home() {
             <Step
               n="3"
               title="Answer what the models need to know"
-              desc="Before finalizing, the models ask follow-up questions: missing context, unstated assumptions, things you'd only know if you were in the room. Your answers sharpen the analysis."
+              desc="Before finalizing, the models ask follow-up questions — missing context and details they can't safely assume without your clarification. Your answers sharpen the analysis."
             />
             <Step
               n="4"
@@ -419,84 +419,92 @@ export default function Home() {
               desc="Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut."
             />
           </div>
-          <div className="mt-10 text-center">
-            <Link
-              href="/tour"
-              className="inline-flex items-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors hover:bg-indigo-500"
-            >
-              See it in action — take the tour →
-            </Link>
-            <p className="mt-2 text-xs text-zinc-400">Interactive walkthrough · no sign-up required</p>
-          </div>
         </div>
       </section>
 
-      {/* ── Think tank value ── */}
+      {/* ── Think tank guardrails ── */}
       <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
-              Your think tank on one decision
+          <div className="mx-auto mb-14 max-w-3xl text-center">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight leading-snug">
+              Not a vote. Not a favorite. A blind synthesis of the best ideas.
             </h2>
-            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
-              Not a pile of separate chats — independent analyses on the same brief, then synthesis
-              when you&apos;re ready.
+            <p className="mt-4 text-zinc-500 leading-relaxed">
+              The same structured analysis rubric for every model, so they don&apos;t leave
+              anything out. Independent answers, so no early opinion sways the room. Blind
+              synthesis, so no model — or brand — favors itself.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: <IconThinkTank />,
-                title: "Independent think tank analysis",
-                desc: "Each model reads your situation and runs the same lenses on its own. Compare where they agree, where they push back, and what only one surfaced.",
+                title: "Same questions, no peeking",
+                desc: "Every model works through the same structure, on its own — nothing skipped, no one influenced by another's early take.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
-                icon: <IconCompare />,
-                title: "Cross-provider comparison",
-                desc: "See divergence side by side — useful when models disagree on risk level, reversibility, or who gets affected.",
+                icon: <IconResearch />,
+                title: "It can look things up",
+                desc: "Models pull in live web search when they need current information, instead of guessing.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
-                icon: <IconResearch />,
-                title: "Research integration",
-                desc: "Ask follow-up research questions with live web search. Findings feed back into the analysis on that run.",
+                icon: <IconCompare />,
+                title: "Where they agree — and where they don't",
+                desc: "Independent answers are laid side by side. Overlap and outliers both surface.",
                 color: "text-violet-500 bg-violet-50",
+              },
+              {
+                icon: <IconPeople />,
+                title: "Then they review each other",
+                desc: "Now that answers are locked in, each model weighs what the others found. The disagreement here is real — nobody talked anybody into it.",
+                color: "text-indigo-500 bg-indigo-50",
               },
               {
                 icon: <IconBrief />,
-                title: "Unified Brief",
-                desc: "When you've run multiple models, merge their output into one synthesized recommendation — exportable as a PDF.",
+                title: "Written blind",
+                desc: "One model merges the strongest thinking into a single brief — without knowing which provider said what. Ideas get through. Brand names don't.",
                 color: "text-emerald-500 bg-emerald-50",
               },
               {
                 icon: <IconAttribution />,
-                title: "Contribution attribution",
-                desc: "See whose ideas made the cut in the Unified Brief: what each model contributed, and what didn't survive synthesis.",
+                title: "Attribution, after the fact",
+                desc: "You can still see whose thinking made the cut. Transparency without letting brand bias into the call itself.",
                 color: "text-orange-500 bg-orange-50",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 hover:border-zinc-200 transition-colors">
                 <div className={`inline-flex p-2.5 rounded-lg mb-4 ${item.color}`}>{item.icon}</div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-1.5">{item.title}</h3>
+                <h3 className="text-sm font-semibold text-zinc-900 mb-1.5 leading-snug">{item.title}</h3>
                 <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
+          <p className="mt-10 mx-auto max-w-2xl text-center text-sm text-zinc-500 leading-relaxed">
+            Is brand bias real? We hide provider names when the Unified Brief is written, so
+            credit follows the idea — not the logo.{" "}
+            <Link
+              href="/model-studies/results/multi-demo-authorship"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              See how we test that in Model Studies →
+            </Link>
+          </p>
         </div>
       </section>
 
       {/* ── vs multi-model chat tools ── */}
       <section className="bg-zinc-950 py-20 border-b border-white/5">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-2xl">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               Not another multi-model chat
             </p>
-            <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight max-w-4xl">
               Built for a decision you have to defend — not a thread you browse.
             </h2>
-            <p className="mt-4 text-base text-zinc-400 leading-relaxed">
+            <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-4xl">
               Leading multi-model tools orchestrate several AIs in an open conversation.
               Decision Copilot starts from a structured intake and a fixed analytical rubric,
               so disagreement is measurable — and every brief is comparable.
@@ -523,14 +531,23 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="mt-10 max-w-2xl text-sm leading-relaxed text-zinc-500">
-            The fixed schema is what makes the research program possible: you can code cases
-            against the same dimensions because every run shares one skeleton — and compare
-            models on a brief you can defend later, not a thread that disappears into chat history.{" "}
-            <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
-              See the Model Studies research →
-            </Link>
-          </p>
+          <div className="mt-14 border-t border-white/10 pt-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+              Why the schema matters
+            </p>
+            <h3 className="mt-3 text-xl lg:text-2xl font-bold text-white tracking-tight max-w-4xl leading-snug">
+              Same skeleton every time — so comparison is actually possible.
+            </h3>
+            <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-4xl">
+              Because every run shares one fixed structure, we can code cases against the same
+              dimensions and compare models on a brief you can defend later — not a thread that
+              disappears into chat history. That&apos;s also what makes rigorous model evaluation
+              possible.{" "}
+              <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
+                See the Model Studies research →
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
 
