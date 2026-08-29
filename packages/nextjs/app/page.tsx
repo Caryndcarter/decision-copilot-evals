@@ -283,15 +283,14 @@ export default function Home() {
               </h1>
               <p className="mt-5 text-lg text-zinc-300 leading-relaxed max-w-lg">
                 You&apos;re facing a decision with real stakes — stay or migrate, hire or restructure,
-                build or buy. There&apos;s no obvious right answer, and one chatbot reply
+                build or buy. There&apos;s no obvious right answer, and one chatbot thread
                 usually isn&apos;t enough.
               </p>
               <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-lg">
-                Decision Copilot is built for that moment. You describe what&apos;s going on:
-                your situation, constraints, what you know and what you don&apos;t. Multiple AI
-                models analyze the same brief independently — and you get structured output you
-                can compare, refine, and act on together with your AI think tank — best-of-all-worlds
-                thinking that pulls the strongest ideas from every perspective into one recommendation.
+                Decision Copilot is built for that moment. You&apos;re guided through describing
+                your situation. Multiple AI models analyze it independently, so no single
+                model&apos;s framing quietly steers the outcome. Their best ideas are then combined into a unified
+                recommendation with a plan you can refine and act on together with your think tank.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -343,7 +342,7 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Not hypotheticals. The kind of calls that keep you up at night — the ones that deserve more than one opinion.
+              Not hypotheticals. The kind of calls that keep you up at night — the ones where you can&apos;t afford any gaps in reasoning.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -393,15 +392,16 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              You bring the decision. Decision Copilot brings structure, follow-up questions, and — if you want —
-              more than one AI perspective on the same problem.
+              You bring the decision. Decision Copilot brings independent perspectives
+              pressure-testing the same problem, then a unified recommendation and plans
+              you can act on.
             </p>
           </div>
           <div className="space-y-8">
             <Step
               n="1"
               title="Describe what's on the table"
-              desc="Paste in your situation: what you're deciding, constraints, what you already know, and what's still unclear. Pick an analysis posture — compare options openly, challenge a leaning, hear the opposition case, focus on risks first, or widen the option set."
+              desc="Lay out the decision as you see it — situation, what you know, what's still unclear. Then set the frame: compare options, gut-check a favorite, hear the opposition case, surface risks, or widen the alternatives — so the analysis matches the kind of help you need."
             />
             <Step
               n="2"
@@ -411,7 +411,7 @@ export default function Home() {
             <Step
               n="3"
               title="Answer what the models need to know"
-              desc="Before finalizing, the models ask follow-up questions: missing context, unstated assumptions, things you'd only know if you were in the room. Your answers sharpen the analysis."
+              desc="Before finalizing, the models ask follow-up questions — missing context and details they can't safely assume without your clarification. Your answers sharpen the analysis."
             />
             <Step
               n="4"
@@ -439,8 +439,8 @@ export default function Home() {
               Your think tank on one decision
             </h2>
             <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
-              Not a pile of separate chats — independent analyses on the same brief, then synthesis
-              when you&apos;re ready.
+              Not a pile of separate chats. One shared brief for every model, so their
+              answers stay comparable and you never lose the thread.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
