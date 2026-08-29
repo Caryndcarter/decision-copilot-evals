@@ -289,8 +289,8 @@ export default function Home() {
               <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-lg">
                 Decision Copilot is built for that moment. You&apos;re guided through describing
                 your situation. Multiple AI models analyze it independently, so no single
-                model&apos;s framing quietly steers the outcome. Their best ideas are then combined into a unified
-                recommendation with a plan you can refine and act on together with your think tank.
+                model&apos;s framing quietly steers the outcome. The best ideas from your think
+                tank are combined into a unified recommendation with a plan you can refine and act on.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -300,10 +300,10 @@ export default function Home() {
                   Describe your decision →
                 </Link>
                 <Link
-                  href="/tour"
+                  href="/intake"
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
-                  See how it works →
+                  Try a demo scenario
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500">
@@ -419,66 +419,64 @@ export default function Home() {
               desc="Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut."
             />
           </div>
-          <div className="mt-10 text-center">
-            <Link
-              href="/tour"
-              className="inline-flex items-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors hover:bg-indigo-500"
-            >
-              See it in action — take the tour →
-            </Link>
-            <p className="mt-2 text-xs text-zinc-400">Interactive walkthrough · no sign-up required</p>
-          </div>
         </div>
       </section>
 
-      {/* ── Think tank value ── */}
+      {/* ── Think tank guardrails ── */}
       <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">
-              Your think tank on one decision
+          <div className="mx-auto mb-14 max-w-3xl text-center">
+            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight leading-snug">
+              Not a vote. Not a favorite. A blind synthesis of purely the best ideas.
             </h2>
-            <p className="mt-3 text-zinc-500 max-w-2xl mx-auto">
-              Not a pile of separate chats. One shared brief for every model, so their
-              answers stay comparable and you never lose the thread.
+            <p className="mt-4 text-zinc-500 leading-relaxed">
+              Every answer is structured so nothing gets missed. Every model works independently
+              first, so no one&apos;s early opinion sways the rest. And the final brief is written
+              blind, so no model — and no brand — gets to favor its own thinking.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: <IconThinkTank />,
-                title: "Independent think tank analysis",
-                desc: "Each model reads your situation and runs the same lenses on its own. Compare where they agree, where they push back, and what only one surfaced.",
+                title: "Every model works the same ground, on its own",
+                desc: "Each model is guided through the same set of questions, so nothing gets left out. And none of them see each other's answers first — so no one's early take can steer the rest of the room before they've had a chance to think it through themselves.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
-                icon: <IconCompare />,
-                title: "Cross-provider comparison",
-                desc: "See divergence side by side — useful when models disagree on risk level, reversibility, or who gets affected.",
+                icon: <IconResearch />,
+                title: "It can look things up",
+                desc: "When a model needs current information to answer well, it searches the web and folds what it finds back into its analysis — instead of reasoning from a guess or outdated knowledge.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
-                icon: <IconResearch />,
-                title: "Research integration",
-                desc: "Ask follow-up research questions with live web search. Findings feed back into the analysis on that run.",
+                icon: <IconCompare />,
+                title: "See what they agree on — and what's unique",
+                desc: "Once every model has answered independently, their ideas are laid side by side — what showed up across all of them, and what only one model caught.",
                 color: "text-violet-500 bg-violet-50",
+              },
+              {
+                icon: <IconPeople />,
+                title: "Then they review each other's thinking",
+                desc: "With independent answers already locked in, each model looks at what the others found and says what it thinks holds up. Disagreement here is useful — it's real, not something one model talked another into.",
+                color: "text-indigo-500 bg-indigo-50",
               },
               {
                 icon: <IconBrief />,
-                title: "Unified Brief",
-                desc: "When you've run multiple models, merge their output into one synthesized recommendation — exportable as a PDF.",
+                title: "The final brief is written blind",
+                desc: "One model combines everyone's strongest thinking into a single recommendation — without knowing which provider said what. The ideas get through. The brand names don't.",
                 color: "text-emerald-500 bg-emerald-50",
               },
               {
                 icon: <IconAttribution />,
-                title: "Contribution attribution",
-                desc: "See whose ideas made the cut in the Unified Brief: what each model contributed, and what didn't survive synthesis.",
+                title: "See whose thinking made it in — after the fact",
+                desc: "Once the blind brief is done, you can still see which model's ideas actually survived synthesis. Transparency without letting brand bias into the decision itself.",
                 color: "text-orange-500 bg-orange-50",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 hover:border-zinc-200 transition-colors">
                 <div className={`inline-flex p-2.5 rounded-lg mb-4 ${item.color}`}>{item.icon}</div>
-                <h3 className="text-sm font-semibold text-zinc-900 mb-1.5">{item.title}</h3>
+                <h3 className="text-sm font-semibold text-zinc-900 mb-1.5 leading-snug">{item.title}</h3>
                 <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
@@ -489,14 +487,14 @@ export default function Home() {
       {/* ── vs multi-model chat tools ── */}
       <section className="bg-zinc-950 py-20 border-b border-white/5">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="max-w-2xl">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               Not another multi-model chat
             </p>
-            <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight max-w-4xl">
               Built for a decision you have to defend — not a thread you browse.
             </h2>
-            <p className="mt-4 text-base text-zinc-400 leading-relaxed">
+            <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-4xl">
               Leading multi-model tools orchestrate several AIs in an open conversation.
               Decision Copilot starts from a structured intake and a fixed analytical rubric,
               so disagreement is measurable — and every brief is comparable.
@@ -523,14 +521,23 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="mt-10 max-w-2xl text-sm leading-relaxed text-zinc-500">
-            The fixed schema is what makes the research program possible: you can code cases
-            against the same dimensions because every run shares one skeleton — and compare
-            models on a brief you can defend later, not a thread that disappears into chat history.{" "}
-            <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
-              See the Model Studies research →
-            </Link>
-          </p>
+          <div className="mt-14 border-t border-white/10 pt-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+              Why the schema matters
+            </p>
+            <h3 className="mt-3 text-xl lg:text-2xl font-bold text-white tracking-tight max-w-4xl leading-snug">
+              Same skeleton every time — so you can actually compare.
+            </h3>
+            <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-4xl">
+              Because every run shares one fixed structure, you can code cases against the same
+              dimensions and compare models on a brief you can defend later — not a thread that
+              disappears into chat history. That&apos;s also what makes rigorous model evaluation
+              possible.{" "}
+              <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
+                See the Model Studies research →
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
 
