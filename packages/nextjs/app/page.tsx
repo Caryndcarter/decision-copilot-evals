@@ -427,50 +427,50 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto mb-14 max-w-3xl text-center">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight leading-snug">
-              Not a vote. Not a favorite. A blind synthesis of purely the best ideas.
+              Not a vote. Not a favorite. A blind synthesis of the best ideas.
             </h2>
             <p className="mt-4 text-zinc-500 leading-relaxed">
-              Every answer is structured so nothing gets missed. Every model works independently
-              first, so no one&apos;s early opinion sways the rest. And the final brief is written
-              blind, so no model — and no brand — gets to favor its own thinking.
+              The same structured analysis rubric for every model, so they don&apos;t leave
+              anything out. Independent answers, so no early opinion sways the room. Blind
+              synthesis, so no model — or brand — favors itself.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: <IconThinkTank />,
-                title: "Every model works the same ground, on its own",
-                desc: "Each model is guided through the same set of questions, so nothing gets left out. And none of them see each other's answers first — so no one's early take can steer the rest of the room before they've had a chance to think it through themselves.",
+                title: "Same questions, no peeking",
+                desc: "Every model works through the same structure, on its own — nothing skipped, no one influenced by another's early take.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
                 icon: <IconResearch />,
                 title: "It can look things up",
-                desc: "When a model needs current information to answer well, it searches the web and folds what it finds back into its analysis — instead of reasoning from a guess or outdated knowledge.",
+                desc: "Models pull in live web search when they need current information, instead of guessing.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
                 icon: <IconCompare />,
-                title: "See what they agree on — and what's unique",
-                desc: "Once every model has answered independently, their ideas are laid side by side — what showed up across all of them, and what only one model caught.",
+                title: "Where they agree — and where they don't",
+                desc: "Independent answers are laid side by side. Overlap and outliers both surface.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
                 icon: <IconPeople />,
-                title: "Then they review each other's thinking",
-                desc: "With independent answers already locked in, each model looks at what the others found and says what it thinks holds up. Disagreement here is useful — it's real, not something one model talked another into.",
+                title: "Then they review each other",
+                desc: "Now that answers are locked in, each model weighs what the others found. The disagreement here is real — nobody talked anybody into it.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
                 icon: <IconBrief />,
-                title: "The final brief is written blind",
-                desc: "One model combines everyone's strongest thinking into a single recommendation — without knowing which provider said what. The ideas get through. The brand names don't.",
+                title: "Written blind",
+                desc: "One model merges the strongest thinking into a single brief — without knowing which provider said what. Ideas get through. Brand names don't.",
                 color: "text-emerald-500 bg-emerald-50",
               },
               {
                 icon: <IconAttribution />,
-                title: "See whose thinking made it in — after the fact",
-                desc: "Once the blind brief is done, you can still see which model's ideas actually survived synthesis. Transparency without letting brand bias into the decision itself.",
+                title: "Attribution, after the fact",
+                desc: "You can still see whose thinking made the cut. Transparency without letting brand bias into the call itself.",
                 color: "text-orange-500 bg-orange-50",
               },
             ].map((item) => (
@@ -481,6 +481,16 @@ export default function Home() {
               </div>
             ))}
           </div>
+          <p className="mt-10 mx-auto max-w-2xl text-center text-sm text-zinc-500 leading-relaxed">
+            Is brand bias real? We hide provider names when the Unified Brief is written, so
+            credit follows the idea — not the logo.{" "}
+            <Link
+              href="/model-studies/results/multi-demo-authorship"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              See how we test that in Model Studies →
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -526,10 +536,10 @@ export default function Home() {
               Why the schema matters
             </p>
             <h3 className="mt-3 text-xl lg:text-2xl font-bold text-white tracking-tight max-w-4xl leading-snug">
-              Same skeleton every time — so you can actually compare.
+              Same skeleton every time — so comparison is actually possible.
             </h3>
             <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-4xl">
-              Because every run shares one fixed structure, you can code cases against the same
+              Because every run shares one fixed structure, we can code cases against the same
               dimensions and compare models on a brief you can defend later — not a thread that
               disappears into chat history. That&apos;s also what makes rigorous model evaluation
               possible.{" "}
