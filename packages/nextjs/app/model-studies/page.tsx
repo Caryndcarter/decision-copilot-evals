@@ -55,15 +55,17 @@ export default function Home() {
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
               Model Studies is a research program that puts frontier AI models through real decision
-              scenarios — same facts, several providers, blind-coded on a fixed rubric. We test how
-              individual models behave under pressure: how the story is framed, how attribution works in a{" "}
+              scenarios — same facts, several providers, blind-coded on a fixed rubric. We track where
+              models&apos; answers split when you hold the facts constant and change the conditions:
+              how the story is framed, whether provider names are visible when briefs are merged into
+              a{" "}
               <Link
                 href="/how-it-works#unified-brief"
                 className="font-semibold text-logo-light hover:text-white transition-colors"
               >
                 Unified Brief
               </Link>
-              , whether findings replicate at volume, and more. Results are published
+              , whether the same scenario holds up when run at volume, and more. Results are published
               here so you can see what held up and what didn&apos;t.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
