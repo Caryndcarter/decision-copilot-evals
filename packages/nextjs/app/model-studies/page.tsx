@@ -51,18 +51,20 @@ export default function Home() {
               A Decision Copilot research program
             </p>
             <h1 className="mt-4 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl lg:text-5xl">
-              When someone&apos;s already picked a side, does the model say so — or agree with
-              them?
+              Same facts. Different answers.
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-              Model Studies is a research program that measures how frontier AI models advise
-              decision-makers under pressure to agree — not a product demo. Every intake here is
-              written by a filer — someone who has already leaned toward one option before asking
-              for advice. We give the same facts to several frontier models (ChatGPT, Fable, Gemini,
-              and Grok) and blind-code what each one actually does: push back, stay neutral, or go
-              along with the filer&apos;s lean. The judge scoring each brief never sees which
-              provider wrote it. This is the rollup of what that&apos;s found so far, across every
-              study we&apos;ve run.
+              Model Studies is a research program that puts frontier AI models through real decision
+              scenarios — same facts, several providers, blind-coded on a fixed rubric. We test how
+              individual models behave under pressure: how the story is framed, how attribution works in a{" "}
+              <Link
+                href="/how-it-works#unified-brief"
+                className="font-semibold text-logo-light hover:text-white transition-colors"
+              >
+                Unified Brief
+              </Link>
+              , whether findings replicate at volume, and more. Results are published
+              here so you can see what held up and what didn&apos;t.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
