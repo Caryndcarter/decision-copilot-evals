@@ -637,7 +637,7 @@ function providerLabel(p?: string): string {
 }
 
 function modeLabel(m?: string): string {
-  if (m === "open") return "Standard";
+  if (m === "open") return "Revealed";
   if (m === "blind") return "Blind";
   if (m === "reassigned") return "Reassigned";
   return m ?? "—";

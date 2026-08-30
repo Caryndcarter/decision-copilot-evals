@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { SiteNav } from "@/app/model-studies/_components/site-nav";
 import { StatStrip } from "@/app/model-studies/_components/stat-strip";
 import { FindingCardGrid } from "@/app/model-studies/_components/finding-card";
+import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
 import { DimensionScoreboard } from "@/app/model-studies/_components/scoreboard-dimension-coded";
 import { InfluenceMatrixPlaceholder } from "@/app/model-studies/_components/scoreboard-influence-matrix";
 import { FINDINGS_STUDIES, getFindingsStudy, getTestType } from "@/lib/findings-registry";
@@ -20,8 +21,8 @@ export async function generateMetadata({
   const { study: studyId } = await params;
   const study = getFindingsStudy(studyId);
   if (!study) return {};
-  // Live authorship case has no public scoreboard — surface the study section instead.
-  if (study.kind === "influence-matrix") {
+  // Live five-demo authorship has no public scoreboard — surface the study section instead.
+  if (study.kind === "influence-matrix" && study.id === "multi-demo-authorship") {
     return {
       title: `${getTestType(study.testTypeId)?.name ?? "Authorship"} — Results — Decision Copilot`,
       description: study.heroQuestion,
@@ -42,9 +43,8 @@ export default async function StudyResultsPage({
   const study = getFindingsStudy(studyId);
   if (!study || study.status !== "live") notFound();
 
-  // No committed public snapshot yet — Authorship lives on the Results study section
-  // (+ signed-in dashboard). Don't keep a thin duplicate case page.
-  if (study.kind === "influence-matrix") {
+  // Live five-demo authorship still has no public scoreboard.
+  if (study.kind === "influence-matrix" && study.id === "multi-demo-authorship") {
     redirect(`/model-studies/results#${study.testTypeId}`);
   }
 
@@ -112,7 +112,9 @@ export default async function StudyResultsPage({
             no model quotes.
           </p>
           <div className="mt-8">
-            {study.kind === "dimension-coded" ? (
+            {study.id === "authorship-budget-conditions" ? (
+              <AuthorshipBudgetConditionsPanel />
+            ) : study.kind === "dimension-coded" ? (
               <DimensionScoreboard rows={study.scoreboard ?? []} />
             ) : (
               <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />

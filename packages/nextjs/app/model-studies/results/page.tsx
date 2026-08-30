@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 import { StatStrip } from "../_components/stat-strip";
 import { RollupFindingGrid } from "../_components/rollup-finding-card";
+import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
 import { DimensionScoreboard } from "../_components/scoreboard-dimension-coded";
 import { InfluenceMatrixPlaceholder } from "../_components/scoreboard-influence-matrix";
 import {
@@ -100,7 +101,8 @@ export default function ResultsPage() {
                         </span>
                         <h3 className="mt-0.5 text-lg font-semibold text-zinc-900">{study.name}</h3>
                       </div>
-                      {study.kind === "dimension-coded" ? (
+                      {study.kind === "dimension-coded" ||
+                      study.id === "authorship-budget-conditions" ? (
                         <Link
                           href={`/model-studies/results/${study.id}`}
                           className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
@@ -110,7 +112,9 @@ export default function ResultsPage() {
                       ) : null}
                     </div>
                     <div className="mt-4">
-                      {study.kind === "dimension-coded" ? (
+                      {study.id === "authorship-budget-conditions" ? (
+                        <AuthorshipBudgetConditionsPanel />
+                      ) : study.kind === "dimension-coded" ? (
                         <DimensionScoreboard rows={study.scoreboard ?? []} />
                       ) : (
                         <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />

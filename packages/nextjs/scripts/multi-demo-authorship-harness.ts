@@ -2,7 +2,7 @@
  * Multi-demo authorship harness (decision-copilot-evals)
  *
  * Runs five high-conflict intake demos once each, generating Unified Briefs in
- * Standard / Blind / Reassigned authorship modes — for branding-effect and
+ * Blind / Revealed / Reassigned authorship modes — for branding-effect and
  * moral-leaning analysis (not voice variants of one case).
  *
  * Cases: Civitas, Hospital PE, Core banking, Gen-AI compliance, VP Sales.

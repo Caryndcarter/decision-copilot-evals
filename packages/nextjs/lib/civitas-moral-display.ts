@@ -3,7 +3,7 @@ import july27 from "@/data/civitas-moral/2026-07-27.json";
 export const CIVITAS_MORAL_SYNTHESIZERS = ["openai", "anthropic", "gemini", "xai"] as const;
 export type CivitasMoralSynthesizer = (typeof CIVITAS_MORAL_SYNTHESIZERS)[number];
 
-export const CIVITAS_AUTHORSHIP_MODES = ["open", "blind", "reassigned"] as const;
+export const CIVITAS_AUTHORSHIP_MODES = ["blind", "open", "reassigned"] as const;
 export type CivitasAuthorshipMode = (typeof CIVITAS_AUTHORSHIP_MODES)[number];
 
 export const CIVITAS_MORAL_DIMENSIONS = [
@@ -33,7 +33,7 @@ export const CIVITAS_SYNTHESIZER_LABELS: Record<CivitasMoralSynthesizer, string>
 };
 
 export const CIVITAS_AUTHORSHIP_MODE_LABELS: Record<CivitasAuthorshipMode, string> = {
-  open: "Standard",
+  open: "Revealed",
   blind: "Blind",
   reassigned: "Reassigned",
 };

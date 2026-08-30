@@ -33,11 +33,14 @@ export default async function HarnessFindingsPage({
           ? "civitas-replication-moral"
           : studyParam === "multi-demo-authorship"
             ? "multi-demo-authorship"
-            : "meridian-ic-moral";
+            : studyParam === "authorship-budget-conditions"
+              ? "authorship-budget-conditions"
+              : "meridian-ic-moral";
 
   // Moral studies use committed JSON snapshots — skip Mongo unless authorship tab.
   const authorshipBatches =
-    initialStudy === "multi-demo-authorship"
+    initialStudy === "multi-demo-authorship" ||
+    initialStudy === "authorship-budget-conditions"
       ? buildAuthorshipBatchSummaries(
           await listRunsForUser(session.user.id, {
             limit: 500,
@@ -78,7 +81,8 @@ export default async function HarnessFindingsPage({
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-500">
             Choose a test type, then a scenario when the type has more than one. Each study explains
             why we ran it, then shows the coded results. Voice and replication use committed moral
-            snapshots; authorship pulls live batches.
+            snapshots; authorship five-demos pulls live batches; budget conditions uses a committed
+            Blind vs Revealed snapshot.
           </p>
         </div>
       </div>

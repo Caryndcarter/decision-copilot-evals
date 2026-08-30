@@ -3,7 +3,13 @@
  */
 
 import { DEMO_HARNESS_CASES } from "@/lib/demo-harness-cases";
-import { HARNESS_KIND_LABELS, shortHarnessBatchId } from "@/lib/harness-meta";
+import {
+  authorshipBatchKindLabel,
+  isAuthorshipBudgetConditionsControlBatch,
+  isAuthorshipBudgetConditionsConstrainedBatch,
+  isAuthorshipInfluenceIncludeBatch,
+  shortHarnessBatchId,
+} from "@/lib/harness-meta";
 import { runProviderLabel } from "@/lib/run-display-name";
 import {
   buildInfluenceMatrix,
@@ -18,6 +24,8 @@ import {
   getUnifiedBriefAuditForAuthor,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefsByAuthor,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
   UNIFIED_BRIEF_SYNTHESIZERS,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
@@ -36,15 +44,11 @@ import type {
 } from "@/types/decision";
 
 export const AUTHORSHIP_SUMMARY_MODES: UnifiedBriefAuthorshipMode[] = [
-  "open",
-  "blind",
-  "reassigned",
+  ...UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
 ];
 
 const MODE_BADGE: Record<UnifiedBriefAuthorshipMode, string> = {
-  open: "Standard",
-  blind: "Blind",
-  reassigned: "Reassigned",
+  ...UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
 };
 
 const PROVIDER_ORDER: LLMProviderName[] = ["anthropic", "openai", "gemini", "xai"];
@@ -120,9 +124,28 @@ export type AuthorshipBatchSummary = {
   expected_briefs: number;
   cross_case_shifts: AuthorshipInfluenceShift[];
   total_influence_shifts: number;
-  /** Mean heatmaps across cases (Standard / Blind / Reassigned). */
+  /** Mean heatmaps across cases (Blind / Revealed / Reassigned). */
   rollup_matrices: AuthorshipRollupMatrix[];
+  /** Present when this batch is the constrained-tokens or Sol control cut. */
+  budget_condition?: "constrained" | "adequate";
 };
+
+/** Whether a run belongs in the authorship findings rollup (does not rewrite stored kind). */
+export function runQualifiesForAuthorshipSummary(run: {
+  harness_run?: boolean;
+  harness_kind?: HarnessKind;
+  harness_batch_id?: string;
+  demo_scenario_id?: string;
+}): boolean {
+  if (!run.harness_run) return false;
+  if (run.harness_kind === "multi-demo-authorship") return true;
+  if (isAuthorshipInfluenceIncludeBatch(run.harness_batch_id)) return true;
+  return (
+    !run.harness_kind &&
+    !!run.demo_scenario_id &&
+    DEMO_HARNESS_CASES.some((c) => c.id === run.demo_scenario_id)
+  );
+}
 
 function demoLabel(id: string): string {
   return DEMO_HARNESS_CASES.find((c) => c.id === id)?.label ?? id;
@@ -202,8 +225,8 @@ function influenceShiftsForDemo(
   const matrices = matricesByMode(persistRun);
   const shifts: AuthorshipInfluenceShift[] = [];
   const pairs: Array<[UnifiedBriefAuthorshipMode, UnifiedBriefAuthorshipMode]> = [
-    ["open", "blind"],
-    ["open", "reassigned"],
+    ["blind", "open"],
+    ["blind", "reassigned"],
   ];
   for (const [fromMode, toMode] of pairs) {
     const from = matrices[fromMode];
@@ -311,14 +334,8 @@ export function buildAuthorshipBatchSummaries(
   const bags = new Map<string, Bag>();
 
   for (const run of runs) {
-    if (!run.harness_run) continue;
+    if (!runQualifiesForAuthorshipSummary(run)) continue;
     const kind = run.harness_kind;
-    const isAuthorship =
-      kind === "multi-demo-authorship" ||
-      (!kind &&
-        !!run.demo_scenario_id &&
-        DEMO_HARNESS_CASES.some((c) => c.id === run.demo_scenario_id));
-    if (!isAuthorship) continue;
 
     const batchKey =
       run.harness_batch_id?.trim() ||
@@ -332,7 +349,7 @@ export function buildAuthorshipBatchSummaries(
         batchKey,
         batch_id: run.harness_batch_id?.trim() || batchKey,
         harness_run_number: run.harness_run_number,
-        harness_kind: "multi-demo-authorship",
+        harness_kind: kind ?? "multi-demo-authorship",
         started_at: activityIso(run as DecisionRunResult & { createdAt?: string; updatedAt?: string }),
         byDecision: new Map(),
       };
@@ -341,6 +358,7 @@ export function buildAuthorshipBatchSummaries(
     if (typeof run.harness_run_number === "number") {
       bag.harness_run_number = run.harness_run_number;
     }
+    if (kind) bag.harness_kind = kind;
     if (run.harness_batch_id?.trim()) bag.batch_id = run.harness_batch_id.trim();
     const iso = activityIso(run as DecisionRunResult & { createdAt?: string; updatedAt?: string });
     if (iso && (!bag.started_at || iso < bag.started_at)) bag.started_at = iso;
@@ -422,8 +440,16 @@ export function buildAuthorshipBatchSummaries(
       batch_short: shortHarnessBatchId(bag.batch_id) ?? bag.batch_id.slice(0, 8),
       harness_run_number: bag.harness_run_number,
       harness_kind: bag.harness_kind,
-      kind_label: HARNESS_KIND_LABELS["multi-demo-authorship"],
+      kind_label: authorshipBatchKindLabel({
+        harnessKind: bag.harness_kind,
+        batchId: bag.batch_id,
+      }),
       started_at: bag.started_at,
+      budget_condition: isAuthorshipBudgetConditionsConstrainedBatch(bag.batch_id)
+        ? "constrained"
+        : isAuthorshipBudgetConditionsControlBatch(bag.batch_id)
+          ? "adequate"
+          : undefined,
       decision_count: demos.length,
       demos,
       total_briefs,

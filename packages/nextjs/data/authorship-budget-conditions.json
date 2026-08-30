@@ -1,0 +1,107 @@
+{
+  "id": "authorship-budget-conditions",
+  "title": "Authorship influence · budget conditions",
+  "scenario_label": "Civitas (constrained tokens)",
+  "control_label": "adequate budget (Sol)",
+  "rater": "openai",
+  "rater_label": "ChatGPT",
+  "influence_scale": { "high": 4, "medium": 3, "low": 2, "minimal": 1 },
+  "constrained": {
+    "batch_id": "db9445cf-ef02-5740-b69f-d34a1194e04a",
+    "harness_kind": "civitas-replication",
+    "scenario_label": "Civitas (constrained tokens)",
+    "demo_id": "meridian-civitas-saas-rollup",
+    "demo_label": "Meridian / Civitas SaaS roll-up",
+    "self_open_high": 5,
+    "self_blind_high": 4,
+    "self_drop_count": 1,
+    "trials": [
+      {
+        "trial": 1,
+        "decision_id": "a8d55d23-63d9-48d9-b702-d8c4a46d829b",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" }
+      },
+      {
+        "trial": 2,
+        "decision_id": "7a962ed3-2763-4248-aa64-db6396337b05",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "minimal" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "minimal" }
+      },
+      {
+        "trial": 3,
+        "decision_id": "f6969a6f-be43-4d1c-9184-a33ea1bdc7dc",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "low" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "medium" }
+      },
+      {
+        "trial": 4,
+        "decision_id": "a43a18cc-e235-4931-a82f-44eb493cad81",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "high", "xai": "medium" },
+        "blind": { "openai": "high", "anthropic": "high", "gemini": "medium", "xai": "medium" }
+      },
+      {
+        "trial": 5,
+        "decision_id": "b796f256-fcbc-4081-b10f-33523925b76e",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "minimal", "xai": "low" },
+        "blind": { "openai": "medium", "anthropic": "high", "gemini": "medium", "xai": "medium" }
+      }
+    ]
+  },
+  "control": {
+    "batch_id": "bc243273-6103-470c-9f11-94943925ca95",
+    "harness_kind": "multi-demo-authorship",
+    "control_label": "adequate budget (Sol)",
+    "self_open_high": 5,
+    "self_blind_high": 5,
+    "self_drop_count": 0,
+    "demos": [
+      {
+        "demo_id": "meridian-civitas-saas-rollup",
+        "demo_label": "Meridian / Civitas SaaS roll-up",
+        "trial": 1,
+        "decision_id": "965d8678-c215-4686-afe8-9c963b3ca05a",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" }
+      },
+      {
+        "demo_id": "vp-sales-underperforming",
+        "demo_label": "Underperforming VP Sales",
+        "trial": 1,
+        "decision_id": "2b987db4-1b91-4e46-8a13-dad6b07b926f",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "high" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "high" }
+      },
+      {
+        "demo_id": "healthcare-pe-acquisition",
+        "demo_label": "Hospital PE / second-site deal",
+        "trial": 2,
+        "decision_id": "07bb5c9a-59e1-4066-93e6-b26d14277dac",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
+        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" }
+      },
+      {
+        "demo_id": "legacy-core-modernization",
+        "demo_label": "Core banking modernization",
+        "trial": 3,
+        "decision_id": "64724b1b-cd83-42c6-b733-53479f53587f",
+        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
+        "blind": { "openai": "high", "anthropic": "high", "gemini": "low", "xai": "high" }
+      },
+      {
+        "demo_id": "gen-ai-product-compliance",
+        "demo_label": "Gen-AI features + compliance",
+        "trial": 4,
+        "decision_id": "a3a35953-c43d-4b82-9936-7310c03d6f21",
+        "open": { "openai": "high", "anthropic": "high", "gemini": "low", "xai": "medium" },
+        "blind": { "openai": "high", "anthropic": "high", "gemini": "medium", "xai": "high" }
+      }
+    ]
+  },
+  "methodology_footnotes": [
+    "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Cells are ChatGPT as rater (self-credit is the ChatGPT→ChatGPT cell). Stored modes stay open / blind / reassigned; open displays as Revealed. Blind is the default product path; Revealed and Reassigned are alternatives.",
+    "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch were inferred at 4096 tokens — the then-current client/lens default.",
+    "Current contribution lens defaults are 8192 tokens for the OpenAI synthesizer and 16384 for the others. Think-tank models on the constrained-tokens batch: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
+    "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Think-tank models: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5."
+  ]
+}
