@@ -26,19 +26,27 @@ export default function WhyPage() {
       <section className="bg-white py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6 space-y-6 text-sm leading-relaxed text-zinc-600">
           <p>
-            Most claims about AI models catching each other&apos;s mistakes are feature
-            descriptions — a product bullet point, not a tested result. This site is the opposite
-            bet: publish the cases, keep the coding blind to which provider wrote what, and let
-            the numbers say whether a model is actually pressure-testing a decision or just
-            agreeing with whoever&apos;s already decided.
+            This site publishes blind-coded studies of how frontier AI models behave under one
+            specific kind of pressure: a filer who has already leaned toward a decision, asking
+            for advice anyway. Every case runs through several models, a judge model scores what
+            came back against a fixed rubric, and the judge never sees which provider wrote which
+            brief. That&apos;s the discipline the rest of this page is arguing for — because most
+            claims about AI models catching each other&apos;s mistakes are feature descriptions, a
+            product bullet point, not a tested result.
           </p>
           <p>
-            That distinction — sycophancy versus accuracy — is different from the thing most
-            multi-model tools measure. Catching a hallucination is a factual check: is this true?
-            Catching sycophancy is a different question: is this model telling the decision-maker
-            what they need to hear, or what they already believe? For a high-stakes decision, the
-            second failure mode is often the more expensive one, and it&apos;s much easier for a
-            product to claim it&apos;s solved than to actually show its work.
+            Sycophancy — telling the decision-maker what they already believe instead of what they
+            need to hear — is the specific failure mode our Voice Influence studies are built to
+            catch. It&apos;s a different question from catching a hallucination: hallucination-checking
+            asks whether a claim is true; sycophancy-checking asks whether the model is bending
+            toward what the filer already wants to hear, true or not. Our studies focus on the
+            second question today, since it&apos;s easier for a product to claim it&apos;s solved than
+            to actually show its work — that&apos;s a choice of where we started, not a ceiling.
+            Authorship studies test something related but distinct: whether a synthesizer&apos;s own
+            judgment shifts based on which brand wrote the analysis it&apos;s combining, independent
+            of the filer&apos;s opinion. Replication studies test something different again — whether
+            the same synthesizer gives you the same answer twice. Fact-checking isn&apos;t part of
+            the rubric yet; nothing about this design rules it out.
           </p>
 
           <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5">
@@ -59,6 +67,32 @@ export default function WhyPage() {
               just measuring it.)
             </p>
           </div>
+
+          <h2 className="text-sm font-semibold text-zinc-900">
+            The same bias risk shows up in the judge, not just the model
+          </h2>
+          <p>
+            Sycophancy is usually framed as a problem between a model and a user — the model tells
+            you what you want to hear. But the same underlying mechanism — preference for the
+            familiar over the correct — threatens the step where multiple models&apos; work gets
+            combined into one answer. A synthesizer that can see which provider wrote which
+            analysis is positioned to develop its own version of that bias: favoring a familiar
+            brand&apos;s phrasing, or its own outputs, independent of whether the reasoning
+            underneath is actually stronger. Groupthink and conformity research (Asch&apos;s
+            conformity experiments; Janis&apos;s work on groupthink) shows the same pattern in
+            humans — once identity or authorship is visible, judgment starts tracking the source
+            instead of the argument.
+          </p>
+          <p>
+            So Decision Copilot&apos;s synthesizer is blind by default: it never sees which model
+            produced which piece of analysis it&apos;s combining, only the reasoning itself.
+            Revealed authorship (standard) and reassigned authorship — where the synthesizer sees
+            real or deliberately relabeled provider identities — exist as research modes, used to
+            test whether visibility changes what a synthesizer keeps or discards. That&apos;s the
+            same question the sycophancy literature asks about individual models, asked again one
+            layer up: does knowing the source change the judgment, even when the underlying
+            reasoning hasn&apos;t changed at all.
+          </p>
 
           <p>
             It&apos;s also why{" "}
