@@ -11,6 +11,14 @@ export const metadata: Metadata = {
     "From intake through think tank to Unified Brief — what you get, how synthesis works, contributions, and PDF export.",
 };
 
+/** Room for sticky main nav + in-page pill bar (~160px). */
+const PAGE_SCROLL_MT = "scroll-mt-40";
+
+/** Zero-height anchor so hash scroll lands above the visible heading. */
+function ScrollAnchor({ id }: { id: string }) {
+  return <span id={id} className={`block h-0 ${PAGE_SCROLL_MT}`} aria-hidden />;
+}
+
 function SectionHeading({
   id,
   eyebrow,
@@ -41,7 +49,7 @@ function SubBlock({ id, title, children }: { id?: string; title: string; childre
       id={id}
       className={
         id
-          ? "scroll-mt-28 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+          ? `${PAGE_SCROLL_MT} rounded-xl border border-zinc-200 bg-white p-6 shadow-sm`
           : "rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
       }
     >
@@ -62,8 +70,8 @@ function BriefItem({ title, children }: { title: ReactNode; children: ReactNode 
 
 const PAGE_NAV = [
   { href: "#flow", label: "The flow" },
-  { href: "#postures", label: "Postures" },
   { href: "#unified-brief", label: "Unified Brief" },
+  { href: "#postures", label: "Postures" },
   { href: "#discuss", label: "Discuss & edit" },
 ] as const;
 
@@ -118,7 +126,7 @@ export default function HowItWorksPage() {
         </nav>
       </div>
 
-      <section id="flow" className="scroll-mt-28 border-b border-zinc-100 bg-white py-16">
+      <section id="flow" className={`${PAGE_SCROLL_MT} border-b border-zinc-100 bg-white py-16`}>
         <div className="mx-auto max-w-3xl px-6">
           <HowItWorksFlowSection
             sectionTitle="The four steps"
@@ -128,7 +136,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section id="unified-brief" className="scroll-mt-28 border-b border-zinc-100 bg-zinc-50 py-16">
+      <section id="unified-brief" className={`${PAGE_SCROLL_MT} border-b border-zinc-100 bg-zinc-50 py-16`}>
         <div className="mx-auto max-w-3xl px-6">
           <SectionHeading
             eyebrow="Unified Brief"
@@ -181,7 +189,8 @@ export default function HowItWorksPage() {
               </div>
             </div>
 
-            <div id="postures" className="scroll-mt-28">
+            <div>
+              <ScrollAnchor id="postures" />
               <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
                 Postures — how you frame the analysis
               </h3>
