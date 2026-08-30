@@ -36,14 +36,34 @@ function requireUri(): string {
 /**
  * Shared promise for Auth.js MongoDBAdapter and app DAOs.
  * Cached on globalThis in development so HMR does not open new pools.
+ *
+ * Connection is deferred until first use so public routes (e.g. `/api/auth/session`
+ * for signed-out visitors on `/demo`) do not require MONGODB_URI at module load.
  */
 const g = globalThis as GlobalMongo;
-export const clientPromise: Promise<MongoClient> =
-  g._mongoClientPromise ??
-  (g._mongoClientPromise = new MongoClient(requireUri(), mongoOptions).connect());
+
+function getClientPromise(): Promise<MongoClient> {
+  if (!g._mongoClientPromise) {
+    g._mongoClientPromise = new MongoClient(requireUri(), mongoOptions).connect();
+  }
+  return g._mongoClientPromise;
+}
+
+export const clientPromise: Promise<MongoClient> = {
+  then(onfulfilled, onrejected) {
+    return getClientPromise().then(onfulfilled, onrejected);
+  },
+  catch(onrejected) {
+    return getClientPromise().catch(onrejected);
+  },
+  finally(onfinally) {
+    return getClientPromise().finally(onfinally);
+  },
+  [Symbol.toStringTag]: "Promise",
+} as Promise<MongoClient>;
 
 export async function getDb(): Promise<Db> {
-  const client = await clientPromise;
+  const client = await getClientPromise();
   return client.db(DB_NAME);
 }
 

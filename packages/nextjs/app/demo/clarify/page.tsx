@@ -50,7 +50,7 @@ export default function DemoClarifyPage() {
           </Link>
           <button
             type="button"
-            onClick={() => router.push("/demo/result?provider=openai")}
+            onClick={() => router.push("/demo/result?provider=openai", { scroll: true })}
             className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
           >
             Submit answers & view results

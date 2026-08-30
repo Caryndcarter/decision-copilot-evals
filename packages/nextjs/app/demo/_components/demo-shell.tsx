@@ -1,5 +1,5 @@
 import { AppNavBrand } from "@/app/components/app-nav-brand";
-import { SessionNav } from "@/app/components/session-nav";
+import { PublicSessionNav } from "@/app/components/public-session-nav";
 import { DemoModeStrip } from "@/app/demo/_components/demo-mode-strip";
 
 /** Match sticky nav width so page chrome does not sit in a narrower column. */
@@ -11,7 +11,7 @@ export function DemoShell({ children }: { children: React.ReactNode }) {
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className={`flex items-center justify-between py-4 ${demoContentClass}`}>
           <AppNavBrand />
-          <SessionNav />
+          <PublicSessionNav />
         </div>
         <DemoModeStrip />
       </nav>

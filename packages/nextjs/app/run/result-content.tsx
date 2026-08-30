@@ -440,6 +440,8 @@ export interface ResultContentProps {
   hideInlineBriefTitle?: boolean;
   /** Demo/tour: static title strip (no sticky shadow) aligned with `/demo/unified`. */
   staticTitleBanner?: boolean;
+  /** Demo/tour: do not scroll to `#rc-*` fragments on mount (keep viewport at page top). */
+  disableDeepLinkScroll?: boolean;
 }
 
 export interface ResultContentHandle {
@@ -460,6 +462,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     onJumpToSynthesis,
     hideInlineBriefTitle = false,
     staticTitleBanner = false,
+    disableDeepLinkScroll = false,
   },
   ref
 ) {
@@ -504,7 +507,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
 
   /** Open the matching collapsible and scroll when the URL hash targets an analysis block (e.g. synthesis deep links). */
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (disableDeepLinkScroll || typeof window === "undefined") return;
     type CollapsibleKey = "riskAnalysis" | "reversibility" | "stakeholders" | "brief" | "variantAdditions";
     const HASH_TO_SECTION: Record<string, CollapsibleKey | "__scroll_only"> = {
       "rc-risk": "riskAnalysis",
@@ -536,7 +539,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     applyHash();
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
-  }, [result.run_id, variantId]);
+  }, [result.run_id, variantId, disableDeepLinkScroll]);
 
   const [editError, setEditError] = useState<string | null>(null);
   const [briefSaving, setBriefSaving] = useState(false);
@@ -836,7 +839,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
   return (
     <div className={className}>
       <div
-        id="rc-decision-brief-title"
+        id={staticTitleBanner ? undefined : "rc-decision-brief-title"}
         className={
           staticTitleBanner
             ? "mb-4 border-b border-zinc-200/90 py-2.5"

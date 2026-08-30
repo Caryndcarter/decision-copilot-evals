@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AppNavBrand } from "@/app/components/app-nav-brand";
-import { SessionNav } from "@/app/components/session-nav";
+import { PublicSessionNav } from "@/app/components/public-session-nav";
 
 export const metadata: Metadata = {
   title: "Product tour — Decision Copilot",
   description:
-    "Walk through a frozen sample decision using the real product UI — intake, clarifying questions, model briefs, and a unified synthesis.",
+    "Walk through a sample decision using the real product flow — intake, clarifying questions, model briefs, and a unified synthesis.",
 };
 
 const STEPS = [
@@ -36,7 +36,7 @@ export default function TourPage() {
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <AppNavBrand />
-          <SessionNav />
+          <PublicSessionNav />
         </div>
       </nav>
 
@@ -44,11 +44,11 @@ export default function TourPage() {
         <div className="mx-auto max-w-3xl px-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-logo">Interactive tour · no sign-up</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-900 lg:text-4xl">
-            See the product, not a slide deck
+            See the product in action
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-600">
-            This tour uses the same pages as a live run — intake, clarifying questions, individual model briefs, and
-            a unified synthesis. Everything is frozen sample data; nothing hits the API or requires an account.
+            Walk through the same flow as a live run — intake, clarifying questions, individual model briefs, and a
+            unified synthesis.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
