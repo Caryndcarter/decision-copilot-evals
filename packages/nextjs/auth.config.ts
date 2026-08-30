@@ -36,6 +36,11 @@ export const authConfig: NextAuthConfig = {
         return isLoggedIn;
       }
 
+      // Public marketing / demo paths (no sign-in).
+      if (path.startsWith("/demo") || path.startsWith("/tour")) {
+        return true;
+      }
+
       const isProtectedPage =
         path.startsWith("/admin") ||
         path.startsWith("/harness") ||
