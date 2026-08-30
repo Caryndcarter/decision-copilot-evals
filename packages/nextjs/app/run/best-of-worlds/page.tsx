@@ -12,6 +12,7 @@ import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
 import { UnifiedBriefAuditPanel } from "../unified-brief-audit-panel";
+import { UnifiedBriefFactCheckPanel } from "../unified-brief-fact-check-panel";
 import { AuthorshipRemapLegend } from "../authorship-remap-legend";
 import {
   UnifiedBriefInfluenceChartsBody,
@@ -23,6 +24,7 @@ import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import { friendlyProviderLabel } from "@/lib/unified-brief-blind";
 import {
   getUnifiedBriefAuditForAuthor,
+  getUnifiedBriefFactCheckForAuthor,
   authorshipModeFromFlags,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefContributionsForAuthor,
@@ -46,7 +48,8 @@ function unifiedBriefGeneratingSteps(synthesizer: UnifiedBriefSynthesizer): stri
     "Pulling in research and saved variants…",
     `Building the consolidated prompt for ${label}…`,
     "Synthesizing your Unified Brief…",
-    "Shaping recommendation and next steps…",
+    "Checking facts…",
+    "Applying factual corrections…",
     "Almost there…",
   ];
 }
@@ -92,8 +95,12 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     "gemini",
     "xai",
   ]);
-  /** When on, prompts use AI Model 1/2/… instead of brand names; UI still shows decoded brands. */
-  const [blindAuthorship, setBlindAuthorship] = useState(false);
+  /**
+   * Default authorship mode is BLIND: prompts use AI Model 1/2/… instead of brand names, so
+   * credit follows ideas rather than logos. UI still shows decoded brands. Users can opt into
+   * Revealed (real names) or Reassigned (research remap). `open` == the "Revealed" mode.
+   */
+  const [blindAuthorship, setBlindAuthorship] = useState(true);
   /** When on, brand names are randomly reassigned (unique bijection) in the prompt. Mutually exclusive with blind. */
   const [reassignedAuthorship, setReassignedAuthorship] = useState(false);
   /** Progress while Generate all walks every synthesizer for the current authorship mode. */
@@ -264,7 +271,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
   /**
    * Generate Unified Briefs for every configured synthesizer in the *current*
-   * authorship mode (standard, blind, or reassigned) — not all modes at once.
+   * authorship mode (blind, revealed, or reassigned) — not all modes at once.
    */
   async function handleGenerateAll() {
     if (!runId && !decisionId) return;
@@ -272,7 +279,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
 
     const mode = authorshipModeFromFlags(blindAuthorship, reassignedAuthorship);
     const modeLabel =
-      mode === "blind" ? "Blind" : mode === "reassigned" ? "Reassigned" : "Standard";
+      mode === "blind" ? "Blind" : mode === "reassigned" ? "Reassigned" : "Revealed";
     const jobs = configuredSynthesizers.map((synthesizer) => ({
       synthesizer,
       blind: blindAuthorship,
@@ -362,6 +369,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
   const audit = persistRun
     ? getUnifiedBriefAuditForAuthor(persistRun, activeSynthesizer, authorshipMode)
     : undefined;
+  const factCheck = persistRun
+    ? getUnifiedBriefFactCheckForAuthor(persistRun, activeSynthesizer, authorshipMode)
+    : undefined;
   const influenceMatrix = persistRun
     ? buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, authorshipMode))
     : null;
@@ -372,7 +382,7 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
       ? "Blind authorship"
       : authorshipMode === "reassigned"
         ? "Reassigned authorship"
-        : "Standard authorship";
+        : "Revealed authorship";
 
   const handlePrintBrief = useCallback(() => {
     if (!brief || !persistRun) return;
@@ -650,43 +660,61 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+                    <fieldset
+                      className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2"
+                      aria-label="Authorship mode — what the brief author sees"
+                    >
                       <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
                         <input
-                          type="checkbox"
-                          checked={blindAuthorship}
-                          onChange={(e) => {
-                            const on = e.target.checked;
-                            setBlindAuthorship(on);
-                            if (on) setReassignedAuthorship(false);
+                          type="radio"
+                          name="authorship-mode"
+                          checked={blindAuthorship && !reassignedAuthorship}
+                          onChange={() => {
+                            setBlindAuthorship(true);
+                            setReassignedAuthorship(false);
                           }}
                           disabled={generating}
-                          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-4 w-4 shrink-0 border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                         />
-                        Blind authorship
+                        Blind <span className="text-xs text-zinc-400">(default)</span>
                       </label>
                       <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
                         <input
-                          type="checkbox"
+                          type="radio"
+                          name="authorship-mode"
+                          checked={!blindAuthorship && !reassignedAuthorship}
+                          onChange={() => {
+                            setBlindAuthorship(false);
+                            setReassignedAuthorship(false);
+                          }}
+                          disabled={generating}
+                          className="h-4 w-4 shrink-0 border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        Revealed
+                      </label>
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-600 select-none">
+                        <input
+                          type="radio"
+                          name="authorship-mode"
                           checked={reassignedAuthorship}
-                          onChange={(e) => {
-                            const on = e.target.checked;
-                            setReassignedAuthorship(on);
-                            if (on) setBlindAuthorship(false);
+                          onChange={() => {
+                            setReassignedAuthorship(true);
+                            setBlindAuthorship(false);
                           }}
                           disabled={generating}
-                          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-4 w-4 shrink-0 border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                         />
-                        Reassigned authorship
+                        Reassigned <span className="text-xs text-zinc-400">(research)</span>
                       </label>
-                    </div>
+                    </fieldset>
 
                     <p className="text-xs leading-relaxed text-zinc-500">
-                      Blind authorship hides brand names from the brief author (sources become AI Model 1, 2,
-                      3…). Reassigned authorship keeps brand names but randomly remaps them—each voice gets a
-                      unique wrong label (e.g. Anthropic’s run may appear as xAI). You still see real names.
-                      Standard, blind, and reassigned briefs are saved separately; the toggles switch between
-                      them.
+                      By default, the brief is written <strong>blind</strong>: the synthesizer sees “AI Model 1,
+                      2, 3…” instead of provider brands, so credit follows ideas rather than logos. Choose{" "}
+                      <strong>Revealed</strong> to show the real provider names to the author, or{" "}
+                      <strong>Reassigned</strong> to randomly remap brands—each voice gets a unique wrong label
+                      (e.g. Anthropic’s run may appear as xAI), useful for stress-testing bias. Blind, revealed,
+                      and reassigned briefs are saved separately; switching modes shows the matching saved brief.
                     </p>
                   </div>
                 </div>
@@ -700,8 +728,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                         </p>
                         <p className="mt-1 text-xs text-indigo-600">
                           {generateAllStatus
-                            ? `Running every configured model for ${authorshipModeLabel.toLowerCase()}, one at a time. Each pass often takes 30–60 seconds.`
-                            : `${activeSynthesizerLabel} reads every member's run, research, and variants in one pass. This often takes 30–60 seconds and can run longer on large decisions.`}
+                            ? `Running every configured model for ${authorshipModeLabel.toLowerCase()}, one at a time. Each pass includes a fact-check and can take a minute or more.`
+                            : `${activeSynthesizerLabel} reads every member's run, research, and variants, then a separate judge checks public facts. This often takes a minute or more.`}
                         </p>
                       </div>
                     ) : generateAllStatus ? (
@@ -784,12 +812,14 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     )}
                   </div>
                 </article>
-              ) : (
+              ) : null}
+              {brief && factCheck ? <UnifiedBriefFactCheckPanel factCheck={factCheck} /> : null}
+              {!brief ? (
                 <p className="mt-8 text-sm text-zinc-600 print:hidden">
                   No {activeSynthesizerLabel} brief yet. With that model selected above, click{" "}
                   <span className="font-medium">Generate with {activeSynthesizerLabel}</span>.
                 </p>
-              )}
+              ) : null}
 
               {/* Print-only appendix: which model's ideas made the cut. Visible only in the downloaded PDF. */}
               {brief && contributions && contributions.contributions.length > 0 && (

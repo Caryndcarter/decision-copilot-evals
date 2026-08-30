@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRun, getRunsByDecisionId, replaceRun } from "@/lib/db/runs";
 import { runBestOfWorldsBriefSynthesis } from "@/lenses/brief";
 import {
+  runUnifiedBriefFactCheck,
+  unifiedBriefFactCheckFailure,
+} from "@/lenses/unified-brief-fact-check";
+import {
   canonicalRunsForUnifiedBriefDecision,
   listIncompleteRunsForBestOfWorlds,
 } from "@/lib/best-of-worlds-incomplete";
@@ -13,12 +17,14 @@ import { runHasAnalysisForUnifiedBrief } from "@/lib/unified-brief-eligibility";
 import {
   authorshipModeFromFlags,
   isUnifiedBriefSynthesizer,
+  mergeUnifiedBriefFactCheckIntoRun,
   mergeUnifiedBriefIntoRun,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
 import type { DecisionRunResult } from "@/types/decision";
 
-export const maxDuration = 60;
+/** Synthesis + web-search fact-check can exceed 60s. */
+export const maxDuration = 180;
 
 /**
  * POST /api/decision/run/best-of-worlds-brief
@@ -82,17 +88,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const incomplete_runs = listIncompleteRunsForBestOfWorlds(allRuns);
 
   try {
-    const brief = await runBestOfWorldsBriefSynthesis(
+    const draft = await runBestOfWorldsBriefSynthesis(
       persistRun,
       eligible,
       allRuns,
       synthesizer,
       authorshipMode
     );
+
+    let brief = draft;
+    let factCheckError: string | undefined;
+    let factCheck;
+    try {
+      const checked = await runUnifiedBriefFactCheck(draft, persistRun.intake, synthesizer);
+      brief = checked.brief;
+      factCheck = checked.factCheck;
+    } catch (err) {
+      console.error("[best-of-worlds-brief] fact-check", err);
+      factCheckError = err instanceof Error ? err.message : "Fact-check failed";
+      factCheck = unifiedBriefFactCheckFailure(draft, err, synthesizer);
+      brief = draft;
+    }
+
     // Re-read before write so a concurrent synthesizer doesn't clobber sibling authorship slots.
     const fresh = (await getRun(persistRun.run_id)) ?? persistRun;
     const consolidated = consolidateUnifiedAuthorshipOntoRun(fresh, allRuns);
-    const updated = mergeUnifiedBriefIntoRun(consolidated, synthesizer, brief, authorshipMode);
+    let updated = mergeUnifiedBriefIntoRun(consolidated, synthesizer, brief, authorshipMode);
+    updated = mergeUnifiedBriefFactCheckIntoRun(updated, synthesizer, factCheck, authorshipMode);
     await replaceRun(persistRun.run_id, updated);
     return NextResponse.json({
       run: updated,
@@ -101,6 +123,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       blind,
       reassigned,
       authorshipMode,
+      ...(factCheckError ? { fact_check_error: factCheckError } : {}),
     });
   } catch (err) {
     console.error("[best-of-worlds-brief]", err);
