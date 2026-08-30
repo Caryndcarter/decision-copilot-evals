@@ -65,8 +65,7 @@ export default function Home() {
               >
                 Unified Brief
               </Link>
-              , whether the same scenario holds up when run at volume, and more. Results are published
-              here so you can see what held up and what didn&apos;t.
+              , whether the same scenario holds up when run at volume, and more.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -104,27 +103,19 @@ export default function Home() {
             Research program
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-            The reason for Model Studies research
+            Why this research exists
           </h2>
           <p className="mt-5 text-base leading-relaxed text-zinc-600">
-            Claims about how models behave under decision pressure — and overconfidence in model
-            consensus — are easy to ship and hard to check. This program exists to make them
-            checkable: the same facts, several models, blind coding on a fixed rubric, and the
-            results published — so you can see what held up and what didn&apos;t, instead of taking
-            a feature bullet on faith.
+            AI decision support can fail without hallucinating a single fact. A model may follow the
+            user&apos;s framing, favor familiar reasoning, suppress meaningful dissent, or produce a
+            different recommendation than another model given the same evidence. Because every answer
+            can still sound thoughtful and convincing, these failures are unusually difficult to see.
           </p>
-          <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-zinc-800">
-            {[
-              "Same facts, several models",
-              "Blind coding on a fixed rubric",
-              "Results published, not claimed",
-            ].map((item) => (
-              <li key={item} className="flex items-center gap-2.5">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" aria-hidden />
-                {item}
-              </li>
-            ))}
-          </ul>
+          <p className="mt-4 text-base leading-relaxed text-zinc-600">
+            Model Studies measures where those differences occur — so people can understand when model
+            choice matters, when apparent consensus is trustworthy, and how decision systems should be
+            designed to preserve independent judgment.
+          </p>
           <div className="mt-10">
             <Link
               href="/model-studies/why"
