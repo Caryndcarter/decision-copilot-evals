@@ -113,15 +113,20 @@ describe("buildAuthorshipBatchSummaries budget-conditions include", () => {
 });
 
 describe("committed budget-conditions snapshot", () => {
-  it("records the T5 self drop and Sol control with no drop", () => {
+  it("records the T5 Revealed shift, Reassigned volatility, and Sol control with no self change", () => {
+    const t1 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.trials.find((t) => t.trial === 1);
     const t5 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.trials.find((t) => t.trial === 5);
     expect(t5?.open.openai).toBe("high");
     expect(t5?.blind.openai).toBe("medium");
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_drop_count).toBe(1);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_drop_count).toBe(0);
+    expect(t5?.reassigned.openai).toBe("high");
+    expect(t1?.reassigned.openai).toBe("minimal");
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_blind_vs_revealed).toBe(1);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_blind_vs_reassigned).toBe(4);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_blind_vs_revealed).toBe(0);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_blind_vs_reassigned).toBe(0);
     expect(
       AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.demos.every(
-        (d) => d.open.openai === "high" && d.blind.openai === "high"
+        (d) => d.open.openai === "high" && d.blind.openai === "high" && d.reassigned.openai === "high"
       )
     ).toBe(true);
   });
@@ -132,10 +137,18 @@ describe("committed budget-conditions snapshot", () => {
     expect(UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER[0]).toBe("blind");
   });
 
-  it("keeps synthesizer token budget in footnotes, not the title", () => {
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.title).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.title.toLowerCase()).not.toMatch(/openai|gpt/);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.methodology_footnotes.join(" ")).toMatch(/4096/);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.scenario_label).toBe("Civitas (constrained tokens)");
+  it("names token budgets and per-batch models in the snapshot story", () => {
+    const snap = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT;
+    expect(snap.title).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
+    expect(snap.title.toLowerCase()).not.toMatch(/openai|gpt/);
+    expect(snap.constrained.token_budget.openai_synthesizer).toBe(4096);
+    expect(snap.control.token_budget.openai_synthesizer).toBe(8192);
+    expect(snap.control.token_budget.other_synthesizers).toBe(16384);
+    expect(snap.constrained.provider_labels.anthropic).toBe("Sonnet");
+    expect(snap.constrained.think_tank_models.anthropic).toBe("claude-sonnet-4-6");
+    expect(snap.control.provider_labels.anthropic).toBe("Fable");
+    expect(snap.control.think_tank_models.anthropic).toBe("claude-fable-5");
+    expect(snap.scenario_label).toBe("Civitas (constrained tokens)");
+    expect(snap.takeaway.meaning.toLowerCase()).toMatch(/remap|reassigned|budget/);
   });
 });

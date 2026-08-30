@@ -60,7 +60,7 @@ const STUDIES: {
     id: "authorship-budget-conditions",
     family: "authorship-influence",
     scenarioLabel: AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
-    blurb: "Does Blind vs Revealed credit shift when contribution budget is tight?",
+    blurb: "Does Blind / Revealed / Reassigned credit shift when the token budget is tight?",
     purpose: AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   },
   {
