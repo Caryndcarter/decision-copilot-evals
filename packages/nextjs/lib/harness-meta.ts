@@ -55,7 +55,7 @@ export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (constrained
 export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL = "adequate budget (Sol)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE =
-  "Authorship influence · budget conditions — same Blind (default) vs Revealed credit question under two synthesizer-contribution budgets: Civitas (constrained tokens) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
+  "Authorship influence · budget conditions — same Blind (default) / Revealed / Reassigned credit question under two synthesizer-contribution budgets: Civitas at 4,096 tokens versus adequate budget (Sol) at 8,192 (ChatGPT synthesizer) / 16,384 (others). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
 
 function normalizeHarnessBatchId(batchId?: string): string | undefined {
   const raw = batchId?.trim();

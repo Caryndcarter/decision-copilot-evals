@@ -106,5 +106,8 @@ describe("authorship budget-conditions inclusion", () => {
     ].join(" ");
     expect(blob.toLowerCase()).not.toMatch(/starv/);
     expect(blob).toContain("constrained tokens");
+    expect(blob).toContain("4,096");
+    expect(blob).toContain("Sonnet");
+    expect(blob).toMatch(/Reassigned/);
   });
 });

@@ -1,11 +1,13 @@
 import {
   AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT as SNAP,
   BUDGET_CONDITION_PEER_PROVIDERS,
-  BUDGET_CONDITION_PROVIDER_LABELS,
   selfCredit,
   type BudgetConditionInfluenceMap,
+  type BudgetConditionProviderLabels,
+  type BudgetConditionRow,
+  type BudgetConditionTokenBudget,
 } from "@/lib/authorship-budget-conditions";
-import type { ContributionInfluence } from "@/types/decision";
+import type { ContributionInfluence, LLMProviderName } from "@/types/decision";
 
 const HEAT: Record<ContributionInfluence, string> = {
   high: "bg-indigo-600 text-white",
@@ -14,11 +16,17 @@ const HEAT: Record<ContributionInfluence, string> = {
   minimal: "bg-zinc-100 text-zinc-600 border border-zinc-200",
 };
 
-function Chip({ value, dropped }: { value: ContributionInfluence; dropped?: boolean }) {
+function Chip({
+  value,
+  changed,
+}: {
+  value: ContributionInfluence;
+  changed?: boolean;
+}) {
   return (
     <span
-      className={`inline-flex min-w-[4.25rem] items-center justify-center rounded-md px-2 py-1 text-[11px] font-semibold capitalize ${HEAT[value]} ${
-        dropped ? "ring-2 ring-amber-400 ring-offset-1" : ""
+      className={`inline-flex min-w-[3.15rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize ${HEAT[value]} ${
+        changed ? "ring-2 ring-amber-400 ring-offset-1" : ""
       }`}
     >
       {value}
@@ -26,37 +34,102 @@ function Chip({ value, dropped }: { value: ContributionInfluence; dropped?: bool
   );
 }
 
-function ModePair({
-  open,
-  blind,
-  highlightDrop,
+function ModeHeat({
+  map,
+  labels,
+  baseline,
+  markSelfChange,
 }: {
-  open: ContributionInfluence;
-  blind: ContributionInfluence;
-  highlightDrop?: boolean;
+  map: BudgetConditionInfluenceMap;
+  labels: BudgetConditionProviderLabels;
+  baseline?: BudgetConditionInfluenceMap;
+  markSelfChange?: boolean;
 }) {
-  const changed = highlightDrop && open !== blind;
+  const self = selfCredit(map);
+  const selfChanged = Boolean(markSelfChange && baseline && selfCredit(baseline) !== self);
+  const cells: Array<{ key: LLMProviderName; label: string; value: ContributionInfluence; changed?: boolean }> = [
+    { key: SNAP.rater, label: labels[SNAP.rater], value: self, changed: selfChanged },
+    ...BUDGET_CONDITION_PEER_PROVIDERS.map((p) => ({
+      key: p,
+      label: labels[p],
+      value: map[p],
+    })),
+  ];
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <Chip value={blind} />
-      <span className="text-[10px] text-zinc-400" aria-hidden>
-        →
-      </span>
-      <Chip value={open} dropped={changed} />
+    <div className="flex flex-nowrap items-center gap-2">
+      {cells.map((cell) => (
+        <span key={cell.key} className="inline-flex flex-nowrap items-center gap-1">
+          <span className="whitespace-nowrap text-[10px] text-zinc-500">{cell.label}</span>
+          <Chip value={cell.value} changed={cell.changed} />
+        </span>
+      ))}
     </div>
   );
 }
 
-function PeerRow({ map }: { map: BudgetConditionInfluenceMap }) {
+function ConditionTable({
+  title,
+  subtitle,
+  budget,
+  models,
+  labels,
+  rows,
+}: {
+  title: string;
+  subtitle: string;
+  budget: BudgetConditionTokenBudget;
+  models: Record<LLMProviderName, string>;
+  labels: BudgetConditionProviderLabels;
+  rows: BudgetConditionRow[];
+}) {
+  const modelLine = `${labels.openai} ${models.openai} · ${labels.anthropic} ${models.anthropic} · ${labels.gemini} ${models.gemini} · ${labels.xai} ${models.xai}`;
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {BUDGET_CONDITION_PEER_PROVIDERS.map((p) => (
-        <span key={p} className="inline-flex items-center gap-1">
-          <span className="text-[10px] text-zinc-500">{BUDGET_CONDITION_PROVIDER_LABELS[p]}</span>
-          <Chip value={map[p]} />
-        </span>
-      ))}
-    </div>
+    <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
+          <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>
+          <p className="mt-1 text-[11px] text-zinc-500">{modelLine}</p>
+        </div>
+        <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-right">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
+            Token budget
+          </p>
+          <p className="text-sm font-semibold tabular-nums text-indigo-950">{budget.headline}</p>
+          <p className="text-[11px] text-indigo-800">{budget.subhead}</p>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
+            <tr>
+              <th className="w-24 px-3 py-2 font-medium">Case</th>
+              <th className="px-3 py-2 font-medium">Blind (default)</th>
+              <th className="px-3 py-2 font-medium">Revealed</th>
+              <th className="px-3 py-2 font-medium">Reassigned</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100">
+            {rows.map((row) => (
+              <tr key={row.decision_id}>
+                <td className="w-24 whitespace-nowrap px-3 py-3 text-xs font-semibold text-zinc-800">
+                  {row.case_label}
+                </td>
+                <td className="whitespace-nowrap px-3 py-3">
+                  <ModeHeat map={row.blind} labels={labels} />
+                </td>
+                <td className="whitespace-nowrap px-3 py-3">
+                  <ModeHeat map={row.open} labels={labels} baseline={row.blind} markSelfChange />
+                </td>
+                <td className="whitespace-nowrap px-3 py-3">
+                  <ModeHeat map={row.reassigned} labels={labels} baseline={row.blind} markSelfChange />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -65,124 +138,64 @@ export function AuthorshipBudgetConditionsPanel() {
     <div className="space-y-6">
       <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
-          Committed snapshot
+          What we tested
         </p>
         <h2 className="mt-1 text-base font-semibold text-zinc-900">{SNAP.title}</h2>
-        <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">
-          {SNAP.rater_label} as rater — Blind (default) vs Revealed self-credit and peer credit.
-          Scenario:{" "}
-          <span className="font-medium text-zinc-800">{SNAP.scenario_label}</span>. Control:{" "}
-          <span className="font-medium text-zinc-800">{SNAP.control_label}</span>. Scale: high = 4,
-          medium = 3, low = 2, minimal = 1.
+        <p className="mt-2 max-w-4xl text-sm leading-relaxed text-zinc-700">{SNAP.takeaway.test}</p>
+        <p className="mt-2 max-w-4xl text-sm leading-relaxed text-zinc-700">{SNAP.takeaway.results}</p>
+        <p className="mt-2 max-w-4xl text-sm leading-relaxed text-zinc-800">
+          <span className="font-semibold text-zinc-900">Takeaway. </span>
+          {SNAP.takeaway.meaning}
         </p>
-        <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained Blind≠Revealed</dt>
-            <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.constrained.self_drop_count} of {SNAP.constrained.trials.length}
-            </dd>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+              {SNAP.constrained.scenario_label}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-amber-950">
+              {SNAP.constrained.token_budget.headline}
+            </p>
+            <p className="text-sm text-amber-900">{SNAP.constrained.token_budget.subhead}</p>
+            <p className="mt-2 text-xs text-amber-800">
+              Blind≠Revealed self {SNAP.constrained.self_blind_vs_revealed} of{" "}
+              {SNAP.constrained.trials.length} · Blind≠Reassigned self{" "}
+              {SNAP.constrained.self_blind_vs_reassigned} of {SNAP.constrained.trials.length}
+            </p>
           </div>
-          <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained Blind self stayed high</dt>
-            <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.constrained.self_blind_high} of {SNAP.constrained.trials.length} Blind
-            </dd>
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+              {SNAP.control.control_label}
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-emerald-950">
+              {SNAP.control.token_budget.headline}
+            </p>
+            <p className="text-sm text-emerald-900">{SNAP.control.token_budget.subhead}</p>
+            <p className="mt-2 text-xs text-emerald-800">
+              Blind≠Revealed self {SNAP.control.self_blind_vs_revealed} of {SNAP.control.demos.length} ·
+              Blind≠Reassigned self {SNAP.control.self_blind_vs_reassigned} of {SNAP.control.demos.length}
+            </p>
           </div>
-          <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Control Blind≠Revealed</dt>
-            <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.control.self_drop_count} of {SNAP.control.demos.length}
-            </dd>
-          </div>
-          <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Control Blind self</dt>
-            <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.control.self_blind_high}/{SNAP.control.demos.length} high
-            </dd>
-          </div>
-        </dl>
+        </div>
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-100 px-4 py-3">
-          <h3 className="text-sm font-semibold text-zinc-900">{SNAP.constrained.scenario_label}</h3>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            {SNAP.constrained.demo_label} · five replication trials · {SNAP.rater_label} as rater
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
-              <tr>
-                <th className="px-4 py-2 font-medium">Trial</th>
-                <th className="px-4 py-2 font-medium">Self (Blind → Revealed)</th>
-                <th className="px-4 py-2 font-medium">Peers · Blind</th>
-                <th className="px-4 py-2 font-medium">Peers · Revealed</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {SNAP.constrained.trials.map((row) => {
-                const openSelf = selfCredit(row.open);
-                const blindSelf = selfCredit(row.blind);
-                return (
-                  <tr key={row.trial}>
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-800">
-                      Trial {row.trial}
-                    </td>
-                    <td className="px-4 py-3">
-                      <ModePair open={openSelf} blind={blindSelf} highlightDrop />
-                    </td>
-                    <td className="px-4 py-3">
-                      <PeerRow map={row.blind} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <PeerRow map={row.open} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <ConditionTable
+        title={SNAP.constrained.scenario_label}
+        subtitle={`${SNAP.constrained.demo_label} · five replication trials · ${SNAP.rater_label} as rater`}
+        budget={SNAP.constrained.token_budget}
+        models={SNAP.constrained.think_tank_models}
+        labels={SNAP.constrained.provider_labels}
+        rows={SNAP.constrained.trials}
+      />
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-100 px-4 py-3">
-          <h3 className="text-sm font-semibold text-zinc-900">{SNAP.control.control_label}</h3>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Five-demo authorship batch · {SNAP.rater_label} as rater · no Blind vs Revealed self
-            change
-          </p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
-              <tr>
-                <th className="px-4 py-2 font-medium">Demo</th>
-                <th className="px-4 py-2 font-medium">Self (Blind → Revealed)</th>
-                <th className="px-4 py-2 font-medium">Peers · Blind</th>
-                <th className="px-4 py-2 font-medium">Peers · Revealed</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {SNAP.control.demos.map((row) => (
-                <tr key={row.decision_id}>
-                  <td className="px-4 py-3 font-medium text-zinc-800">{row.demo_label}</td>
-                    <td className="px-4 py-3">
-                    <ModePair open={selfCredit(row.open)} blind={selfCredit(row.blind)} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PeerRow map={row.blind} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PeerRow map={row.open} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <ConditionTable
+        title={SNAP.control.control_label}
+        subtitle={`Five-demo authorship batch · ${SNAP.rater_label} as rater · self-credit held high in every mode`}
+        budget={SNAP.control.token_budget}
+        models={SNAP.control.think_tank_models}
+        labels={SNAP.control.provider_labels}
+        rows={SNAP.control.demos}
+      />
 
       <aside className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">

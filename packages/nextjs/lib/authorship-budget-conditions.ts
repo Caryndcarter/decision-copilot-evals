@@ -3,16 +3,42 @@ import type { ContributionInfluence, LLMProviderName } from "@/types/decision";
 
 export type BudgetConditionInfluenceMap = Record<LLMProviderName, ContributionInfluence>;
 
-export type BudgetConditionTrial = {
-  trial: number;
-  decision_id: string;
-  open: BudgetConditionInfluenceMap;
-  blind: BudgetConditionInfluenceMap;
+export type BudgetConditionProviderLabels = Record<LLMProviderName, string>;
+
+export type BudgetConditionTokenBudget = {
+  headline: string;
+  subhead: string;
+  openai_synthesizer: number;
+  other_synthesizers: number;
+  note: string;
 };
 
-export type BudgetConditionControlDemo = BudgetConditionTrial & {
+export type BudgetConditionRow = {
+  trial: number;
+  decision_id: string;
+  case_label: string;
+  open: BudgetConditionInfluenceMap;
+  blind: BudgetConditionInfluenceMap;
+  reassigned: BudgetConditionInfluenceMap;
+};
+
+export type BudgetConditionControlDemo = BudgetConditionRow & {
   demo_id: string;
   demo_label: string;
+};
+
+export type BudgetConditionBatchBlock = {
+  batch_id: string;
+  harness_kind: string;
+  token_budget: BudgetConditionTokenBudget;
+  think_tank_models: Record<LLMProviderName, string>;
+  provider_labels: BudgetConditionProviderLabels;
+  self_open_high: number;
+  self_blind_high: number;
+  self_reassigned_high: number;
+  self_blind_vs_revealed: number;
+  self_blind_vs_reassigned: number;
+  self_drop_count: number;
 };
 
 export type AuthorshipBudgetConditionsSnapshot = {
@@ -23,24 +49,19 @@ export type AuthorshipBudgetConditionsSnapshot = {
   rater: LLMProviderName;
   rater_label: string;
   influence_scale: Record<ContributionInfluence, number>;
-  constrained: {
-    batch_id: string;
-    harness_kind: string;
+  takeaway: {
+    test: string;
+    results: string;
+    meaning: string;
+  };
+  constrained: BudgetConditionBatchBlock & {
     scenario_label: string;
     demo_id: string;
     demo_label: string;
-    self_open_high: number;
-    self_blind_high: number;
-    self_drop_count: number;
-    trials: Array<BudgetConditionTrial & { open: BudgetConditionInfluenceMap; blind: BudgetConditionInfluenceMap }>;
+    trials: BudgetConditionRow[];
   };
-  control: {
-    batch_id: string;
-    harness_kind: string;
+  control: BudgetConditionBatchBlock & {
     control_label: string;
-    self_open_high: number;
-    self_blind_high: number;
-    self_drop_count: number;
     demos: BudgetConditionControlDemo[];
   };
   methodology_footnotes: string[];
@@ -54,13 +75,6 @@ export const BUDGET_CONDITION_PEER_PROVIDERS: LLMProviderName[] = [
   "gemini",
   "xai",
 ];
-
-export const BUDGET_CONDITION_PROVIDER_LABELS: Record<LLMProviderName, string> = {
-  openai: "ChatGPT",
-  anthropic: "Fable",
-  gemini: "Gemini",
-  xai: "Grok",
-};
 
 export function selfCredit(
   map: BudgetConditionInfluenceMap,
