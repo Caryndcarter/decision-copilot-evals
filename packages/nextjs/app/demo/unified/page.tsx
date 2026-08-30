@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import { CollapsibleBlock } from "@/app/run/collapsible-block";
 import { DemoBriefToolbar } from "@/app/demo/_components/demo-brief-toolbar";
 import { DemoBriefTitleBanner, demoBriefBodyClass } from "@/app/demo/_components/demo-brief-title-banner";
 import { demoContentClass } from "@/app/demo/_components/demo-shell";
 import {
-  DEMO_PROVIDERS,
   DEMO_UNIFIED_AUTHORSHIP_MODE,
   DEMO_UNIFIED_BRIEF,
   DEMO_UNIFIED_FACT_CHECK_JUDGE,
@@ -21,22 +19,11 @@ import {
   unifiedBriefAuthorshipModeLabel,
   unifiedBriefSynthesizerLabel,
 } from "@/lib/unified-briefs";
-import type { LLMProviderName } from "@/types/decision";
-
-function parseProvider(value: string | null): LLMProviderName {
-  if (value && DEMO_PROVIDERS.includes(value as LLMProviderName)) {
-    return value as LLMProviderName;
-  }
-  return "openai";
-}
 
 function DemoUnifiedContent() {
-  const searchParams = useSearchParams();
-  const provider = parseProvider(searchParams.get("provider"));
-
   return (
     <>
-      <DemoBriefToolbar view="unified" provider={provider} />
+      <DemoBriefToolbar view="unified" />
 
       <div className={`${demoBriefBodyClass} ${demoContentClass}`}>
         <DemoBriefTitleBanner title={DEMO_UNIFIED_BRIEF.title}>
@@ -105,10 +92,7 @@ function DemoUnifiedContent() {
       </div>
 
       <div className={`flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 py-6 ${demoContentClass}`}>
-        <Link
-          href={`/demo/result?provider=${provider}`}
-          className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-        >
+        <Link href="/demo/result?provider=openai" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
           ← Individual model results
         </Link>
         <Link
