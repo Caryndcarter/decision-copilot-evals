@@ -122,7 +122,7 @@ function ThinkTankMockup() {
 
       {/* Convergence hint */}
       <div className="relative flex justify-center mb-2">
-        <div className="flex items-center gap-1 text-[10px] text-indigo-400/80 uppercase tracking-widest font-semibold">
+        <div className="flex items-center gap-1 text-[10px] text-logo-light/80 uppercase tracking-widest font-semibold">
           <span className="h-px w-8 bg-indigo-500/40" />
           synthesize
           <span className="h-px w-8 bg-indigo-500/40" />
@@ -139,7 +139,7 @@ function ThinkTankMockup() {
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold mb-1">Situation</div>
+            <div className="text-[10px] uppercase tracking-widest text-logo-light font-semibold mb-1">Situation</div>
             <div className="text-xs text-zinc-300 leading-relaxed">Migrate from Vercel to AWS self-hosted infrastructure to reduce costs from $5k → $600/month.</div>
           </div>
 
@@ -156,8 +156,8 @@ function ThinkTankMockup() {
             ))}
           </div>
 
-          <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 px-3 py-2">
-            <div className="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold mb-1">Recommendation</div>
+          <div className="rounded-lg border border-logo/30 bg-indigo-950/40 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-widest text-logo-light font-semibold mb-1">Recommendation</div>
             <div className="text-[11px] text-zinc-300 leading-relaxed">Run a 30-day parallel deployment on a single non-critical service before committing to full migration.</div>
           </div>
         </div>
@@ -208,7 +208,7 @@ function ThreeLensesLink({ href = "#three-lenses" }: { href?: string }) {
   return (
     <Link
       href={href}
-      className="font-medium text-indigo-300 hover:text-indigo-200 underline decoration-indigo-400/40 underline-offset-2"
+      className="font-medium text-logo-light hover:text-white underline decoration-logo-light/40 underline-offset-2"
     >
       Risk, Reversibility, Stakeholders
     </Link>
@@ -275,19 +275,19 @@ export default function Home() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-logo/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300 mb-6">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-logo/30 bg-logo/10 px-3 py-1 text-xs font-medium text-logo-light mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-logo-light animate-pulse" />
                 Your AI think tank · OpenAI · Anthropic · Gemini · xAI
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                 Turn AI models into<br />
-                <span className="text-indigo-400">your own think tank.</span>
+                <span className="text-logo-light">your own think tank.</span>
               </h1>
               <p className="mt-5 text-lg text-zinc-300 leading-relaxed max-w-lg">
                 You&apos;re facing a decision with real stakes — stay or migrate, hire or restructure,
@@ -301,7 +301,7 @@ export default function Home() {
                 tank are combined into a{" "}
                 <Link
                   href="/how-it-works#unified-brief"
-                  className="font-semibold text-indigo-300 hover:text-indigo-200 transition-colors"
+                  className="font-semibold text-logo-light hover:text-white transition-colors"
                 >
                   Unified Brief
                 </Link>{" "}
@@ -487,7 +487,7 @@ export default function Home() {
       <section className="bg-zinc-950 py-20 border-b border-white/5">
         <div className="mx-auto max-w-6xl px-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">
               Not another multi-model chat
             </p>
             <h2 className="mt-3 text-2xl lg:text-3xl font-bold text-white tracking-tight max-w-4xl">
@@ -505,7 +505,7 @@ export default function Home() {
               <div className="grid grid-cols-[minmax(8rem,0.9fr)_1.1fr_1.2fr] gap-x-4 border-b border-white/10 pb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                 <span>Dimension</span>
                 <span>Multi-model AI chat</span>
-                <span className="text-indigo-300">Decision Copilot</span>
+                <span className="text-logo-light">Decision Copilot</span>
               </div>
               {MULTI_MODEL_DIFFERENCES.map((row) => (
                 <div
@@ -522,14 +522,14 @@ export default function Home() {
 
           <p className="mt-8 text-sm text-zinc-400">
             What are{" "}
-            <Link href="#three-lenses" className="font-medium text-indigo-400 hover:text-indigo-300">
+            <Link href="#three-lenses" className="font-medium text-logo-light hover:text-white">
               Risk, Reversibility, and Stakeholders
             </Link>
             ?
           </p>
 
           <div className="mt-14 border-t border-white/10 pt-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">
               Why the schema matters
             </p>
             <h3 className="mt-3 text-xl lg:text-2xl font-bold text-white tracking-tight max-w-4xl leading-snug">
@@ -540,7 +540,7 @@ export default function Home() {
               dimensions and compare models on a brief you can defend later — not a thread that
               disappears into chat history. That&apos;s also what makes rigorous model evaluation
               possible.{" "}
-              <Link href="/model-studies" className="font-medium text-indigo-400 hover:text-indigo-300">
+              <Link href="/model-studies" className="font-medium text-logo-light hover:text-white">
                 See the Model Studies research →
               </Link>
             </p>

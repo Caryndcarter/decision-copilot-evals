@@ -128,9 +128,9 @@ export default function WhyPage() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl" />
+        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-logo/20 blur-3xl" />
         <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">
             Why it matters
           </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-white leading-tight sm:text-4xl lg:text-5xl">

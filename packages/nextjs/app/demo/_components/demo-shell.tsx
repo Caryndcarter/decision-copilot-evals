@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { SessionNav } from "@/app/components/session-nav";
+import { DemoModeStrip } from "@/app/demo/_components/demo-mode-strip";
 
 export function DemoShell({ children }: { children: React.ReactNode }) {
   return (
@@ -10,14 +10,8 @@ export function DemoShell({ children }: { children: React.ReactNode }) {
           <AppNavBrand />
           <SessionNav />
         </div>
+        <DemoModeStrip />
       </nav>
-      <div className="border-b border-amber-200 bg-amber-50 px-6 py-2.5 text-center text-sm text-amber-950">
-        <span className="font-semibold">Demo mode.</span> Frozen sample run — no data is saved or sent to models.{" "}
-        <Link href="/request-access" className="font-medium text-amber-900 underline hover:text-amber-800">
-          Request access
-        </Link>{" "}
-        to run your own decisions.
-      </div>
       {children}
     </div>
   );

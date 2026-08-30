@@ -56,13 +56,10 @@ export default function DemoIntakePage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-6 py-8">
-        <div className="mb-8 rounded-xl border border-indigo-200 bg-indigo-50/60 p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700">
-              Demo
-            </span>
-            <p className="text-sm font-medium text-indigo-700">Sample scenario: {DEMO_SCENARIO_LABEL}</p>
-          </div>
+        <div className="mb-8 rounded-xl border border-logo-border bg-logo-muted/60 p-5">
+          <p className="text-sm font-medium text-logo-text">
+            Sample scenario: <span className="font-semibold">{DEMO_SCENARIO_LABEL}</span>
+          </p>
         </div>
 
         <form

@@ -19,7 +19,7 @@ function FlowStep({
 }) {
   return (
     <div className="flex gap-4">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-logo text-sm font-bold text-white">
         {n}
       </div>
       <div>

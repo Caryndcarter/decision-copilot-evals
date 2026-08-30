@@ -75,7 +75,7 @@ export default async function StudyResultsPage({
                 <span className="text-zinc-700">/</span>
               </>
             )}
-            <span className="text-indigo-400">{study.eyebrow}</span>
+            <span className="text-logo-light">{study.eyebrow}</span>
           </p>
           <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
             {study.heroQuestion}

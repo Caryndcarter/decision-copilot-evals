@@ -548,12 +548,12 @@ export default function IntakePage() {
 
       <div className="mx-auto max-w-3xl px-6 py-8">
         {/* Demo scenarios */}
-        <div className="mb-8 rounded-xl border border-indigo-200 bg-indigo-50/60 p-5">
+        <div className="mb-8 rounded-xl border border-logo-border bg-logo-muted/60 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-indigo-700">
+            <span className="rounded-md bg-logo-soft px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-logo-text">
               Demo
             </span>
-            <p className="text-sm text-indigo-700 font-medium">Load a sample scenario to try it out</p>
+            <p className="text-sm text-logo-text font-medium">Load a sample scenario to try it out</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {DEMO_SCENARIOS.map((demo) => {
@@ -567,7 +567,7 @@ export default function IntakePage() {
                   className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                     selected
                       ? "border-indigo-500 bg-indigo-100 text-indigo-900 ring-1 ring-indigo-500"
-                      : "border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300"
+                      : "border-logo-border bg-white text-logo-text hover:bg-logo-soft hover:border-logo-border"
                   }`}
                 >
                   {demo.label}

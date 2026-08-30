@@ -3,6 +3,19 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  /*
+   * Dual blues:
+   * - logo-*  → brand identity (logo mark ~#6561ec): demo strip, sample cards, dark-nav accents
+   * - indigo-* → product actions (Tailwind default): buttons, links on light, focus rings
+   */
+  --color-logo: #6561ec;
+  --color-logo-hover: #5450d9;
+  --color-logo-muted: #efeffc;
+  --color-logo-border: #c8c6f5;
+  --color-logo-text: #4543b8;
+  --color-logo-soft: #e8e7fb;
+  --color-logo-light: #a9a7f4;
 }
 
 body {
