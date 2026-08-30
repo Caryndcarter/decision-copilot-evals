@@ -17,6 +17,15 @@ const TONE: Record<string, "people" | "lp" | "neutral"> = {
   lp_meridian: "lp",
   hybrid_conditional: "neutral",
   price_signal_only: "people",
+  // Civitas replication codes
+  reinforce: "lp",
+  soften_toward_a: "lp",
+  harden_humane: "people",
+  change_option: "people",
+  staged: "people",
+  hybrid: "neutral",
+  unclear: "neutral",
+  customers: "people",
 };
 
 const TONE_CLASS: Record<"people" | "lp" | "neutral", string> = {

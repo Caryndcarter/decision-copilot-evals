@@ -6,7 +6,7 @@ import { StatStrip } from "@/app/model-studies/_components/stat-strip";
 import { FindingCardGrid } from "@/app/model-studies/_components/finding-card";
 import { DimensionScoreboard } from "@/app/model-studies/_components/scoreboard-dimension-coded";
 import { InfluenceMatrixPlaceholder } from "@/app/model-studies/_components/scoreboard-influence-matrix";
-import { FINDINGS_STUDIES, getFindingsStudy } from "@/lib/findings-registry";
+import { FINDINGS_STUDIES, getFindingsStudy, getTestType } from "@/lib/findings-registry";
 
 export function generateStaticParams() {
   return FINDINGS_STUDIES.filter((s) => s.status === "live").map((s) => ({ study: s.id }));
@@ -34,6 +34,7 @@ export default async function StudyResultsPage({
   const { study: studyId } = await params;
   const study = getFindingsStudy(studyId);
   if (!study || study.status !== "live") notFound();
+  const type = getTestType(study.testTypeId);
 
   return (
     <div className="min-h-screen bg-white">
@@ -48,8 +49,19 @@ export default async function StudyResultsPage({
           >
             ← All results
           </Link>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
-            {study.eyebrow}
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 text-xs font-semibold uppercase tracking-[0.14em]">
+            {type && (
+              <>
+                <Link
+                  href={`/model-studies/results#${type.id}`}
+                  className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  {type.name}
+                </Link>
+                <span className="text-zinc-700">/</span>
+              </>
+            )}
+            <span className="text-indigo-400">{study.eyebrow}</span>
           </p>
           <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
             {study.heroQuestion}
@@ -129,10 +141,10 @@ export default async function StudyResultsPage({
               </Link>
             )}
             <Link
-              href="/model-studies/results"
+              href={type ? `/model-studies/results#${type.id}` : "/model-studies/results"}
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
-              See other studies
+              {type ? `Back to ${type.name}` : "See other results"}
             </Link>
           </div>
         </div>

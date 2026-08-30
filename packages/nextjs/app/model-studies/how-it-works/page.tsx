@@ -1,15 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
-import { getLiveStudies } from "@/lib/findings-registry";
+import { Glossary } from "../_components/glossary";
+import { DimensionGlossaryTable } from "../_components/dimension-glossary-table";
+import { getLiveTestTypes, getStudiesForType } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "How it works — Model Studies",
-  description: "The shared method behind every study: blind coding against a fixed rubric.",
+  description: "The shared method behind every test type: blind coding against a fixed rubric.",
 };
 
 export default function HowItWorksPage() {
-  const studies = getLiveStudies();
+  const testTypes = getLiveTestTypes();
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,22 +33,49 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      <section className="bg-white py-12 border-b border-zinc-100">
+        <div className="mx-auto max-w-3xl px-6 space-y-6">
+          <p className="text-sm leading-relaxed text-zinc-600">
+            The site is organized in four layers, nested inside each other: a{" "}
+            <strong className="font-semibold text-zinc-900">test type</strong> is the question
+            being asked (does filer voice change model behavior?); a{" "}
+            <strong className="font-semibold text-zinc-900">study</strong> is one specific test of
+            that question, built from several{" "}
+            <strong className="font-semibold text-zinc-900">case files</strong>; each case file runs
+            through every model, and every resulting brief is scored by a{" "}
+            <strong className="font-semibold text-zinc-900">judge model</strong> that never sees
+            which provider wrote it.
+          </p>
+          <p className="text-sm leading-relaxed text-zinc-600">
+            Two kinds of brief show up throughout this site.{" "}
+            <strong className="font-semibold text-zinc-900">Decision Brief</strong> is one model's
+            own response to a case — its analysis and recommendation, on its own.{" "}
+            <strong className="font-semibold text-zinc-900">Unified Brief</strong> is different:
+            it's what you get when a <strong className="font-semibold text-zinc-900">synthesizer</strong>{" "}
+            model merges several models' Decision Briefs into one combined recommendation. Voice
+            Influence studies score Decision Briefs directly; Authorship and Replication studies
+            score Unified Briefs, since what they're testing is what happens during that merge.
+          </p>
+          <Glossary />
+        </div>
+      </section>
+
       <section className="bg-white py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">The shared process</h2>
           <ol className="mt-6 space-y-6">
             {[
               {
-                title: "Write a case with a narrator who's already decided",
-                desc: "Each case is a Decision Brief intake authored by a \"filer\" who has already leaned toward one option. The tone and framing vary — confident, urgent, optimistic, honest-aggressive — but for a given case, the underlying facts are held constant across every model.",
+                title: "Write a case with a filer who's already decided",
+                desc: "Each case is an intake authored by a filer who has already leaned toward one option. The tone and framing vary — confident, urgent, optimistic, honest-aggressive — but for a given case, the underlying facts are held constant across every model.",
               },
               {
-                title: "Run the same case through every provider",
-                desc: "The same four provider models (OpenAI, Anthropic, Gemini, xAI) each independently produce a Decision Brief on the same intake — no model sees another's output.",
+                title: "Run the same case through every model",
+                desc: "The same four models — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each independently produce their own Decision Brief on the same intake, without seeing what the others wrote.",
               },
               {
                 title: "Blind-code every brief against a fixed rubric",
-                desc: "A separate judge model codes each brief against a rubric written specifically for that study — it never sees which provider wrote the brief it's coding, only the brief itself.",
+                desc: "A separate judge model scores each brief against a rubric written specifically for that study, kept blind to which provider wrote the brief it's coding — only the brief itself. Which model judges varies by study (see the notes for each one below), and one study (multi-demo authorship) has no separate judge at all — see its notes for why.",
               },
               {
                 title: "Aggregate, and let the split speak",
@@ -69,29 +98,42 @@ export default function HowItWorksPage() {
 
       <section className="bg-zinc-50 py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Per-study notes</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">By test type</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Each study's rubric is scenario-specific — here&apos;s what&apos;s particular to each
-            one.
+            Each type's rubric is scenario-specific — here&apos;s what&apos;s particular to every
+            study inside it.
           </p>
-          <div className="mt-8 space-y-8">
-            {studies.map((study) => (
-              <div key={study.id}>
-                <h3 className="text-sm font-semibold text-zinc-900">{study.name}</h3>
-                <ul className="mt-3 space-y-2">
-                  {study.methodology.map((m) => (
-                    <li key={m} className="flex gap-3 text-sm leading-relaxed text-zinc-600">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                      <span>{m}</span>
-                    </li>
+          <div className="mt-8 space-y-10">
+            {testTypes.map((type) => (
+              <div key={type.id}>
+                <h3 className="text-base font-semibold text-zinc-900">{type.name}</h3>
+                <p className="mt-1 text-sm text-zinc-500">{type.heroQuestion}</p>
+                <div className="mt-4 space-y-6">
+                  {getStudiesForType(type.id).map((study) => (
+                    <div key={study.id} className="border-l-2 border-zinc-200 pl-4">
+                      <h4 className="text-sm font-semibold text-zinc-800">{study.name}</h4>
+                      <ul className="mt-2 space-y-2">
+                        {study.methodology.map((m) => (
+                          <li key={m} className="flex gap-3 text-sm leading-relaxed text-zinc-600">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                            <span>{m}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {study.dimensionGlossary && (
+                        <div className="mt-3">
+                          <DimensionGlossaryTable entries={study.dimensionGlossary} />
+                        </div>
+                      )}
+                      <Link
+                        href={`/model-studies/results/${study.id}`}
+                        className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        See {study.name} results →
+                      </Link>
+                    </div>
                   ))}
-                </ul>
-                <Link
-                  href={`/results/${study.id}`}
-                  className="mt-3 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                >
-                  See {study.name} results →
-                </Link>
+                </div>
               </div>
             ))}
           </div>

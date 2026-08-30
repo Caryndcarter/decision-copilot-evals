@@ -3,8 +3,13 @@ import type { Metadata } from "next";
 import { SiteNav } from "./_components/site-nav";
 import { StatStrip } from "./_components/stat-strip";
 import { RollupFindingGrid } from "./_components/rollup-finding-card";
-import { StudyCard } from "./_components/study-card";
-import { FINDINGS_STUDIES, getRollupFindings, getRollupStats } from "@/lib/findings-registry";
+import { TestTypeCard } from "./_components/test-type-card";
+import {
+  getLiveTestTypes,
+  getRollupFindings,
+  getRollupStats,
+  getStudiesForType,
+} from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "Model Studies — a Decision Copilot research program",
@@ -15,6 +20,7 @@ export const metadata: Metadata = {
 export default function Home() {
   const stats = getRollupStats();
   const findings = getRollupFindings(2);
+  const testTypes = getLiveTestTypes();
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,10 +55,12 @@ export default function Home() {
               them?
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-              Give several frontier models the same facts, written by a narrator who&apos;s
-              already decided. Blind-code what each one actually does with the pressure — the
-              judge never sees which provider wrote what. This is the rollup of what that&apos;s
-              found so far, across every study we&apos;ve run.
+              Every case here is written by a filer — someone who has already leaned toward one
+              option before asking for advice. We give the same facts to several frontier models
+              (ChatGPT, Fable, Gemini, and Grok) and blind-code what each one actually does under
+              that pressure to agree: push back, stay neutral, or go along with the filer&apos;s
+              lean. The judge scoring each brief never sees which provider wrote it. This is the
+              rollup of what that&apos;s found so far, across every study we&apos;ve run.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -100,17 +108,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Study grid */}
+      {/* Test type grid */}
       <section className="bg-zinc-50 py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">The studies</h2>
+          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">The test types</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Same method, different scenario each time. New studies get added to this rollup as a
-            registry entry — nothing about the layout has to change.
+            Each type is a question, tested across one or more studies. New studies land inside an
+            existing type as a registry entry — the type is the story, not any single case.
           </p>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {FINDINGS_STUDIES.map((s) => (
-              <StudyCard key={s.id} study={s} />
+          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+            {testTypes.map((t) => (
+              <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
             ))}
           </div>
         </div>

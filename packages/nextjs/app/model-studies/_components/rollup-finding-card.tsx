@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { RollupFinding } from "@/lib/findings-registry";
 
 /**
- * Cross-study finding card for the homepage / results rollup — tagged with
- * which study it came from and linking through to that study's full page,
- * instead of the per-study "Finding N" numbering.
+ * Cross-study finding card for the homepage / results rollup. Leads with the
+ * test type — that's the durable story — and names the specific study as a
+ * secondary detail, linking through to that study's full page.
  */
 export function RollupFindingGrid({ findings }: { findings: RollupFinding[] }) {
   if (findings.length === 0) return null;
@@ -17,7 +17,10 @@ export function RollupFindingGrid({ findings }: { findings: RollupFinding[] }) {
           className="block rounded-xl border border-zinc-200 bg-white p-5 hover:border-indigo-300 hover:shadow-md transition-all duration-200"
         >
           <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600">
-            {f.studyName}
+            {f.testTypeName}
+          </span>
+          <span className="ml-1.5 text-[10px] uppercase tracking-wider text-zinc-400">
+            · {f.studyName}
           </span>
           <h3 className="mt-1.5 text-sm font-semibold text-zinc-900">{f.headline}</h3>
           <p className="mt-2 text-sm leading-relaxed text-zinc-500">{f.body}</p>
