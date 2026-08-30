@@ -35,9 +35,9 @@ function SectionHeading({
   );
 }
 
-function SubBlock({ title, children }: { title: string; children: ReactNode }) {
+function SubBlock({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5">
+    <div id={id} className={id ? "scroll-mt-24 rounded-xl border border-zinc-200 bg-zinc-50/80 p-5" : "rounded-xl border border-zinc-200 bg-zinc-50/80 p-5"}>
       <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
       <div className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-600">{children}</div>
     </div>
@@ -79,9 +79,27 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      <nav className="sticky top-[65px] z-40 border-b border-zinc-200 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-3xl gap-6 overflow-x-auto px-6 py-3 text-sm font-medium">
+          <Link href="#flow" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
+            The flow
+          </Link>
+          <Link href="#postures" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
+            Postures
+          </Link>
+          <Link href="#unified-brief" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
+            Unified Brief
+          </Link>
+        </div>
+      </nav>
+
       <section id="flow" className="scroll-mt-24 border-b border-zinc-100 bg-white py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <HowItWorksFlowSection showUnifiedBriefCta={false} linkIntroUnifiedBrief={false} />
+          <HowItWorksFlowSection
+            sectionTitle="The four steps"
+            showUnifiedBriefCta={false}
+            linkIntroUnifiedBrief={false}
+          />
         </div>
       </section>
 
@@ -139,18 +157,18 @@ export default function HowItWorksPage() {
               </ul>
             </SubBlock>
 
-            <SubBlock title="Postures — how you frame the analysis">
+            <SubBlock id="postures" title="Postures — how you frame the analysis">
               <p>
                 At intake you tell your think tank <em>how</em> to analyze the decision — that&apos;s
                 your <strong className="font-medium text-zinc-800">posture</strong>. Every structured
-                Decision Brief still uses the same{" "}
+                Decision Brief uses the same{" "}
                 <Link
                   href="/#three-lenses"
                   className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                 >
                   Risk / Reversibility / Stakeholders
                 </Link>{" "}
-                skeleton; the posture changes what models emphasize:
+                lenses; the posture changes what models emphasize:
               </p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>
@@ -191,13 +209,6 @@ export default function HowItWorksPage() {
               </p>
             </SubBlock>
 
-            <SubBlock title="Download as PDF">
-              <p>
-                Use <strong className="font-medium text-zinc-800">PDF</strong> on the Unified Brief
-                page to save or print — contributions appendix optional.
-              </p>
-            </SubBlock>
-
             <SubBlock title="Contributions — whose ideas made the cut">
               <p>
                 After the merge, the synthesizer runs a{" "}
@@ -207,7 +218,9 @@ export default function HowItWorksPage() {
               </p>
               <p>
                 That&apos;s attribution <em>after</em> the blind merge — transparency without letting
-                brand bias into the recommendation itself. The PDF appendix can include this breakdown.
+                brand bias into the recommendation itself. Export as{" "}
+                <strong className="font-medium text-zinc-800">PDF</strong> on the Unified Brief page
+                — contributions appendix optional.
               </p>
             </SubBlock>
           </div>
@@ -218,6 +231,12 @@ export default function HowItWorksPage() {
               className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
             >
               Start a decision →
+            </Link>
+            <Link
+              href="/intake"
+              className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+            >
+              Try a demo →
             </Link>
             <Link
               href="/tour"

@@ -163,8 +163,8 @@ function ThinkTankMockup() {
         </div>
       </div>
 
-      {/* Floating contributions card — narrow badge that hangs mostly below the brief card, only dipping into its empty bottom padding (never the recommendation text) */}
-      <div className="absolute -bottom-28 -left-8 w-52 rounded-xl border border-white/10 bg-zinc-900 shadow-xl p-3 space-y-2">
+      {/* Floating contributions card — hidden on small screens where it clips the mockup */}
+      <div className="absolute -bottom-28 -left-8 hidden w-52 rounded-xl border border-white/10 bg-zinc-900 p-3 shadow-xl space-y-2 sm:block">
         <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Contributions</div>
         <div className="text-[11px] text-zinc-300 leading-snug">Whose ideas made the cut — attribution across every model in your think tank.</div>
         <div className="flex flex-wrap gap-1">
@@ -174,8 +174,8 @@ function ThinkTankMockup() {
         </div>
       </div>
 
-      {/* Floating research card — hangs mostly past the brief card's right edge, in the empty gap between the advisor pills and the Situation text */}
-      <div className="absolute top-8 -right-16 w-40 rounded-xl border border-white/10 bg-zinc-900 shadow-xl p-3 space-y-1.5">
+      {/* Floating research card — hidden on small screens where it clips the mockup */}
+      <div className="absolute top-8 -right-16 hidden w-40 rounded-xl border border-white/10 bg-zinc-900 p-3 shadow-xl space-y-1.5 sm:block">
         <div className="text-[10px] uppercase tracking-widest text-violet-400 font-semibold">Research</div>
         <div className="text-[11px] text-zinc-300 leading-snug">Live web search feeds back into your think tank&apos;s analysis.</div>
       </div>
@@ -298,7 +298,14 @@ export default function Home() {
                 Decision Copilot is built for that moment. You&apos;re guided through describing
                 your situation. Multiple AI models analyze it independently, so no single
                 model&apos;s framing quietly steers the outcome. The best ideas from your think
-                tank are combined into a Unified Brief with a plan you can refine and act on.
+                tank are combined into a{" "}
+                <Link
+                  href="/how-it-works#unified-brief"
+                  className="font-semibold text-indigo-300 hover:text-indigo-200 transition-colors"
+                >
+                  Unified Brief
+                </Link>{" "}
+                with a plan you can refine and act on.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -308,7 +315,7 @@ export default function Home() {
                   Describe your decision →
                 </Link>
                 <Link
-                  href="/intake"
+                  href="/intake?demo=gen-ai-product-compliance"
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
                   Try a demo scenario
@@ -359,37 +366,37 @@ export default function Home() {
               icon={<IconRisk />}
               title="Infrastructure cost decisions"
               scenario="Should we migrate from Vercel to self-hosted AWS to cut costs from $5k to $600/month — and what are we actually risking?"
-              posture="Cost & risk"
+              posture="Risk-first"
             />
             <UseCaseCard
               icon={<IconPeople />}
               title="Leadership & people calls"
               scenario="Our VP Sales is underperforming. Do we support them with ops, or make a change — and how do we protect the customer relationships?"
-              posture="Pressure test"
+              posture="Challenge my leaning"
             />
             <UseCaseCard
               icon={<IconResearch />}
               title="Compliance & regulatory"
               scenario="We're shipping AI features to EU enterprise customers. What's our EU AI Act exposure, and what do RFPs actually require?"
-              posture="Regulatory"
+              posture="Risk-first"
             />
             <UseCaseCard
               icon={<IconCompare />}
               title="Strategic M&A"
               scenario="A PE-backed acquisition of a distressed hospital. What's the regulatory path, and can we secure the union agreements?"
-              posture="Pressure test"
+              posture="Challenge my leaning"
             />
             <UseCaseCard
               icon={<IconReversibility />}
               title="Office & real estate"
               scenario="Our downtown lease ends in 7 months and we need a hybrid policy. What are the realistic alternatives and hidden costs?"
-              posture="Compare options"
+              posture="Widen the option set"
             />
             <UseCaseCard
               icon={<IconBrief />}
               title="Tech modernization"
               scenario="Rip-and-replace vs incremental sidecar approach for a 20-year-old core banking system. What's the regulator's likely stance?"
-              posture="Modernization"
+              posture="Risk-first"
             />
           </div>
         </div>
@@ -513,6 +520,14 @@ export default function Home() {
             </div>
           </div>
 
+          <p className="mt-8 text-sm text-zinc-400">
+            What are{" "}
+            <Link href="#three-lenses" className="font-medium text-indigo-400 hover:text-indigo-300">
+              Risk, Reversibility, and Stakeholders
+            </Link>
+            ?
+          </p>
+
           <div className="mt-14 border-t border-white/10 pt-12">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">
               Why the schema matters
@@ -600,10 +615,16 @@ export default function Home() {
               Start a decision →
             </Link>
             <Link
-              href="/intake"
+              href="/intake?demo=vp-sales-underperforming"
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
               Try a demo
+            </Link>
+            <Link
+              href="/tour"
+              className="rounded-lg border border-zinc-700/60 px-8 py-3 text-sm font-semibold text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
+            >
+              Take the product tour
             </Link>
           </div>
         </div>

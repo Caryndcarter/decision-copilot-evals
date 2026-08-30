@@ -232,6 +232,11 @@ export default function IntakePage() {
       .catch(() => setAvailableProviders(["openai"]));
   }, []);
 
+  useEffect(() => {
+    const demoId = new URLSearchParams(window.location.search).get("demo");
+    if (demoId) loadDemo(demoId);
+  }, []);
+
   function toggleProvider(provider: LLMProviderName) {
     setRunAllProviders(false);
     setSelectedProviders((prev) => {
@@ -263,7 +268,7 @@ export default function IntakePage() {
     setSituation(demo.situation);
     setConstraints(demo.constraints);
     setPosture(demo.posture);
-    setLeaningDirection(demo.leaning_direction);
+    setLeaningDirection(demo.leaning_direction ?? "");
     setKnownsAssumptions(demo.knowns_assumptions);
     setUnknowns(demo.unknowns);
   }

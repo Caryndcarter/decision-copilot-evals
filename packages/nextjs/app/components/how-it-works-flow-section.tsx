@@ -37,17 +37,19 @@ export function HowItWorksFlowSection({
   showFullWalkthroughLink = false,
   showUnifiedBriefCta = true,
   linkIntroUnifiedBrief = true,
+  sectionTitle = "How it works",
 }: {
   introLinkHref?: string;
   unifiedBriefCtaHref?: string;
   showFullWalkthroughLink?: boolean;
   showUnifiedBriefCta?: boolean;
   linkIntroUnifiedBrief?: boolean;
+  sectionTitle?: string;
 }) {
   return (
     <>
       <div className="text-center mb-12">
-        <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
+        <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">{sectionTitle}</h2>
         <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
           {HOW_IT_WORKS_INTRO.beforeLink}
           {linkIntroUnifiedBrief ? (
