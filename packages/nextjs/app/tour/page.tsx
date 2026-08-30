@@ -13,7 +13,7 @@ const STEPS = [
   {
     title: "Brief your think tank",
     description:
-      "Pre-filled intake for an underperforming VP Sales scenario — the same form you use for real decisions.",
+      "Pre-filled intake for a Vercel vs AWS hosting decision — migrate, hybrid, or optimize in place.",
   },
   {
     title: "Answer follow-up questions",
@@ -22,7 +22,7 @@ const STEPS = [
   {
     title: "Compare model briefs",
     description:
-      "Switch between OpenAI, Anthropic, Gemini, and xAI — each with its own risk, reversibility, and people lenses.",
+      "Switch between OpenAI, Anthropic, Gemini, and xAI — each with its own risk, reversibility, and stakeholders lenses.",
   },
   {
     title: "Read the Unified Brief",

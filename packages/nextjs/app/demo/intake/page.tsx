@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DEMO_INTAKE, DEMO_SCENARIO_LABEL } from "@/app/demo/_data/vp-sales-fixtures";
+import { DEMO_INTAKE, DEMO_SCENARIO_LABEL } from "@/app/demo/_data/demo-fixtures";
+import { demoContentClass } from "@/app/demo/_components/demo-shell";
 
 const SUBMITTING_STEPS = [
   "Running your think tank simultaneously…",
@@ -15,6 +16,17 @@ const SUBMITTING_STEPS = [
 
 function FieldHelp({ children }: { children: React.ReactNode }) {
   return <p className="mt-1 text-xs leading-relaxed text-zinc-500">{children}</p>;
+}
+
+function DemoReadOnlyText({ id, value }: { id: string; value: string }) {
+  return (
+    <div
+      id={id}
+      className="mt-2 w-full whitespace-pre-wrap rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm leading-relaxed text-zinc-900"
+    >
+      {value}
+    </div>
+  );
 }
 
 export default function DemoIntakePage() {
@@ -35,7 +47,7 @@ export default function DemoIntakePage() {
 
   if (submitting) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-16 text-center">
+      <div className={`py-16 text-center ${demoContentClass}`}>
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
         <p className="mt-6 text-lg font-medium text-zinc-900">Running your think tank</p>
         <p className="mt-2 text-sm text-zinc-500">{SUBMITTING_STEPS[stepIndex]}</p>
@@ -46,7 +58,7 @@ export default function DemoIntakePage() {
   return (
     <>
       <div className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto max-w-3xl px-6 py-8">
+        <div className={`py-8 ${demoContentClass}`}>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Brief your think tank</h1>
           <p className="mt-2 text-sm leading-relaxed text-zinc-600">
             Describe the decision you&apos;re facing — what&apos;s on the table, what triggered it, who&apos;s
@@ -55,7 +67,7 @@ export default function DemoIntakePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 py-8">
+      <div className={`py-8 ${demoContentClass}`}>
         <div className="mb-8 rounded-xl border border-logo-border bg-logo-muted/60 p-5">
           <p className="text-sm font-medium text-logo-text">
             Sample scenario: <span className="font-semibold">{DEMO_SCENARIO_LABEL}</span>
@@ -74,13 +86,7 @@ export default function DemoIntakePage() {
               Include context: org size, stakeholders, what triggered this, options you&apos;re weighing, and what
               success looks like.
             </FieldHelp>
-            <textarea
-              id="situation"
-              readOnly
-              rows={8}
-              value={DEMO_INTAKE.situation}
-              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-zinc-900"
-            />
+            <DemoReadOnlyText id="situation" value={DEMO_INTAKE.situation} />
           </div>
 
           <div>
@@ -88,13 +94,7 @@ export default function DemoIntakePage() {
               What constraints are you facing related to this decision? <span className="text-red-500">*</span>
             </label>
             <FieldHelp>Timeline, budget, headcount, legal or regulatory limits, politics, non-negotiables.</FieldHelp>
-            <textarea
-              id="constraints"
-              readOnly
-              rows={5}
-              value={DEMO_INTAKE.constraints}
-              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-zinc-900"
-            />
+            <DemoReadOnlyText id="constraints" value={DEMO_INTAKE.constraints} />
           </div>
 
           <fieldset>
@@ -132,26 +132,14 @@ export default function DemoIntakePage() {
             <label htmlFor="knowns_assumptions" className="block text-sm font-medium text-zinc-800">
               Facts and assumptions presumed to be true
             </label>
-            <textarea
-              id="knowns_assumptions"
-              readOnly
-              rows={5}
-              value={DEMO_INTAKE.knowns_assumptions ?? ""}
-              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-zinc-900"
-            />
+            <DemoReadOnlyText id="knowns_assumptions" value={DEMO_INTAKE.knowns_assumptions ?? ""} />
           </div>
 
           <div>
             <label htmlFor="unknowns" className="block text-sm font-medium text-zinc-800">
               Open questions whose answers might change the recommendation
             </label>
-            <textarea
-              id="unknowns"
-              readOnly
-              rows={5}
-              value={DEMO_INTAKE.unknowns ?? ""}
-              className="mt-2 w-full resize-y rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-zinc-900"
-            />
+            <DemoReadOnlyText id="unknowns" value={DEMO_INTAKE.unknowns ?? ""} />
           </div>
 
           <div className="border-t border-zinc-100 pt-4">

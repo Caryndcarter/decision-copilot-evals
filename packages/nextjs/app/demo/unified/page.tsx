@@ -1,23 +1,56 @@
+"use client";
+
 import Link from "next/link";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import { CollapsibleBlock } from "@/app/run/collapsible-block";
-import { DEMO_UNIFIED_BRIEF } from "@/app/demo/_data/vp-sales-fixtures";
+import { DemoBriefToolbar } from "@/app/demo/_components/demo-brief-toolbar";
+import { DemoBriefTitleBanner, demoBriefBodyClass } from "@/app/demo/_components/demo-brief-title-banner";
+import { demoContentClass } from "@/app/demo/_components/demo-shell";
+import {
+  DEMO_PROVIDERS,
+  DEMO_UNIFIED_AUTHORSHIP_MODE,
+  DEMO_UNIFIED_BRIEF,
+  DEMO_UNIFIED_FACT_CHECK_JUDGE,
+  DEMO_UNIFIED_SYNTHESIZER,
+} from "@/app/demo/_data/demo-fixtures";
 import { TOUR_DISAGREEMENTS, TOUR_UNIFIED_BRIEF } from "@/app/tour/_data/tour-demo-data";
 import { runProviderLabel } from "@/lib/run-display-name";
+import {
+  unifiedBriefAuthorshipModeLabel,
+  unifiedBriefSynthesizerLabel,
+} from "@/lib/unified-briefs";
+import type { LLMProviderName } from "@/types/decision";
 
-export default function DemoUnifiedPage() {
+function parseProvider(value: string | null): LLMProviderName {
+  if (value && DEMO_PROVIDERS.includes(value as LLMProviderName)) {
+    return value as LLMProviderName;
+  }
+  return "openai";
+}
+
+function DemoUnifiedContent() {
+  const searchParams = useSearchParams();
+  const provider = parseProvider(searchParams.get("provider"));
+
   return (
     <>
-      <header className="border-b border-zinc-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-3xl px-6 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">Unified Brief</p>
-          <h1 className="mt-1 text-xl font-bold text-zinc-900">{DEMO_UNIFIED_BRIEF.title}</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Synthesized across all four models in your think tank (demo).
-          </p>
-        </div>
-      </header>
+      <DemoBriefToolbar view="unified" provider={provider} />
 
-      <div className="mx-auto max-w-3xl space-y-4 px-6 py-6">
+      <div className={`${demoBriefBodyClass} ${demoContentClass}`}>
+        <DemoBriefTitleBanner title={DEMO_UNIFIED_BRIEF.title}>
+          <p className="mt-1 text-xs text-zinc-500">
+            Synthesized by {unifiedBriefSynthesizerLabel(DEMO_UNIFIED_SYNTHESIZER)} ·{" "}
+            {unifiedBriefAuthorshipModeLabel(DEMO_UNIFIED_AUTHORSHIP_MODE)} authorship
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Fact-check judge: {runProviderLabel(DEMO_UNIFIED_FACT_CHECK_JUDGE)}
+          </p>
+          <BriefGeneratedDateLine iso={DEMO_UNIFIED_BRIEF.generated_at} className="mt-1" label="Generated" />
+        </DemoBriefTitleBanner>
+
+        <div className="space-y-4">
         {TOUR_DISAGREEMENTS.map((d) => (
           <CollapsibleBlock key={d.label} title={d.label} defaultOpen>
             <div className="overflow-x-auto">
@@ -68,10 +101,14 @@ export default function DemoUnifiedPage() {
             ))}
           </ul>
         </CollapsibleBlock>
+        </div>
       </div>
 
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-6 py-6">
-        <Link href="/demo/result?provider=openai" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
+      <div className={`flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 py-6 ${demoContentClass}`}>
+        <Link
+          href={`/demo/result?provider=${provider}`}
+          className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+        >
           ← Individual model results
         </Link>
         <Link
@@ -82,5 +119,19 @@ export default function DemoUnifiedPage() {
         </Link>
       </div>
     </>
+  );
+}
+
+export default function DemoUnifiedPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={`py-12 ${demoContentClass}`}>
+          <p className="text-zinc-600">Loading…</p>
+        </div>
+      }
+    >
+      <DemoUnifiedContent />
+    </Suspense>
   );
 }

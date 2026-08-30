@@ -8,7 +8,9 @@ import type {
   LensOutput,
   LensQuestion,
   LLMProviderName,
+  UnifiedBriefAuthorshipMode,
 } from "@/types/decision";
+import type { UnifiedBriefSynthesizer } from "@/lib/unified-briefs";
 import {
   TOUR_CLARIFICATIONS,
   TOUR_INTAKE,
@@ -17,8 +19,8 @@ import {
   type TourProvider,
 } from "@/app/tour/_data/tour-demo-data";
 
-export const DEMO_DECISION_ID = "demo-vp-sales";
-export const DEMO_SCENARIO_LABEL = "Underperforming VP Sales";
+export const DEMO_DECISION_ID = "demo-vercel-aws-migration";
+export const DEMO_SCENARIO_LABEL = "Vercel vs self-hosted AWS";
 export const DEMO_PROVIDERS: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
 
 const GENERATED_AT = "2026-08-15T14:30:00.000Z";
@@ -129,7 +131,7 @@ function buildBrief(provider: TourProvider): DecisionBrief {
 }
 
 export function demoRunId(provider: LLMProviderName): string {
-  return `demo-vp-sales-${provider}`;
+  return `demo-vercel-aws-migration-${provider}`;
 }
 
 export function buildDemoRun(provider: LLMProviderName): DecisionRunResult {
@@ -151,7 +153,6 @@ export function buildDemoRun(provider: LLMProviderName): DecisionRunResult {
     decision_title: decision_brief.title,
     decision_brief,
     llm_provider: provider,
-    demo_scenario_id: "vp-sales-underperforming",
   };
 }
 
@@ -168,8 +169,13 @@ export const DEMO_UNIFIED_BRIEF: DecisionBrief = {
   recommendation: TOUR_UNIFIED_BRIEF.recommendation,
   key_considerations: TOUR_UNIFIED_BRIEF.key_considerations,
   next_steps: [
-    "Draft board metrics memo before announcing ops scope.",
-    "Assign ops to CRM/forecast cadence for 60 days.",
-    "Pre-brief top accounts on continuity within two weeks.",
+    "Load-test export routes on Fargate at campaign spike levels.",
+    "Build traffic-split rollback runbook before DNS cutover.",
+    "Model 12-month TCO including platform eng time for CFO payback.",
   ],
 };
+
+/** Frozen Unified Brief metadata — mirrors live `/run/best-of-worlds` attribution. */
+export const DEMO_UNIFIED_SYNTHESIZER: UnifiedBriefSynthesizer = "openai";
+export const DEMO_UNIFIED_AUTHORSHIP_MODE: UnifiedBriefAuthorshipMode = "blind";
+export const DEMO_UNIFIED_FACT_CHECK_JUDGE: LLMProviderName = "gemini";

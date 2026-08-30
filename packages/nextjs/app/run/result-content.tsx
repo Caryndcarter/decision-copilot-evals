@@ -436,6 +436,10 @@ export interface ResultContentProps {
   onJumpToResearch?: () => void;
   /** Opens and scrolls to the cross-provider synthesis section. */
   onJumpToSynthesis?: () => void;
+  /** Hide the brief title inside the brief section when it already appears in the sticky banner. */
+  hideInlineBriefTitle?: boolean;
+  /** Demo/tour: static title strip (no sticky shadow) aligned with `/demo/unified`. */
+  staticTitleBanner?: boolean;
 }
 
 export interface ResultContentHandle {
@@ -454,6 +458,8 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     onCollapseAll,
     onJumpToResearch,
     onJumpToSynthesis,
+    hideInlineBriefTitle = false,
+    staticTitleBanner = false,
   },
   ref
 ) {
@@ -831,7 +837,11 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     <div className={className}>
       <div
         id="rc-decision-brief-title"
-        className="scroll-mt-32 sticky top-[4.75rem] z-30 mb-4 border-b border-zinc-200/90 bg-white/95 py-2.5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-white/85 print:static print:top-auto print:z-auto print:border-zinc-200 print:shadow-none sm:top-20"
+        className={
+          staticTitleBanner
+            ? "mb-4 border-b border-zinc-200/90 py-2.5"
+            : "scroll-mt-32 sticky top-[4.75rem] z-30 mb-4 border-b border-zinc-200/90 bg-white/95 py-2.5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-white/85 print:static print:top-auto print:z-auto print:border-zinc-200 print:shadow-none sm:top-20"
+        }
       >
         <h2 className="text-lg font-semibold leading-snug text-zinc-900 sm:text-xl">{stickyBriefBannerTitle}</h2>
         {!isStubBrief && activeBriefGeneratedAt ? (
@@ -1486,31 +1496,33 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
             )
           ) : (
             <>
-              <div className="min-w-0">
-                {canEdit && !isStubBrief && briefDraft ? (
-                  <ClarificationAnswerEditor
-                    ref={titleRef}
-                    editorKey="brief.title"
-                    value={briefDraft.title || "Decision brief"}
-                    onChange={(v) => {
-                      setBriefDraft((b) => (b ? { ...b, title: v || "Decision brief" } : null));
-                      persistBrief();
-                    }}
-                    variant="inline"
-                    className="text-lg font-semibold text-zinc-900"
-                  />
-                ) : (
-                  <h2 className="text-lg font-semibold text-zinc-900">
-                    {result.decision_brief.title || "Decision brief"}
-                  </h2>
-                )}
-                {!isStubBrief ? (
-                  <BriefGeneratedDateLine
-                    iso={briefDraft?.generated_at ?? result.decision_brief.generated_at}
-                    className="mt-1"
-                  />
-                ) : null}
-              </div>
+              {!hideInlineBriefTitle ? (
+                <div className="min-w-0">
+                  {canEdit && !isStubBrief && briefDraft ? (
+                    <ClarificationAnswerEditor
+                      ref={titleRef}
+                      editorKey="brief.title"
+                      value={briefDraft.title || "Decision brief"}
+                      onChange={(v) => {
+                        setBriefDraft((b) => (b ? { ...b, title: v || "Decision brief" } : null));
+                        persistBrief();
+                      }}
+                      variant="inline"
+                      className="text-lg font-semibold text-zinc-900"
+                    />
+                  ) : (
+                    <h2 className="text-lg font-semibold text-zinc-900">
+                      {result.decision_brief.title || "Decision brief"}
+                    </h2>
+                  )}
+                  {!isStubBrief ? (
+                    <BriefGeneratedDateLine
+                      iso={briefDraft?.generated_at ?? result.decision_brief.generated_at}
+                      className="mt-1"
+                    />
+                  ) : null}
+                </div>
+              ) : null}
               <div className="mt-3">
                 {isStubBrief ? (
                   <p className="text-zinc-500 italic">

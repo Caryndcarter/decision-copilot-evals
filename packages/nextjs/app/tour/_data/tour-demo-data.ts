@@ -1,5 +1,5 @@
 /**
- * Curated frozen demo for `/tour` — VP Sales scenario (matches intake demo copy).
+ * Curated frozen demo for `/tour` and `/demo/*` — infrastructure migrate decision.
  * Hand-authored excerpts; no live API calls.
  */
 
@@ -44,37 +44,38 @@ export interface TourDisagreement {
 
 export const TOUR_INTAKE: TourIntake = {
   situation:
-    "Our VP of Sales of 2 years is underperforming. Pipeline is down 30% year-over-year despite adding two reps. She's well-liked, has deep customer relationships, and was critical to landing our three largest accounts. The board is asking why we're missing targets.",
+    "We're a Series B B2B SaaS (~$12M ARR) running Next.js on Vercel with Postgres on Neon, Redis on Upstash, and background jobs on Inngest. Traffic is spiky — marketing campaigns and end-of-month reporting drive 8–12× baseline for a few hours.\n\nVercel spend is ~$4.8k/month today and finance projects $7–9k by Q1 at current growth. A platform engineer modeled self-hosted AWS (Fargate + ALB + RDS + ElastiCache + CloudFront) at roughly $600–900/month at today's load, scaling to ~$1.4k at 3× traffic — but that excludes on-call, migration effort, and any perf regressions.\n\nWe're also renewing an enterprise contract in four months; two prospects asked about data residency and whether we run on a shared PaaS. Options on the table: stay on Vercel and renegotiate, migrate API + workers to AWS while keeping static/edge on Vercel, or full self-host on AWS.",
   constraints:
-    "Q4 planning starts in 6 weeks. Sales team is already anxious about potential changes. We can't afford a long leadership gap.",
+    "Two platform engineers; no dedicated SRE. Must keep 99.9% uptime SLA for enterprise tier. Security wants SOC 2 controls documented for whatever we choose. CFO wants a payback period under 12 months on any migration project. Cannot freeze product development for more than one sprint without CEO pushback.",
   posture: "pressure_test",
   leaning_direction:
-    "Keeping her but adding a sales ops lead to handle process and accountability, letting her focus on strategic deals",
+    "Migrate API and background workers to AWS Fargate this quarter, keep Next.js front door on Vercel short term, target ~$800/month all-in infra within 90 days of cutover",
   knowns_assumptions:
-    "She's great at relationships but weak on process and pipeline management. The two new reps aren't ramping well due to lack of structure. I assume adding ops support will fix the gap without losing her customer relationships.",
+    "Current Vercel bill breakdown: ~55% function execution, ~25% bandwidth, ~20% seats/add-ons. Assumed Fargate task sizing from two weeks of load tests. Assuming Neon/Upstash can stay as-is initially — only compute moves first.",
   unknowns:
-    "Whether she'll accept an ops hire as support vs. see it as undermining her. If the real problem is her or the reps she hired. How the board will react to anything short of replacement.",
+    "True p99 latency on AWS vs Vercel for our heaviest API routes (PDF generation, bulk exports). Whether Vercel will offer a meaningful commit discount if we threaten to leave. Hidden cost of building CI/CD, autoscaling tuning, and incident response on AWS. If hybrid (Vercel + AWS) adds complexity that slows the team more than the savings justify.",
 };
 
 export const TOUR_CLARIFICATIONS: TourClarification[] = [
   {
     lens: "risk",
     question:
-      "What specific pipeline and conversion metrics would trigger a leadership change if the ops-support path fails?",
+      "What measurable regression (latency, error rate, or SLA breach) would force a rollback during cutover — and who can call it?",
     answer:
-      "Board wants trailing-90-day pipeline coverage ≥3× quota and stage-3+ conversion back to 22% (was 28% two years ago). If we're still below by end of Q1 planning, we'd escalate to a structured performance plan or transition.",
-  },
-  {
-    lens: "people",
-    question: "Has she been told her leaning toward an ops hire is on the table, and how did she react?",
-    answer:
-      "Not directly. In a skip-level she said she 'just needs more bodies,' not different roles. HR thinks a surprise ops overlay could read as a demotion unless we frame it as Q4 execution support.",
+      "Enterprise SLA is 99.9% monthly; p99 API latency must stay under 800ms on export routes. Platform lead or on-call eng can rollback DNS/traffic split; CEO notified if SLA breach exceeds 30 minutes. We haven't load-tested PDF generation on Fargate at campaign spike levels yet.",
   },
   {
     lens: "reversibility",
-    question: "If you hire sales ops now, how hard is it to unwind if you later replace the VP?",
+    question: "If AWS costs or ops load come in worse than modeled, how hard is it to move back to Vercel?",
     answer:
-      "Moderate. Ops lead would own CRM hygiene and forecast cadence — useful regardless. Harder to undo if we give them quota-adjacent authority or customer-facing process changes tied to her org chart.",
+      "Moderate if we keep Vercel project warm and avoid Vercel-specific middleware lock-in. Harder once we decommission Vercel functions and delete edge configs — probably 2–3 eng-weeks to revert if we've fully cut over.",
+  },
+  {
+    lens: "people",
+    question:
+      "How much eng capacity can platform allocate without slipping the enterprise renewal features?",
+    answer:
+      "Platform eng estimates 4–6 eng-weeks for migration + 2 eng-weeks/month run-the-platform once live. Product agreed to one sprint of reduced feature surface if migration stays in scope; anything beyond that needs CEO tradeoff.",
   },
 ];
 
@@ -82,35 +83,35 @@ export const TOUR_RUNS: TourProviderRun[] = [
   {
     provider: "openai",
     brief: {
-      title: "VP Sales performance — retain with structured support",
+      title: "Vercel → AWS — migrate compute with a traffic-split pilot",
       summary:
-        "Pipeline decline coincides with weak process and rep ramp, not necessarily relationship failure. A time-boxed ops overlay can work if paired with explicit metrics and board-aligned milestones.",
+        "The cost gap is real at projected scale, but savings evaporate if you under-price eng time and incident load. A phased move — workers and heavy APIs first, front door later — keeps rollback viable while you validate latency and TCO.",
       recommendation:
-        "Proceed with a sales ops lead for 90 days, paired with weekly pipeline reviews and a written success criteria memo to the board — but keep a pre-approved replacement search confidentially warm.",
+        "Run a 30-day pilot: route 10% of API traffic to Fargate behind the same domain, compare p99 and bill. If within SLA, cut over workers and heavy routes; renegotiate Vercel for static/ISR only. Target sub-$1.5k combined infra at 2× today's load, revisit full exit from Vercel in Q2.",
       next_steps: [
-        "Draft 90-day success metrics with the board before announcing any role.",
-        "Run structured customer touchpoints so key accounts hear continuity from her, not HR.",
-        "Backfill rep ramp with playbooks ops owns; VP keeps top-10 account strategy.",
+        "Load-test PDF/export routes on Fargate at 12× spike profile.",
+        "Build traffic-split rollback runbook before changing production DNS.",
+        "Model TCO including 0.25 FTE platform ops, not just AWS line items.",
       ],
     },
     lenses: {
       risk: {
         confidence: "medium",
         top: [
-          "Board interprets ops hire as half-measure and demands replacement anyway.",
-          "Reps split loyalty if ops lead has implicit authority over forecasting.",
-          "Q4 planning slips while you negotiate internal politics.",
+          "Cold starts and PDF CPU limits on Fargate miss p99 vs Vercel during spikes.",
+          "Hybrid routing bugs cause auth/session issues across origins.",
+          "Underestimated autoscaling costs during campaign spikes.",
         ],
       },
       reversibility: {
-        hard_to_undo: ["Publicly pairing her with a 'fixer' without clear scope."],
-        safe_first: ["Pilot ops scope on CRM/forecast only before org-chart changes."],
+        hard_to_undo: ["Deleting Vercel functions before 30-day parallel run completes."],
+        safe_first: ["Keep Vercel warm as fallback origin for one billing cycle."],
       },
       people: {
         impacts: [
-          { who: "VP Sales", sentiment: "mixed", note: "May feel sidelined unless role is framed as leverage." },
-          { who: "Sales reps", sentiment: "positive", note: "Want clearer pipeline rules and less heroics." },
-          { who: "Board", sentiment: "neutral", note: "Needs numbers, not narrative, within one quarter." },
+          { who: "Platform engineering", sentiment: "mixed", note: "Feasible but becomes default on-call for AWS stack." },
+          { who: "Product engineering", sentiment: "positive", note: "Likes clearer cost story for enterprise prospects." },
+          { who: "Enterprise customers", sentiment: "neutral", note: "Care about SLA and residency answers, not where containers run." },
         ],
       },
     },
@@ -118,35 +119,35 @@ export const TOUR_RUNS: TourProviderRun[] = [
   {
     provider: "anthropic",
     brief: {
-      title: "Pressure-test: ops overlay may not fix a leadership gap",
+      title: "Pressure-test: AWS savings may not survive full TCO",
       summary:
-        "Your leaning assumes the VP's relationships are the asset and process is the gap. The data also fits weak hiring judgment and avoidance of accountability conversations.",
+        "Your leaning treats the $600–900 AWS estimate as comparable to $4.8k Vercel. That comparison omits eng time, CI/CD, security hardening, and the opportunity cost of a two-person platform team running infra instead of product enablers.",
       recommendation:
-        "Run a 60-day performance plan with the VP first: named metrics, joint account plans, and explicit authority over the two under-ramped reps. Add ops only if she engages — otherwise transition with a customer-retention plan.",
+        "Before committing to migration, get a Vercel enterprise commit quote and build a 12-month TCO sheet: AWS infra + eng hours + incident risk + slower feature velocity. If payback is unclear, optimize Vercel usage (function bundling, cache headers, cron consolidation) and defer AWS until traffic justifies dedicated ops.",
       next_steps: [
-        "Document missed forecast commitments from the last two quarters.",
-        "Interview the two new reps on enablement gaps vs. management gaps.",
-        "Prepare a board narrative that separates 'relationship value' from 'execution results'.",
+        "Audit top 5 Vercel cost drivers with actual invocation metrics.",
+        "Ask Vercel AE for commit pricing at projected Q1 volume.",
+        "Price 0.25–0.5 FTE ongoing platform work in the CFO model.",
       ],
     },
     lenses: {
       risk: {
         confidence: "high",
         top: [
-          "Ops hire becomes permanent theater while pipeline keeps declining.",
-          "Best reps leave if they perceive leadership won't make hard calls.",
-          "Largest accounts get stale coverage while you optimize internal process.",
+          "Migration slips past enterprise renewal while platform is distracted.",
+          "SOC 2 evidence gaps during hybrid period.",
+          "Spiky workload autoscaling misconfigured → surprise AWS bill.",
         ],
       },
       reversibility: {
-        hard_to_undo: ["Letting Q4 planning proceed without a decision on authority."],
-        safe_first: ["Time-boxed plan with pre-written board update if metrics miss."],
+        hard_to_undo: ["Rewriting deployment pipelines around AWS-only assumptions."],
+        safe_first: ["Cost-optimization sprint on Vercel before irreversible migration spend."],
       },
       people: {
         impacts: [
-          { who: "VP Sales", sentiment: "negative", note: "Likely to resist if plan feels like setup for exit." },
-          { who: "High performers", sentiment: "positive", note: "Want standards enforced consistently." },
-          { who: "Customers", sentiment: "neutral", note: "Care about continuity more than your org chart." },
+          { who: "Platform engineering", sentiment: "negative", note: "Small team may be underwater on ops + migration." },
+          { who: "Finance", sentiment: "positive", note: "Wants honest payback, not headline monthly savings." },
+          { who: "Security / compliance", sentiment: "mixed", note: "AWS can help residency narrative but adds control scope." },
         ],
       },
     },
@@ -154,33 +155,33 @@ export const TOUR_RUNS: TourProviderRun[] = [
   {
     provider: "gemini",
     brief: {
-      title: "Split the difference: phased support with a decision gate",
+      title: "Hybrid path: move heavy compute, keep Vercel for edge",
       summary:
-        "Pure replacement risks customer relationships and a messy Q4; pure ops overlay risks looking indecisive. A phased path with a public decision gate balances people and reversibility.",
+        "Full migration maximizes savings but concentrates risk in one quarter. Staying put avoids disruption but leaves enterprise residency questions unanswered. Hybrid gives a credible AWS footprint for sales while preserving Vercel's edge strengths for Next.js.",
       recommendation:
-        "Announce an interim sales ops leader (IC or player-coach) for process and forecast discipline, while the VP owns top accounts. At 90 days, board chooses: promote ops into COO-of-sales, replace VP with ops continuity, or revert if metrics recover.",
+        "Migrate background jobs and CPU-heavy APIs (PDF, bulk export) to Fargate first; keep Next.js SSR/ISR on Vercel. Document a single primary region on AWS for enterprise data-residency questionnaires. Re-evaluate full front-end migration after six months of stable hybrid ops.",
       next_steps: [
-        "Communicate internally before external accounts hear about 'new leadership layers'.",
-        "Assign ops to rep ramp metrics first — fastest visible win.",
-        "Pre-brief board on the 90-day gate so it doesn't read as drift.",
+        "Define which routes must stay on Vercel vs AWS in a routing matrix.",
+        "Update enterprise security packet with AWS region + shared-responsibility diagram.",
+        "Set monthly cost review for hybrid stack vs baseline.",
       ],
     },
     lenses: {
       risk: {
         confidence: "medium",
         top: [
-          "Two leaders confuse the field unless scopes are written and repeated.",
-          "Decision gate becomes political rather than metric-driven.",
+          "Dual-stack complexity slows debugging during incidents.",
+          "Inconsistent caching between Vercel edge and AWS origin.",
         ],
       },
       reversibility: {
-        hard_to_undo: ["Dual leadership without written RACI."],
-        safe_first: ["Ops scoped to systems and cadence, not comp plans, for 60 days."],
+        hard_to_undo: ["Tight coupling of env vars and secrets across two deploy targets."],
+        safe_first: ["Migrate stateless workers before user-facing API paths."],
       },
       people: {
         impacts: [
-          { who: "VP Sales", sentiment: "mixed", note: "Can accept if she keeps strategic accounts and title." },
-          { who: "Board", sentiment: "positive", note: "Gets a clear checkpoint before a expensive search." },
+          { who: "Sales / enterprise AEs", sentiment: "positive", note: "Gets a concrete residency story quickly." },
+          { who: "Platform engineering", sentiment: "mixed", note: "Two deploy paths until consolidation." },
         ],
       },
     },
@@ -188,33 +189,33 @@ export const TOUR_RUNS: TourProviderRun[] = [
   {
     provider: "xai",
     brief: {
-      title: "Move faster — Q4 window dominates",
+      title: "Move now — cost curve and renewal window",
       summary:
-        "Six weeks to Q4 planning is the binding constraint. Any path that doesn't show pipeline movement before planning reads as failure.",
+        "Waiting until Q1 bill hits $8k means paying Vercel premium for another two quarters while you build nothing. Enterprise renewal in four months is the moment prospects will ask where workloads run — 'mostly Vercel' is a weak answer if competitors offer dedicated VPC.",
       recommendation:
-        "Hire sales ops immediately with line authority over forecast and CRM; VP focuses on closing top 5 deals only. Parallel confidential search for external VP candidates to swap in Q1 if metrics don't move in 45 days.",
+        "Start Fargate cutover for workers and APIs within two weeks; parallel-track Vercel commit negotiation as leverage, not as reason to delay. Ship a one-pager for enterprise: primary region, encryption, uptime. Accept one sprint of feature slowdown — CFO payback math works even with 0.25 FTE if Vercel bill drops 60%+.",
       next_steps: [
-        "Publish weekly pipeline delta internally starting now.",
-        "Cap VP scope to named accounts within two weeks.",
-        "Engage search firm quietly; don't wait for board permission to explore options.",
+        "Stand up staging on AWS this week; run export-route benchmarks.",
+        "Brief enterprise CS on migration timeline before renewal calls.",
+        "Set 45-day deadline for production traffic on AWS or explicit no-go.",
       ],
     },
     lenses: {
       risk: {
         confidence: "medium",
         top: [
-          "VP exits early if scope cut feels humiliating.",
-          "Confidential search leaks and destabilizes team.",
+          "Rushed cutover before load tests complete.",
+          "Vercel commit offer arrives after migration momentum starts — sunk cost debate.",
         ],
       },
       reversibility: {
-        hard_to_undo: ["Announcing scope cuts without a comms plan."],
-        safe_first: ["Ops fixes forecast hygiene while you decide on leadership."],
+        hard_to_undo: ["Announcing AWS migration to enterprise before pilot validates latency."],
+        safe_first: ["Internal dogfood on AWS for two weeks before customer-visible cutover."],
       },
       people: {
         impacts: [
-          { who: "VP Sales", sentiment: "negative", note: "High risk of departure if not handled carefully." },
-          { who: "Board", sentiment: "positive", note: "Wants velocity over nuance." },
+          { who: "CEO / leadership", sentiment: "positive", note: "Wants cost story and residency box checked before renewal." },
+          { who: "Product engineering", sentiment: "mixed", note: "Will feel squeeze if migration runs long." },
         ],
       },
     },
@@ -225,38 +226,38 @@ export const TOUR_DISAGREEMENTS: TourDisagreement[] = [
   {
     label: "Core move",
     rows: [
-      { provider: "openai", stance: "Ops overlay + keep VP on strategic accounts" },
-      { provider: "anthropic", stance: "Performance plan first; ops only if she engages" },
-      { provider: "gemini", stance: "Phased ops + 90-day public decision gate" },
-      { provider: "xai", stance: "Ops with authority now; parallel replacement search" },
+      { provider: "openai", stance: "Phased migrate with 10% traffic pilot; keep Vercel for static short term" },
+      { provider: "anthropic", stance: "Optimize Vercel first; prove 12-month TCO before leaving" },
+      { provider: "gemini", stance: "Hybrid — heavy APIs/workers on AWS, Next on Vercel" },
+      { provider: "xai", stance: "Cut over within 45 days; use Vercel quote as leverage only" },
     ],
   },
   {
-    label: "Board narrative",
+    label: "Cost model",
     rows: [
-      { provider: "openai", stance: "Frame as disciplined experiment with exit ready" },
-      { provider: "anthropic", stance: "Separate relationship value from execution results" },
-      { provider: "gemini", stance: "Checkpoint avoids looking indecisive" },
-      { provider: "xai", stance: "Show pipeline movement before Q4 planning" },
+      { provider: "openai", stance: "Include 0.25 FTE platform ops in payback" },
+      { provider: "anthropic", stance: "Headline AWS $600/mo is not apples-to-apples vs Vercel" },
+      { provider: "gemini", stance: "Hybrid may cost more monthly but wins enterprise deals" },
+      { provider: "xai", stance: "60%+ Vercel drop still pays back with one sprint slip" },
     ],
   },
 ];
 
 export const TOUR_UNIFIED_BRIEF = {
-  title: "Unified Brief — VP Sales path",
+  title: "Vercel → AWS — pilot compute migration before enterprise renewal",
   summary:
-    "All four models agree the relationship asset is real but insufficient alone. They diverge on speed vs. fairness: whether to add ops immediately, lead with a performance plan, or pre-wire a replacement search.",
+    "All four models agree infra cost matters at your growth curve and that enterprise renewal raises residency and SLA questions. They diverge on timing and scope: optimize Vercel first vs hybrid vs full migration, and whether headline AWS pricing survives a full TCO with platform eng time.",
   recommendation:
-    "Run a 90-day structured path: hire or assign a sales ops lead with clear CRM/forecast ownership, keep the VP on top accounts with written success metrics, and pre-align the board on a decision gate at day 90 (continue, expand ops authority, or transition). Start customer continuity messaging within two weeks.",
+    "Run a 30-day pilot migrating CPU-heavy workers and APIs to AWS Fargate with traffic-split rollback, while negotiating a Vercel commit as fallback — not as the plan. Keep Next.js on Vercel until p99 and TCO validate. If pilot meets SLA and 12-month payback including ~0.25 FTE ops, cut over before enterprise renewal; otherwise implement a Vercel optimization sprint and revisit at 2× traffic.",
   key_considerations: [
-    "Ops scope must be narrow at first (systems + cadence) to stay reversible.",
-    "Board needs numeric triggers, not narrative, before Q4 planning.",
-    "Internal comms before any public signal to accounts.",
+    "Load-test PDF/export routes at campaign spike levels before any customer cutover.",
+    "CFO payback must include eng-weeks and ongoing platform on-call, not AWS line items alone.",
+    "Enterprise packet needs primary region and uptime story regardless of hybrid vs full migrate.",
   ],
   contributions: [
-    { provider: "anthropic" as TourProvider, note: "90-day gate and performance-plan framing" },
-    { provider: "openai" as TourProvider, note: "Customer continuity playbook for top accounts" },
-    { provider: "gemini" as TourProvider, note: "Written RACI between VP and ops" },
+    { provider: "anthropic" as TourProvider, note: "Full TCO and Vercel optimization before irreversible spend" },
+    { provider: "openai" as TourProvider, note: "Traffic-split pilot and rollback runbook" },
+    { provider: "gemini" as TourProvider, note: "Hybrid routing matrix and residency narrative" },
   ],
 };
 
@@ -276,5 +277,5 @@ export const POSTURE_LABEL: Record<string, string> = {
 export const LENS_LABEL = {
   risk: "Risk",
   reversibility: "Reversibility",
-  people: "People",
+  people: "Stakeholders",
 } as const;

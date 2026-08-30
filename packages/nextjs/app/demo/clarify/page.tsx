@@ -6,22 +6,18 @@ import {
   DEMO_CLARIFICATION_QUESTIONS,
   DEMO_SCENARIO_LABEL,
   getDemoRun,
-} from "@/app/demo/_data/vp-sales-fixtures";
+} from "@/app/demo/_data/demo-fixtures";
 import { TOUR_CLARIFICATIONS } from "@/app/tour/_data/tour-demo-data";
+import { demoContentClass } from "@/app/demo/_components/demo-shell";
+import { LENS_THEME_LABELS } from "@/lib/merge-clarification-questions";
 import { runHeadline } from "@/lib/run-display-name";
-
-const LENS_LABELS = {
-  risk: "Risk",
-  reversibility: "Reversibility",
-  stakeholders: "People",
-} as const;
 
 export default function DemoClarifyPage() {
   const router = useRouter();
   const headline = runHeadline(getDemoRun("openai"));
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-8">
+    <div className={`py-8 ${demoContentClass}`}>
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Your think tank</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">Answer unique follow-up questions</h1>
@@ -36,7 +32,7 @@ export default function DemoClarifyPage() {
         {DEMO_CLARIFICATION_QUESTIONS.map((q, i) => (
           <div key={q.question_id} className="border-b border-zinc-100 pb-5 last:border-0 last:pb-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              {LENS_LABELS[q.lens]} lens
+              {LENS_THEME_LABELS[q.lens] ?? q.lens} lens
             </p>
             <p className="mt-1 text-sm font-medium text-zinc-900">{q.question_text}</p>
             <textarea
