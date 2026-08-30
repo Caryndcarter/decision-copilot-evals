@@ -11,6 +11,7 @@ import {
   harnessCaseNote,
   HARNESS_STUDY_TABS,
   harnessStudyTabForKind,
+  harnessStudyTabsForBatch,
   resolveHarnessBatchKind,
   shortHarnessBatchId,
   type HarnessStudyTab,
@@ -278,10 +279,18 @@ function groupHarnessBatchesByStudy(
 ): Map<HarnessStudyTab | "other", HarnessBatchSection[]> {
   const map = new Map<HarnessStudyTab | "other", HarnessBatchSection[]>();
   for (const batch of batches) {
-    const study = harnessBatchStudy(batch);
-    const list = map.get(study) ?? [];
-    list.push(batch);
-    map.set(study, list);
+    const tabs = harnessStudyTabsForBatch({
+      kind: batch.kind ?? resolveHarnessBatchKind({
+        demoScenarioId: batch.trials[0]?.demoScenarioId,
+      }),
+      batchId: batch.batchId,
+    });
+    const studies = tabs.length > 0 ? tabs : [harnessBatchStudy(batch)];
+    for (const study of studies) {
+      const list = map.get(study) ?? [];
+      list.push(batch);
+      map.set(study, list);
+    }
   }
   return map;
 }
@@ -793,7 +802,12 @@ export function RunsClient({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-sm font-semibold text-zinc-900">
-                      {harnessBatchTitle({ kind: batch.kind, runNumber: batch.runNumber })}
+                      {harnessBatchTitle({
+                        kind: batch.kind,
+                        runNumber: batch.runNumber,
+                        batchId: batch.batchId,
+                        studyTab: effectiveHarnessStudy,
+                      })}
                     </h2>
                     {shortId && (
                       <span className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] font-medium text-zinc-100">
@@ -810,7 +824,10 @@ export function RunsClient({
                     </p>
                   )}
                   <p className="mt-1.5 text-xs text-zinc-600 leading-relaxed">
-                    {harnessBatchPurpose(batch.kind)}
+                    {harnessBatchPurpose(batch.kind, {
+                      batchId: batch.batchId,
+                      studyTab: effectiveHarnessStudy,
+                    })}
                   </p>
                   {modelLines.map((line) => (
                     <p key={line} className="mt-1.5 text-xs text-zinc-600 leading-relaxed">

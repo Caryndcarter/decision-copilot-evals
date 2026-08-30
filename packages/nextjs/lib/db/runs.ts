@@ -7,6 +7,7 @@
 
 import "server-only";
 import { ensureMongoIndexes, getRunsCollection } from "@/server/config/mongodb";
+import { authorshipOnlyMongoClause } from "@/lib/harness-meta";
 import { normalizeRunLensFields } from "@/lib/normalize-lens";
 import type { DecisionRunResult } from "@/types/decision";
 
@@ -21,7 +22,7 @@ export type ListRunsOptions = {
   asAdmin?: boolean;
   /** Skip multi-MB fields (variants, research, lens_outputs) for the /runs list. */
   dashboard?: boolean;
-  /** Only multi-demo authorship harness runs (findings authorship tab). */
+  /** Authorship findings: multi-demo batches plus whitelist (e.g. Civitas July 27). */
   authorshipOnly?: boolean;
 };
 
@@ -105,8 +106,7 @@ export async function listRunsForUser(
   const col = await getRunsCollection();
   const filter: Record<string, unknown> = options.asAdmin ? {} : { user_id: userId };
   if (options.authorshipOnly) {
-    filter.harness_run = true;
-    filter.harness_kind = "multi-demo-authorship";
+    Object.assign(filter, authorshipOnlyMongoClause());
   }
   const projection = options.authorshipOnly
     ? AUTHORSHIP_RUN_PROJECTION

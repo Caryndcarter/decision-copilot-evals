@@ -5,14 +5,23 @@ import { AuthorshipHarnessDashboard } from "@/app/harness/demos/authorship/autho
 import { CivitasMoralDashboard } from "@/app/harness/civitas/moral/civitas-moral-dashboard";
 import { HormuzMoralDashboard } from "@/app/harness/hormuz/moral/hormuz-moral-dashboard";
 import { MeridianMoralDashboard } from "@/app/harness/meridian-ic/moral/meridian-moral-dashboard";
+import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
 import type { AuthorshipBatchSummary } from "@/lib/authorship-harness-summary";
-import type { HarnessStudyTab } from "@/lib/harness-meta";
+import {
+  AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL,
+  AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
+  AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
+  isAuthorshipBudgetConditionsControlBatch,
+  isAuthorshipBudgetConditionsStarvedBatch,
+  type HarnessStudyTab,
+} from "@/lib/harness-meta";
 
 export type FindingsStudy =
   | "meridian-ic-moral"
   | "hormuz-moral"
   | "civitas-replication-moral"
-  | "multi-demo-authorship";
+  | "multi-demo-authorship"
+  | "authorship-budget-conditions";
 
 const STUDIES: {
   id: FindingsStudy;
@@ -46,6 +55,13 @@ const STUDIES: {
     blurb: "When brands are hidden or swapped, does credit still stick?",
     purpose:
       "Unified Briefs name which think-tank member contributed what — but brand labels may bias the synthesizer. Across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas), we synthesize Standard, Blind, and Reassigned briefs and compare influence heatmaps plus moral audits. Goal: measure whether attribution tracks ideas or logos, and whether moral posture shifts when authorship cues change.",
+  },
+  {
+    id: "authorship-budget-conditions",
+    family: "authorship-influence",
+    scenarioLabel: AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
+    blurb: "Does open-vs-blind credit shift when contribution budget is tight?",
+    purpose: AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   },
   {
     id: "civitas-replication-moral",
@@ -207,6 +223,28 @@ export function HarnessFindingsDashboard({
         <HormuzMoralDashboard embedded />
       ) : study === "civitas-replication-moral" ? (
         <CivitasMoralDashboard embedded />
+      ) : study === "authorship-budget-conditions" ? (
+        <div className="space-y-6">
+          <AuthorshipBudgetConditionsPanel />
+          {(() => {
+            const live = authorshipBatches.filter(
+              (b) =>
+                isAuthorshipBudgetConditionsStarvedBatch(b.batch_id) ||
+                isAuthorshipBudgetConditionsControlBatch(b.batch_id)
+            );
+            if (live.length === 0) return null;
+            return (
+              <div className="space-y-2">
+                <p className="text-xs text-zinc-500">
+                  Live batches on this account ({AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL} /{" "}
+                  {AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL}). Atlas owner only — the table above
+                  is the committed snapshot.
+                </p>
+                <AuthorshipHarnessDashboard batches={live} compactHeader />
+              </div>
+            );
+          })()}
+        </div>
       ) : (
         <AuthorshipHarnessDashboard batches={authorshipBatches} compactHeader />
       )}

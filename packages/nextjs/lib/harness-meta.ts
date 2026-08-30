@@ -26,6 +26,95 @@ export const MERIDIAN_IC_VOICE_DYNAMO_LEGACY_MERGED_BATCH_ID =
 export const CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID =
   "db9445cf-ef02-5740-b69f-d34a1194e04a";
 
+/**
+ * Multi-demo authorship batch used as the adequate-budget control
+ * (Sol-era synthesizer / contribution defaults).
+ */
+export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_BATCH_ID =
+  "bc243273-6103-470c-9f11-94943925ca95";
+
+/**
+ * Civitas July 27 stays `harness_kind: civitas-replication`.
+ * Authorship influence includes it by batch id — do not retag.
+ */
+export const AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS = [
+  CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID,
+] as const;
+
+/** Extra batches loaded into authorship rollup / findings without changing stored kind. */
+export const AUTHORSHIP_INFLUENCE_INCLUDE_BATCH_IDS = [
+  ...AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS,
+] as const;
+
+/** Primary product title for the budget-conditions cut (not a model name). */
+export const AUTHORSHIP_BUDGET_CONDITIONS_TITLE =
+  "Authorship influence · budget conditions";
+
+export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (starved)";
+
+export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL = "adequate budget (Sol)";
+
+export const AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE =
+  "Authorship influence · budget conditions — same open vs blind credit question under two synthesizer-contribution budgets: Civitas (starved) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
+
+function normalizeHarnessBatchId(batchId?: string): string | undefined {
+  const raw = batchId?.trim();
+  if (!raw) return undefined;
+  return raw;
+}
+
+export function isAuthorshipBudgetConditionsStarvedBatch(batchId?: string): boolean {
+  const id = normalizeHarnessBatchId(batchId);
+  if (!id) return false;
+  return (AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS as readonly string[]).includes(id);
+}
+
+export function isAuthorshipBudgetConditionsControlBatch(batchId?: string): boolean {
+  return normalizeHarnessBatchId(batchId) === AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_BATCH_ID;
+}
+
+export function isAuthorshipInfluenceIncludeBatch(batchId?: string): boolean {
+  const id = normalizeHarnessBatchId(batchId);
+  if (!id) return false;
+  return (AUTHORSHIP_INFLUENCE_INCLUDE_BATCH_IDS as readonly string[]).includes(id);
+}
+
+/** Mongo clause for findings authorship (live five-demos + whitelist). */
+export function authorshipOnlyMongoClause(): Record<string, unknown> {
+  return {
+    harness_run: true,
+    $or: [
+      { harness_kind: "multi-demo-authorship" },
+      { harness_batch_id: { $in: [...AUTHORSHIP_INFLUENCE_INCLUDE_BATCH_IDS] } },
+    ],
+  };
+}
+
+/** Tabs a batch should appear under on My Decisions → Studies. */
+export function harnessStudyTabsForBatch(opts: {
+  kind?: HarnessKind;
+  batchId?: string;
+}): Array<HarnessStudyTab | "other"> {
+  const primary = harnessStudyTabForKind(opts.kind);
+  if (isAuthorshipBudgetConditionsStarvedBatch(opts.batchId) && primary === "replication") {
+    return ["replication", "authorship-influence"];
+  }
+  return [primary];
+}
+
+export function authorshipBatchKindLabel(opts: {
+  harnessKind: HarnessKind;
+  batchId?: string;
+}): string {
+  if (isAuthorshipBudgetConditionsStarvedBatch(opts.batchId)) {
+    return AUTHORSHIP_BUDGET_CONDITIONS_TITLE;
+  }
+  if (isAuthorshipBudgetConditionsControlBatch(opts.batchId)) {
+    return `${HARNESS_KIND_LABELS["multi-demo-authorship"]} · ${AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL}`;
+  }
+  return HARNESS_KIND_LABELS[opts.harnessKind] ?? HARNESS_KIND_LABELS["multi-demo-authorship"];
+}
+
 /** Infer harness kind from demo scenario when older runs omit `harness_kind`. */
 export function inferHarnessKindFromDemoScenario(demoScenarioId?: string): HarnessKind | undefined {
   if (!demoScenarioId) return undefined;
@@ -65,7 +154,7 @@ export const HARNESS_STUDY_TABS: {
     id: "authorship-influence",
     label: "Authorship influence",
     blurb:
-      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship to see whether influence and moral posture track ideas or labels.",
+      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship. A budget-conditions cut (Civitas starved vs adequate budget) checks whether open-vs-blind credit shifts when contribution analysis is token-constrained.",
     findingsStudy: "multi-demo-authorship",
   },
   {
@@ -148,7 +237,19 @@ export const HARNESS_KIND_PURPOSE: Record<HarnessKind, string> = {
     "Authorship influence — Standard, Blind, and Reassigned Unified Briefs across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas roll-up). Measures synthesizer branding effects, influence shifts, and moral audit scores.",
 };
 
-export function harnessBatchPurpose(kind?: HarnessKind): string {
+export function harnessBatchPurpose(
+  kind?: HarnessKind,
+  opts?: { batchId?: string; studyTab?: HarnessStudyTab }
+): string {
+  if (
+    opts?.studyTab === "authorship-influence" &&
+    isAuthorshipBudgetConditionsStarvedBatch(opts.batchId)
+  ) {
+    return AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE;
+  }
+  if (isAuthorshipBudgetConditionsControlBatch(opts?.batchId)) {
+    return `${HARNESS_KIND_PURPOSE["multi-demo-authorship"]} Control: ${AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL}.`;
+  }
   if (kind) return HARNESS_KIND_PURPOSE[kind];
   return "Behavior study batch. Older runs may not record which test type produced them.";
 }
@@ -174,8 +275,15 @@ export function harnessBatchKey(opts: {
 export function harnessBatchTitle(opts: {
   kind?: HarnessKind;
   runNumber?: number;
+  batchId?: string;
+  studyTab?: HarnessStudyTab;
 }): string {
-  const kindLabel = opts.kind ? HARNESS_KIND_LABELS[opts.kind] : "Behavior study";
+  const kindLabel =
+    opts.studyTab === "authorship-influence" && opts.kind
+      ? authorshipBatchKindLabel({ harnessKind: opts.kind, batchId: opts.batchId })
+      : opts.kind
+        ? HARNESS_KIND_LABELS[opts.kind]
+        : "Behavior study";
   if (typeof opts.runNumber === "number") {
     return `${kindLabel} · Run ${opts.runNumber}`;
   }

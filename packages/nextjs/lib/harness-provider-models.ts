@@ -45,6 +45,11 @@ export type HarnessBatchModelSnapshot = {
   clarification_model?: string;
   /** Clarification question dedupe (Gemini). */
   clarification_dedupe_model?: string;
+  /**
+   * Inferred contribution-analysis maxTokens for methodology footnotes.
+   * Do not use this as a product title.
+   */
+  contribution_analysis_max_tokens?: number;
 };
 
 /** Recorded snapshots for batches run before `llm_model` was persisted on runs. */
@@ -128,6 +133,7 @@ export const HARNESS_BATCH_MODEL_SNAPSHOTS: Record<string, HarnessBatchModelSnap
     },
     clarification_model: "claude-fable-5",
     clarification_dedupe_model: "gemini-3.6-flash",
+    contribution_analysis_max_tokens: 4096,
   },
 };
 
@@ -218,6 +224,7 @@ export function resolveHarnessBatchModels(opts: {
       snapshot?.clarification_model ?? kindAux?.clarification_model,
     clarification_dedupe_model:
       snapshot?.clarification_dedupe_model ?? kindAux?.clarification_dedupe_model,
+    contribution_analysis_max_tokens: snapshot?.contribution_analysis_max_tokens,
   };
 }
 
@@ -241,6 +248,11 @@ export function formatHarnessBatchModelsDescription(snapshot: HarnessBatchModelS
   }
   if (snapshot.clarification_dedupe_model) {
     lines.push(`Question dedupe: ${snapshot.clarification_dedupe_model}`);
+  }
+  if (typeof snapshot.contribution_analysis_max_tokens === "number") {
+    lines.push(
+      `Contribution analysis budget: ${snapshot.contribution_analysis_max_tokens} tokens (inferred; methodology footnote)`
+    );
   }
   return lines;
 }

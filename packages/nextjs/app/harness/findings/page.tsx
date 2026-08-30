@@ -33,11 +33,14 @@ export default async function HarnessFindingsPage({
           ? "civitas-replication-moral"
           : studyParam === "multi-demo-authorship"
             ? "multi-demo-authorship"
-            : "meridian-ic-moral";
+            : studyParam === "authorship-budget-conditions"
+              ? "authorship-budget-conditions"
+              : "meridian-ic-moral";
 
   // Moral studies use committed JSON snapshots — skip Mongo unless authorship tab.
   const authorshipBatches =
-    initialStudy === "multi-demo-authorship"
+    initialStudy === "multi-demo-authorship" ||
+    initialStudy === "authorship-budget-conditions"
       ? buildAuthorshipBatchSummaries(
           await listRunsForUser(session.user.id, {
             limit: 500,
