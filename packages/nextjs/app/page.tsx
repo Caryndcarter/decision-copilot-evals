@@ -1,5 +1,7 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { AppNavBrand } from "@/app/components/app-nav-brand";
+import { HowItWorksFlowSection } from "@/app/components/how-it-works-flow-section";
 import { SessionNav } from "@/app/components/session-nav";
 
 // ── Inline SVG icons ──────────────────────────────────────────────────────────
@@ -201,22 +203,23 @@ function UseCaseCard({ icon, title, scenario, posture }: {
   );
 }
 
-// ── Step ─────────────────────────────────────────────────────────────────────
-
-function Step({ n, title, desc }: { n: string; title: string; desc: string }) {
+/** Positioning vs general multi-model chat tools — no competitor names. */
+function ThreeLensesLink({ href = "#three-lenses" }: { href?: string }) {
   return (
-    <div className="flex gap-4">
-      <div className="shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center">{n}</div>
-      <div>
-        <div className="text-sm font-semibold text-zinc-900">{title}</div>
-        <div className="mt-0.5 text-sm text-zinc-500 leading-relaxed">{desc}</div>
-      </div>
-    </div>
+    <Link
+      href={href}
+      className="font-medium text-indigo-300 hover:text-indigo-200 underline decoration-indigo-400/40 underline-offset-2"
+    >
+      Risk, Reversibility, Stakeholders
+    </Link>
   );
 }
 
-/** Positioning vs general multi-model chat tools — no competitor names. */
-const MULTI_MODEL_DIFFERENCES = [
+const MULTI_MODEL_DIFFERENCES: {
+  dim: string;
+  theirs: string;
+  ours: ReactNode;
+}[] = [
   {
     dim: "What disagreement means",
     theirs: "Models catch each other's factual errors and hallucinations.",
@@ -225,7 +228,12 @@ const MULTI_MODEL_DIFFERENCES = [
   {
     dim: "Output consistency",
     theirs: "Shape varies by conversation mode — debate, red-team, freeform.",
-    ours: "Every brief uses the same Risk / Reversibility / Stakeholders rubric — comparable across models and over time.",
+    ours: (
+      <>
+        Structured briefs share one rubric — <ThreeLensesLink /> — and you pick how models analyze:
+        challenge your lean, show the opposition, risk-first, or freeform.
+      </>
+    ),
   },
   {
     dim: "Unit of work",
@@ -235,7 +243,7 @@ const MULTI_MODEL_DIFFERENCES = [
   {
     dim: "Irreversibility",
     theirs: "Not a distinct concept.",
-    ours: "A first-class lens: what's safe to try, what's irreversible, and what must clear first.",
+    ours: "Built into every brief — what's safe to try, what's irreversible, and what must clear first.",
   },
   {
     dim: "Evidence behind the claims",
@@ -290,7 +298,7 @@ export default function Home() {
                 Decision Copilot is built for that moment. You&apos;re guided through describing
                 your situation. Multiple AI models analyze it independently, so no single
                 model&apos;s framing quietly steers the outcome. The best ideas from your think
-                tank are combined into a unified recommendation with a plan you can refine and act on.
+                tank are combined into a Unified Brief with a plan you can refine and act on.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -351,7 +359,7 @@ export default function Home() {
               icon={<IconRisk />}
               title="Infrastructure cost decisions"
               scenario="Should we migrate from Vercel to self-hosted AWS to cut costs from $5k to $600/month — and what are we actually risking?"
-              posture="Surface risks"
+              posture="Cost & risk"
             />
             <UseCaseCard
               icon={<IconPeople />}
@@ -363,7 +371,7 @@ export default function Home() {
               icon={<IconResearch />}
               title="Compliance & regulatory"
               scenario="We're shipping AI features to EU enterprise customers. What's our EU AI Act exposure, and what do RFPs actually require?"
-              posture="Surface risks"
+              posture="Regulatory"
             />
             <UseCaseCard
               icon={<IconCompare />}
@@ -375,51 +383,22 @@ export default function Home() {
               icon={<IconReversibility />}
               title="Office & real estate"
               scenario="Our downtown lease ends in 7 months and we need a hybrid policy. What are the realistic alternatives and hidden costs?"
-              posture="Generate alternatives"
+              posture="Compare options"
             />
             <UseCaseCard
               icon={<IconBrief />}
               title="Tech modernization"
               scenario="Rip-and-replace vs incremental sidecar approach for a 20-year-old core banking system. What's the regulator's likely stance?"
-              posture="Surface risks"
+              posture="Modernization"
             />
           </div>
         </div>
       </section>
 
       {/* ── How it works ── */}
-      <section className="bg-white py-20 border-b border-zinc-100">
+      <section id="how-it-works" className="scroll-mt-24 bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
-            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              You bring the decision. Decision Copilot brings independent perspectives
-              pressure-testing the same problem, then a unified recommendation and plans
-              you can act on.
-            </p>
-          </div>
-          <div className="space-y-8">
-            <Step
-              n="1"
-              title="Describe what's on the table"
-              desc="Lay out the decision as you see it — situation, what you know, what's still unclear. Then set the frame: compare options, gut-check a favorite, hear the opposition case, surface risks, or widen the alternatives — so the analysis matches the kind of help you need."
-            />
-            <Step
-              n="2"
-              title="Convene your think tank"
-              desc="Run a single AI model or several at once. Each one reads the same brief and produces its own structured analysis — so you're not relying on one voice for a complicated call."
-            />
-            <Step
-              n="3"
-              title="Answer what the models need to know"
-              desc="Before finalizing, the models ask follow-up questions — missing context and details they can't safely assume without your clarification. Your answers sharpen the analysis."
-            />
-            <Step
-              n="4"
-              title="Get a brief you can use"
-              desc="Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut."
-            />
-          </div>
+          <HowItWorksFlowSection showFullWalkthroughLink />
         </div>
       </section>
 
@@ -448,13 +427,13 @@ export default function Home() {
               },
               {
                 icon: <IconResearch />,
-                title: "It can look things up",
+                title: "Models can look things up",
                 desc: "Models pull in live web search when they need current information, instead of guessing.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
                 icon: <IconCompare />,
-                title: "Where they agree — and where they don't",
+                title: "Dissent is allowed before convergence",
                 desc: "Independent answers are laid side by side. Overlap and outliers both surface.",
                 color: "text-violet-500 bg-violet-50",
               },
@@ -491,7 +470,7 @@ export default function Home() {
               href="/model-studies/results#authorship"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              See how we measure that in Model Studies →
+              See how we measure bias in Model Studies →
             </Link>
           </p>
         </div>
@@ -555,7 +534,7 @@ export default function Home() {
       </section>
 
       {/* ── Why three lenses ── */}
-      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
+      <section id="three-lenses" className="scroll-mt-24 bg-zinc-50 py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">

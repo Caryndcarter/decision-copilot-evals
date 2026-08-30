@@ -9,6 +9,12 @@ export function AppNavBrand() {
         <LogoLockup />
       </Link>
       <Link
+        href="/how-it-works"
+        className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+      >
+        How it works
+      </Link>
+      <Link
         href="/tour"
         className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
       >
