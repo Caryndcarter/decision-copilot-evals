@@ -233,7 +233,7 @@ export function CivitasMoralDashboard({ embedded = false }: { embedded?: boolean
   const hasBatches = CIVITAS_MORAL_BATCHES.length > 0;
   const [batchId, setBatchId] = useState(CIVITAS_MORAL_BATCHES[0]?.id ?? "");
   const [synthesizer, setSynthesizer] = useState<CivitasMoralSynthesizer>("openai");
-  const [authorshipMode, setAuthorshipMode] = useState<CivitasAuthorshipMode>("open");
+  const [authorshipMode, setAuthorshipMode] = useState<CivitasAuthorshipMode>("blind");
   const [selected, setSelected] = useState<CivitasMoralItem | null>(null);
 
   const batch: CivitasMoralBatch | undefined =

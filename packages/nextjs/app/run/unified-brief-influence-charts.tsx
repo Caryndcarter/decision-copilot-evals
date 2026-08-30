@@ -10,7 +10,9 @@ import type {
 import {
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefForAuthor,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
   UNIFIED_BRIEF_SYNTHESIZERS,
+  unifiedBriefAuthorshipModeLabel,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
 } from "@/lib/unified-briefs";
@@ -33,15 +35,15 @@ const HEATMAP_CELL: Record<ContributionInfluence, string> = {
 };
 
 const MAX_SCORE = 4;
-const CHART_MODES: UnifiedBriefAuthorshipMode[] = ["open", "blind", "reassigned"];
+const CHART_MODES: UnifiedBriefAuthorshipMode[] = [
+  ...UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
+];
 
 type ChartTab = UnifiedBriefAuthorshipMode | "findings";
 type MatrixByMode = Record<UnifiedBriefAuthorshipMode, InfluenceMatrix | null>;
 
 function authorshipModeChartLabel(mode: UnifiedBriefAuthorshipMode): string {
-  if (mode === "blind") return "Blind";
-  if (mode === "reassigned") return "Reassigned";
-  return "Revealed";
+  return unifiedBriefAuthorshipModeLabel(mode);
 }
 
 function authorshipModeDescription(mode: UnifiedBriefAuthorshipMode): string {
@@ -253,9 +255,9 @@ function buildInfluenceFindings(
   }
 
   const comparedModes: Array<[UnifiedBriefAuthorshipMode, UnifiedBriefAuthorshipMode]> = [
-    ["open", "blind"],
-    ["open", "reassigned"],
+    ["blind", "open"],
     ["blind", "reassigned"],
+    ["open", "reassigned"],
   ];
 
   for (const [fromMode, toMode] of comparedModes) {
@@ -443,7 +445,7 @@ export function UnifiedBriefInfluenceChartsOverlay({
   open,
   onClose,
   persistRun,
-  authorshipMode = "open",
+  authorshipMode = "blind",
   activeSynthesizer = "anthropic",
 }: UnifiedBriefInfluenceChartsOverlayProps) {
   const titleId = useId();

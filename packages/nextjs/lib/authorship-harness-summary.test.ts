@@ -8,6 +8,10 @@ import {
   AUTHORSHIP_BUDGET_CONDITIONS_TITLE,
   CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID,
 } from "./harness-meta";
+import {
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
+} from "./unified-briefs";
 import type {
   ContributionInfluence,
   DecisionRunResult,
@@ -120,6 +124,12 @@ describe("committed budget-conditions snapshot", () => {
         (d) => d.open.openai === "high" && d.blind.openai === "high"
       )
     ).toBe(true);
+  });
+
+  it("labels stored open as Revealed and leads charts with Blind", () => {
+    expect(UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS.open).toBe("Revealed");
+    expect(UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS.blind).toBe("Blind");
+    expect(UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER[0]).toBe("blind");
   });
 
   it("keeps synthesizer token budget in footnotes, not the title", () => {

@@ -24,6 +24,8 @@ import {
   getUnifiedBriefAuditForAuthor,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefsByAuthor,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
   UNIFIED_BRIEF_SYNTHESIZERS,
   unifiedBriefSynthesizerLabel,
   type UnifiedBriefSynthesizer,
@@ -42,15 +44,11 @@ import type {
 } from "@/types/decision";
 
 export const AUTHORSHIP_SUMMARY_MODES: UnifiedBriefAuthorshipMode[] = [
-  "open",
-  "blind",
-  "reassigned",
+  ...UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER,
 ];
 
 const MODE_BADGE: Record<UnifiedBriefAuthorshipMode, string> = {
-  open: "Standard",
-  blind: "Blind",
-  reassigned: "Reassigned",
+  ...UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
 };
 
 const PROVIDER_ORDER: LLMProviderName[] = ["anthropic", "openai", "gemini", "xai"];
@@ -126,7 +124,7 @@ export type AuthorshipBatchSummary = {
   expected_briefs: number;
   cross_case_shifts: AuthorshipInfluenceShift[];
   total_influence_shifts: number;
-  /** Mean heatmaps across cases (Standard / Blind / Reassigned). */
+  /** Mean heatmaps across cases (Blind / Revealed / Reassigned). */
   rollup_matrices: AuthorshipRollupMatrix[];
   /** Present when this batch is the constrained-tokens or Sol control cut. */
   budget_condition?: "constrained" | "adequate";
@@ -227,8 +225,8 @@ function influenceShiftsForDemo(
   const matrices = matricesByMode(persistRun);
   const shifts: AuthorshipInfluenceShift[] = [];
   const pairs: Array<[UnifiedBriefAuthorshipMode, UnifiedBriefAuthorshipMode]> = [
-    ["open", "blind"],
-    ["open", "reassigned"],
+    ["blind", "open"],
+    ["blind", "reassigned"],
   ];
   for (const [fromMode, toMode] of pairs) {
     const from = matrices[fromMode];

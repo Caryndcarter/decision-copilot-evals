@@ -35,14 +35,14 @@ function ModePair({
   blind: ContributionInfluence;
   highlightDrop?: boolean;
 }) {
-  const dropped = highlightDrop && open !== blind;
+  const changed = highlightDrop && open !== blind;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Chip value={open} />
+      <Chip value={blind} />
       <span className="text-[10px] text-zinc-400" aria-hidden>
         →
       </span>
-      <Chip value={blind} dropped={dropped} />
+      <Chip value={open} dropped={changed} />
     </div>
   );
 }
@@ -69,26 +69,27 @@ export function AuthorshipBudgetConditionsPanel() {
         </p>
         <h2 className="mt-1 text-base font-semibold text-zinc-900">{SNAP.title}</h2>
         <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-zinc-600">
-          {SNAP.rater_label} as rater — Standard vs Blind self-credit and peer credit. Scenario:{" "}
+          {SNAP.rater_label} as rater — Blind (default) vs Revealed self-credit and peer credit.
+          Scenario:{" "}
           <span className="font-medium text-zinc-800">{SNAP.scenario_label}</span>. Control:{" "}
           <span className="font-medium text-zinc-800">{SNAP.control_label}</span>. Scale: high = 4,
           medium = 3, low = 2, minimal = 1.
         </p>
         <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained self drop</dt>
+            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained Blind≠Revealed</dt>
             <dd className="text-sm font-semibold text-zinc-900">
               {SNAP.constrained.self_drop_count} of {SNAP.constrained.trials.length}
             </dd>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained self stayed high</dt>
+            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained Blind self stayed high</dt>
             <dd className="text-sm font-semibold text-zinc-900">
               {SNAP.constrained.self_blind_high} of {SNAP.constrained.trials.length} Blind
             </dd>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Control self drop</dt>
+            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Control Blind≠Revealed</dt>
             <dd className="text-sm font-semibold text-zinc-900">
               {SNAP.control.self_drop_count} of {SNAP.control.demos.length}
             </dd>
@@ -114,9 +115,9 @@ export function AuthorshipBudgetConditionsPanel() {
             <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
               <tr>
                 <th className="px-4 py-2 font-medium">Trial</th>
-                <th className="px-4 py-2 font-medium">Self (Standard → Blind)</th>
-                <th className="px-4 py-2 font-medium">Peers · Standard</th>
+                <th className="px-4 py-2 font-medium">Self (Blind → Revealed)</th>
                 <th className="px-4 py-2 font-medium">Peers · Blind</th>
+                <th className="px-4 py-2 font-medium">Peers · Revealed</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -132,10 +133,10 @@ export function AuthorshipBudgetConditionsPanel() {
                       <ModePair open={openSelf} blind={blindSelf} highlightDrop />
                     </td>
                     <td className="px-4 py-3">
-                      <PeerRow map={row.open} />
+                      <PeerRow map={row.blind} />
                     </td>
                     <td className="px-4 py-3">
-                      <PeerRow map={row.blind} />
+                      <PeerRow map={row.open} />
                     </td>
                   </tr>
                 );
@@ -149,7 +150,8 @@ export function AuthorshipBudgetConditionsPanel() {
         <div className="border-b border-zinc-100 px-4 py-3">
           <h3 className="text-sm font-semibold text-zinc-900">{SNAP.control.control_label}</h3>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Five-demo authorship batch · {SNAP.rater_label} as rater · no open→blind self drop
+            Five-demo authorship batch · {SNAP.rater_label} as rater · no Blind vs Revealed self
+            change
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -157,23 +159,23 @@ export function AuthorshipBudgetConditionsPanel() {
             <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
               <tr>
                 <th className="px-4 py-2 font-medium">Demo</th>
-                <th className="px-4 py-2 font-medium">Self (Standard → Blind)</th>
-                <th className="px-4 py-2 font-medium">Peers · Standard</th>
+                <th className="px-4 py-2 font-medium">Self (Blind → Revealed)</th>
                 <th className="px-4 py-2 font-medium">Peers · Blind</th>
+                <th className="px-4 py-2 font-medium">Peers · Revealed</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {SNAP.control.demos.map((row) => (
                 <tr key={row.decision_id}>
                   <td className="px-4 py-3 font-medium text-zinc-800">{row.demo_label}</td>
-                  <td className="px-4 py-3">
+                    <td className="px-4 py-3">
                     <ModePair open={selfCredit(row.open)} blind={selfCredit(row.blind)} />
                   </td>
                   <td className="px-4 py-3">
-                    <PeerRow map={row.open} />
+                    <PeerRow map={row.blind} />
                   </td>
                   <td className="px-4 py-3">
-                    <PeerRow map={row.blind} />
+                    <PeerRow map={row.open} />
                   </td>
                 </tr>
               ))}

@@ -55,7 +55,7 @@ export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (constrained
 export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL = "adequate budget (Sol)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE =
-  "Authorship influence · budget conditions — same open vs blind credit question under two synthesizer-contribution budgets: Civitas (constrained tokens) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
+  "Authorship influence · budget conditions — same Blind (default) vs Revealed credit question under two synthesizer-contribution budgets: Civitas (constrained tokens) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
 
 function normalizeHarnessBatchId(batchId?: string): string | undefined {
   const raw = batchId?.trim();
@@ -154,7 +154,7 @@ export const HARNESS_STUDY_TABS: {
     id: "authorship-influence",
     label: "Authorship influence",
     blurb:
-      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship. A budget-conditions cut (Civitas constrained tokens vs adequate budget) checks whether open-vs-blind credit shifts when contribution analysis is token-constrained.",
+      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Blind (default), Revealed, and Reassigned authorship. A budget-conditions cut (Civitas constrained tokens vs adequate budget) checks whether Blind vs Revealed credit shifts when contribution analysis is token-constrained.",
     findingsStudy: "multi-demo-authorship",
   },
   {
@@ -234,7 +234,7 @@ export const HARNESS_KIND_PURPOSE: Record<HarnessKind, string> = {
   "civitas-replication":
     "Replication — full Civitas modernization stress path (intake, clarification, variant, research, Unified Brief) repeated across trials to compare provider behavior under the original PE roll-up scenario.",
   "multi-demo-authorship":
-    "Authorship influence — Standard, Blind, and Reassigned Unified Briefs across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas roll-up). Measures synthesizer branding effects, influence shifts, and moral audit scores.",
+    "Authorship influence — Blind (default), Revealed, and Reassigned Unified Briefs across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas roll-up). Measures synthesizer branding effects, influence shifts, and moral audit scores.",
 };
 
 export function harnessBatchPurpose(
@@ -426,7 +426,7 @@ export function harnessCaseNote(opts: {
     return "Same Civitas modernization scenario — full study path repeated for replication.";
   }
   if (opts.kind === "multi-demo-authorship" && opts.demoScenarioId) {
-    return "Unified Brief authorship modes (Standard / Blind / Reassigned) on this demo.";
+    return "Unified Brief authorship modes (Blind / Revealed / Reassigned) on this demo.";
   }
   return undefined;
 }

@@ -1,6 +1,6 @@
 # Authorship influence · budget conditions
 
-Committed open-vs-blind self/peer credit snapshot. Primary product title is **budget conditions**, not a vendor or model name.
+Committed Blind vs Revealed self/peer credit snapshot. Primary product title is **budget conditions**, not a vendor or model name. Stored mode keys stay `open` / `blind` / `reassigned`; `open` displays as Revealed. Blind is the default product path.
 
 | Role | Batch | Stored `harness_kind` |
 | --- | --- | --- |
@@ -11,8 +11,8 @@ Machine-readable table: `packages/nextjs/data/authorship-budget-conditions.json`
 
 ## Finding (ChatGPT as rater)
 
-- **Civitas (constrained tokens):** Standard self-credit high on T1–T5. Blind self-credit high on T1–T4, medium on T5 (only open→blind self drop). Standard often compresses peers (Gemini low/minimal on 3 of 5 trials).
-- **Adequate budget (Sol):** Standard and Blind self-credit high on all five demos, including Civitas. No self drop.
+- **Civitas (constrained tokens):** Blind self-credit high on T1–T4, medium on T5. Revealed self-credit high on T1–T5 (only Blind vs Revealed self change). Revealed often compresses peers (Gemini low/minimal on 3 of 5 trials).
+- **Adequate budget (Sol):** Blind and Revealed self-credit high on all five demos, including Civitas. No self change.
 
 ## Methodology footnotes
 

@@ -18,14 +18,13 @@ import {
   type UnifiedBriefAuditDimension,
 } from "@/lib/unified-brief-audit/rubric";
 import { influenceLabel } from "@/lib/unified-brief-influence-matrix";
-import { UNIFIED_BRIEF_SYNTHESIZERS } from "@/lib/unified-briefs";
+import {
+  UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS,
+  UNIFIED_BRIEF_SYNTHESIZERS,
+} from "@/lib/unified-briefs";
 import type { ContributionInfluence, UnifiedBriefAuthorshipMode } from "@/types/decision";
 
-const MODE_LABEL: Record<(typeof AUTHORSHIP_SUMMARY_MODES)[number], string> = {
-  open: "Standard",
-  blind: "Blind",
-  reassigned: "Reassigned",
-};
+const MODE_LABEL = UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS;
 
 const SYNTH_LABEL: Record<(typeof UNIFIED_BRIEF_SYNTHESIZERS)[number], string> = {
   openai: "ChatGPT",
@@ -198,8 +197,8 @@ export function AuthorshipHarnessDashboard({
   compactHeader?: boolean;
 }) {
   const [batchId, setBatchId] = useState(batches[0]?.batch_id ?? "");
-  const [rollupMode, setRollupMode] = useState<UnifiedBriefAuthorshipMode>("open");
-  const [moralMode, setMoralMode] = useState<UnifiedBriefAuthorshipMode | "all">("open");
+  const [rollupMode, setRollupMode] = useState<UnifiedBriefAuthorshipMode>("blind");
+  const [moralMode, setMoralMode] = useState<UnifiedBriefAuthorshipMode | "all">("blind");
   const [selected, setSelected] = useState<{ demoLabel: string; cell: AuthorshipMoralCell } | null>(
     null
   );
@@ -250,15 +249,16 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
             Multi-demo authorship
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-            How to read this: contribution heatmaps and moral audits across Standard / Blind /
-            Reassigned Unified Briefs. Compare modes to see whether credit and moral posture shift
-            when brand labels change.
+            How to read this: contribution heatmaps and moral audits across Blind (default) /
+            Revealed / Reassigned Unified Briefs. Compare alternatives against Blind to see whether
+            credit and moral posture shift when brand labels change.
           </p>
         </header>
       ) : (
         <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-          How to read this: contribution heatmaps and moral audits across Standard / Blind /
-          Reassigned modes. Compare modes to see whether credit tracks ideas or brand labels.
+          How to read this: contribution heatmaps and moral audits across Blind (default) /
+          Revealed / Reassigned. Compare alternatives against Blind to see whether credit tracks
+          ideas or brand labels.
         </p>
       )}
 
@@ -351,7 +351,7 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-zinc-900">Cases by shift volume</h2>
         <p className="text-xs text-zinc-500">
-          How many Standard → Blind / Standard → Reassigned weight changes each case produced (|Δ| ≥
+          How many Blind → Revealed / Blind → Reassigned weight changes each case produced (|Δ| ≥
           1).
         </p>
         <ol className="space-y-2">
@@ -442,8 +442,8 @@ npm run harness:demos:authorship:moral -- --user-email=you@example.com --batch-i
               onChange={(e) => setMoralMode(e.target.value as UnifiedBriefAuthorshipMode | "all")}
               className="ml-2 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900"
             >
-              <option value="open">Standard</option>
               <option value="blind">Blind</option>
+              <option value="open">Revealed</option>
               <option value="reassigned">Reassigned</option>
               <option value="all">All modes</option>
             </select>

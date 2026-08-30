@@ -17,6 +17,27 @@ export type UnifiedBriefSynthesizer = (typeof UNIFIED_BRIEF_SYNTHESIZERS)[number
 
 export type { UnifiedBriefAuthorshipMode };
 
+/**
+ * Product labels for stored authorship modes.
+ * Keys stay `open` | `blind` | `reassigned` in Mongo; `open` displays as Revealed.
+ * Blind is the default Unified Brief path; Revealed and Reassigned are alternatives.
+ */
+export const UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS: Record<UnifiedBriefAuthorshipMode, string> = {
+  open: "Revealed",
+  blind: "Blind",
+  reassigned: "Reassigned",
+};
+
+export const UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER: UnifiedBriefAuthorshipMode[] = [
+  "blind",
+  "open",
+  "reassigned",
+];
+
+export function unifiedBriefAuthorshipModeLabel(mode: UnifiedBriefAuthorshipMode): string {
+  return UNIFIED_BRIEF_AUTHORSHIP_MODE_LABELS[mode];
+}
+
 export function isUnifiedBriefSynthesizer(value: string): value is UnifiedBriefSynthesizer {
   return (UNIFIED_BRIEF_SYNTHESIZERS as readonly string[]).includes(value);
 }

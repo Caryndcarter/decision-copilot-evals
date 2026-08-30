@@ -54,13 +54,13 @@ const STUDIES: {
     scenarioLabel: "Five demos",
     blurb: "When brands are hidden or swapped, does credit still stick?",
     purpose:
-      "Unified Briefs name which think-tank member contributed what — but brand labels may bias the synthesizer. Across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas), we synthesize Standard, Blind, and Reassigned briefs and compare influence heatmaps plus moral audits. Goal: measure whether attribution tracks ideas or logos, and whether moral posture shifts when authorship cues change.",
+      "Unified Briefs name which think-tank member contributed what — but brand labels may bias the synthesizer. Across five high-conflict demos (hospital PE, VP sales, Gen-AI compliance, banking modernization, Civitas), we synthesize Blind (default), Revealed, and Reassigned briefs and compare influence heatmaps plus moral audits. Goal: measure whether attribution tracks ideas or logos, and whether moral posture shifts when authorship cues change.",
   },
   {
     id: "authorship-budget-conditions",
     family: "authorship-influence",
     scenarioLabel: AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
-    blurb: "Does open-vs-blind credit shift when contribution budget is tight?",
+    blurb: "Does Blind vs Revealed credit shift when contribution budget is tight?",
     purpose: AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   },
   {
@@ -69,7 +69,7 @@ const STUDIES: {
     scenarioLabel: "Civitas",
     blurb: "Full product path, five trials — what’s stable vs one-shot noise?",
     purpose:
-      "A single impressive demo can hide trial-to-trial drift. We re-run the full Civitas path (intake → clarification → variant → research → Unified Brief) across five harness trials, then blind-code Unified Briefs for moral lean under Standard, Blind, and Reassigned authorship. Goal: separate durable model behavior from one-off wording luck before we trust patterns from a single run.",
+      "A single impressive demo can hide trial-to-trial drift. We re-run the full Civitas path (intake → clarification → variant → research → Unified Brief) across five harness trials, then blind-code Unified Briefs for moral lean under Blind, Revealed, and Reassigned authorship. Goal: separate durable model behavior from one-off wording luck before we trust patterns from a single run.",
   },
 ];
 

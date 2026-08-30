@@ -99,7 +99,7 @@
     ]
   },
   "methodology_footnotes": [
-    "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Cells are ChatGPT as rater (self-credit is the ChatGPT→ChatGPT cell).",
+    "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Cells are ChatGPT as rater (self-credit is the ChatGPT→ChatGPT cell). Stored modes stay open / blind / reassigned; open displays as Revealed. Blind is the default product path; Revealed and Reassigned are alternatives.",
     "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch were inferred at 4096 tokens — the then-current client/lens default.",
     "Current contribution lens defaults are 8192 tokens for the OpenAI synthesizer and 16384 for the others. Think-tank models on the constrained-tokens batch: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
     "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Think-tank models: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5."

@@ -371,32 +371,32 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     name: "Budget conditions",
     eyebrow: "Authorship influence · budget conditions",
     heroQuestion:
-      "When contribution analysis is token-constrained, does open-vs-blind credit still hold?",
-    dek: "Same authorship design (Standard vs Blind), two budget conditions: Civitas (constrained tokens) on the July 27 replication batch, versus adequate budget (Sol) on the five-demo authorship batch. The research object is the budget, not a single vendor brand.",
+      "When contribution analysis is token-constrained, does Blind vs Revealed credit still hold?",
+    dek: "Same authorship design (Blind is the default; Revealed is the named-brand alternative), two budget conditions: Civitas (constrained tokens) on the July 27 replication batch, versus adequate budget (Sol) on the five-demo authorship batch. The research object is the budget, not a single vendor brand.",
     stats: [
       { value: "5", label: "Civitas (constrained tokens) trials" },
       { value: "5", label: "adequate-budget demos" },
-      { value: "1 of 5", label: "constrained self-credit drop" },
-      { value: "0 of 5", label: "control self-credit drop" },
+      { value: "1 of 5", label: "constrained Blind≠Revealed" },
+      { value: "0 of 5", label: "control Blind≠Revealed" },
     ],
     caseCount: 2,
     modelCount: 4,
     findings: [
       {
-        headline: "Constrained-token Civitas dropped self-credit on one trial only",
-        body: "ChatGPT as rater kept Standard self-credit high on all five Civitas (constrained tokens) trials. Blind self-credit stayed high on T1–T4 and fell to medium on T5 — the only open→blind self drop in that batch.",
+        headline: "Constrained-token Civitas changed self-credit on one trial only",
+        body: "ChatGPT as rater kept Blind self-credit high on T1–T4 of Civitas (constrained tokens) and medium on T5. Revealed self-credit was high on all five — the only Blind vs Revealed self change in that batch.",
       },
       {
-        headline: "Constrained Standard often compressed peers",
-        body: "On Civitas (constrained tokens), ChatGPT as rater frequently scored Gemini low or minimal under Standard authorship (3 of 5 trials). Blind redistributed some of that peer weight, especially on T5.",
+        headline: "Constrained Revealed often compressed peers",
+        body: "On Civitas (constrained tokens), ChatGPT as rater frequently scored Gemini low or minimal under Revealed authorship (3 of 5 trials). Blind redistributed some of that peer weight, especially on T5.",
       },
       {
         headline: "Adequate budget (Sol) held self-credit high",
-        body: "On the five-demo adequate-budget (Sol) control — including the Civitas demo — ChatGPT as rater scored self high under both Standard and Blind. No open→blind self drop.",
+        body: "On the five-demo adequate-budget (Sol) control — including the Civitas demo — ChatGPT as rater scored self high under both Blind and Revealed. No Blind vs Revealed self change.",
       },
     ],
     methodology: [
-      "Authorship influence · budget conditions compares Standard vs Blind contribution credit under two synthesizer-contribution budgets. Scenario: Civitas (constrained tokens). Control: adequate budget (Sol).",
+      "Authorship influence · budget conditions compares Blind (default) vs Revealed contribution credit under two synthesizer-contribution budgets. Scenario: Civitas (constrained tokens). Control: adequate budget (Sol). Stored mode keys stay open / blind / reassigned; open displays as Revealed.",
       "Civitas (constrained tokens) uses the July 27 Civitas replication batch (still stored as civitas-replication — not retagged). Five trials, one scenario. Control uses the five-demo authorship batch.",
       "Cells shown are ChatGPT as rater. Self-credit is the ChatGPT→ChatGPT cell. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
       "Contribution analyses on the constrained-tokens batch were inferred at 4096 tokens (then-current client/lens default). Current lens defaults are 8192 for the OpenAI synthesizer and 16384 for the others. Constrained-tokens think-tank models: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3. Control: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5.",
@@ -445,7 +445,7 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     ],
     methodology: [
       "One Civitas modernization scenario (Meridian LP portfolio company) runs through the full harness path five times — intake, research, variant, and Unified Brief synthesis.",
-      "Four synthesizers — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each produce Unified Briefs under three authorship conditions: Standard (brands visible), Blind (brands hidden), and Reassigned (brands swapped).",
+      "Four synthesizers — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each produce Unified Briefs under three authorship conditions: Blind (brands hidden; product default), Revealed (brands visible; stored as open), and Reassigned (brands swapped).",
       "A separate judge model — Gemini, kept blind to synthesizer brand and authorship condition — codes every Unified Brief against a fixed 12-dimension rubric: pace, speed vs humane, senior tier, severance, customer risk, vs intake lean, risk bearer, dignity, truth to leavers, public accountability, uncertainty bearer, power asymmetry.",
       "The judge never sees synthesizer brand or authorship condition during coding; metadata is joined afterward for aggregation.",
     ],
