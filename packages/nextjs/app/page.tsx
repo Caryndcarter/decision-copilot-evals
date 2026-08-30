@@ -485,10 +485,10 @@ export default function Home() {
             Is brand bias real? We hide provider names when the Unified Brief is written, so
             credit follows the idea — not the logo.{" "}
             <Link
-              href="/model-studies/results/multi-demo-authorship"
+              href="/model-studies/results#authorship"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              See how we test that in Model Studies →
+              See how we measure that in Model Studies →
             </Link>
           </p>
         </div>

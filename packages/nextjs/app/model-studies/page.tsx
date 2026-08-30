@@ -55,7 +55,7 @@ export default function Home() {
               them?
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-              Every case here is written by a filer — someone who has already leaned toward one
+              Every intake here is written by a filer — someone who has already leaned toward one
               option before asking for advice. We give the same facts to several frontier models
               (ChatGPT, Fable, Gemini, and Grok) and blind-code what each one actually does under
               that pressure to agree: push back, stay neutral, or go along with the filer&apos;s
@@ -84,6 +84,46 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Hook — why the program exists, then into studies */}
+      <section className="bg-white py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
+            Why any of these studies exist
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-600">
+            Claims about how models behave under decision pressure are easy to ship and hard to
+            check. This program exists to make them checkable: the same facts, several models,
+            blind coding on a fixed rubric, and the results published — so you can see what held up
+            and what didn&apos;t, instead of taking a feature bullet on faith.
+          </p>
+          <div className="mt-5">
+            <Link
+              href="/model-studies/why"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              Why it matters →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Studies */}
+      <section id="studies" className="scroll-mt-20 bg-zinc-50 py-20 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">Studies</h2>
+          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
+            Each study is a research question, answered across one or more cases. New cases land
+            inside an existing study as a registry entry — the study is the story, not any single
+            case.
+          </p>
+          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+            {testTypes.map((t) => (
+              <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Rollup findings */}
       <section className="bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
@@ -102,44 +142,9 @@ export default function Home() {
               href="/model-studies/results"
               className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
-              See every finding, from every study →
+              See every finding, from every case →
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Test type grid */}
-      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">The test types</h2>
-          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Each type is a question, tested across one or more studies. New studies land inside an
-            existing type as a registry entry — the type is the story, not any single case.
-          </p>
-          <div className="mt-8 grid gap-5 sm:grid-cols-3">
-            {testTypes.map((t) => (
-              <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why it matters teaser */}
-      <section className="bg-white py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">Why we run this</h2>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-600">
-            Most claims about AI models catching each other&apos;s mistakes are feature
-            descriptions — plausible, but untested. This is the opposite bet: publish the cases,
-            keep the coding blind, and let the numbers say whether a model is actually
-            pressure-testing a decision or just agreeing with whoever&apos;s already decided.
-          </p>
-          <Link
-            href="/model-studies/why"
-            className="mt-4 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            Read the full argument →
-          </Link>
         </div>
       </section>
 
@@ -151,7 +156,7 @@ export default function Home() {
           </h2>
           <p className="mt-3 text-zinc-400 max-w-lg mx-auto">
             Every coded brief, every dimension, every verbatim quote — sign in to explore the
-            complete studies.
+            complete cases.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
             <Link

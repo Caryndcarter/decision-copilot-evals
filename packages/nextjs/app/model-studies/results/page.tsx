@@ -16,7 +16,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Results — Model Studies",
-  description: "Every test type, every finding — the full rollup of blind-coded model behavior.",
+  description: "Every study, every finding — the full rollup of blind-coded model behavior.",
 };
 
 export default function ResultsPage() {
@@ -36,12 +36,12 @@ export default function ResultsPage() {
               Full rollup
             </p>
             <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-              Every test type, every finding
+              Every study, every finding
             </h1>
             <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-              Grouped by what&apos;s actually being tested, not by case name. Each type holds one or
-              more studies — new studies land inside an existing type as it&apos;s coded, rather than
-              becoming a new peer at the top level.
+              Grouped by research question, not by case name. Each study holds one or more cases —
+              new cases land inside an existing study as they&apos;re coded, rather than becoming a
+              new peer at the top level.
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default function ResultsPage() {
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">All findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
             Every claim below is drawn from a blind-coded batch — the judge never saw which
-            provider wrote which brief. Click through to a study for its full scoreboard and
+            provider wrote which brief. Click through to a case for its full scoreboard and
             methodology.
           </p>
           <div className="mt-8">
@@ -100,12 +100,14 @@ export default function ResultsPage() {
                         </span>
                         <h3 className="mt-0.5 text-lg font-semibold text-zinc-900">{study.name}</h3>
                       </div>
-                      <Link
-                        href={`/model-studies/results/${study.id}`}
-                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                      >
-                        Full study page →
-                      </Link>
+                      {study.kind === "dimension-coded" ? (
+                        <Link
+                          href={`/model-studies/results/${study.id}`}
+                          className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                          Full case page →
+                        </Link>
+                      ) : null}
                     </div>
                     <div className="mt-4">
                       {study.kind === "dimension-coded" ? (

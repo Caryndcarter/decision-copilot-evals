@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SiteNav } from "@/app/model-studies/_components/site-nav";
 import { StatStrip } from "@/app/model-studies/_components/stat-strip";
 import { FindingCardGrid } from "@/app/model-studies/_components/finding-card";
@@ -20,6 +20,13 @@ export async function generateMetadata({
   const { study: studyId } = await params;
   const study = getFindingsStudy(studyId);
   if (!study) return {};
+  // Live authorship case has no public scoreboard — surface the study section instead.
+  if (study.kind === "influence-matrix") {
+    return {
+      title: `${getTestType(study.testTypeId)?.name ?? "Authorship"} — Results — Decision Copilot`,
+      description: study.heroQuestion,
+    };
+  }
   return {
     title: `${study.name} — Results — Decision Copilot`,
     description: study.heroQuestion,
@@ -34,6 +41,13 @@ export default async function StudyResultsPage({
   const { study: studyId } = await params;
   const study = getFindingsStudy(studyId);
   if (!study || study.status !== "live") notFound();
+
+  // No committed public snapshot yet — Authorship lives on the Results study section
+  // (+ signed-in dashboard). Don't keep a thin duplicate case page.
+  if (study.kind === "influence-matrix") {
+    redirect(`/model-studies/results#${study.testTypeId}`);
+  }
+
   const type = getTestType(study.testTypeId);
 
   return (
@@ -129,7 +143,7 @@ export default async function StudyResultsPage({
           <h2 className="text-xl font-bold text-white tracking-tight">Want the full dataset?</h2>
           <p className="mt-3 text-sm text-zinc-400 max-w-lg mx-auto">
             Every coded brief, every dimension, every verbatim quote the judge based its call on —
-            sign in to explore the complete study.
+            sign in to explore the complete case.
           </p>
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
             {study.deepDiveHref && (

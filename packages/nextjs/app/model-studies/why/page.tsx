@@ -22,10 +22,10 @@ const FAILURE_MODES = [
     links: [
       {
         href: "/model-studies/how-it-works#voice-influence",
-        label: "Our Voice Influence studies",
+        label: "Our Voice Influence study",
       },
     ],
-    descAfter: " target this.",
+    descAfter: " targets this.",
   },
   {
     title: "Brand influence",
@@ -34,10 +34,10 @@ const FAILURE_MODES = [
     links: [
       {
         href: "/model-studies/how-it-works#authorship-influence",
-        label: "Our Authorship studies",
+        label: "Our Authorship study",
       },
     ],
-    descAfter: " test this.",
+    descAfter: " measures this.",
   },
   {
     title: "Self-preference",
@@ -47,10 +47,10 @@ const FAILURE_MODES = [
     links: [
       {
         href: "/model-studies/how-it-works#authorship-influence",
-        label: "Our Authorship studies",
+        label: "Our Authorship study",
       },
     ],
-    descAfter: " test this.",
+    descAfter: " measures this.",
   },
   {
     title: "Lost dissent",
@@ -82,7 +82,7 @@ const AI_LITERATURE = [
     title: "Discovering Language Model Behaviors with Model-Written Evaluations",
     venue: "arXiv:2212.09251",
     finding:
-      "generated test cases at scale and scored them against a fixed rubric, rather than judging behavior case-by-case. Same structure this site runs.",
+      "generated evaluation scenarios at scale and scored them against a fixed rubric, rather than judging behavior case-by-case. Same structure this site runs.",
   },
   {
     label: "The sycophancy trigger is confirmed.",
@@ -137,8 +137,8 @@ export default function WhyPage() {
             An AI that agrees with you isn&apos;t the same as an AI that&apos;s correct
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-300">
-            Most “models catch each other&apos;s mistakes” claims are feature bullets. This site
-            publishes tested results — blind-coded, on a fixed rubric, under real decision pressure.
+            Advice can fail in quieter ways than a wrong fact — sycophancy, favoritism, groupthink
+            suppressing dissent. We publish measured results on those failure modes and more.
           </p>
         </div>
       </section>
@@ -212,16 +212,16 @@ export default function WhyPage() {
 
           <div className="mx-auto mt-10 max-w-4xl">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
-              Authorship modes
+              Authorship conditions
             </p>
             <h3 className="mt-2 text-lg font-semibold text-zinc-900">
               How much brand the synthesizer sees
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-zinc-500">
               When several models&apos; analyses are merged into one Unified Brief, an authorship
-              mode controls whether the synthesizer sees real provider names. Decision Copilot
+              condition controls whether the synthesizer sees real provider names. Decision Copilot
               defaults to Blind; Revealed is a choice in the product; Reassigned is how we
-              stress-test brand influence in our Authorship studies.
+              measure brand influence in our Authorship study.
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {[
@@ -237,8 +237,8 @@ export default function WhyPage() {
                 },
                 {
                   title: "Reassigned",
-                  role: "Used in our studies",
-                  desc: "Brand names stay in the prompt, but they're randomly remapped (each voice gets a unique wrong label). Tests whether credit follows the logo or the idea.",
+                  role: "Research condition",
+                  desc: "Brand names stay in the prompt, but they're randomly remapped (each voice gets a unique wrong label). Shows whether credit follows the logo or the idea.",
                 },
               ].map((mode) => (
                 <div
@@ -248,7 +248,7 @@ export default function WhyPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
                     {mode.role}
                   </p>
-                  <h4 className="mt-1.5 text-sm font-semibold text-zinc-900">{mode.title} mode</h4>
+                  <h4 className="mt-1.5 text-sm font-semibold text-zinc-900">{mode.title}</h4>
                   <p className="mt-2 text-sm leading-relaxed text-zinc-500">{mode.desc}</p>
                 </div>
               ))}
@@ -313,7 +313,7 @@ export default function WhyPage() {
           </div>
 
           <p className="mx-auto mt-8 max-w-4xl text-center text-sm leading-relaxed text-zinc-500">
-            What&apos;s specific here isn&apos;t the phenomenon — it&apos;s testing it against a
+            What&apos;s specific here isn&apos;t the phenomenon — it&apos;s measuring it against a
             fixed decision rubric, with blind multi-model coding, on adversarially framed intakes.
           </p>
         </div>

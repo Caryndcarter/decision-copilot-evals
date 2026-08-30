@@ -3,8 +3,8 @@ import type { RollupFinding } from "@/lib/findings-registry";
 
 /**
  * Cross-study finding card for the homepage / results rollup. Leads with the
- * test type — that's the durable story — and names the specific study as a
- * secondary detail, linking through to that study's full page.
+ * study — that's the durable story — and names the specific case as a
+ * secondary detail, linking through to that case's full page.
  */
 export function RollupFindingGrid({ findings }: { findings: RollupFinding[] }) {
   if (findings.length === 0) return null;

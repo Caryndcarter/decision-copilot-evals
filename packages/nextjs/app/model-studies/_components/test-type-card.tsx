@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { FindingsStudyMeta, TestTypeMeta } from "@/lib/findings-registry";
 
 /**
- * Overview-page card for one test type — the primary grouping unit. Lists
- * which studies currently live inside it, so it's visible at a glance that
- * a type can (and will) hold more than one study over time.
+ * Overview-page card for one study — the primary grouping unit. Lists which
+ * cases currently live inside it, so it's visible at a glance that a study
+ * can (and will) hold more than one case over time.
  */
 export function TestTypeCard({
   type,
@@ -29,7 +29,7 @@ export function TestTypeCard({
       <div className="mt-4 flex items-baseline gap-1.5">
         <span className="text-lg font-bold tabular-nums text-zinc-900">{studies.length}</span>
         <span className="text-xs text-zinc-400">
-          {studies.length === 1 ? "study" : "studies"}
+          {studies.length === 1 ? "case" : "cases"}
           {briefTotal > 0 ? ` · ${briefTotal} briefs coded` : ""}
         </span>
       </div>

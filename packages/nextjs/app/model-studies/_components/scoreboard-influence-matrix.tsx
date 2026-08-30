@@ -10,7 +10,7 @@ export function InfluenceMatrixPlaceholder({ deepDiveHref }: { deepDiveHref?: st
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center">
       <p className="text-sm font-medium text-zinc-700">
-        This study updates continuously against live study batches.
+        This case updates continuously against live batches.
       </p>
       <p className="mt-1 text-sm text-zinc-500">
         A committed scoreboard snapshot isn&apos;t published yet — the current rollup is in the

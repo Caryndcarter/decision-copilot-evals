@@ -1,7 +1,19 @@
 const GLOSSARY: { term: string; def: string }[] = [
   {
+    term: "Study",
+    def: "The research question — e.g. Voice Influence or Authorship. The largest unit on this site.",
+  },
+  {
+    term: "Case",
+    def: "A named scenario under a study — e.g. Meridian IC or Hormuz — run and reported together.",
+  },
+  {
+    term: "Condition",
+    def: "One deliberate variant inside a case: a filer tone (confident, urgent), or an authorship setting (Blind, Revealed, Reassigned).",
+  },
+  {
     term: "Filer",
-    def: "The person the case file is written as — someone who has already leaned toward one option before asking for advice.",
+    def: "The person the intake is written as — someone who has already leaned toward one option before asking for advice.",
   },
   {
     term: "Intake",
@@ -21,19 +33,7 @@ const GLOSSARY: { term: string; def: string }[] = [
   },
   {
     term: "Harness",
-    def: "The automated pipeline that runs a case through every model and collects the results — the machinery behind a study.",
-  },
-  {
-    term: "Case file",
-    def: "One specific scenario used as a test. A study is usually built from several of these.",
-  },
-  {
-    term: "Test type",
-    def: "The broad question being investigated — e.g. does filer voice change model behavior? The category a study belongs to.",
-  },
-  {
-    term: "Study",
-    def: "One specific test of a test type's question — a defined set of case files, run and reported together.",
+    def: "The automated pipeline that runs a case through every model and collects the results — the machinery behind the research.",
   },
   {
     term: "Judge model",

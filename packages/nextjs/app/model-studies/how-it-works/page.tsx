@@ -7,26 +7,27 @@ import { getLiveTestTypes, getStudiesForType } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "How it works — Model Studies",
-  description: "The shared method behind every test type: blind coding against a fixed rubric.",
+  description: "The shared method behind every study: blind coding against a fixed rubric.",
 };
 
-const STUDY_TYPES = [
+const STUDIES = [
   {
     id: "voice-influence",
     title: "Voice influence",
-    question: "Does the model push back — or go along with the filer?",
+    question: "Does the way the user frames the story change how the model treats the same facts?",
     desc: "A filer who has already leaned toward a decision asks for advice. We measure sycophancy: telling them what they already believe instead of what they need to hear.",
   },
   {
     id: "authorship-influence",
     title: "Authorship influence",
-    question: "Does the synthesizer favor a brand — or the better argument?",
-    desc: "Same analyses, different brand visibility. We test whether knowing who wrote what changes what gets kept in the Unified Brief.",
+    question:
+      "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is revealed or swapped?",
+    desc: "Same analyses, different brand visibility. We measure whether knowing who wrote what changes what gets kept in the Unified Brief.",
   },
   {
     id: "replication",
     title: "Replication",
-    question: "Does the same synthesizer give the same answer twice?",
+    question: "Does a model's recommendations remain constant when you run the same scenario over and over?",
     desc: "Repeat the full path across trials to separate durable behavior from one-shot noise.",
   },
 ] as const;
@@ -57,9 +58,9 @@ export default function HowItWorksPage() {
             One method, run on a different scenario each time
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-300">
-            Every study on this site follows the same shape. What changes is the scenario, the
-            cases, and the rubric dimensions specific to it — not the process that produces the
-            numbers.
+            Every case on this site follows the same shape. What changes is the scenario, the
+            conditions, and the rubric dimensions specific to it — not the process that produces
+            the numbers.
           </p>
         </div>
       </section>
@@ -77,7 +78,7 @@ export default function HowItWorksPage() {
             {[
               {
                 title: "Adversarial intakes",
-                desc: "Cases written by a filer who has already leaned toward a decision — built to read like a real high-stakes call, not a chat turn.",
+                desc: "Intakes written by a filer who has already leaned toward a decision — built to read like a real high-stakes call, not a chat turn.",
               },
               {
                 title: "Same rubric every time",
@@ -100,16 +101,16 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Study families */}
+      {/* Studies */}
       <section className="border-b border-zinc-100 bg-zinc-50 py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-              What each study family tests
+              What each study asks
             </h2>
           </div>
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {STUDY_TYPES.map((s) => (
+            {STUDIES.map((s) => (
               <div
                 id={s.id}
                 key={s.id}
@@ -139,26 +140,27 @@ export default function HowItWorksPage() {
       <section className="bg-white py-12 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6 space-y-6">
           <p className="text-sm leading-relaxed text-zinc-600">
-            The site is organized in four layers, nested inside each other: a{" "}
-            <strong className="font-semibold text-zinc-900">test type</strong> is the question
-            being asked (does filer voice change model behavior?); a{" "}
-            <strong className="font-semibold text-zinc-900">study</strong> is one specific test of
-            that question, built from several{" "}
-            <strong className="font-semibold text-zinc-900">case files</strong>; each case file runs
-            through every model, and every resulting brief is scored by a{" "}
+            The site is organized in three layers: a{" "}
+            <strong className="font-semibold text-zinc-900">study</strong> is the research
+            question (does filer voice change model behavior?); a{" "}
+            <strong className="font-semibold text-zinc-900">case</strong> is a named scenario under
+            that study (e.g. Meridian IC), built from several{" "}
+            <strong className="font-semibold text-zinc-900">conditions</strong> (confident tone,
+            Blind authorship, and so on). Each condition runs through every model, and every
+            resulting brief is scored by a{" "}
             <strong className="font-semibold text-zinc-900">judge model</strong> that never sees
             which provider wrote it.
           </p>
           <p className="text-sm leading-relaxed text-zinc-600">
             Two kinds of brief show up throughout this site.{" "}
             <strong className="font-semibold text-zinc-900">Decision Brief</strong> is one model&apos;s
-            own response to a case — its analysis and recommendation, on its own.{" "}
+            own response to an intake — its analysis and recommendation, on its own.{" "}
             <strong className="font-semibold text-zinc-900">Unified Brief</strong> is different:
             it&apos;s what you get when a{" "}
             <strong className="font-semibold text-zinc-900">synthesizer</strong> model merges several
-            models&apos; Decision Briefs into one combined recommendation. Voice Influence studies
-            score Decision Briefs directly; Authorship and Replication studies score Unified Briefs,
-            since what they&apos;re testing is what happens during that merge.
+            models&apos; Decision Briefs into one combined recommendation. Voice Influence cases
+            score Decision Briefs directly; Authorship and Replication cases score Unified Briefs,
+            since what they measure is what happens during that merge.
           </p>
           <Glossary />
         </div>
@@ -170,20 +172,20 @@ export default function HowItWorksPage() {
           <ol className="mt-6 space-y-6">
             {[
               {
-                title: "Write a case with a filer who's already decided",
-                desc: "Each case is an intake authored by a filer who has already leaned toward one option. The tone and framing vary — confident, urgent, optimistic, honest-aggressive — but for a given case, the underlying facts are held constant across every model.",
+                title: "Write a condition with a filer who's already decided",
+                desc: "Each condition is an intake authored by a filer who has already leaned toward one option. Tone and framing vary — confident, urgent, optimistic, honest-aggressive — but for a given condition, the underlying facts are held constant across every model.",
               },
               {
-                title: "Run the same case through every model",
+                title: "Run the same intake through every model",
                 desc: "The same four models — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each independently produce their own Decision Brief on the same intake, without seeing what the others wrote.",
               },
               {
                 title: "Blind-code every brief against a fixed rubric",
-                desc: "A separate judge model scores each brief against a rubric written specifically for that study, kept blind to which provider wrote the brief it's coding — only the brief itself. Which model judges varies by study (see the notes for each one below), and one study (multi-demo authorship) has no separate judge at all — see its notes for why.",
+                desc: "A separate judge model scores each brief against a rubric written specifically for that case, kept blind to which provider wrote the brief it's coding — only the brief itself. Which model judges varies by case (see the notes for each one below), and one case (multi-demo authorship) has no separate judge at all — see its notes for why.",
               },
               {
                 title: "Aggregate, and let the split speak",
-                desc: "Counts are aggregated by provider and by case. The interesting result usually isn't a single number — it's where providers split from each other on the same facts.",
+                desc: "Counts are aggregated by provider and by condition. The interesting result usually isn't a single number — it's where providers split from each other on the same facts.",
               },
             ].map((step, i) => (
               <li key={step.title} className="flex gap-4">
@@ -202,10 +204,10 @@ export default function HowItWorksPage() {
 
       <section className="bg-zinc-50 py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">By test type</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">By study</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Each type&apos;s rubric is scenario-specific — here&apos;s what&apos;s particular to every
-            study inside it.
+            Each study&apos;s rubric is scenario-specific — here&apos;s what&apos;s particular to
+            every case inside it.
           </p>
           <div className="mt-8 space-y-10">
             {testTypes.map((type) => (
@@ -230,10 +232,14 @@ export default function HowItWorksPage() {
                         </div>
                       )}
                       <Link
-                        href={`/model-studies/results/${study.id}`}
+                        href={
+                          study.kind === "influence-matrix"
+                            ? `/model-studies/results#${type.id}`
+                            : `/model-studies/results/${study.id}`
+                        }
                         className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                       >
-                        See {study.name} results →
+                        See {study.name} on Results →
                       </Link>
                     </div>
                   ))}
@@ -255,8 +261,8 @@ export default function HowItWorksPage() {
               Decision Copilot
             </Link>{" "}
             runs every decision through Risk, Reversibility, and Stakeholders — not a menu of chat
-            styles. A fixed rubric is what makes these studies possible. Each study&apos;s own
-            codes are that same skeleton under a specific pressure test: catch the ignored risk,
+            styles. A fixed rubric is what makes these studies possible. Each case&apos;s own
+            codes are that same skeleton under specific decision pressure: catch the ignored risk,
             keep the door open before committing, say who bears the downside.
           </p>
           <ul className="mx-auto mt-8 max-w-md space-y-3 text-left text-sm text-zinc-600">
