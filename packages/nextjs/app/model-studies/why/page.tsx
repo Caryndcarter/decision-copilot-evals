@@ -78,10 +78,13 @@ export default function WhyPage() {
             combined into one answer. A synthesizer that can see which provider wrote which
             analysis is positioned to develop its own version of that bias: favoring a familiar
             brand&apos;s phrasing, or its own outputs, independent of whether the reasoning
-            underneath is actually stronger. Groupthink and conformity research (Asch&apos;s
-            conformity experiments; Janis&apos;s work on groupthink) shows the same pattern in
-            humans — once identity or authorship is visible, judgment starts tracking the source
-            instead of the argument.
+            underneath is actually stronger. Groupthink and conformity research shows the same
+            pattern in humans: Solomon Asch&apos;s 1950s experiments found people would give an
+            answer they knew was wrong just to match what the group around them said; Irving
+            Janis&apos;s work on groupthink documented how a visible, cohesive group suppresses
+            dissent and critical judgment in favor of consensus. Once identity or authorship is
+            visible, the same thing happens here — judgment starts tracking the source instead of
+            the argument.
           </p>
           <p>
             So Decision Copilot&apos;s synthesizer is blind by default: it never sees which model
