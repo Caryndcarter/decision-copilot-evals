@@ -116,6 +116,18 @@ export default function Home() {
             choice matters, when apparent consensus is trustworthy, and how decision systems should be
             designed to preserve independent judgment.
           </p>
+          <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-zinc-800">
+            {[
+              "Reveal when framing changes judgment",
+              "Distinguish real consensus from conformity",
+              "Inform safer model selection and synthesis",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2.5">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
           <div className="mt-10">
             <Link
               href="/model-studies/why"
