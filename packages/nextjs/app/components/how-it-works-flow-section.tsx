@@ -35,10 +35,14 @@ export function HowItWorksFlowSection({
   introLinkHref = "/how-it-works#unified-brief",
   unifiedBriefCtaHref = "/how-it-works#unified-brief",
   showFullWalkthroughLink = false,
+  showUnifiedBriefCta = true,
+  linkIntroUnifiedBrief = true,
 }: {
   introLinkHref?: string;
   unifiedBriefCtaHref?: string;
   showFullWalkthroughLink?: boolean;
+  showUnifiedBriefCta?: boolean;
+  linkIntroUnifiedBrief?: boolean;
 }) {
   return (
     <>
@@ -46,12 +50,16 @@ export function HowItWorksFlowSection({
         <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">How it works</h2>
         <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
           {HOW_IT_WORKS_INTRO.beforeLink}
-          <Link
-            href={introLinkHref}
-            className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            {HOW_IT_WORKS_INTRO.linkLabel}
-          </Link>
+          {linkIntroUnifiedBrief ? (
+            <Link
+              href={introLinkHref}
+              className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              {HOW_IT_WORKS_INTRO.linkLabel}
+            </Link>
+          ) : (
+            <span className="font-semibold text-zinc-700">{HOW_IT_WORKS_INTRO.linkLabel}</span>
+          )}
           {HOW_IT_WORKS_INTRO.afterLink}
         </p>
         {showFullWalkthroughLink ? (
@@ -71,7 +79,7 @@ export function HowItWorksFlowSection({
             title={step.title}
             desc={step.desc}
             footer={
-              step.n === "4" ? (
+              step.n === "4" && showUnifiedBriefCta ? (
                 <Link
                   href={unifiedBriefCtaHref}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"

@@ -166,6 +166,58 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      <section id="unified-brief-research" className="scroll-mt-24 bg-zinc-50 py-16 border-b border-zinc-100">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+            Unified Brief research instruments
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+            Some studies go beyond blind rubric coding and use optional product artifacts built for
+            authorship and ethics research on Unified Briefs.
+          </p>
+          <div className="mt-8 space-y-4">
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <h3 className="text-sm font-semibold text-zinc-900">
+                Influence charts — how each author weighted the room
+              </h3>
+              <div className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-600">
+                <p>
+                  When multiple synthesizers each produce a Unified Brief, every author can rate how
+                  much each think-tank member influenced <em>their</em> merge. Influence charts show
+                  rater × rated heatmaps and averages — including side-by-side comparisons across
+                  Blind, Revealed, and Reassigned authorship.
+                </p>
+                <p>
+                  This is the layer{" "}
+                  <Link
+                    href="/model-studies/how-it-works#authorship-influence"
+                    className="font-semibold text-indigo-600 hover:text-indigo-800"
+                  >
+                    Authorship influence
+                  </Link>{" "}
+                  measures: does credit track the idea or the logo?
+                </p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <h3 className="text-sm font-semibold text-zinc-900">Ethics audit (moral audit)</h3>
+              <div className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-600">
+                <p>
+                  A blind <strong className="font-medium text-zinc-800">moral audit</strong> scores a
+                  Unified Brief on eight domain-agnostic dimensions — tradeoff honesty, whose downside
+                  is protected, and similar — using a separate reviewer that never sees which model
+                  wrote the brief.
+                </p>
+                <p>
+                  Replication cases such as Civitas use this layer alongside rubric coding to ask
+                  whether models protect the right downside under pressure.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-white py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">The shared process</h2>

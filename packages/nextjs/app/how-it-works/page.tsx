@@ -8,7 +8,7 @@ import { SessionNav } from "@/app/components/session-nav";
 export const metadata: Metadata = {
   title: "How it works — Decision Copilot",
   description:
-    "From intake through think tank to Unified Brief — what you get, how synthesis works, contributions, influence charts, and PDF export.",
+    "From intake through think tank to Unified Brief — what you get, how synthesis works, contributions, and PDF export.",
 };
 
 function SectionHeading({
@@ -54,13 +54,23 @@ export default function HowItWorksPage() {
         </div>
       </nav>
 
-      <section className="border-b border-zinc-100 bg-zinc-950 py-16 lg:py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
+      <section className="relative overflow-hidden border-b border-zinc-100 bg-zinc-950 py-16 lg:py-24">
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#818cf8 1px, transparent 1px), linear-gradient(90deg, #818cf8 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl px-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-400">Product</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white leading-tight sm:text-4xl lg:text-5xl">
             How Decision Copilot works
           </h1>
-          <p className="mt-5 text-base leading-relaxed text-zinc-300">
+          <p className="mt-5 text-lg leading-relaxed text-zinc-300">
             You bring the decision. Independent models pressure-test the same facts. You get
             structured briefs — and, when you run a think tank, one merged{" "}
             <strong className="font-semibold text-white">Unified Brief</strong> you can discuss,
@@ -71,7 +81,7 @@ export default function HowItWorksPage() {
 
       <section id="flow" className="scroll-mt-24 border-b border-zinc-100 bg-white py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <HowItWorksFlowSection introLinkHref="#unified-brief" unifiedBriefCtaHref="#unified-brief" />
+          <HowItWorksFlowSection showUnifiedBriefCta={false} linkIntroUnifiedBrief={false} />
         </div>
       </section>
 
@@ -80,15 +90,21 @@ export default function HowItWorksPage() {
           <SectionHeading
             eyebrow="Unified Brief"
             title="What's in a Unified Brief"
-            dek="One synthesizer merges every model's Decision Brief, your research, and saved variants into one Unified Brief — written blind by default so ideas beat brand names."
+            dek="One merged brief from your think tank — written blind by default so ideas beat brand names."
           />
 
           <div className="mt-8 space-y-4">
             <SubBlock title="What's inside">
               <p>
-                A Unified Brief is still a structured decision artifact — not a chat transcript. It
-                typically includes:
+                A <strong className="font-medium text-zinc-800">Unified Brief</strong> is one
+                structured decision write-up — not a chat transcript. When you run a think tank,
+                each model first produces its own{" "}
+                <strong className="font-medium text-zinc-800">Decision Brief</strong> on your
+                decision. One model you choose — the{" "}
+                <strong className="font-medium text-zinc-800">synthesizer</strong> — merges all of
+                that into a single Unified Brief.
               </p>
+              <p>That merged brief typically includes:</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>
                   <strong className="font-medium text-zinc-800">Situation & summary</strong> — the
@@ -103,8 +119,9 @@ export default function HowItWorksPage() {
                       Risk, Reversibility, Stakeholders
                     </Link>
                   </strong>{" "}
-                  — the same three lenses every Decision Brief uses, so you can compare models apples
-                  to apples
+                  — what could go wrong, how hard it is to undo, and who has to live with the
+                  outcome; so you don&apos;t get a good-on-paper answer that skips downside,
+                  lock-in, or the people involved
                 </li>
                 <li>
                   <strong className="font-medium text-zinc-800">Recommendation</strong> — one clear
@@ -115,9 +132,9 @@ export default function HowItWorksPage() {
                   — tradeoffs to keep visible and actions you can take this week
                 </li>
                 <li>
-                  <strong className="font-medium text-zinc-800">Research & variants</strong> — live web
-                  research and any saved scenario variants you asked for are folded into the synthesis
-                  prompt, not bolted on afterward
+                  <strong className="font-medium text-zinc-800">Research & variants</strong> — live
+                  web lookups for current facts, plus alternate scenarios or what-if branches you
+                  saved along the way; folded into the merge, not bolted on afterward
                 </li>
               </ul>
             </SubBlock>
@@ -165,48 +182,25 @@ export default function HowItWorksPage() {
               </p>
             </SubBlock>
 
-            <SubBlock title="How one is made">
-              <ol className="list-decimal space-y-2 pl-5">
-                <li>
-                  Each think-tank member finishes its own Decision Brief on the same intake (after
-                  clarifications).
-                </li>
-                <li>
-                  You pick a <strong className="font-medium text-zinc-800">synthesizer</strong> — any
-                  configured model can merge (OpenAI, Anthropic, Gemini, or xAI).
-                </li>
-                <li>
-                  The synthesizer receives every lane&apos;s structured output, research notes, and
-                  variants, then writes one JSON brief. By default it runs in{" "}
-                  <strong className="font-medium text-zinc-800">Blind</strong> authorship: provider
-                  names are hidden during the merge so credit follows ideas, not logos.
-                </li>
-                <li>
-                  An optional <strong className="font-medium text-zinc-800">fact-check pass</strong>{" "}
-                  can run afterward — a separate judge with web search flags public factual errors and
-                  rewrites the draft without changing the recommendation.
-                </li>
-              </ol>
-              <p className="pt-1">
-                You can regenerate under <strong className="font-medium text-zinc-800">Revealed</strong>{" "}
-                (real brand names visible) or <strong className="font-medium text-zinc-800">Reassigned</strong>{" "}
-                (brands swapped) to study authorship effects — Blind stays the product default.
+            <SubBlock title="Fact-check pass (optional)">
+              <p>
+                After the synthesizer writes the Unified Brief, an optional{" "}
+                <strong className="font-medium text-zinc-800">fact-check pass</strong> can run — a
+                separate judge with web search flags public factual errors and rewrites the draft
+                without changing the recommendation.
               </p>
             </SubBlock>
 
             <SubBlock title="Download as PDF">
               <p>
-                On the Unified Brief page, use <strong className="font-medium text-zinc-800">PDF</strong>{" "}
-                to print or save. The export includes the brief itself plus optional appendices:
-                contribution attribution (who influenced the merge) and influence heatmaps when
-                you&apos;ve generated them. Browser print → &quot;Save as PDF&quot; works the same way
-                as on individual Decision Briefs.
+                Use <strong className="font-medium text-zinc-800">PDF</strong> on the Unified Brief
+                page to save or print — contributions appendix optional.
               </p>
             </SubBlock>
 
             <SubBlock title="Contributions — whose ideas made the cut">
               <p>
-                After synthesis, the Unified Brief&apos;s author runs a{" "}
+                After the merge, the synthesizer runs a{" "}
                 <strong className="font-medium text-zinc-800">contributions analysis</strong>: for
                 every think-tank member it states what was adopted, what was distinct, what was left
                 out, and an influence rating (high / medium / low / minimal).
@@ -214,31 +208,6 @@ export default function HowItWorksPage() {
               <p>
                 That&apos;s attribution <em>after</em> the blind merge — transparency without letting
                 brand bias into the recommendation itself. The PDF appendix can include this breakdown.
-              </p>
-            </SubBlock>
-
-            <SubBlock title="Influence charts — how each author weighted the room">
-              <p>
-                When multiple synthesizers each produce a Unified Brief, every author can also rate
-                how much each think-tank member influenced <em>their</em> merge. Influence charts
-                show rater × rated heatmaps and averages — including side-by-side comparisons across
-                Blind, Revealed, and Reassigned authorship.
-              </p>
-              <p>
-                This is the layer our{" "}
-                <Link href="/model-studies" className="font-semibold text-indigo-600 hover:text-indigo-800">
-                  Model Studies
-                </Link>{" "}
-                authorship research measures: does credit track the idea or the logo?
-              </p>
-            </SubBlock>
-
-            <SubBlock title="Ethics audit (optional)">
-              <p>
-                You can also run a blind <strong className="font-medium text-zinc-800">moral audit</strong>{" "}
-                on a Unified Brief — eight domain-agnostic dimensions (tradeoff honesty, whose
-                downside is protected, and similar) scored by a separate reviewer that never sees
-                which model wrote the brief.
               </p>
             </SubBlock>
           </div>
