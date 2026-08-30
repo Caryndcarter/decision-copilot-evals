@@ -457,6 +457,12 @@ export default function Home() {
                 color: "text-emerald-500 bg-emerald-50",
               },
               {
+                icon: <IconCompare />,
+                title: "Push back after the brief",
+                desc: "Chat with any model about the analysis — edit sections in place, ask why a peer's idea was downplayed, request new views, or regenerate the Unified Brief when you want a fresh merge.",
+                color: "text-sky-500 bg-sky-50",
+              },
+              {
                 icon: <IconAttribution />,
                 title: "Attribution, after the fact",
                 desc: "You can still see whose thinking made the cut. Transparency without letting brand bias into the call itself.",

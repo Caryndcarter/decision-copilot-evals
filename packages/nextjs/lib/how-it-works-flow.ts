@@ -32,7 +32,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
     n: "4",
     title: "Get a brief you can use",
-    desc: "Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. When you've run multiple models, you can also merge them into one Unified Brief and see which ideas from your think tank made the cut.",
+    desc: "Each run produces a structured decision brief — risks, tradeoffs, stakeholder impacts, recommendation, next steps. Read it, edit it in place, and discuss it with the models. When you've run a think tank, merge into one Unified Brief — then challenge the synthesis or regenerate when you want the merge to change.",
   },
 ];
 

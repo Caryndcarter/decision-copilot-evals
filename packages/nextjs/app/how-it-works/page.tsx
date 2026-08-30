@@ -90,6 +90,9 @@ export default function HowItWorksPage() {
           <Link href="#unified-brief" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
             Unified Brief
           </Link>
+          <Link href="#discuss" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
+            Discuss & edit
+          </Link>
         </div>
       </nav>
 
@@ -197,6 +200,30 @@ export default function HowItWorksPage() {
                 <strong className="font-medium text-zinc-800">freeform</strong> lets the model choose
                 its own structure instead. In a think tank, every model works from the same intake and
                 posture before their outputs merge into one Unified Brief.
+              </p>
+            </SubBlock>
+
+            <SubBlock id="discuss" title="Discuss, don't just download">
+              <p>
+                A brief isn&apos;t the end of the conversation. Every{" "}
+                <strong className="font-medium text-zinc-800">Decision Brief</strong> opens with a{" "}
+                <strong className="font-medium text-zinc-800">Discuss &amp; clarify</strong> panel —
+                chat with that model about the analysis, compare sibling runs, or ask for deeper
+                research.
+              </p>
+              <p>
+                Edit recommendation, next steps, and other sections{" "}
+                <strong className="font-medium text-zinc-800">directly in the brief</strong> — or ask
+                in chat for a new section or view (timeline, cost breakdown, comparison table) and
+                save it as a variant.
+              </p>
+              <p>
+                On the <strong className="font-medium text-zinc-800">Unified Brief</strong>, use{" "}
+                <strong className="font-medium text-zinc-800">Discuss</strong> to talk with the
+                synthesizer that wrote the merge — or any other model reviewing it — including
+                questions like why another model&apos;s idea wasn&apos;t taken seriously.{" "}
+                <strong className="font-medium text-zinc-800">Regenerate</strong> when you want the
+                written merge to change; contributions show what made the cut either way.
               </p>
             </SubBlock>
 
