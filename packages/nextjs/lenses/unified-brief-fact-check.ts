@@ -131,35 +131,46 @@ function blindedBriefText(draft: DecisionBrief): string {
   return stripProviderBrandsFromText(formatBriefForAudit(draft));
 }
 
-/**
- * Fact-check a synthesized Unified Brief draft.
- * Throws if the judge is unconfigured or returns nothing parseable.
- */
-export async function runUnifiedBriefFactCheck(
-  draft: DecisionBrief,
-  intake: DecisionIntake,
-  synthesizer?: LLMProviderName
-): Promise<{ brief: DecisionBrief; factCheck: UnifiedBriefFactCheck }> {
-  const judge = resolveFactCheckJudgeProvider(synthesizer);
-  const model = factCheckJudgeModel(judge);
-  const briefText = blindedBriefText(draft);
-  if (!briefText) {
-    throw new Error("Unified Brief has no content to fact-check.");
-  }
+function isJudgeAuthError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const o = err as { code?: unknown; message?: unknown };
+  const code = typeof o.code === "string" ? o.code : "";
+  const message = typeof o.message === "string" ? o.message : "";
+  return (
+    code === "MISSING_API_KEY" ||
+    code === "HTTP_401" ||
+    code === "HTTP_403" ||
+    /incorrect api key|api key.*not set|unauthorized/i.test(message)
+  );
+}
 
-  const messages = buildJudgeMessages(intake, briefText);
+function alternateJudge(provider: LLMProvider): LLMProvider {
+  return provider === "gemini" ? "openai" : "gemini";
+}
+
+async function runJudgeCall(
+  judge: LLMProvider,
+  messages: LLMMessage[]
+): Promise<{ parsed: unknown; model?: string }> {
+  const model = factCheckJudgeModel(judge);
   const requestOpts = {
     enableWebSearch: true as const,
     temperature: 0,
-    maxTokens: 8192,
+    maxTokens: 16384,
     effort: "low" as const,
     ...(model ? { model } : {}),
   };
-
   const client = getClient(judge);
   let response = await client.run(messages, requestOpts);
   let parsed = parseJsonObjectFromModelText(response.content);
   if (!parsed) {
+    console.warn("[unified-brief-fact-check] first reply not JSON", {
+      judge,
+      model: response.meta?.model || model,
+      finishReason: response.meta?.finishReason,
+      contentLen: response.content?.length ?? 0,
+      preview: (response.content ?? "").slice(0, 400),
+    });
     response = await client.run(
       [
         ...messages,
@@ -174,7 +185,49 @@ export async function runUnifiedBriefFactCheck(
     parsed = parseJsonObjectFromModelText(response.content);
   }
   if (!parsed) {
-    throw new Error("Fact-check judge returned no parseable JSON.");
+    const preview = (response.content ?? "").slice(0, 240);
+    throw new Error(
+      `Fact-check judge returned no parseable JSON (${judge}, ${response.content?.length ?? 0} chars): ${preview}`
+    );
+  }
+  return { parsed, model: response.meta?.model || model };
+}
+
+/**
+ * Fact-check a synthesized Unified Brief draft.
+ * Throws if the judge is unconfigured or returns nothing parseable.
+ */
+export async function runUnifiedBriefFactCheck(
+  draft: DecisionBrief,
+  intake: DecisionIntake,
+  synthesizer?: LLMProviderName
+): Promise<{ brief: DecisionBrief; factCheck: UnifiedBriefFactCheck }> {
+  const briefText = blindedBriefText(draft);
+  if (!briefText) {
+    throw new Error("Unified Brief has no content to fact-check.");
+  }
+
+  const messages = buildJudgeMessages(intake, briefText);
+  let judge = resolveFactCheckJudgeProvider(synthesizer);
+  let parsed: unknown;
+  let usedModel: string | undefined;
+  try {
+    const result = await runJudgeCall(judge, messages);
+    parsed = result.parsed;
+    usedModel = result.model;
+  } catch (err) {
+    const fallback = alternateJudge(judge);
+    if (isJudgeAuthError(err) && providerConfigured(fallback)) {
+      console.warn(
+        `[unified-brief-fact-check] ${judge} failed auth; retrying with ${fallback}`
+      );
+      judge = fallback;
+      const result = await runJudgeCall(judge, messages);
+      parsed = result.parsed;
+      usedModel = result.model;
+    } else {
+      throw err;
+    }
   }
 
   const payload = parseFactCheckJudgePayload(parsed, draft.generated_at);
@@ -186,7 +239,7 @@ export async function runUnifiedBriefFactCheck(
   const factCheck: UnifiedBriefFactCheck = {
     generated_at: new Date().toISOString(),
     judge_provider: judge,
-    ...(response.meta?.model ? { judge_model: response.meta.model } : model ? { judge_model: model } : {}),
+    ...(usedModel ? { judge_model: usedModel } : {}),
     summary: payload.summary,
     corrections: payload.corrections,
     draft_brief: draft,
