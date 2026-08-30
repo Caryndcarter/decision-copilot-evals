@@ -8,8 +8,8 @@ import { SessionNav } from "@/app/components/session-nav";
 const NAV_ITEMS = [
   { href: "/model-studies", label: "Overview" },
   { href: "/model-studies/results", label: "Results" },
-  { href: "/model-studies/how-it-works", label: "How it works" },
   { href: "/model-studies/why", label: "Why it matters" },
+  { href: "/model-studies/how-it-works", label: "How it works" },
 ];
 
 function isActive(pathname: string, href: string) {
