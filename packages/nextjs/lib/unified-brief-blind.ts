@@ -267,6 +267,32 @@ export function resolveBlindProvider(
  * Best-effort: replace prompt aliases / scrambled brand names in free text with real provider names.
  * Uses placeholders so swapped brand names (reassigned mode) do not double-replace.
  */
+/**
+ * Brand spellings to hide from a fact-check judge so it cannot see who synthesized
+ * the brief. Omits bare "Google" — that would mangle unrelated company names.
+ */
+export function providerBrandStripVariants(): string[] {
+  const variants = new Set<string>();
+  for (const key of PROVIDER_ALIAS_ORDER) {
+    for (const v of labelVariantsForKey(key)) {
+      if (v.toLowerCase() === "google") continue;
+      variants.add(v);
+    }
+  }
+  return [...variants].sort((a, b) => b.length - a.length);
+}
+
+/** Replace think-tank / synthesizer brand names with a generic phrase. */
+export function stripProviderBrandsFromText(text: string): string {
+  if (!text) return text;
+  let out = text;
+  for (const variant of providerBrandStripVariants()) {
+    const re = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
+    out = out.replace(re, "an analysis");
+  }
+  return out.replace(/\ban analysis(?:'s)?(?:\s+an analysis)+\b/gi, "an analysis");
+}
+
 export function decodeAliasesInText(text: string, map: ProviderAliasMap): string {
   if (!text) return text;
 
