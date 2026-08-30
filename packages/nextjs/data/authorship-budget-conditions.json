@@ -3,13 +3,61 @@
   "title": "Authorship influence · budget conditions",
   "scenario_label": "Civitas (constrained tokens)",
   "control_label": "adequate budget (Sol)",
-  "rater": "openai",
-  "rater_label": "ChatGPT",
+  "rated": "openai",
+  "rated_label": "ChatGPT",
   "influence_scale": { "high": 4, "medium": 3, "low": 2, "minimal": 1 },
   "takeaway": {
-    "test": "ChatGPT scored who influenced its Unified Brief under Blind (brands hidden; the product default), Revealed (real brands), and Reassigned (brands swapped). Same authorship design, two contribution-analysis budgets: Civitas at 4,096 tokens per analysis, versus a five-demo adequate-budget control at 8,192 tokens when ChatGPT is the synthesizer and 16,384 for the others.",
-    "results": "On constrained Civitas, Blind vs Revealed self-credit barely moved — only Trial 5 changed (Blind medium → Revealed high). Reassigned was the volatile condition: self-credit changed on four of five trials, including a collapse to minimal on Trial 1. On the adequate-budget control, self-credit stayed high in all three modes on every demo, including Civitas.",
-    "meaning": "A tight token budget does not, by itself, make ChatGPT less self-crediting when brands are merely hidden. It does make self-credit unstable when brands are remapped. With an adequate budget, authorship condition barely moves the self-credit cell. Constrained Revealed also compressed peers (Gemini often low or minimal); that compression is weaker once the budget is adequate."
+    "test": "Same Civitas scenario, two contribution-analysis budgets. Constrained: 4,096 tokens on every analysis (gpt-5.5 era). Adequate: Sol on 8,192 tokens when ChatGPT synthesizes and 16,384 for the others. After each Unified Brief, every synthesizer rates how much each think-tank member influenced the result — including itself.",
+    "results": "Under constraint, ChatGPT’s own work was genuinely thin (4,096-token contribution analyses), and the other models said so — peers rated ChatGPT ~1.9 on average while ChatGPT rated itself ~4.0. After the Sol upgrade and more tokens, quality improved and the room agreed: self ~4.0, peers ~3.9, gap nearly closed.",
+    "meaning": "The interesting finding is not whether Blind vs Revealed moved self-credit a notch. It is unjustified self-inflation under constraint: ChatGPT kept assigning itself top credit while peers — who could see the weak attribution — rated it near the bottom. Adequate budget fixed the work and restored consensus; it did not teach ChatGPT humility."
+  },
+  "aggregate": {
+    "constrained": {
+      "source": "docs/harness-snapshots/civitas-2026-07-27/civitas-harness-influence-map.html (5-trial means)",
+      "modes": {
+        "open": {
+          "mean_self": 4.0,
+          "mean_peers_to_openai": 1.87,
+          "self_minus_peers": 2.13,
+          "peers_to_openai": { "anthropic": "low", "gemini": "low", "xai": "low" }
+        },
+        "blind": {
+          "mean_self": 3.8,
+          "mean_peers_to_openai": 1.93,
+          "self_minus_peers": 1.87,
+          "peers_to_openai": { "anthropic": "low", "gemini": "low", "xai": "low" }
+        },
+        "reassigned": {
+          "mean_self": 2.8,
+          "mean_peers_to_openai": 2.07,
+          "self_minus_peers": 0.73,
+          "peers_to_openai": { "anthropic": "low", "gemini": "low", "xai": "low" }
+        }
+      }
+    },
+    "control": {
+      "source": "multi-demo authorship batch bc243273… (5 demos, Sol-era defaults)",
+      "modes": {
+        "open": {
+          "mean_self": 4.0,
+          "mean_peers_to_openai": 3.93,
+          "self_minus_peers": 0.07,
+          "peers_to_openai": { "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        },
+        "blind": {
+          "mean_self": 4.0,
+          "mean_peers_to_openai": 3.93,
+          "self_minus_peers": 0.07,
+          "peers_to_openai": { "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        },
+        "reassigned": {
+          "mean_self": 4.0,
+          "mean_peers_to_openai": 3.85,
+          "self_minus_peers": 0.15,
+          "peers_to_openai": { "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        }
+      }
+    }
   },
   "constrained": {
     "batch_id": "db9445cf-ef02-5740-b69f-d34a1194e04a",
@@ -22,7 +70,7 @@
       "subhead": "every contribution analysis",
       "openai_synthesizer": 4096,
       "other_synthesizers": 4096,
-      "note": "Then-current client/lens default. One number for every synthesizer on this batch."
+      "note": "Then-current lens default on 2026-07-27 (flat 4,096 for every synthesizer). gpt-5.5 had too little headroom; outputs were often thin or truncated."
     },
     "think_tank_models": {
       "openai": "gpt-5.5",
@@ -36,52 +84,66 @@
       "gemini": "Gemini",
       "xai": "Grok"
     },
-    "self_open_high": 5,
-    "self_blind_high": 4,
-    "self_reassigned_high": 2,
-    "self_blind_vs_revealed": 1,
-    "self_blind_vs_reassigned": 4,
-    "self_drop_count": 1,
     "trials": [
       {
         "trial": 1,
         "decision_id": "a8d55d23-63d9-48d9-b702-d8c4a46d829b",
         "case_label": "T1",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
-        "reassigned": { "openai": "minimal", "anthropic": "low", "gemini": "high", "xai": "medium" }
+        "self": { "open": "high", "blind": "high", "reassigned": "minimal" },
+        "peers_to_openai": {
+          "open": { "anthropic": "low", "gemini": "low", "xai": "minimal" },
+          "blind": { "anthropic": "low", "gemini": "low", "xai": "minimal" },
+          "reassigned": { "anthropic": "low", "gemini": "high", "xai": "medium" }
+        },
+        "peer_mean_received": { "open": 2.5, "blind": 2.4, "reassigned": 2.3 }
       },
       {
         "trial": 2,
         "decision_id": "7a962ed3-2763-4248-aa64-db6396337b05",
         "case_label": "T2",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "minimal" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "minimal" },
-        "reassigned": { "openai": "medium", "anthropic": "medium", "gemini": "high", "xai": "medium" }
+        "self": { "open": "high", "blind": "high", "reassigned": "medium" },
+        "peers_to_openai": {
+          "open": { "anthropic": "low", "gemini": "medium", "xai": "minimal" },
+          "blind": { "anthropic": "low", "gemini": "low", "xai": "minimal" },
+          "reassigned": { "anthropic": "medium", "gemini": "high", "xai": "medium" }
+        },
+        "peer_mean_received": { "open": 2.25, "blind": 2.2, "reassigned": 2.5 }
       },
       {
         "trial": 3,
         "decision_id": "f6969a6f-be43-4d1c-9184-a33ea1bdc7dc",
         "case_label": "T3",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "low" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "medium" },
-        "reassigned": { "openai": "low", "anthropic": "medium", "gemini": "high", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "low" },
+        "peers_to_openai": {
+          "open": { "anthropic": "low", "gemini": "low", "xai": "low" },
+          "blind": { "anthropic": "low", "gemini": "medium", "xai": "medium" },
+          "reassigned": { "anthropic": "medium", "gemini": "high", "xai": "high" }
+        },
+        "peer_mean_received": { "open": 2.0, "blind": 2.1, "reassigned": 2.6 }
       },
       {
         "trial": 4,
         "decision_id": "a43a18cc-e235-4931-a82f-44eb493cad81",
         "case_label": "T4",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "high", "xai": "medium" },
-        "blind": { "openai": "high", "anthropic": "high", "gemini": "medium", "xai": "medium" },
-        "reassigned": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "low", "gemini": "high", "xai": "medium" },
+          "blind": { "anthropic": "low", "gemini": "medium", "xai": "medium" },
+          "reassigned": { "anthropic": "medium", "gemini": "low", "xai": "high" }
+        },
+        "peer_mean_received": { "open": 2.5, "blind": 2.5, "reassigned": 2.4 }
       },
       {
         "trial": 5,
         "decision_id": "b796f256-fcbc-4081-b10f-33523925b76e",
         "case_label": "T5",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "minimal", "xai": "low" },
-        "blind": { "openai": "medium", "anthropic": "high", "gemini": "medium", "xai": "medium" },
-        "reassigned": { "openai": "high", "anthropic": "minimal", "gemini": "medium", "xai": "medium" }
+        "self": { "open": "high", "blind": "medium", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "low", "gemini": "minimal", "xai": "low" },
+          "blind": { "anthropic": "low", "gemini": "medium", "xai": "medium" },
+          "reassigned": { "anthropic": "minimal", "gemini": "medium", "xai": "medium" }
+        },
+        "peer_mean_received": { "open": 2.5, "blind": 2.6, "reassigned": 2.5 }
       }
     ]
   },
@@ -94,7 +156,7 @@
       "subhead": "ChatGPT synthesizer / everyone else",
       "openai_synthesizer": 8192,
       "other_synthesizers": 16384,
-      "note": "Current contribution-lens defaults used on this Sol-era control."
+      "note": "Post-July-30 lens defaults on gpt-5.6-sol. Not flat 4,096 — adequate headroom for full attribution JSON."
     },
     "think_tank_models": {
       "openai": "gpt-5.6-sol",
@@ -108,12 +170,6 @@
       "gemini": "Gemini",
       "xai": "Grok"
     },
-    "self_open_high": 5,
-    "self_blind_high": 5,
-    "self_reassigned_high": 5,
-    "self_blind_vs_revealed": 0,
-    "self_blind_vs_reassigned": 0,
-    "self_drop_count": 0,
     "demos": [
       {
         "demo_id": "meridian-civitas-saas-rollup",
@@ -121,9 +177,12 @@
         "case_label": "Civitas",
         "trial": 1,
         "decision_id": "965d8678-c215-4686-afe8-9c963b3ca05a",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" },
-        "reassigned": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "medium", "gemini": "medium", "xai": "high" },
+          "blind": { "anthropic": "medium", "gemini": "medium", "xai": "high" },
+          "reassigned": { "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        }
       },
       {
         "demo_id": "vp-sales-underperforming",
@@ -131,9 +190,12 @@
         "case_label": "VP Sales",
         "trial": 1,
         "decision_id": "2b987db4-1b91-4e46-8a13-dad6b07b926f",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "high" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "high" },
-        "reassigned": { "openai": "high", "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "medium", "gemini": "low", "xai": "high" },
+          "blind": { "anthropic": "medium", "gemini": "low", "xai": "high" },
+          "reassigned": { "anthropic": "medium", "gemini": "medium", "xai": "high" }
+        }
       },
       {
         "demo_id": "healthcare-pe-acquisition",
@@ -141,9 +203,12 @@
         "case_label": "Hospital PE",
         "trial": 2,
         "decision_id": "07bb5c9a-59e1-4066-93e6-b26d14277dac",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
-        "blind": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
-        "reassigned": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "medium", "gemini": "low", "xai": "medium" },
+          "blind": { "anthropic": "medium", "gemini": "low", "xai": "medium" },
+          "reassigned": { "anthropic": "medium", "gemini": "low", "xai": "medium" }
+        }
       },
       {
         "demo_id": "legacy-core-modernization",
@@ -151,9 +216,12 @@
         "case_label": "Core banking",
         "trial": 3,
         "decision_id": "64724b1b-cd83-42c6-b733-53479f53587f",
-        "open": { "openai": "high", "anthropic": "medium", "gemini": "low", "xai": "medium" },
-        "blind": { "openai": "high", "anthropic": "high", "gemini": "low", "xai": "high" },
-        "reassigned": { "openai": "high", "anthropic": "high", "gemini": "medium", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "medium", "gemini": "low", "xai": "high" },
+          "blind": { "anthropic": "high", "gemini": "low", "xai": "high" },
+          "reassigned": { "anthropic": "high", "gemini": "medium", "xai": "high" }
+        }
       },
       {
         "demo_id": "gen-ai-product-compliance",
@@ -161,15 +229,18 @@
         "case_label": "Gen-AI",
         "trial": 4,
         "decision_id": "a3a35953-c43d-4b82-9936-7310c03d6f21",
-        "open": { "openai": "high", "anthropic": "high", "gemini": "low", "xai": "medium" },
-        "blind": { "openai": "high", "anthropic": "high", "gemini": "medium", "xai": "high" },
-        "reassigned": { "openai": "high", "anthropic": "high", "gemini": "minimal", "xai": "high" }
+        "self": { "open": "high", "blind": "high", "reassigned": "high" },
+        "peers_to_openai": {
+          "open": { "anthropic": "high", "gemini": "low", "xai": "medium" },
+          "blind": { "anthropic": "high", "gemini": "medium", "xai": "high" },
+          "reassigned": { "anthropic": "high", "gemini": "minimal", "xai": "high" }
+        }
       }
     ]
   },
   "methodology_footnotes": [
-    "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Cells are ChatGPT as rater (self-credit is the ChatGPT→ChatGPT cell). Stored modes stay open / blind / reassigned; open displays as Revealed. Blind is the default product path; Revealed and Reassigned are alternatives.",
-    "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch used 4,096 tokens. Think-tank models: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
-    "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Contribution analyses used 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others. Think-tank models: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5."
+    "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Self-credit is ChatGPT→ChatGPT when ChatGPT wrote the Unified Brief. Peers→ChatGPT is the mean of Sonnet, Gemini, and Grok rating ChatGPT’s contribution (excluding self). Stored modes stay open / blind / reassigned; open displays as Revealed. Blind is the default product path.",
+    "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch used 4,096 tokens for every synthesizer on 2026-07-27. Think-tank: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
+    "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Contribution analyses used 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others on gpt-5.6-sol. Aggregate peer means on the control are batch-level (5 demos); per-demo peer cells are committed where transcribed from the Sol run."
   ]
 }

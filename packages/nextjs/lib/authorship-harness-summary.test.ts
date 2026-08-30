@@ -113,20 +113,24 @@ describe("buildAuthorshipBatchSummaries budget-conditions include", () => {
 });
 
 describe("committed budget-conditions snapshot", () => {
-  it("records the T5 Revealed shift, Reassigned volatility, and Sol control with no self change", () => {
-    const t1 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.trials.find((t) => t.trial === 1);
+  it("records constrained self-inflation vs peer consensus and Sol control alignment", () => {
     const t5 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.trials.find((t) => t.trial === 5);
-    expect(t5?.open.openai).toBe("high");
-    expect(t5?.blind.openai).toBe("medium");
-    expect(t5?.reassigned.openai).toBe("high");
-    expect(t1?.reassigned.openai).toBe("minimal");
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_blind_vs_revealed).toBe(1);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_blind_vs_reassigned).toBe(4);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_blind_vs_revealed).toBe(0);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_blind_vs_reassigned).toBe(0);
+    expect(t5?.self.open).toBe("high");
+    expect(t5?.self.blind).toBe("medium");
+    expect(t5?.self.reassigned).toBe("high");
+
+    const constrainedOpen = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.aggregate.constrained.modes.open;
+    const controlOpen = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.aggregate.control.modes.open;
+    expect(constrainedOpen.mean_self).toBe(4.0);
+    expect(constrainedOpen.mean_peers_to_openai).toBeCloseTo(1.87, 2);
+    expect(constrainedOpen.self_minus_peers).toBeCloseTo(2.13, 2);
+    expect(controlOpen.mean_self).toBe(4.0);
+    expect(controlOpen.mean_peers_to_openai).toBeCloseTo(3.93, 2);
+    expect(controlOpen.self_minus_peers).toBeCloseTo(0.07, 2);
+
     expect(
       AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.demos.every(
-        (d) => d.open.openai === "high" && d.blind.openai === "high" && d.reassigned.openai === "high"
+        (d) => d.self.open === "high" && d.self.blind === "high" && d.self.reassigned === "high"
       )
     ).toBe(true);
   });
@@ -149,6 +153,6 @@ describe("committed budget-conditions snapshot", () => {
     expect(snap.control.provider_labels.anthropic).toBe("Fable");
     expect(snap.control.think_tank_models.anthropic).toBe("claude-fable-5");
     expect(snap.scenario_label).toBe("Civitas (constrained tokens)");
-    expect(snap.takeaway.meaning.toLowerCase()).toMatch(/remap|reassigned|budget/);
+    expect(snap.takeaway.meaning.toLowerCase()).toMatch(/self|peer|inflation|consensus/);
   });
 });

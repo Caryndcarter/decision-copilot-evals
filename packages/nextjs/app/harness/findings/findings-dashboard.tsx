@@ -60,7 +60,7 @@ const STUDIES: {
     id: "authorship-budget-conditions",
     family: "authorship-influence",
     scenarioLabel: AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
-    blurb: "Does Blind / Revealed / Reassigned credit shift when the token budget is tight?",
+    blurb: "When contribution analysis is token-constrained, does the synthesizer still rate itself highly while peers do not?",
     purpose: AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   },
   {

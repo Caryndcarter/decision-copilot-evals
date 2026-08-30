@@ -7,10 +7,10 @@ import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorsh
 import { DimensionScoreboard } from "../_components/scoreboard-dimension-coded";
 import { InfluenceMatrixPlaceholder } from "../_components/scoreboard-influence-matrix";
 import {
-  getAllRollupFindings,
   getLiveTestTypes,
   getRollupStats,
   getRollupStatsForType,
+  getStandoutFindings,
   getStudiesForType,
   getUpcomingStudies,
 } from "@/lib/findings-registry";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function ResultsPage() {
   const stats = getRollupStats();
-  const findings = getAllRollupFindings();
+  const standout = getStandoutFindings();
   const testTypes = getLiveTestTypes();
   const upcoming = getUpcomingStudies();
 
@@ -53,14 +53,13 @@ export default function ResultsPage() {
 
       <section className="bg-white py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">All findings</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Standout findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Every claim below is drawn from a blind-coded batch — the judge never saw which
-            provider wrote which brief. Click through to a case for its full scoreboard and
-            methodology.
+            Where models split — on whose downside is protected, filer alignment, crew risk, pace,
+            and lean — under the same facts and a blind judge.
           </p>
           <div className="mt-8">
-            <RollupFindingGrid findings={findings} />
+            <RollupFindingGrid findings={standout} />
           </div>
         </div>
       </section>

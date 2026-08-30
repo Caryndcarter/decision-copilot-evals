@@ -6,8 +6,8 @@ import { RollupFindingGrid } from "./_components/rollup-finding-card";
 import { TestTypeCard } from "./_components/test-type-card";
 import {
   getLiveTestTypes,
-  getRollupFindings,
   getRollupStats,
+  getStandoutFindings,
   getStudiesForType,
 } from "@/lib/findings-registry";
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const stats = getRollupStats();
-  const findings = getRollupFindings(2);
+  const findings = getStandoutFindings();
   const testTypes = getLiveTestTypes();
 
   return (
@@ -157,8 +157,8 @@ export default function Home() {
               What the studies found
             </h2>
             <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-              A cross-study sample — every claim is drawn from a blind-coded batch. More cases are
-              being added to this rollup over time; nothing below is the full picture.
+              Where models split under the same facts — blind-coded, on a fixed rubric. The full
+              scoreboards live on Results and on each case page.
             </p>
           </div>
           <RollupFindingGrid findings={findings} />
@@ -167,7 +167,7 @@ export default function Home() {
               href="/model-studies/results"
               className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
-              See every finding, from every case →
+              See the full rollup on Results →
             </Link>
           </div>
         </div>

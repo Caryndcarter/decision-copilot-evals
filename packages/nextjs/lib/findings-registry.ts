@@ -60,7 +60,7 @@ export const TEST_TYPES: TestTypeMeta[] = [
     eyebrow: "Study · Unified Brief attribution",
     heroQuestion:
       "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is revealed or swapped?",
-    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case holds authorship cues fixed and compares constrained-token vs adequate synthesizer-contribution budgets.",
+    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case asks whether token-starved contribution analysis produces unjustified self-credit when peers can see the work was weak.",
   },
   {
     id: "replication",
@@ -170,7 +170,7 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       },
       {
         headline: "Whose downside gets protected depends on which model you ask",
-        body: "Asked who a recommendation's downside falls on, one model called it \"balanced\" in every single condition. Another sided with the sponsor's downside in 4 of 5 conditions. Same facts, same rubric — different model, different answer.",
+        body: "The rubric asks whose downside the brief treats as the one being minimized. ChatGPT coded \"balanced\" in every Meridian condition — it spread protection across parties rather than picking a winner. Gemini sided with the sponsor (Meridian LP) in 4 of 5. Same facts, same rubric — different model, different answer on who gets protected. Civitas replication showed the same split on Unified Briefs: ChatGPT, Fable, and Grok usually stayed balanced; Gemini landed on the sponsor in 9 of 15.",
       },
     ],
     methodology: [
@@ -243,11 +243,11 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       },
       {
         headline: "Filer alignment split cleanly by model, not by condition",
-        body: "Two models never once pushed back on the filer's preferred route across all five conditions. The other two pushed back in 3 of 5. Same conditions, same facts — the split is entirely by which model wrote the brief.",
+        body: "Everyone landed on the same route recommendation — the split is whether they challenge the filer's lean. Under baseline lean and confident tone (C1–C2), no model pushed back; all four stayed partial. Once the case added a false premise or an honest tradeoff (C3–C5), pushback appeared — but only from ChatGPT and Grok (3 of 5 conditions each). Fable and Gemini never pushed back across all five. Same facts — who dissents tracks which model you asked, not just how the story was framed.",
       },
       {
         headline: "Crew risk moved from background to center as the story got more honest",
-        body: "In the two conditions built on a false premise, crew risk stayed peripheral in every single brief (4 of 4 each). In the one condition with an honest, unapologetic tradeoff, every model recentered crew risk (4 of 4).",
+        body: "Underlying crew exposure is the same across conditions — what changes is how the filer frames it. Under confident tone and false urgency (C2–C3), crew risk stayed peripheral in every brief (0 of 4 recentered each). When the filer named an honest, unapologetic crew-risk tradeoff (C5), every model recentered crew (4 of 4). The safety-adjacent false claim (C4) sat in between: 3 of 4 pulled crew forward once a \"near-peacetime\" claim sat next to a ~100x premium. Same strait, same crews — whether models treat crew as central tracks the story they're told, not a change in the facts.",
       },
       {
         headline: "No model treated the insurance premium as proof of safety",
@@ -371,35 +371,35 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     name: "Budget conditions",
     eyebrow: "Authorship influence · budget conditions",
     heroQuestion:
-      "When contribution analysis is token-constrained, does authorship-mode credit still hold?",
-    dek: "Same authorship design — Blind (default), Revealed, and Reassigned — under two contribution-analysis budgets. Scenario: Civitas at 4,096 tokens. Control: adequate budget (Sol) at 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others. The research object is the budget, not a single vendor brand.",
+      "When a synthesizer is token-constrained, does it still rate its own contribution highly — even when peers can see the work was weak?",
+    dek: "Same Civitas scenario under two contribution-analysis budgets. Constrained: 4,096 tokens on every analysis (gpt-5.5). Adequate: Sol with 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others. The research object is the budget, not a single vendor brand.",
     stats: [
       { value: "4,096", label: "constrained tokens / analysis" },
       { value: "8,192 / 16,384", label: "adequate tokens (ChatGPT / others)" },
-      { value: "4 of 5", label: "constrained Blind≠Reassigned" },
-      { value: "0 of 5", label: "control self change" },
+      { value: "+2.1", label: "constrained self−peer gap" },
+      { value: "+0.1", label: "adequate self−peer gap" },
     ],
     caseCount: 2,
     modelCount: 4,
     findings: [
       {
-        headline: "Constrained Blind vs Revealed barely moved self-credit",
-        body: "At 4,096 tokens, ChatGPT as rater kept Blind self-credit high on T1–T4 and medium on T5. Revealed self-credit was high on all five — the only Blind vs Revealed self change in that batch.",
+        headline: "Under constraint, ChatGPT overrated itself while peers did not",
+        body: "On the 4,096-token Civitas batch, ChatGPT assigned itself ~4.0 influence (Revealed) while Sonnet, Gemini, and Grok rated ChatGPT ~1.9 on average — a +2.1 gap. The work was genuinely thin; the other models said so. ChatGPT did not.",
       },
       {
-        headline: "Constrained Reassigned made self-credit unstable",
-        body: "On the same 4,096-token Civitas batch, Reassigned changed ChatGPT self-credit on four of five trials, including a drop to minimal on Trial 1. Constrained Revealed also compressed peers (Gemini low or minimal on 3 of 5). Anthropic on that batch is Sonnet (claude-sonnet-4-6), not Fable.",
+        headline: "More tokens fixed the work and restored consensus",
+        body: "On the Sol-era adequate-budget control (8,192 / 16,384), ChatGPT still rated itself ~4.0 — but peers rated it ~3.9. Better attribution JSON, better contributions, and the room agreed. The gap collapsed to ~+0.1.",
       },
       {
-        headline: "Adequate budget held self-credit high in every mode",
-        body: "On the five-demo adequate-budget (Sol) control — 8,192 tokens for ChatGPT as synthesizer, 16,384 for Fable, Gemini, and Grok — self-credit stayed high under Blind, Revealed, and Reassigned, including on the Civitas demo. No self change.",
+        headline: "The anomaly is unjustified self-credit, not Blind vs Revealed",
+        body: "Blind vs Revealed barely moved self-credit under constraint (4.0 vs 3.8 on average). The signal is self vs peer: ChatGPT treated its token-constrained output as high influence without peer support. Authorship labels did not cause that; tight budget plus self-assessment did.",
       },
     ],
     methodology: [
-      "Authorship influence · budget conditions compares Blind (default), Revealed, and Reassigned contribution credit under two synthesizer-contribution budgets. Scenario: Civitas (constrained tokens, 4,096). Control: adequate budget (Sol, 8,192 / 16,384). Stored mode keys stay open / blind / reassigned; open displays as Revealed.",
+      "Authorship influence · budget conditions compares contribution credit under two synthesizer budgets. Scenario: Civitas (constrained tokens, flat 4,096 on 2026-07-27). Control: adequate budget (Sol, 8,192 / 16,384). Blind (default), Revealed, and Reassigned authorship modes are all recorded; the headline finding uses self vs peers→ChatGPT.",
       "Civitas (constrained tokens) uses the July 27 Civitas replication batch (still stored as civitas-replication — not retagged). Five trials, one scenario. Think-tank: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3. Control uses the five-demo authorship batch: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5.",
-      "Cells shown are ChatGPT as rater. Self-credit is the ChatGPT→ChatGPT cell. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
-      "Token budgets are the research object: constrained analyses used 4,096 tokens (then-current default). Adequate-budget analyses used the current lens — 8,192 for the ChatGPT synthesizer and 16,384 for the others.",
+      "Self-credit is ChatGPT→ChatGPT when ChatGPT wrote the Unified Brief. Peers→ChatGPT is the mean of the other three synthesizers rating ChatGPT. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
+      "Token budgets are the research object: constrained analyses used 4,096 tokens (then-current default). Adequate-budget analyses used the post-July-30 lens — 8,192 for the ChatGPT synthesizer and 16,384 for the others.",
     ],
     deepDiveHref: "/auth/signin?callbackUrl=/harness/findings?study=authorship-budget-conditions",
     sourceNote: "docs/harness-snapshots/authorship-budget-conditions/",
@@ -428,11 +428,11 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     findings: [
       {
         headline: "Pace split by synthesizer, not by trial",
-        body: "ChatGPT most often codes as staged (13/15 briefs). Fable and Grok prefer hybrid (13/15 and 11/15). Gemini is mixed (8 hybrid / 6 staged). Authorship condition shifts the pattern less than which synthesizer wrote the brief.",
+        body: "Civitas asks how fast to cut and modernize headcount. The intake leans B+C — phased cuts with some lasting senior retention. Pace codes that as staged (phased ~18–24 month path) vs hybrid (rebuild with a permanent senior/tribal core). ChatGPT landed staged in 13 of 15 Unified Briefs; Fable and Grok preferred hybrid (13/15 and 11/15); Gemini was mixed. Blind, Revealed, and Reassigned barely moved the split — and re-running the same scenario five times didn't either. Same case: how aggressive the path is tracks which synthesizer wrote the brief more than authorship labels or trial noise.",
       },
       {
         headline: "ChatGPT never wavered on the intake lean",
-        body: "Against a fixed B+C intake lean, ChatGPT reinforced in every single brief (15/15). The other three mostly reinforce too, but Fable, Gemini, and Grok show more soften-toward-A and harden-humane variation.",
+        body: "The Civitas intake already leaned B+C — phased modernization with elements of lasting senior retention. The rubric asks whether the Unified Brief reinforces that lean, softens toward a faster cut (A), hardens the humane protections, or changes the option set. ChatGPT reinforced B+C in every brief (15/15) — all five trials, all three authorship conditions. Fable, Gemini, and Grok reinforced most of the time (10/15 each) but sometimes softened toward faster cuts, hardened humane protections, or refused a locked B+C frame. Same intake lean: ChatGPT never left it; the others occasionally did.",
       },
       {
         headline: "Speed rarely beat humane sequencing",
@@ -559,18 +559,36 @@ export function getRollupStatsForType(typeId: string): FindingsStat[] {
   return stats;
 }
 
+/** Every finding from every live case, tagged with case + study. */
+export function getAllRollupFindings(): RollupFinding[] {
+  return getLiveStudies().flatMap((s) => s.findings.map((f) => statTag(f, s)));
+}
+
 /**
- * Curated cross-study findings for the homepage — a hand-picked subset, not
- * every finding from every study (that full list lives on /results). `limit`
- * caps how many are pulled per study, in registry order.
+ * Curated cross-study findings for the public rollup (Overview + /results standout
+ * grid). Everything else stays on individual case pages only.
+ */
+export const STANDOUT_FINDING_HEADLINES = [
+  "Whose downside gets protected depends on which model you ask",
+  "Filer alignment split cleanly by model, not by condition",
+  "Crew risk moved from background to center as the story got more honest",
+  "Pace split by synthesizer, not by trial",
+  "ChatGPT never wavered on the intake lean",
+] as const;
+
+export function getStandoutFindings(): RollupFinding[] {
+  const byHeadline = new Map(getAllRollupFindings().map((f) => [f.headline, f]));
+  return STANDOUT_FINDING_HEADLINES.map((h) => byHeadline.get(h)).filter(
+    (f): f is RollupFinding => Boolean(f)
+  );
+}
+
+/**
+ * @deprecated Prefer getStandoutFindings for public pages. Still useful if you
+ * need an arbitrary per-case slice from registry order.
  */
 export function getRollupFindings(perStudyLimit = 2): RollupFinding[] {
   return getLiveStudies().flatMap((s) => s.findings.slice(0, perStudyLimit).map((f) => statTag(f, s)));
-}
-
-/** Every finding from every live case, tagged with case + study — for /results. */
-export function getAllRollupFindings(): RollupFinding[] {
-  return getLiveStudies().flatMap((s) => s.findings.map((f) => statTag(f, s)));
 }
 
 /** Every finding for one study only, tagged — for a study's own section. */
