@@ -12,6 +12,7 @@ import { decisionGroupTitleFromRuns } from "@/lib/run-display-name";
 import { UnifiedBriefChat } from "../unified-brief-chat";
 import { UnifiedBriefContributionsPanel } from "../unified-brief-contributions-panel";
 import { UnifiedBriefAuditPanel } from "../unified-brief-audit-panel";
+import { UnifiedBriefFactCheckPanel } from "../unified-brief-fact-check-panel";
 import { AuthorshipRemapLegend } from "../authorship-remap-legend";
 import {
   UnifiedBriefInfluenceChartsBody,
@@ -23,6 +24,7 @@ import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import { friendlyProviderLabel } from "@/lib/unified-brief-blind";
 import {
   getUnifiedBriefAuditForAuthor,
+  getUnifiedBriefFactCheckForAuthor,
   authorshipModeFromFlags,
   getUnifiedBriefContributionsByAuthor,
   getUnifiedBriefContributionsForAuthor,
@@ -46,7 +48,8 @@ function unifiedBriefGeneratingSteps(synthesizer: UnifiedBriefSynthesizer): stri
     "Pulling in research and saved variants…",
     `Building the consolidated prompt for ${label}…`,
     "Synthesizing your Unified Brief…",
-    "Shaping recommendation and next steps…",
+    "Checking facts…",
+    "Applying factual corrections…",
     "Almost there…",
   ];
 }
@@ -365,6 +368,9 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
     : undefined;
   const audit = persistRun
     ? getUnifiedBriefAuditForAuthor(persistRun, activeSynthesizer, authorshipMode)
+    : undefined;
+  const factCheck = persistRun
+    ? getUnifiedBriefFactCheckForAuthor(persistRun, activeSynthesizer, authorshipMode)
     : undefined;
   const influenceMatrix = persistRun
     ? buildInfluenceMatrix(getUnifiedBriefContributionsByAuthor(persistRun, authorshipMode))
@@ -722,8 +728,8 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                         </p>
                         <p className="mt-1 text-xs text-indigo-600">
                           {generateAllStatus
-                            ? `Running every configured model for ${authorshipModeLabel.toLowerCase()}, one at a time. Each pass often takes 30–60 seconds.`
-                            : `${activeSynthesizerLabel} reads every member's run, research, and variants in one pass. This often takes 30–60 seconds and can run longer on large decisions.`}
+                            ? `Running every configured model for ${authorshipModeLabel.toLowerCase()}, one at a time. Each pass includes a fact-check and can take a minute or more.`
+                            : `${activeSynthesizerLabel} reads every member's run, research, and variants, then a separate judge checks public facts. This often takes a minute or more.`}
                         </p>
                       </div>
                     ) : generateAllStatus ? (
@@ -806,12 +812,14 @@ function UnifiedBriefPageInner({ runId, decisionId }: { runId: string; decisionI
                     )}
                   </div>
                 </article>
-              ) : (
+              ) : null}
+              {brief && factCheck ? <UnifiedBriefFactCheckPanel factCheck={factCheck} /> : null}
+              {!brief ? (
                 <p className="mt-8 text-sm text-zinc-600 print:hidden">
                   No {activeSynthesizerLabel} brief yet. With that model selected above, click{" "}
                   <span className="font-medium">Generate with {activeSynthesizerLabel}</span>.
                 </p>
-              )}
+              ) : null}
 
               {/* Print-only appendix: which model's ideas made the cut. Visible only in the downloaded PDF. */}
               {brief && contributions && contributions.contributions.length > 0 && (

@@ -1,10 +1,13 @@
 import type { DecisionBrief, DecisionRunResult } from "@/types/decision";
 import {
+  getUnifiedBriefFactCheckForAuthor,
   getUnifiedBriefForAuthor,
+  mergeUnifiedBriefFactCheckIntoRun,
   mergeUnifiedBriefIntoRun,
   mergeUnifiedBriefContributionsIntoRun,
   normalizeBriefAuthorshipSlot,
   normalizeContributionsAuthorshipSlot,
+  normalizeFactCheckAuthorshipSlot,
   runHasAnyUnifiedBrief,
   UNIFIED_BRIEF_SYNTHESIZERS,
   type UnifiedBriefAuthorshipMode,
@@ -66,6 +69,15 @@ export function consolidateUnifiedAuthorshipOntoRun(
         );
         if (!existing[mode]) {
           next = mergeUnifiedBriefContributionsIntoRun(next, author, incoming, mode);
+        }
+      }
+      const factVersions = normalizeFactCheckAuthorshipSlot(
+        src.unified_brief_fact_checks_by_author?.[author]
+      );
+      for (const mode of AUTHORSHIP_MODES) {
+        const incoming = factVersions[mode];
+        if (incoming && !getUnifiedBriefFactCheckForAuthor(next, author, mode)) {
+          next = mergeUnifiedBriefFactCheckIntoRun(next, author, incoming, mode);
         }
       }
     }

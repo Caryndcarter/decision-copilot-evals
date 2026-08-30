@@ -60,6 +60,7 @@ const AUTHORSHIP_RUN_PROJECTION = {
   unified_briefs_by_author: 1,
   unified_brief_contributions_by_author: 1,
   unified_brief_audits_by_author: 1,
+  unified_brief_fact_checks_by_author: 1,
   createdAt: 1,
   updatedAt: 1,
 } as const;

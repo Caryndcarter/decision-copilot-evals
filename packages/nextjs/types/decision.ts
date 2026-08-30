@@ -284,6 +284,35 @@ export interface UnifiedBriefAuditField {
   quote: string;
 }
 
+/** Outcome of one public-fact claim in a Unified Brief fact-check pass. */
+export type FactCheckStatus = "corrected" | "confirmed" | "unverified" | "out_of_scope";
+
+/** One claim the fact-check judge examined in the draft Unified Brief. */
+export interface UnifiedBriefFactCorrection {
+  claim_as_written: string;
+  status: FactCheckStatus;
+  corrected_to?: string | null;
+  rationale: string;
+  sources?: { title: string; url: string }[];
+}
+
+/**
+ * Blind web-search fact-check of a Unified Brief draft.
+ * The fact-checked brief is stored in `unified_briefs_by_author`; this record
+ * holds the report plus the pre-check `draft_brief`.
+ */
+export interface UnifiedBriefFactCheck {
+  generated_at: string;
+  judge_provider: LLMProviderName;
+  judge_model?: string;
+  summary: string;
+  corrections: UnifiedBriefFactCorrection[];
+  /** Pre-fact-check synthesis output. */
+  draft_brief?: DecisionBrief;
+  /** Set when the judge or rewrite failed; the stored Unified Brief stays the draft. */
+  error?: string;
+}
+
 /**
  * Blind structured audit of a Unified Brief on domain-agnostic ethics dimensions.
  * Generated on demand; keyed by synthesizer like contributions.
@@ -459,6 +488,16 @@ export interface DecisionRunResult {
   /** Generic ethics audit keyed by synthesizer, then authorship mode (matches briefs). */
   unified_brief_audits_by_author?: Partial<
     Record<LLMProviderName, UnifiedBriefAuthorshipVersions<UnifiedBriefAudit> | UnifiedBriefAudit>
+  >;
+  /**
+   * Fact-check reports keyed by synthesizer, then authorship mode (matches briefs).
+   * The user-facing brief after this pass lives in `unified_briefs_by_author`.
+   */
+  unified_brief_fact_checks_by_author?: Partial<
+    Record<
+      LLMProviderName,
+      UnifiedBriefAuthorshipVersions<UnifiedBriefFactCheck> | UnifiedBriefFactCheck
+    >
   >;
   /**
    * Legacy: Q&A about the unified brief (Anthropic-only chats before per-provider threads).

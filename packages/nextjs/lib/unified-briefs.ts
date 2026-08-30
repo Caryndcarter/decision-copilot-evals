@@ -7,6 +7,7 @@ import type {
   UnifiedBriefAuthorshipMode,
   UnifiedBriefAuthorshipVersions,
   UnifiedBriefContributions,
+  UnifiedBriefFactCheck,
 } from "@/types/decision";
 
 /** Models that can synthesize the Unified Brief (distinct from think-tank member runs). */
@@ -62,6 +63,12 @@ function looksLikeAudit(value: unknown): value is UnifiedBriefAudit {
   if (!value || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
   return typeof o.rubric_id === "string" && typeof o.codes === "object" && o.codes !== null;
+}
+
+function looksLikeFactCheck(value: unknown): value is UnifiedBriefFactCheck {
+  if (!value || typeof value !== "object") return false;
+  const o = value as Record<string, unknown>;
+  return typeof o.summary === "string" && Array.isArray(o.corrections);
 }
 
 /** Normalize a stored brief slot (legacy flat brief or `{ open, blind, reassigned }`) to version map. */
@@ -274,4 +281,61 @@ export function mergeUnifiedBriefAuditIntoRun(
     [author]: versions,
   };
   return { ...run, unified_brief_audits_by_author };
+}
+
+export function normalizeFactCheckAuthorshipSlot(
+  slot: unknown
+): UnifiedBriefAuthorshipVersions<UnifiedBriefFactCheck> {
+  if (!slot || typeof slot !== "object") return {};
+  if (looksLikeFactCheck(slot)) return { open: slot };
+  const o = slot as Record<string, unknown>;
+  const out: UnifiedBriefAuthorshipVersions<UnifiedBriefFactCheck> = {};
+  if (looksLikeFactCheck(o.open)) out.open = o.open;
+  if (looksLikeFactCheck(o.blind)) out.blind = o.blind;
+  if (looksLikeFactCheck(o.reassigned)) out.reassigned = o.reassigned;
+  return out;
+}
+
+export function getUnifiedBriefFactChecksByAuthor(
+  run: DecisionRunResult,
+  mode: UnifiedBriefAuthorshipMode = "open"
+): Partial<Record<UnifiedBriefSynthesizer, UnifiedBriefFactCheck>> {
+  const out: Partial<Record<UnifiedBriefSynthesizer, UnifiedBriefFactCheck>> = {};
+  for (const author of UNIFIED_BRIEF_SYNTHESIZERS) {
+    const versions = normalizeFactCheckAuthorshipSlot(
+      run.unified_brief_fact_checks_by_author?.[author]
+    );
+    if (versions[mode]) out[author] = versions[mode];
+  }
+  return out;
+}
+
+export function getUnifiedBriefFactCheckForAuthor(
+  run: DecisionRunResult,
+  author: UnifiedBriefSynthesizer,
+  mode: UnifiedBriefAuthorshipMode = "open"
+): UnifiedBriefFactCheck | undefined {
+  return getUnifiedBriefFactChecksByAuthor(run, mode)[author];
+}
+
+export function mergeUnifiedBriefFactCheckIntoRun(
+  run: DecisionRunResult,
+  author: UnifiedBriefSynthesizer,
+  factCheck: UnifiedBriefFactCheck,
+  mode: UnifiedBriefAuthorshipMode = "open"
+): DecisionRunResult {
+  const prevVersions = normalizeFactCheckAuthorshipSlot(
+    run.unified_brief_fact_checks_by_author?.[author]
+  );
+  const versions: UnifiedBriefAuthorshipVersions<UnifiedBriefFactCheck> = {
+    ...prevVersions,
+    [mode]: factCheck,
+  };
+  const unified_brief_fact_checks_by_author: NonNullable<
+    DecisionRunResult["unified_brief_fact_checks_by_author"]
+  > = {
+    ...(run.unified_brief_fact_checks_by_author ?? {}),
+    [author]: versions,
+  };
+  return { ...run, unified_brief_fact_checks_by_author };
 }
