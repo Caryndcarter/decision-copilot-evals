@@ -6,7 +6,7 @@ import { DEMO_HARNESS_CASES } from "@/lib/demo-harness-cases";
 import {
   authorshipBatchKindLabel,
   isAuthorshipBudgetConditionsControlBatch,
-  isAuthorshipBudgetConditionsStarvedBatch,
+  isAuthorshipBudgetConditionsConstrainedBatch,
   isAuthorshipInfluenceIncludeBatch,
   shortHarnessBatchId,
 } from "@/lib/harness-meta";
@@ -128,8 +128,8 @@ export type AuthorshipBatchSummary = {
   total_influence_shifts: number;
   /** Mean heatmaps across cases (Standard / Blind / Reassigned). */
   rollup_matrices: AuthorshipRollupMatrix[];
-  /** Present when this batch is the budget-conditions starved or Sol control cut. */
-  budget_condition?: "starved" | "adequate";
+  /** Present when this batch is the constrained-tokens or Sol control cut. */
+  budget_condition?: "constrained" | "adequate";
 };
 
 /** Whether a run belongs in the authorship findings rollup (does not rewrite stored kind). */
@@ -447,8 +447,8 @@ export function buildAuthorshipBatchSummaries(
         batchId: bag.batch_id,
       }),
       started_at: bag.started_at,
-      budget_condition: isAuthorshipBudgetConditionsStarvedBatch(bag.batch_id)
-        ? "starved"
+      budget_condition: isAuthorshipBudgetConditionsConstrainedBatch(bag.batch_id)
+        ? "constrained"
         : isAuthorshipBudgetConditionsControlBatch(bag.batch_id)
           ? "adequate"
           : undefined,

@@ -76,15 +76,15 @@ export function AuthorshipBudgetConditionsPanel() {
         </p>
         <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Starved self drop</dt>
+            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained self drop</dt>
             <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.starved.self_drop_count} of {SNAP.starved.trials.length}
+              {SNAP.constrained.self_drop_count} of {SNAP.constrained.trials.length}
             </dd>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Starved self stayed high</dt>
+            <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Constrained self stayed high</dt>
             <dd className="text-sm font-semibold text-zinc-900">
-              {SNAP.starved.self_blind_high} of {SNAP.starved.trials.length} Blind
+              {SNAP.constrained.self_blind_high} of {SNAP.constrained.trials.length} Blind
             </dd>
           </div>
           <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2">
@@ -104,9 +104,9 @@ export function AuthorshipBudgetConditionsPanel() {
 
       <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 px-4 py-3">
-          <h3 className="text-sm font-semibold text-zinc-900">{SNAP.starved.scenario_label}</h3>
+          <h3 className="text-sm font-semibold text-zinc-900">{SNAP.constrained.scenario_label}</h3>
           <p className="mt-0.5 text-xs text-zinc-500">
-            {SNAP.starved.demo_label} · five replication trials · {SNAP.rater_label} as rater
+            {SNAP.constrained.demo_label} · five replication trials · {SNAP.rater_label} as rater
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -120,7 +120,7 @@ export function AuthorshipBudgetConditionsPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {SNAP.starved.trials.map((row) => {
+              {SNAP.constrained.trials.map((row) => {
                 const openSelf = selfCredit(row.open);
                 const blindSelf = selfCredit(row.blind);
                 return (

@@ -37,25 +37,25 @@ export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_BATCH_ID =
  * Civitas July 27 stays `harness_kind: civitas-replication`.
  * Authorship influence includes it by batch id — do not retag.
  */
-export const AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS = [
+export const AUTHORSHIP_BUDGET_CONDITIONS_CONSTRAINED_BATCH_IDS = [
   CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID,
 ] as const;
 
 /** Extra batches loaded into authorship rollup / findings without changing stored kind. */
 export const AUTHORSHIP_INFLUENCE_INCLUDE_BATCH_IDS = [
-  ...AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS,
+  ...AUTHORSHIP_BUDGET_CONDITIONS_CONSTRAINED_BATCH_IDS,
 ] as const;
 
 /** Primary product title for the budget-conditions cut (not a model name). */
 export const AUTHORSHIP_BUDGET_CONDITIONS_TITLE =
   "Authorship influence · budget conditions";
 
-export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (starved)";
+export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (constrained tokens)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL = "adequate budget (Sol)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE =
-  "Authorship influence · budget conditions — same open vs blind credit question under two synthesizer-contribution budgets: Civitas (starved) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
+  "Authorship influence · budget conditions — same open vs blind credit question under two synthesizer-contribution budgets: Civitas (constrained tokens) versus adequate budget (Sol). Measures whether self-credit and peer compression shift when contribution analysis is token-constrained. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
 
 function normalizeHarnessBatchId(batchId?: string): string | undefined {
   const raw = batchId?.trim();
@@ -63,10 +63,10 @@ function normalizeHarnessBatchId(batchId?: string): string | undefined {
   return raw;
 }
 
-export function isAuthorshipBudgetConditionsStarvedBatch(batchId?: string): boolean {
+export function isAuthorshipBudgetConditionsConstrainedBatch(batchId?: string): boolean {
   const id = normalizeHarnessBatchId(batchId);
   if (!id) return false;
-  return (AUTHORSHIP_BUDGET_CONDITIONS_STARVED_BATCH_IDS as readonly string[]).includes(id);
+  return (AUTHORSHIP_BUDGET_CONDITIONS_CONSTRAINED_BATCH_IDS as readonly string[]).includes(id);
 }
 
 export function isAuthorshipBudgetConditionsControlBatch(batchId?: string): boolean {
@@ -96,7 +96,7 @@ export function harnessStudyTabsForBatch(opts: {
   batchId?: string;
 }): Array<HarnessStudyTab | "other"> {
   const primary = harnessStudyTabForKind(opts.kind);
-  if (isAuthorshipBudgetConditionsStarvedBatch(opts.batchId) && primary === "replication") {
+  if (isAuthorshipBudgetConditionsConstrainedBatch(opts.batchId) && primary === "replication") {
     return ["replication", "authorship-influence"];
   }
   return [primary];
@@ -106,7 +106,7 @@ export function authorshipBatchKindLabel(opts: {
   harnessKind: HarnessKind;
   batchId?: string;
 }): string {
-  if (isAuthorshipBudgetConditionsStarvedBatch(opts.batchId)) {
+  if (isAuthorshipBudgetConditionsConstrainedBatch(opts.batchId)) {
     return AUTHORSHIP_BUDGET_CONDITIONS_TITLE;
   }
   if (isAuthorshipBudgetConditionsControlBatch(opts.batchId)) {
@@ -154,7 +154,7 @@ export const HARNESS_STUDY_TABS: {
     id: "authorship-influence",
     label: "Authorship influence",
     blurb:
-      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship. A budget-conditions cut (Civitas starved vs adequate budget) checks whether open-vs-blind credit shifts when contribution analysis is token-constrained.",
+      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Standard, Blind, and Reassigned authorship. A budget-conditions cut (Civitas constrained tokens vs adequate budget) checks whether open-vs-blind credit shifts when contribution analysis is token-constrained.",
     findingsStudy: "multi-demo-authorship",
   },
   {
@@ -243,7 +243,7 @@ export function harnessBatchPurpose(
 ): string {
   if (
     opts?.studyTab === "authorship-influence" &&
-    isAuthorshipBudgetConditionsStarvedBatch(opts.batchId)
+    isAuthorshipBudgetConditionsConstrainedBatch(opts.batchId)
   ) {
     return AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE;
   }

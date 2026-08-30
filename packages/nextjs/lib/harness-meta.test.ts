@@ -11,14 +11,14 @@ import {
   harnessBatchTitle,
   harnessStudyTabForKind,
   harnessStudyTabsForBatch,
-  isAuthorshipBudgetConditionsStarvedBatch,
+  isAuthorshipBudgetConditionsConstrainedBatch,
   isAuthorshipInfluenceIncludeBatch,
 } from "./harness-meta";
 import { FINDINGS_STUDIES } from "./findings-registry";
 
 describe("authorship budget-conditions inclusion", () => {
   it("whitelists July 27 without treating it as multi-demo-authorship", () => {
-    expect(isAuthorshipBudgetConditionsStarvedBatch(CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID)).toBe(
+    expect(isAuthorshipBudgetConditionsConstrainedBatch(CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID)).toBe(
       true
     );
     expect(isAuthorshipInfluenceIncludeBatch(CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID)).toBe(true);
@@ -65,8 +65,8 @@ describe("authorship budget-conditions inclusion", () => {
   });
 
   it("keeps model names out of the primary title and in purpose footnotes only", () => {
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_TITLE.toLowerCase()).not.toMatch(/openai|gpt|starved study/);
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL).toBe("Civitas (starved)");
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_TITLE.toLowerCase()).not.toMatch(/openai|gpt/);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL).toBe("Civitas (constrained tokens)");
     const purpose = harnessBatchPurpose("civitas-replication", {
       batchId: CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID,
       studyTab: "authorship-influence",
@@ -91,12 +91,20 @@ describe("authorship budget-conditions inclusion", () => {
     );
   });
 
-  it("does not brand findings as an OpenAI starved study", () => {
+  it("uses constrained-tokens labels in findings copy", () => {
     const study = FINDINGS_STUDIES.find((s) => s.id === "authorship-budget-conditions");
     expect(study).toBeDefined();
     expect(study!.name.toLowerCase()).not.toMatch(/openai/);
     expect(study!.eyebrow).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
-    const blob = [study!.name, study!.eyebrow, ...study!.findings.map((f) => f.headline)].join(" ");
-    expect(blob.toLowerCase()).not.toContain("openai starved");
+    const blob = [
+      study!.name,
+      study!.eyebrow,
+      study!.dek,
+      ...study!.findings.map((f) => `${f.headline} ${f.body}`),
+      ...study!.methodology,
+      ...study!.stats.map((s) => s.label),
+    ].join(" ");
+    expect(blob.toLowerCase()).not.toMatch(/starv/);
+    expect(blob).toContain("constrained tokens");
   });
 });

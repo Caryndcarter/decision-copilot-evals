@@ -1,15 +1,15 @@
 {
   "id": "authorship-budget-conditions",
   "title": "Authorship influence · budget conditions",
-  "scenario_label": "Civitas (starved)",
+  "scenario_label": "Civitas (constrained tokens)",
   "control_label": "adequate budget (Sol)",
   "rater": "openai",
   "rater_label": "ChatGPT",
   "influence_scale": { "high": 4, "medium": 3, "low": 2, "minimal": 1 },
-  "starved": {
+  "constrained": {
     "batch_id": "db9445cf-ef02-5740-b69f-d34a1194e04a",
     "harness_kind": "civitas-replication",
-    "scenario_label": "Civitas (starved)",
+    "scenario_label": "Civitas (constrained tokens)",
     "demo_id": "meridian-civitas-saas-rollup",
     "demo_label": "Meridian / Civitas SaaS roll-up",
     "self_open_high": 5,
@@ -100,8 +100,8 @@
   },
   "methodology_footnotes": [
     "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Cells are ChatGPT as rater (self-credit is the ChatGPT→ChatGPT cell).",
-    "Civitas (starved) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch were inferred at 4096 tokens — the then-current client/lens default.",
-    "Current contribution lens defaults are 8192 tokens for the OpenAI synthesizer and 16384 for the others. Think-tank models on the starved batch: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
+    "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch were inferred at 4096 tokens — the then-current client/lens default.",
+    "Current contribution lens defaults are 8192 tokens for the OpenAI synthesizer and 16384 for the others. Think-tank models on the constrained-tokens batch: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
     "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Think-tank models: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5."
   ]
 }

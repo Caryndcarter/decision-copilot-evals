@@ -76,7 +76,7 @@ describe("buildAuthorshipBatchSummaries budget-conditions include", () => {
     expect(summaries).toHaveLength(1);
     expect(summaries[0]!.harness_kind).toBe("civitas-replication");
     expect(summaries[0]!.kind_label).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
-    expect(summaries[0]!.budget_condition).toBe("starved");
+    expect(summaries[0]!.budget_condition).toBe("constrained");
     expect(summaries[0]!.demos[0]!.modes.open.contributions).toBe(1);
     expect(summaries[0]!.demos[0]!.modes.blind.contributions).toBe(1);
   });
@@ -110,10 +110,10 @@ describe("buildAuthorshipBatchSummaries budget-conditions include", () => {
 
 describe("committed budget-conditions snapshot", () => {
   it("records the T5 self drop and Sol control with no drop", () => {
-    const t5 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.starved.trials.find((t) => t.trial === 5);
+    const t5 = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.trials.find((t) => t.trial === 5);
     expect(t5?.open.openai).toBe("high");
     expect(t5?.blind.openai).toBe("medium");
-    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.starved.self_drop_count).toBe(1);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.constrained.self_drop_count).toBe(1);
     expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.self_drop_count).toBe(0);
     expect(
       AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.control.demos.every(
@@ -126,5 +126,6 @@ describe("committed budget-conditions snapshot", () => {
     expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.title).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
     expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.title.toLowerCase()).not.toMatch(/openai|gpt/);
     expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.methodology_footnotes.join(" ")).toMatch(/4096/);
+    expect(AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT.scenario_label).toBe("Civitas (constrained tokens)");
   });
 });

@@ -23,7 +23,7 @@ export type AuthorshipBudgetConditionsSnapshot = {
   rater: LLMProviderName;
   rater_label: string;
   influence_scale: Record<ContributionInfluence, number>;
-  starved: {
+  constrained: {
     batch_id: string;
     harness_kind: string;
     scenario_label: string;

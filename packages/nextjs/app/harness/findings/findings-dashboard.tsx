@@ -12,7 +12,7 @@ import {
   AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
   isAuthorshipBudgetConditionsControlBatch,
-  isAuthorshipBudgetConditionsStarvedBatch,
+  isAuthorshipBudgetConditionsConstrainedBatch,
   type HarnessStudyTab,
 } from "@/lib/harness-meta";
 
@@ -229,7 +229,7 @@ export function HarnessFindingsDashboard({
           {(() => {
             const live = authorshipBatches.filter(
               (b) =>
-                isAuthorshipBudgetConditionsStarvedBatch(b.batch_id) ||
+                isAuthorshipBudgetConditionsConstrainedBatch(b.batch_id) ||
                 isAuthorshipBudgetConditionsControlBatch(b.batch_id)
             );
             if (live.length === 0) return null;

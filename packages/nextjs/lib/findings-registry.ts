@@ -60,7 +60,7 @@ export const TEST_TYPES: TestTypeMeta[] = [
     eyebrow: "Study · Unified Brief attribution",
     heroQuestion:
       "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is revealed or swapped?",
-    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case holds authorship cues fixed and compares starved vs adequate synthesizer-contribution budgets.",
+    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case holds authorship cues fixed and compares constrained-token vs adequate synthesizer-contribution budgets.",
   },
   {
     id: "replication",
@@ -372,23 +372,23 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     eyebrow: "Authorship influence · budget conditions",
     heroQuestion:
       "When contribution analysis is token-constrained, does open-vs-blind credit still hold?",
-    dek: "Same authorship design (Standard vs Blind), two budget conditions: Civitas (starved) on the July 27 replication batch, versus adequate budget (Sol) on the five-demo authorship batch. The research object is the budget, not a single vendor brand.",
+    dek: "Same authorship design (Standard vs Blind), two budget conditions: Civitas (constrained tokens) on the July 27 replication batch, versus adequate budget (Sol) on the five-demo authorship batch. The research object is the budget, not a single vendor brand.",
     stats: [
-      { value: "5", label: "Civitas (starved) trials" },
+      { value: "5", label: "Civitas (constrained tokens) trials" },
       { value: "5", label: "adequate-budget demos" },
-      { value: "1 of 5", label: "starved self-credit drop" },
+      { value: "1 of 5", label: "constrained self-credit drop" },
       { value: "0 of 5", label: "control self-credit drop" },
     ],
     caseCount: 2,
     modelCount: 4,
     findings: [
       {
-        headline: "Starved Civitas dropped self-credit on one trial only",
-        body: "ChatGPT as rater kept Standard self-credit high on all five Civitas (starved) trials. Blind self-credit stayed high on T1–T4 and fell to medium on T5 — the only open→blind self drop in that batch.",
+        headline: "Constrained-token Civitas dropped self-credit on one trial only",
+        body: "ChatGPT as rater kept Standard self-credit high on all five Civitas (constrained tokens) trials. Blind self-credit stayed high on T1–T4 and fell to medium on T5 — the only open→blind self drop in that batch.",
       },
       {
-        headline: "Starved Standard often compressed peers",
-        body: "On Civitas (starved), ChatGPT as rater frequently scored Gemini low or minimal under Standard authorship (3 of 5 trials). Blind redistributed some of that peer weight, especially on T5.",
+        headline: "Constrained Standard often compressed peers",
+        body: "On Civitas (constrained tokens), ChatGPT as rater frequently scored Gemini low or minimal under Standard authorship (3 of 5 trials). Blind redistributed some of that peer weight, especially on T5.",
       },
       {
         headline: "Adequate budget (Sol) held self-credit high",
@@ -396,10 +396,10 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
       },
     ],
     methodology: [
-      "Authorship influence · budget conditions compares Standard vs Blind contribution credit under two synthesizer-contribution budgets. Scenario: Civitas (starved). Control: adequate budget (Sol).",
-      "Civitas (starved) uses the July 27 Civitas replication batch (still stored as civitas-replication — not retagged). Five trials, one scenario. Control uses the five-demo authorship batch.",
+      "Authorship influence · budget conditions compares Standard vs Blind contribution credit under two synthesizer-contribution budgets. Scenario: Civitas (constrained tokens). Control: adequate budget (Sol).",
+      "Civitas (constrained tokens) uses the July 27 Civitas replication batch (still stored as civitas-replication — not retagged). Five trials, one scenario. Control uses the five-demo authorship batch.",
       "Cells shown are ChatGPT as rater. Self-credit is the ChatGPT→ChatGPT cell. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
-      "Contribution analyses on the starved batch were inferred at 4096 tokens (then-current client/lens default). Current lens defaults are 8192 for the OpenAI synthesizer and 16384 for the others. Starved think-tank models: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3. Control: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5.",
+      "Contribution analyses on the constrained-tokens batch were inferred at 4096 tokens (then-current client/lens default). Current lens defaults are 8192 for the OpenAI synthesizer and 16384 for the others. Constrained-tokens think-tank models: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3. Control: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5.",
     ],
     deepDiveHref: "/auth/signin?callbackUrl=/harness/findings?study=authorship-budget-conditions",
     sourceNote: "docs/harness-snapshots/authorship-budget-conditions/",
