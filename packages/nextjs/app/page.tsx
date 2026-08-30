@@ -428,8 +428,8 @@ export default function Home() {
             {[
               {
                 icon: <IconThinkTank />,
-                title: "Same questions, no peeking",
-                desc: "Every model works through the same structure, on its own — nothing skipped, no one influenced by another's early take.",
+                title: "Every model starts from the same brief, alone",
+                desc: "Each one works through the same structure independently, before seeing any other model's answer.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
@@ -440,33 +440,27 @@ export default function Home() {
               },
               {
                 icon: <IconCompare />,
-                title: "Dissent is allowed before convergence",
-                desc: "Independent answers are laid side by side. Overlap and outliers both surface.",
+                title: "Independent answers, side by side",
+                desc: "Every model's answer is shown as-is — where they agree, and where they don't.",
                 color: "text-violet-500 bg-violet-50",
               },
               {
                 icon: <IconPeople />,
-                title: "Then they review each other",
-                desc: "Now that answers are locked in, each model weighs what the others found. The disagreement here is real — nobody talked anybody into it.",
+                title: "Then each model reviews the others' thinking",
+                desc: "With independent answers already locked in, each model weighs what the others found and says what holds up.",
                 color: "text-indigo-500 bg-indigo-50",
               },
               {
-                icon: <IconBrief />,
-                title: "Written blind",
-                desc: "One model merges the strongest thinking into a single brief — without knowing which provider said what. Ideas get through. Brand names don't.",
+                icon: <IconAttribution />,
+                title: "Written blind, attributed after",
+                desc: "One model merges the strongest thinking into a single brief without knowing which provider said what — ideas get through, brand names don't. Once it's done, you can still see whose thinking made the cut.",
                 color: "text-emerald-500 bg-emerald-50",
               },
               {
-                icon: <IconCompare />,
-                title: "Push back after the brief",
-                desc: "Chat with any model about the analysis — edit sections in place, ask why a peer's idea was downplayed, request new views, or regenerate the Unified Brief when you want a fresh merge.",
+                icon: <IconBrief />,
+                title: "Keep refining after the brief",
+                desc: "Discuss the analysis with any model, edit sections in place, or regenerate the Unified Brief when you want a different merge.",
                 color: "text-sky-500 bg-sky-50",
-              },
-              {
-                icon: <IconAttribution />,
-                title: "Attribution, after the fact",
-                desc: "You can still see whose thinking made the cut. Transparency without letting brand bias into the call itself.",
-                color: "text-orange-500 bg-orange-50",
               },
             ].map((item) => (
               <div key={item.title} className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 hover:border-zinc-200 transition-colors">

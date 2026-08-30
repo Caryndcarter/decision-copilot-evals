@@ -37,12 +37,35 @@ function SectionHeading({
 
 function SubBlock({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
   return (
-    <div id={id} className={id ? "scroll-mt-24 rounded-xl border border-zinc-200 bg-zinc-50/80 p-5" : "rounded-xl border border-zinc-200 bg-zinc-50/80 p-5"}>
-      <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
-      <div className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-600">{children}</div>
+    <div
+      id={id}
+      className={
+        id
+          ? "scroll-mt-28 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+          : "rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+      }
+    >
+      <h3 className="text-base font-semibold text-zinc-900">{title}</h3>
+      <div className="mt-3 space-y-3 text-base leading-relaxed text-zinc-600">{children}</div>
     </div>
   );
 }
+
+function BriefItem({ title, children }: { title: ReactNode; children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-zinc-200/80 bg-white p-4">
+      <p className="text-sm font-semibold text-zinc-900">{title}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{children}</p>
+    </div>
+  );
+}
+
+const PAGE_NAV = [
+  { href: "#flow", label: "The flow" },
+  { href: "#postures", label: "Postures" },
+  { href: "#unified-brief", label: "Unified Brief" },
+  { href: "#discuss", label: "Discuss & edit" },
+] as const;
 
 export default function HowItWorksPage() {
   return (
@@ -79,24 +102,23 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <nav className="sticky top-[65px] z-40 border-b border-zinc-200 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-3xl gap-6 overflow-x-auto px-6 py-3 text-sm font-medium">
-          <Link href="#flow" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
-            The flow
-          </Link>
-          <Link href="#postures" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
-            Postures
-          </Link>
-          <Link href="#unified-brief" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
-            Unified Brief
-          </Link>
-          <Link href="#discuss" className="shrink-0 text-zinc-600 hover:text-indigo-600 transition-colors">
-            Discuss & edit
-          </Link>
-        </div>
-      </nav>
+      <div className="sticky top-[65px] z-40 border-b border-zinc-100 bg-zinc-50/95 py-5 backdrop-blur-sm">
+        <nav aria-label="On this page" className="mx-auto flex max-w-3xl justify-center px-6">
+          <div className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-full border border-zinc-200 bg-white p-1.5 shadow-sm">
+            {PAGE_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-indigo-600"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
 
-      <section id="flow" className="scroll-mt-24 border-b border-zinc-100 bg-white py-16">
+      <section id="flow" className="scroll-mt-28 border-b border-zinc-100 bg-white py-16">
         <div className="mx-auto max-w-3xl px-6">
           <HowItWorksFlowSection
             sectionTitle="The four steps"
@@ -106,7 +128,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section id="unified-brief" className="scroll-mt-24 border-b border-zinc-100 bg-zinc-50 py-16">
+      <section id="unified-brief" className="scroll-mt-28 border-b border-zinc-100 bg-zinc-50 py-16">
         <div className="mx-auto max-w-3xl px-6">
           <SectionHeading
             eyebrow="Unified Brief"
@@ -114,140 +136,109 @@ export default function HowItWorksPage() {
             dek="One merged brief from your think tank — written blind by default so ideas beat brand names."
           />
 
-          <div className="mt-8 space-y-4">
-            <SubBlock title="What's inside">
-              <p>
-                A <strong className="font-medium text-zinc-800">Unified Brief</strong> is one
-                structured decision write-up — not a chat transcript. When you run a think tank,
-                each model first produces its own{" "}
-                <strong className="font-medium text-zinc-800">Decision Brief</strong> on your
-                decision. One model you choose — the{" "}
-                <strong className="font-medium text-zinc-800">synthesizer</strong> — merges all of
-                that into a single Unified Brief.
+          <div className="mt-10 space-y-10">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                How it&apos;s built
+              </h3>
+              <p className="mt-3 text-base leading-relaxed text-zinc-700">
+                Run a think tank and each model produces its own{" "}
+                <strong className="font-medium text-zinc-900">Decision Brief</strong>. You pick a{" "}
+                <strong className="font-medium text-zinc-900">synthesizer</strong> to merge those
+                into one <strong className="font-medium text-zinc-900">Unified Brief</strong> — a
+                structured write-up, not a chat transcript.
               </p>
-              <p>That merged brief typically includes:</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>
-                  <strong className="font-medium text-zinc-800">Situation & summary</strong> — the
-                  merged read of what&apos;s on the table
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                What&apos;s in the document
+              </h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <BriefItem title="Situation & summary">
+                  The merged read of what&apos;s on the table.
+                </BriefItem>
+                <BriefItem
+                  title={
                     <Link
                       href="/#three-lenses"
                       className="text-indigo-600 hover:text-indigo-800 transition-colors"
                     >
                       Risk, Reversibility, Stakeholders
                     </Link>
-                  </strong>{" "}
-                  — what could go wrong, how hard it is to undo, and who has to live with the
-                  outcome; so you don&apos;t get a good-on-paper answer that skips downside,
-                  lock-in, or the people involved
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Recommendation</strong> — one clear
-                  call drawn from the think tank&apos;s best ideas
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Key considerations & next steps</strong>{" "}
-                  — tradeoffs to keep visible and actions you can take this week
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Research & variants</strong> — live
-                  web lookups for current facts, plus alternate scenarios or what-if branches you
-                  saved along the way; folded into the merge, not bolted on afterward
-                </li>
-              </ul>
-            </SubBlock>
+                  }
+                >
+                  What could go wrong, how hard it is to undo, and who bears the consequences.
+                </BriefItem>
+                <BriefItem title="Recommendation">One clear call from the think tank&apos;s best ideas.</BriefItem>
+                <BriefItem title="Key considerations & next steps">
+                  Tradeoffs to keep visible and actions for this week.
+                </BriefItem>
+                <BriefItem title="Research & variants">
+                  Live web lookups and saved what-if branches — folded into the merge, not added
+                  afterward.
+                </BriefItem>
+              </div>
+            </div>
 
-            <SubBlock id="postures" title="Postures — how you frame the analysis">
-              <p>
-                At intake you tell your think tank <em>how</em> to analyze the decision — that&apos;s
-                your <strong className="font-medium text-zinc-800">posture</strong>. Every structured
-                Decision Brief uses the same{" "}
+            <div id="postures" className="scroll-mt-28">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                Postures — how you frame the analysis
+              </h3>
+              <p className="mt-3 text-base leading-relaxed text-zinc-700">
+                At intake you choose <em>how</em> models analyze the decision. Every brief still runs
+                through the same{" "}
                 <Link
                   href="/#three-lenses"
                   className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                 >
-                  Risk / Reversibility / Stakeholders
-                </Link>{" "}
-                lenses; the posture changes what models emphasize:
+                  three lenses
+                </Link>
+                ; the posture sets the emphasis:
               </p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>
-                  <strong className="font-medium text-zinc-800">Compare options openly</strong> —
-                  balanced analysis across paths, no preferred direction assumed
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Challenge my leaning</strong> —
-                  pressure-test the plan you&apos;re considering, with downsides and blind spots
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Show me the opposition</strong> —
-                  steelman the strongest case against your lean
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Risk-first</strong> — thorough
-                  downside scan; risks and hidden assumptions front and center
-                </li>
-                <li>
-                  <strong className="font-medium text-zinc-800">Widen the option set</strong> —
-                  alternative paths and adjacent factors you might not have named
-                </li>
-              </ul>
-              <p>
-                If the standard brief isn&apos;t the right fit,{" "}
-                <strong className="font-medium text-zinc-800">freeform</strong> lets the model choose
-                its own structure instead. In a think tank, every model works from the same intake and
-                posture before their outputs merge into one Unified Brief.
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Compare options openly", "Balanced paths — no preferred direction assumed."],
+                  ["Challenge my leaning", "Pressure-test your plan; downsides and blind spots."],
+                  ["Show me the opposition", "Steelman the strongest case against your lean."],
+                  ["Risk-first", "Downside scan — risks and hidden assumptions first."],
+                  ["Widen the option set", "Alternatives and adjacent factors you may not have named."],
+                ].map(([name, desc]) => (
+                  <div key={name} className="rounded-lg border border-zinc-200/80 bg-white p-4">
+                    <p className="text-sm font-semibold text-zinc-900">{name}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-zinc-600">{desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-600">
+                Prefer a different shape? Use <strong className="font-medium text-zinc-800">freeform</strong>{" "}
+                and let the model choose its own structure.
               </p>
-            </SubBlock>
+            </div>
 
             <SubBlock id="discuss" title="Discuss, don't just download">
-              <p>
-                A brief isn&apos;t the end of the conversation. Every{" "}
-                <strong className="font-medium text-zinc-800">Decision Brief</strong> opens with a{" "}
-                <strong className="font-medium text-zinc-800">Discuss &amp; clarify</strong> panel —
-                chat with that model about the analysis, compare sibling runs, or ask for deeper
-                research.
-              </p>
-              <p>
-                Edit recommendation, next steps, and other sections{" "}
-                <strong className="font-medium text-zinc-800">directly in the brief</strong> — or ask
-                in chat for a new section or view (timeline, cost breakdown, comparison table) and
-                save it as a variant.
-              </p>
-              <p>
-                On the <strong className="font-medium text-zinc-800">Unified Brief</strong>, use{" "}
-                <strong className="font-medium text-zinc-800">Discuss</strong> to talk with the
-                synthesizer that wrote the merge — or any other model reviewing it — including
-                questions like why another model&apos;s idea wasn&apos;t taken seriously.{" "}
-                <strong className="font-medium text-zinc-800">Regenerate</strong> when you want the
-                written merge to change; contributions show what made the cut either way.
-              </p>
+              <ul className="list-disc space-y-3 pl-5">
+                <li>
+                  <strong className="font-medium text-zinc-800">Decision Briefs</strong> — chat in
+                  Discuss &amp; clarify; edit sections in place; ask for new views and save variants.
+                </li>
+                <li>
+                  <strong className="font-medium text-zinc-800">Unified Brief</strong> — discuss with
+                  the synthesizer or any reviewer; ask why an idea was left out; regenerate when you
+                  want the written merge to change.
+                </li>
+                <li>
+                  <strong className="font-medium text-zinc-800">Contributions</strong> — see what
+                  each model contributed after the blind merge; export as PDF with an optional
+                  appendix.
+                </li>
+              </ul>
             </SubBlock>
 
             <SubBlock title="Fact-check pass (optional)">
               <p>
-                After the synthesizer writes the Unified Brief, an optional{" "}
-                <strong className="font-medium text-zinc-800">fact-check pass</strong> can run — a
-                separate judge with web search flags public factual errors and rewrites the draft
-                without changing the recommendation.
-              </p>
-            </SubBlock>
-
-            <SubBlock title="Contributions — whose ideas made the cut">
-              <p>
-                After the merge, the synthesizer runs a{" "}
-                <strong className="font-medium text-zinc-800">contributions analysis</strong>: for
-                every think-tank member it states what was adopted, what was distinct, what was left
-                out, and an influence rating (high / medium / low / minimal).
-              </p>
-              <p>
-                That&apos;s attribution <em>after</em> the blind merge — transparency without letting
-                brand bias into the recommendation itself. Export as{" "}
-                <strong className="font-medium text-zinc-800">PDF</strong> on the Unified Brief page
-                — contributions appendix optional.
+                A separate judge with web search can flag public factual errors and rewrite the draft
+                — without changing the recommendation.
               </p>
             </SubBlock>
           </div>
