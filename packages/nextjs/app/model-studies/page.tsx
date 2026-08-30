@@ -55,12 +55,14 @@ export default function Home() {
               them?
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
-              Every intake here is written by a filer — someone who has already leaned toward one
-              option before asking for advice. We give the same facts to several frontier models
-              (ChatGPT, Fable, Gemini, and Grok) and blind-code what each one actually does under
-              that pressure to agree: push back, stay neutral, or go along with the filer&apos;s
-              lean. The judge scoring each brief never sees which provider wrote it. This is the
-              rollup of what that&apos;s found so far, across every study we&apos;ve run.
+              Model Studies is a research program that measures how frontier AI models advise
+              decision-makers under pressure to agree — not a product demo. Every intake here is
+              written by a filer — someone who has already leaned toward one option before asking
+              for advice. We give the same facts to several frontier models (ChatGPT, Fable, Gemini,
+              and Grok) and blind-code what each one actually does: push back, stay neutral, or go
+              along with the filer&apos;s lean. The judge scoring each brief never sees which
+              provider wrote it. This is the rollup of what that&apos;s found so far, across every
+              study we&apos;ve run.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -85,21 +87,44 @@ export default function Home() {
       </section>
 
       {/* Hook — why the program exists, then into studies */}
-      <section className="bg-white py-20 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
-            Why any of these studies exist
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-600">
-            Claims about how models behave under decision pressure are easy to ship and hard to
-            check. This program exists to make them checkable: the same facts, several models,
-            blind coding on a fixed rubric, and the results published — so you can see what held up
-            and what didn&apos;t, instead of taking a feature bullet on faith.
+      <section className="relative overflow-hidden border-b border-zinc-100 bg-zinc-50 py-20 lg:py-24">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 80% 60% at 0% 0%, rgba(99,102,241,0.12), transparent 55%), radial-gradient(ellipse 50% 40% at 100% 100%, rgba(139,92,246,0.08), transparent 50%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl px-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">
+            Research program
           </p>
-          <div className="mt-5">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+            The reason for Model Studies research
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-zinc-600">
+            Claims about how models behave under decision pressure — and overconfidence in model
+            consensus — are easy to ship and hard to check. This program exists to make them
+            checkable: the same facts, several models, blind coding on a fixed rubric, and the
+            results published — so you can see what held up and what didn&apos;t, instead of taking
+            a feature bullet on faith.
+          </p>
+          <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-zinc-800">
+            {[
+              "Same facts, several models",
+              "Blind coding on a fixed rubric",
+              "Results published, not claimed",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2.5">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-10">
             <Link
               href="/model-studies/why"
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+              className="inline-flex rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-500/20 transition-colors hover:bg-indigo-500"
             >
               Why it matters →
             </Link>
@@ -108,9 +133,9 @@ export default function Home() {
       </section>
 
       {/* Studies */}
-      <section id="studies" className="scroll-mt-20 bg-zinc-50 py-20 border-b border-zinc-100">
+      <section id="studies" className="scroll-mt-20 bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">Studies</h2>
+          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">The Studies</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
             Each study is a research question, answered across one or more cases. New cases land
             inside an existing study as a registry entry — the study is the story, not any single
@@ -125,7 +150,7 @@ export default function Home() {
       </section>
 
       {/* Rollup findings */}
-      <section className="bg-white py-20 border-b border-zinc-100">
+      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-10">
             <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">

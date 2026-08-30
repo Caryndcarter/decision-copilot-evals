@@ -342,7 +342,8 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight">Built for real decisions</h2>
             <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-              Not hypotheticals. The kind of calls that keep you up at night — the ones where you can&apos;t afford any gaps in reasoning.
+              Not hypotheticals. The kind of calls that keep you up at night — the ones where you
+              can&apos;t afford any reasoning gaps.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -427,12 +428,14 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto mb-14 max-w-3xl text-center">
             <h2 className="text-2xl lg:text-3xl font-bold text-zinc-900 tracking-tight leading-snug">
-              Not a vote. Not a favorite. A blind synthesis of the best ideas.
+              Not a vote. Not a favorite.
+              <br />
+              A synthesis of only the best ideas.
             </h2>
             <p className="mt-4 text-zinc-500 leading-relaxed">
               The same structured analysis rubric for every model, so they don&apos;t leave
               anything out. Independent answers, so no early opinion sways the room. Blind
-              synthesis, so no model — or brand — favors itself.
+              synthesis, so no model — or brand — favors&nbsp;itself.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -15,5 +15,6 @@ node_modules
 docs/SESSION_SUMMARY.md
 docs/MIGRATION_SUMMARY.md
 docs/DYNAMODB_SINGLE_TABLE.md
+docs/local/
 packages/nextjs/scripts/backfill-orphan-runs.ts
 packages/nextjs/scripts/output/
