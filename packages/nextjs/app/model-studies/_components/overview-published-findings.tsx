@@ -41,12 +41,23 @@ export function OverviewPublishedFindings({ findings }: { findings: OverviewPubl
               <p className="text-xs font-medium text-zinc-500">
                 Case: <span className="text-zinc-700">{caseLabel(f.sources)}</span>
               </p>
-              <Link
-                href={f.href}
-                className="mt-3 inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-              >
-                Explore this finding →
-              </Link>
+              <div className="mt-3 flex flex-col gap-1.5">
+                <Link
+                  href={f.href}
+                  className="inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  Explore this finding →
+                </Link>
+                {f.relatedLinks?.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="inline-flex text-sm font-medium text-indigo-600/90 hover:text-indigo-800 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </article>

@@ -6,6 +6,8 @@ import { StatStrip } from "@/app/model-studies/_components/stat-strip";
 import { FindingCardGrid } from "@/app/model-studies/_components/finding-card";
 import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
 import { DimensionScoreboard } from "@/app/model-studies/_components/scoreboard-dimension-coded";
+import { CaseMoralEval } from "@/app/model-studies/_components/moral-eval/case-moral-eval";
+import { hasCaseMoralEval } from "@/lib/case-moral-eval-studies";
 import { InfluenceMatrixPlaceholder } from "@/app/model-studies/_components/scoreboard-influence-matrix";
 import { FINDINGS_STUDIES, getFindingsStudy, getTestType } from "@/lib/findings-registry";
 
@@ -109,14 +111,19 @@ export default async function StudyResultsPage({
       {/* Scoreboard */}
       <section className="bg-zinc-50 py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Scoreboard</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+            {hasCaseMoralEval(study.id) ? "Moral eval" : "Scoreboard"}
+          </h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            A curated slice of the coded dimensions, by provider. This is aggregate counts only —
-            no model quotes.
+            {hasCaseMoralEval(study.id)
+              ? "Directional lean by model and blind-coded dimension grid — same chips as the signed-in harness Findings, read-only here."
+              : "A curated slice of the coded dimensions, by provider. This is aggregate counts only — no model quotes."}
           </p>
           <div className="mt-8">
             {study.id === "authorship-budget-conditions" ? (
               <AuthorshipBudgetConditionsPanel />
+            ) : hasCaseMoralEval(study.id) ? (
+              <CaseMoralEval studyId={study.id} />
             ) : study.kind === "dimension-coded" ? (
               <DimensionScoreboard rows={study.scoreboard ?? []} />
             ) : (

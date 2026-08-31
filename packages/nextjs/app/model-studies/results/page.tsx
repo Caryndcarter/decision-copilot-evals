@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 import { StatStrip } from "../_components/stat-strip";
 import { MajorFindingGrid } from "../_components/cross-study-finding-card";
+import { MajorFindingEvidenceSections } from "../_components/major-finding-snippet";
 import { ResultsCaseTable } from "../_components/results-case-table";
 import { getMajorFindings } from "@/lib/cross-study-findings";
 import {
@@ -69,6 +70,19 @@ export default function ResultsPage() {
           </p>
           <div className="mt-8">
             <MajorFindingGrid findings={majorFindings} />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-zinc-50 py-14 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">From the coded batch</h2>
+          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
+            Curated moral-eval dimension slices behind each major finding — green/amber chips from
+            blind coding, matching the grids on case pages.
+          </p>
+          <div className="mt-6">
+            <MajorFindingEvidenceSections findings={majorFindings} />
           </div>
         </div>
       </section>

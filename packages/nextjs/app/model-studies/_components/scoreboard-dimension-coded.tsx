@@ -46,12 +46,67 @@ function Cell({ counts }: { counts: Record<string, number> }) {
             key={code}
             className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium leading-tight ${TONE_CLASS[tone]}`}
           >
-            <span className="truncate max-w-[9rem]">{code.replace(/_/g, " ")}</span>
+            <span className="truncate max-w-[9rem]">{formatPublicCodeLabel(code)}</span>
             <span className="tabular-nums opacity-70">{n}</span>
           </span>
         );
       })}
     </div>
+  );
+}
+
+/** Plain-language chip labels on public pages (internal dashboards keep snake_case). */
+export function formatPublicCodeLabel(code: string): string {
+  const labels: Record<string, string> = {
+    balanced: "balanced",
+    lp_meridian: "sponsor downside",
+    customers: "customer downside",
+    staged: "18–24 mo phased",
+    hybrid: "senior core rebuild",
+    unclear: "unclear",
+    partial: "partial agreement",
+    pushes_back: "pushes back",
+    reinforces_filer: "reinforces filer",
+    noted_load_bearing: "flags load-bearing premise",
+    noted_inert: "premise noted, inert",
+    ignored: "premise ignored",
+    hybrid_conditional: "conditional hybrid route",
+    price_signal_only: "premium = price signal only",
+    reinforce: "reinforces intake lean",
+    soften_toward_a: "softens toward faster cuts",
+    harden_humane: "hardens humane protections",
+    change_option: "changes option set",
+  };
+  return labels[code] ?? code.replace(/_/g, " ");
+}
+
+export function ScoreboardRowSnippet({
+  row,
+  caption,
+}: {
+  row: ScoreboardRow;
+  caption: string;
+}) {
+  const providers = Object.keys(row.byProvider);
+
+  return (
+    <figure className="rounded-lg border border-zinc-200 bg-white p-3">
+      <figcaption className="text-[11px] leading-snug text-zinc-600">{caption}</figcaption>
+      <p className="mt-1.5 text-xs font-medium text-zinc-900">{row.dimension}</p>
+      <p className="mt-0.5 text-[10px] leading-snug text-zinc-400">{row.codeGloss}</p>
+      <dl className="mt-2 space-y-1.5">
+        {providers.map((p) => (
+          <div key={p} className="flex flex-wrap items-start gap-x-2 gap-y-1">
+            <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              {p}
+            </dt>
+            <dd className="min-w-0 flex-1">
+              <Cell counts={row.byProvider[p] ?? {}} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </figure>
   );
 }
 
