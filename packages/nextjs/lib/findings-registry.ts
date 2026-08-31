@@ -527,47 +527,122 @@ function statTag(f: FindingsCard, s: FindingsStudyMeta): RollupFinding {
 
 /**
  * Rollup totals across every live case, for Overview and /results.
- * Sums conditions (caseCount) and briefs; takes max of modelCount since the
- * same providers run across cases, not four new ones each time.
+ * Brief counts use unique artifacts — Civitas and multi-demo batches are not double-counted.
  */
+export function getVoiceDecisionBriefCount(): number {
+  return getStudiesForType("voice-influence").reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+}
+
+/** Civitas replication batch (60) + multi-demo authorship batch (60); budget control reuses multi-demo. */
+export function getProgramUnifiedBriefCount(): number {
+  return 120;
+}
+
+export function getAuthorshipUnifiedBriefCount(): number {
+  return getProgramUnifiedBriefCount();
+}
+
+export function getReplicationUnifiedBriefCount(): number {
+  return getStudiesForType("replication").reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+}
+
+export type TestTypeCardMetrics = {
+  caseCount: number;
+  /** e.g. "5 trials" — shown between case count and brief count on overview cards. */
+  midSegment?: string;
+  briefCount: number;
+  briefLabel: string;
+};
+
+export function getTestTypeCardMetrics(typeId: string): TestTypeCardMetrics {
+  const cases = getStudiesForType(typeId);
+  const caseCount = cases.length;
+
+  switch (typeId) {
+    case "voice-influence":
+      return {
+        caseCount,
+        briefCount: getVoiceDecisionBriefCount(),
+        briefLabel: "Decision Briefs",
+      };
+    case "authorship":
+      return {
+        caseCount,
+        briefCount: getAuthorshipUnifiedBriefCount(),
+        briefLabel: "Unified Briefs",
+      };
+    case "replication": {
+      const trials = cases.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+      return {
+        caseCount,
+        midSegment: `${trials} trials`,
+        briefCount: getReplicationUnifiedBriefCount(),
+        briefLabel: "Unified Briefs",
+      };
+    }
+    default: {
+      const briefs = cases.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+      return { caseCount, briefCount: briefs, briefLabel: "briefs coded" };
+    }
+  }
+}
+
 export function getRollupStats(): FindingsStat[] {
   const live = getLiveStudies();
-  const conditions = live.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
-  const blindCodedBriefs = live
-    .filter((s) => s.kind === "dimension-coded")
-    .reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
   const models = live.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
 
   return [
     { value: String(getLiveTestTypes().length), label: "studies" },
     { value: String(live.length), label: "cases" },
-    { value: String(conditions), label: "conditions" },
     { value: String(models), label: "models" },
-    { value: String(blindCodedBriefs), label: "blind-coded briefs" },
+    { value: String(getVoiceDecisionBriefCount()), label: "Decision Briefs" },
+    { value: String(getProgramUnifiedBriefCount()), label: "Unified Briefs" },
   ];
-}
-
-function briefCountLabel(studies: FindingsStudyMeta[]): string {
-  const hasDimension = studies.some((s) => s.kind === "dimension-coded");
-  const hasInfluence = studies.some((s) => s.kind === "influence-matrix");
-  if (hasInfluence && !hasDimension) return "Unified Briefs";
-  return "blind-coded briefs";
 }
 
 /** Same shape as getRollupStats, scoped to the cases inside one study. */
 export function getRollupStatsForType(typeId: string): FindingsStat[] {
   const cases = getStudiesForType(typeId);
-  const conditions = cases.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
-  const briefs = cases.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
   const models = cases.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
 
-  const stats: FindingsStat[] = [
-    { value: String(cases.length), label: cases.length === 1 ? "case" : "cases" },
-  ];
-  if (conditions > 0) stats.push({ value: String(conditions), label: "conditions" });
-  if (models > 0) stats.push({ value: String(models), label: "models" });
-  if (briefs > 0) stats.push({ value: String(briefs), label: briefCountLabel(cases) });
-  return stats;
+  switch (typeId) {
+    case "voice-influence": {
+      const filerVariants = cases.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+      return [
+        { value: String(cases.length), label: cases.length === 1 ? "case" : "cases" },
+        { value: String(filerVariants), label: "filer variants" },
+        { value: String(models), label: "models" },
+        { value: String(getVoiceDecisionBriefCount()), label: "Decision Briefs" },
+      ];
+    }
+    case "authorship":
+      return [
+        { value: String(cases.length), label: "cases" },
+        { value: "3", label: "authorship modes" },
+        { value: String(models), label: "synthesizers" },
+        { value: String(getAuthorshipUnifiedBriefCount()), label: "Unified Briefs" },
+      ];
+    case "replication": {
+      const trials = cases.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+      return [
+        { value: String(cases.length), label: "case" },
+        { value: String(trials), label: "trials" },
+        { value: String(models), label: "synthesizers" },
+        { value: String(getReplicationUnifiedBriefCount()), label: "Unified Briefs" },
+      ];
+    }
+    default: {
+      const conditions = cases.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
+      const briefs = cases.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+      const stats: FindingsStat[] = [
+        { value: String(cases.length), label: cases.length === 1 ? "case" : "cases" },
+      ];
+      if (conditions > 0) stats.push({ value: String(conditions), label: "variants" });
+      if (models > 0) stats.push({ value: String(models), label: "models" });
+      if (briefs > 0) stats.push({ value: String(briefs), label: "briefs coded" });
+      return stats;
+    }
+  }
 }
 
 /** Every finding from every live case, tagged with case + study. */

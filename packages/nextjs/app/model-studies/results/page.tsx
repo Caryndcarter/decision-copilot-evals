@@ -1,28 +1,29 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 import { StatStrip } from "../_components/stat-strip";
-import { RollupFindingGrid } from "../_components/rollup-finding-card";
-import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
-import { DimensionScoreboard } from "../_components/scoreboard-dimension-coded";
-import { InfluenceMatrixPlaceholder } from "../_components/scoreboard-influence-matrix";
+import { CrossStudyFindingGrid } from "../_components/cross-study-finding-card";
+import { ResultsCaseCard } from "../_components/results-case-card";
+import { getCrossStudyFindings } from "@/lib/cross-study-findings";
+import {
+  RESULTS_STUDY_LABELS,
+  getResultsStudyMetricsLine,
+} from "@/lib/results-browse-meta";
 import {
   getLiveTestTypes,
   getRollupStats,
-  getRollupStatsForType,
-  getStandoutFindings,
   getStudiesForType,
   getUpcomingStudies,
 } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "Results — Model Studies",
-  description: "Every study, every finding — the full rollup of blind-coded model behavior.",
+  description:
+    "What changed when the facts stayed the same — cross-study findings and links to every case's blind-coded evidence.",
 };
 
 export default function ResultsPage() {
   const stats = getRollupStats();
-  const standout = getStandoutFindings();
+  const crossStudyFindings = getCrossStudyFindings();
   const testTypes = getLiveTestTypes();
   const upcoming = getUpcomingStudies();
 
@@ -33,16 +34,13 @@ export default function ResultsPage() {
       <section className="bg-zinc-950 pt-16 pb-10 lg:pt-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">
-              Full rollup
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">Results</p>
             <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
-              Every study, every finding
+              What changed when the facts stayed the same
             </h1>
             <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-              Grouped by research question, not by case name. Each study holds one or more cases —
-              new cases land inside an existing study as they&apos;re coded, rather than becoming a
-              new peer at the top level.
+              Browse the strongest findings across Model Studies, then open any study or case to examine
+              the conditions, coded dimensions, and model-level results behind it.
             </p>
           </div>
         </div>
@@ -53,79 +51,84 @@ export default function ResultsPage() {
 
       <section className="bg-white py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Standout findings</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Cross-study findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Where models split — on whose downside is protected, filer alignment, crew risk, pace,
-            and lean — under the same facts and a blind judge.
+            Patterns that show up across cases — blind-coded evidence, not case names. Open any
+            supporting case for full scoreboards and methodology.
           </p>
           <div className="mt-8">
-            <RollupFindingGrid findings={standout} />
+            <CrossStudyFindingGrid findings={crossStudyFindings} />
           </div>
         </div>
       </section>
 
-      {testTypes.map((type) => {
-        const studies = getStudiesForType(type.id);
-        const typeStats = getRollupStatsForType(type.id);
-        return (
-          <section
-            key={type.id}
-            id={type.id}
-            className="scroll-mt-20 bg-zinc-50 py-16 border-b border-zinc-100"
-          >
-            <div className="mx-auto max-w-6xl px-6">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500">
-                {type.eyebrow}
-              </span>
-              <h2 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">{type.name}</h2>
-              <p className="mt-2 max-w-2xl text-sm font-medium text-zinc-700 leading-relaxed">
-                {type.heroQuestion}
-              </p>
-              <p className="mt-1.5 max-w-2xl text-sm text-zinc-500 leading-relaxed">{type.dek}</p>
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
-                {typeStats.map((s) => (
-                  <span key={s.label} className="text-xs text-zinc-500">
-                    <strong className="tabular-nums text-zinc-900">{s.value}</strong> {s.label}
-                  </span>
-                ))}
-              </div>
+      <section className="bg-zinc-50 py-16 border-b border-zinc-100">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Browse by study</h2>
+          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
+            Three research questions, each with one or more cases. Scoreboards and condition definitions
+            live on the case pages — not here.
+          </p>
 
-              <div className="mt-8 space-y-8">
-                {studies.map((study) => (
-                  <div key={study.id} className="rounded-xl border border-zinc-200 bg-white p-6">
-                    <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div className="mt-10 space-y-14">
+            {testTypes.map((type) => {
+              const studies = getStudiesForType(type.id);
+              const browse = RESULTS_STUDY_LABELS[type.id];
+              const metricsLine = getResultsStudyMetricsLine(type.id);
+
+              return (
+                <div key={type.id} id={type.id} className="scroll-mt-20">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500">
+                    Study
+                  </span>
+                  <h3 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
+                    {browse?.displayName ?? type.name}
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm font-medium text-zinc-700 leading-relaxed">
+                    {browse?.heroQuestion ?? type.heroQuestion}
+                  </p>
+                  <p className="mt-2 text-xs text-zinc-500">{metricsLine}</p>
+
+                  {type.id === "authorship" ? (
+                    <div className="mt-6 space-y-6">
                       <div>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                          {study.eyebrow}
-                        </span>
-                        <h3 className="mt-0.5 text-lg font-semibold text-zinc-900">{study.name}</h3>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                          Published
+                        </p>
+                        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                          {studies
+                            .filter((s) => s.id === "authorship-budget-conditions")
+                            .map((study) => (
+                              <ResultsCaseCard key={study.id} study={study} />
+                            ))}
+                        </div>
                       </div>
-                      {study.kind === "dimension-coded" ||
-                      study.id === "authorship-budget-conditions" ? (
-                        <Link
-                          href={`/model-studies/results/${study.id}`}
-                          className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                        >
-                          Full case page →
-                        </Link>
-                      ) : null}
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                          Ongoing
+                        </p>
+                        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                          {studies
+                            .filter((s) => s.id === "multi-demo-authorship")
+                            .map((study) => (
+                              <ResultsCaseCard key={study.id} study={study} />
+                            ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-4">
-                      {study.id === "authorship-budget-conditions" ? (
-                        <AuthorshipBudgetConditionsPanel />
-                      ) : study.kind === "dimension-coded" ? (
-                        <DimensionScoreboard rows={study.scoreboard ?? []} />
-                      ) : (
-                        <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />
-                      )}
+                  ) : (
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      {studies.map((study) => (
+                        <ResultsCaseCard key={study.id} study={study} />
+                      ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      })}
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {upcoming.length > 0 && (
         <section className="bg-white py-16">

@@ -20,6 +20,16 @@ export const metadata: Metadata = {
     "Blind-coded, multi-model research on whether AI advisors tell decision-makers the truth or agree with them.",
 };
 
+/** Room for sticky site nav + in-page pill bar (~160px). */
+const PAGE_SCROLL_MT = "scroll-mt-40";
+
+const PAGE_NAV = [
+  { href: "#why", label: "Why research" },
+  { href: "#studies", label: "What we study" },
+  { href: "#findings", label: "Latest findings" },
+  { href: "#dataset", label: "Full dataset" },
+] as const;
+
 export default function Home() {
   const stats = getRollupStats();
   const testTypes = getLiveTestTypes();
@@ -91,8 +101,24 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="sticky top-[65px] z-40 border-b border-zinc-100 bg-zinc-50/95 py-5 backdrop-blur-sm">
+        <nav aria-label="On this page" className="mx-auto flex max-w-6xl justify-center px-6">
+          <div className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-full border border-zinc-200 bg-white p-1.5 shadow-sm">
+            {PAGE_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-indigo-600"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
+
       {/* Hook — why the program exists, then into studies */}
-      <section className="relative overflow-hidden border-b border-zinc-100 bg-zinc-50 py-20 lg:py-24">
+      <section id="why" className={`${PAGE_SCROLL_MT} relative overflow-hidden border-b border-zinc-100 bg-zinc-50 py-20 lg:py-24`}>
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.35]"
           style={{
@@ -143,7 +169,7 @@ export default function Home() {
       </section>
 
       {/* Studies */}
-      <section id="studies" className="scroll-mt-20 bg-white py-20 border-b border-zinc-100">
+      <section id="studies" className={`${PAGE_SCROLL_MT} bg-white py-20 border-b border-zinc-100`}>
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">What we study</h2>
           <p className="mt-3 max-w-3xl text-base leading-relaxed text-zinc-600">
@@ -166,7 +192,7 @@ export default function Home() {
       </section>
 
       {/* Latest findings — overview narrative; full rollup lives on /results */}
-      <section className="bg-zinc-50 py-20 border-b border-zinc-100">
+      <section id="findings" className={`${PAGE_SCROLL_MT} bg-zinc-50 py-20 border-b border-zinc-100`}>
         <div className="mx-auto max-w-6xl px-6">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">
             Latest findings
@@ -192,7 +218,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="bg-zinc-950 py-20">
+      <section id="dataset" className={`${PAGE_SCROLL_MT} bg-zinc-950 py-20`}>
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
             Want the full dataset?

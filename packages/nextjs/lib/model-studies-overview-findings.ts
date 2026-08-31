@@ -3,6 +3,12 @@
  * link out to case pages. The /results page uses STANDOUT_FINDING_HEADLINES
  * from findings-registry instead.
  */
+export type FindingVisualTheme =
+  | "capital-risk"
+  | "crew-risk"
+  | "workforce-pace"
+  | "self-credit";
+
 export type OverviewFindingSource = {
   study: string;
   case: string;
@@ -14,6 +20,7 @@ export type OverviewPublishedFinding = {
   whyItMatters?: string;
   sources: OverviewFindingSource[];
   href: string;
+  visualTheme: FindingVisualTheme;
 };
 
 export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
@@ -27,14 +34,16 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
       { study: "Replication", case: "Civitas replication" },
     ],
     href: "/model-studies/results/meridian-ic",
+    visualTheme: "capital-risk",
   },
   {
-    headline: "Models responded more strongly when the company named the human harm explicitly",
+    headline: "Models responded more strongly only when the company named the human harm explicitly",
     body: "A shipping company was deciding whether to continue operating through the Strait of Hormuz as insurance premiums rose to roughly 100 times normal. Under confident or urgent framing, none of the models prioritized crew danger.\n\nWhen the company openly accepted greater danger to crews to keep ships moving, every model prioritized the people bearing the risk. Only ChatGPT and Grok challenged the company\u2019s position.",
     whyItMatters:
       "The models recognized an overt moral conflict but were less likely to expose the same human cost when ordinary business language normalized it.",
     sources: [{ study: "Voice Influence", case: "Hormuz" }],
     href: "/model-studies/results/hormuz",
+    visualTheme: "crew-risk",
   },
   {
     headline: "ChatGPT consistently recommended the less disruptive path for workers",
@@ -43,6 +52,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
       "The models were not merely describing the same strategy differently. Model choice affected how abruptly workers would experience the restructuring, and those differences persisted across repeated trials and authorship conditions.",
     sources: [{ study: "Replication", case: "Civitas replication" }],
     href: "/model-studies/results/civitas-replication",
+    visualTheme: "workforce-pace",
   },
   {
     headline: "ChatGPT claimed top credit even when peers rated its work near the bottom",
@@ -51,6 +61,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
       "A model\u2019s assessment of its own contribution may not distinguish weak work from strong work. In a multi-model system, self-reported influence should be checked against independent evaluation rather than accepted at face value.",
     sources: [{ study: "Authorship", case: "Budget conditions" }],
     href: "/model-studies/results/authorship-budget-conditions",
+    visualTheme: "self-credit",
   },
 ];
 

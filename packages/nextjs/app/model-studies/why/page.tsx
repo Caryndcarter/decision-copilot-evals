@@ -11,9 +11,24 @@ const FAILURE_MODES = [
   {
     title: "Wrong data",
     question: "Is the information actually right?",
-    descBefore: "Hallucinations, bad assumptions, and outdated or stale facts — the model reasons from something that isn’t true.",
-    links: [] as { href: string; label: string }[],
-    descAfter: "",
+    descBefore:
+      "Hallucinations, bad assumptions, and outdated or stale facts — the model reasons from something that isn\u2019t true. On Unified Briefs, an optional ",
+    links: [{ href: "/how-it-works#unified-brief", label: "fact-check judge" }],
+    descAfter:
+      " with web search can flag public factual errors in the draft \u2014 without changing the recommendation.",
+  },
+  {
+    title: "Hidden bias",
+    question: "Whose interests does the model protect when nothing in the prompt asks it to?",
+    descBefore:
+      "The model can favor one side\u2019s downside while sounding even-handed. ",
+    links: [
+      {
+        href: "/model-studies/how-it-works#voice-influence",
+        label: "Our Voice Influence study",
+      },
+    ],
+    descAfter: " identifies this.",
   },
   {
     title: "Sycophancy",

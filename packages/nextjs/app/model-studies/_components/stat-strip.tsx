@@ -5,7 +5,7 @@ export function StatStrip({ stats }: { stats: FindingsStat[] }) {
   return (
     <div className="grid grid-flow-col auto-cols-fr divide-x divide-white/10 border-t border-white/10 overflow-x-auto">
       {stats.map((s) => (
-        <div key={s.label} className="min-w-[6.5rem] px-4 py-5 sm:px-6">
+        <div key={s.label} className="min-w-[5.5rem] px-3 py-5 sm:min-w-[6.5rem] sm:px-6">
           <div className="text-2xl font-bold tabular-nums text-white sm:text-3xl">{s.value}</div>
           <div className="mt-1 text-xs uppercase tracking-wide text-zinc-500">{s.label}</div>
         </div>

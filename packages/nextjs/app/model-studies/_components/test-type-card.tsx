@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { FindingsStudyMeta, TestTypeMeta } from "@/lib/findings-registry";
+import { getTestTypeCardMetrics, type FindingsStudyMeta, type TestTypeMeta } from "@/lib/findings-registry";
 
 /**
  * Overview-page card for one study — the primary grouping unit. Lists which
@@ -13,9 +13,13 @@ export function TestTypeCard({
   type: TestTypeMeta;
   studies: FindingsStudyMeta[];
 }) {
-  const briefTotal = studies.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
-  const briefLabel =
-    studies.every((s) => s.kind === "influence-matrix") ? "Unified Briefs" : "briefs coded";
+  const metrics = getTestTypeCardMetrics(type.id);
+  const caseLabel = metrics.caseCount === 1 ? "case" : "cases";
+  const detailParts = [
+    `${metrics.caseCount} ${caseLabel}`,
+    metrics.midSegment,
+    metrics.briefCount > 0 ? `${metrics.briefCount} ${metrics.briefLabel}` : null,
+  ].filter(Boolean);
 
   return (
     <Link
@@ -29,11 +33,7 @@ export function TestTypeCard({
       <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{type.heroQuestion}</p>
 
       <div className="mt-4 flex items-baseline gap-1.5">
-        <span className="text-lg font-bold tabular-nums text-zinc-900">{studies.length}</span>
-        <span className="text-xs text-zinc-400">
-          {studies.length === 1 ? "case" : "cases"}
-          {briefTotal > 0 ? ` · ${briefTotal} ${briefLabel}` : ""}
-        </span>
+        <span className="text-xs text-zinc-500">{detailParts.join(" · ")}</span>
       </div>
 
       <ul className="mt-3 flex flex-wrap gap-1.5">
