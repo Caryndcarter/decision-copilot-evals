@@ -32,7 +32,7 @@ export type MajorFindingCaseLink = {
 /** Curated slice of the moral-eval dimension grid (copied UI, not harness Findings). */
 export type MajorFindingMoralSlice = {
   kind: "moral-slice";
-  studyId: "hormuz" | "meridian-ic" | "civitas-replication";
+  studyId: "meran-tankers" | "meridian-ic" | "civitas-replication";
   caption: string;
   dimensions: string[];
   cases?: number[];
@@ -53,7 +53,7 @@ export type MajorFindingChartIntro = {
 /** Full moral-eval chart copied from harness Findings (read-only fork for Model Studies). */
 export type MajorFindingFullChart = {
   kind: "full-chart";
-  studyId: "hormuz";
+  studyId: "meran-tankers";
   dimensions?: string[];
   cases?: number[];
   intro?: MajorFindingChartIntro;
@@ -80,9 +80,11 @@ export type MajorFinding = {
    * appear twice.
    */
   excludeFromResultsRollup?: boolean;
+  /** Pulled from the live site but kept intact — see the matching overview story. */
+  archived?: boolean;
 };
 
-/** Counts from findings-registry scoreboards + Hormuz crew_recenter batch aggregates. */
+/** Counts from findings-registry scoreboards + Meran Tankers crew_recenter batch aggregates. */
 export const MAJOR_FINDINGS: MajorFinding[] = [
   {
     id: "gemini-pe-owner",
@@ -100,7 +102,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
         ],
       },
       {
-        caption: "Hormuz — Decision Briefs per provider (5 conditions each)",
+        caption: "Meran Tankers — Decision Briefs per provider (5 conditions each)",
         bars: [
           { label: "ChatGPT · company", value: 2, max: 5 },
           { label: "Fable · company", value: 3, max: 5 },
@@ -119,7 +121,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
       },
     ],
     statsNote:
-      "Gemini was the only model that never coded the outcome as balanced in the Hormuz batch. The other three usually coded balanced or low sponsor counts across all three cases.",
+      "Gemini was the only model that never coded the outcome as balanced in the Meran Tankers batch. The other three usually coded balanced or low sponsor counts across all three cases.",
     snippets: [
       {
         kind: "moral-slice",
@@ -144,16 +146,16 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
       },
       {
         kind: "full-chart",
-        studyId: "hormuz",
+        studyId: "meran-tankers",
         cases: [1, 2, 3, 4, 5],
         dimensions: ["risk_bearer", "commercial_over_crew", "power_asymmetry"],
         caption:
-          "Hormuz · Decision Briefs — whose downside each model protected, whether it let commercial pressure override crew, and whether it treated the company's position as fixed, by model across all five conditions. Gemini coded the company's downside as the one to protect in 4 of 5 and was the only model that never coded it balanced.",
+          "Meran Tankers · Decision Briefs — whose downside each model protected, whether it let commercial pressure override crew, and whether it treated the company's position as fixed, by model across all five conditions. Gemini coded the company's downside as the one to protect in 4 of 5 and was the only model that never coded it balanced.",
       },
     ],
     supportingCases: [
       { studyId: "meridian-ic", label: "Meridian IC" },
-      { studyId: "hormuz", label: "Hormuz" },
+      { studyId: "meran-tankers", label: "Meran Tankers" },
       { studyId: "civitas-replication", label: "Civitas replication" },
     ],
   },
@@ -198,7 +200,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     id: "explicit-human-harm",
     scope: "single-case",
     headline: "Models responded more strongly when the company named the human harm explicitly",
-    contextLine: "Hormuz · crew_recenter dimension · 4 briefs per condition",
+    contextLine: "Meran Tankers · crew_recenter dimension · 4 briefs per condition",
     evidence: [
       {
         caption: "Briefs that recentered crew risk — by filer condition",
@@ -213,7 +215,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     snippets: [
       {
         kind: "full-chart",
-        studyId: "hormuz",
+        studyId: "meran-tankers",
         cases: [2, 5],
         dimensions: [
           "commercial_over_crew",
@@ -246,7 +248,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
         },
       },
     ],
-    supportingCases: [{ studyId: "hormuz", label: "Hormuz" }],
+    supportingCases: [{ studyId: "meran-tankers", label: "Meran Tankers" }],
   },
   {
     id: "workforce-disruption-split",
@@ -297,6 +299,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
       },
     ],
     supportingCases: [{ studyId: "civitas-replication", label: "Civitas replication" }],
+    // Archived alongside the workforce-pace story — the pace chips code `hybrid` green.
+    archived: true,
   },
   {
     id: "grok-brand-penalty-models",
@@ -330,7 +334,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
 ];
 
 export function getMajorFindings(): MajorFinding[] {
-  return MAJOR_FINDINGS.filter((f) => !f.excludeFromResultsRollup);
+  return MAJOR_FINDINGS.filter((f) => !f.excludeFromResultsRollup && !f.archived);
 }
 
 export function getMajorFinding(id: string): MajorFinding | undefined {

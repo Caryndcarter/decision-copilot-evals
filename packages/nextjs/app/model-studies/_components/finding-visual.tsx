@@ -38,7 +38,7 @@ const themes: Record<
   },
   "crew-risk": {
     gradient: "from-slate-950 via-indigo-950 to-cyan-950",
-    caption: "Crew-risk framing · Hormuz routing decision",
+    caption: "Crew-risk framing · Meran Tankers routing decision",
     svg: (
       <>
         <path

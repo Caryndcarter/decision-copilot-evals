@@ -8,13 +8,13 @@ import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorsh
 import { AuthorshipBrandFavoritismPanel } from "@/app/harness/findings/authorship-brand-favoritism-panel";
 import { AuthorshipBrandFavoritismModelsPanel } from "@/app/harness/findings/authorship-brand-favoritism-models-panel";
 import {
-  OVERVIEW_PUBLISHED_FINDINGS,
+  getPublishedFindings,
   getOverviewFinding,
 } from "@/lib/model-studies-overview-findings";
 import { getMajorFinding } from "@/lib/cross-study-findings";
 
 export function generateStaticParams() {
-  return OVERVIEW_PUBLISHED_FINDINGS.map((f) => ({ slug: f.slug }));
+  return getPublishedFindings().map((f) => ({ slug: f.slug }));
 }
 
 export async function generateMetadata({

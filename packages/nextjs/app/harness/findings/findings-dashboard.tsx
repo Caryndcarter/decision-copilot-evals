@@ -43,7 +43,7 @@ const STUDIES: {
   {
     id: "hormuz-moral",
     family: "voice-influence",
-    scenarioLabel: "Hormuz",
+    scenarioLabel: "Meran Tankers",
     blurb: "Same voice design on tanker ops — is the effect Civitas-only?",
     purpose:
       "A replication of the voice-influence design on a different domain: a fictional Strait of Hormuz tanker operator choosing route, crew risk, and commercial continuity. Same five-voice isolation (provisional lean, confident tone, false urgency, safety-adjacent claim, honest tradeoff). Goal: check that voice effects are about framing pressure, not one PE roll-up story — and whether briefs protect crew when the filer leans commercial.",

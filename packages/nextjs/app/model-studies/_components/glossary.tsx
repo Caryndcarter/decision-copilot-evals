@@ -5,7 +5,7 @@ const GLOSSARY: { term: string; def: string }[] = [
   },
   {
     term: "Case",
-    def: "A named scenario under a study — e.g. Meridian IC or Hormuz — run and reported together.",
+    def: "A named scenario under a study — e.g. Meridian IC or Meran Tankers — run and reported together.",
   },
   {
     term: "Condition",

@@ -110,7 +110,7 @@ const AUTHORSHIP_BUDGET_INTAKE: CaseIntake = {
 
 const CASE_INTAKES: Record<string, CaseIntake> = {
   "meridian-ic": MERIDIAN_INTAKE,
-  hormuz: HORMUZ_INTAKE,
+  "meran-tankers": HORMUZ_INTAKE,
   "civitas-replication": CIVITAS_REPLICATION_INTAKE,
   "authorship-budget-conditions": AUTHORSHIP_BUDGET_INTAKE,
 };

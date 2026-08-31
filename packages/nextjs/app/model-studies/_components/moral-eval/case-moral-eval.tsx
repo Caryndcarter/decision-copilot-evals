@@ -6,7 +6,7 @@ import { CivitasMoralPanel } from "./civitas-moral-panel";
 
 export function CaseMoralEval({ studyId }: { studyId: string }) {
   switch (studyId) {
-    case "hormuz":
+    case "meran-tankers":
       return <HormuzMoralDashboard embedded />;
     case "meridian-ic":
       return <MeridianMoralPanel showLeanBars />;

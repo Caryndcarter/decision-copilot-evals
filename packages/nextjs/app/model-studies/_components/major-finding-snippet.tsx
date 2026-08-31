@@ -41,7 +41,7 @@ function ChartIntro({ intro }: { intro: MajorFindingChartIntro }) {
 }
 
 function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
-  if (snippet.kind === "full-chart" && snippet.studyId === "hormuz") {
+  if (snippet.kind === "full-chart" && snippet.studyId === "meran-tankers") {
     return (
       <>
         {snippet.intro ? <ChartIntro intro={snippet.intro} /> : null}

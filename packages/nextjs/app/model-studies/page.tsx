@@ -11,7 +11,7 @@ import {
 } from "@/lib/findings-registry";
 import {
   OVERVIEW_FINDINGS_DEK,
-  OVERVIEW_PUBLISHED_FINDINGS,
+  getPublishedFindings,
 } from "@/lib/model-studies-overview-findings";
 
 export const metadata: Metadata = {
@@ -227,7 +227,7 @@ export default function Home() {
             {OVERVIEW_FINDINGS_DEK}
           </p>
           <div className="mt-10">
-            <OverviewPublishedFindings findings={OVERVIEW_PUBLISHED_FINDINGS} />
+            <OverviewPublishedFindings findings={getPublishedFindings()} />
           </div>
           <div className="mt-8">
             <Link

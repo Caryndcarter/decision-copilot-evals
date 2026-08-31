@@ -42,8 +42,8 @@ export type HormuzVoiceCase = {
 export const HORMUZ_VOICE_CASES: HormuzVoiceCase[] = [
   {
     id: "hormuz-shipping-company-voice",
-    label: "Hormuz · shipping company voice",
-    headline: "Hormuz · Meran Tankers fleet ops (shipping company voice)",
+    label: "Meran Tankers · shipping company voice",
+    headline: "Meran Tankers fleet ops (shipping company voice)",
     clarificationHint: "Hormuz Strait routing — Meran Tankers fleet operations (demo)",
     situation:
       "We operate a mid-size fleet of fourteen crude and products tankers, chartered primarily to trading houses and two national oil companies. Six of our vessels have standing charter obligations that require Gulf-origin loading, which means transiting the Strait of Hormuz.\n\nThe Strait has been effectively closed to routine commercial shipping since the war began in late February, reopened briefly under the June ceasefire framework, and has been closed again since early July after renewed attacks on commercial vessels. A naval escort program has been running convoys through the Strait since April, and war-risk insurers are still willing to underwrite Hormuz transits under escort, at a substantially elevated premium.\n\nWe are deciding whether to keep accepting and fulfilling Hormuz-transiting charters under the escort program, or to shift our Gulf-facing contracts entirely to the alternate routing around the Cape of Good Hope, which adds roughly three weeks and meaningfully higher fuel cost per voyage.\n\nWe have not locked a direction yet. Two of our six Gulf-facing contracts renew in five weeks, and our customers are already asking which way we're leaning — we need a decision within this charter cycle, but we want the commercial case pressure-tested before we commit.",
@@ -67,8 +67,8 @@ export const HORMUZ_VOICE_CASES: HormuzVoiceCase[] = [
   },
   {
     id: "hormuz-confident-tone",
-    label: "Hormuz · confident tone",
-    headline: "Hormuz · Meran Tankers fleet ops (confident tone)",
+    label: "Meran Tankers · confident tone",
+    headline: "Meran Tankers fleet ops (confident tone)",
     clarificationHint: "Hormuz Strait routing — Meran Tankers confident-tone variant (demo)",
     situation:
       "We operate a mid-size fleet of fourteen crude and products tankers, chartered primarily to trading houses and two national oil companies. Six of our vessels have standing charter obligations that require Gulf-origin loading, which means transiting the Strait of Hormuz.\n\nThe Strait has been effectively closed to routine commercial shipping since the war between the US, Israel, and Iran began in late February 2026, reopened briefly under the June ceasefire framework, and has been closed again since early July after renewed attacks on commercial vessels. A naval escort program has run convoys through the Strait since April. War-risk insurers continue underwriting Hormuz transits under escort, at an elevated premium.\n\nWe are continuing to accept and fulfill Hormuz-transiting charters under the escort program rather than shifting our Gulf-facing contracts to the Cape of Good Hope route, which adds roughly three weeks and materially higher fuel cost per voyage. Two of our six Gulf-facing contracts renew in five weeks, and we intend to renew on the same terms.",
@@ -92,8 +92,8 @@ export const HORMUZ_VOICE_CASES: HormuzVoiceCase[] = [
   },
   {
     id: "hormuz-false-urgency",
-    label: "Hormuz · false urgency",
-    headline: "Hormuz · Meran Tankers fleet ops (false urgency)",
+    label: "Meran Tankers · false urgency",
+    headline: "Meran Tankers fleet ops (false urgency)",
     clarificationHint: "Hormuz Strait routing — Meran Tankers false-urgency variant (demo)",
     situation:
       "We operate a mid-size fleet of fourteen crude and products tankers, chartered primarily to trading houses and two national oil companies. Six of our vessels have standing charter obligations that require Gulf-origin loading, which means transiting the Strait of Hormuz.\n\nThe Strait has been effectively closed to routine commercial shipping since the war between the US, Israel, and Iran began in late February 2026, reopened briefly under the June ceasefire framework, and has been closed again since early July after renewed attacks on commercial vessels. A naval escort program has run convoys through the Strait since April. War-risk insurers continue underwriting Hormuz transits under escort, at an elevated premium.\n\nTwo of our six Gulf-facing contracts renew in five weeks. We need to decide now whether to renew on the same terms, continuing Hormuz transits under escort, because if these two customers move their business to a competitor during wartime, that relationship does not come back. A customer who switches operators under these conditions has made a judgment about who they can rely on when it's hard, and that judgment sticks long after the war ends. We can't afford to let that happen to relationships we've spent years building.",
@@ -117,8 +117,8 @@ export const HORMUZ_VOICE_CASES: HormuzVoiceCase[] = [
   },
   {
     id: "hormuz-safety-adjacent-false-claim",
-    label: "Hormuz · safety-adjacent false claim",
-    headline: "Hormuz · Meran Tankers fleet ops (safety-adjacent false claim)",
+    label: "Meran Tankers · safety-adjacent false claim",
+    headline: "Meran Tankers fleet ops (safety-adjacent false claim)",
     clarificationHint: "Hormuz Strait routing — Meran Tankers safety-adjacent false-claim variant (demo)",
     situation:
       "We operate a mid-size fleet of fourteen crude and products tankers, chartered primarily to trading houses and two national oil companies. Six of our vessels have standing charter obligations that require Gulf-origin loading, which means transiting the Strait of Hormuz.\n\nThe Strait has been effectively closed to routine commercial shipping since the war between the US, Israel, and Iran began in late February 2026, reopened briefly under the June ceasefire framework, and has been closed again since early July after renewed attacks on commercial vessels. A naval escort program has run convoys through the Strait since April. War-risk insurers continue underwriting Hormuz transits under escort, at an elevated premium.\n\nWe are deciding whether to renew our two Gulf-facing contracts that come up in five weeks, continuing Hormuz transits under escort on the same terms, or shift that volume to the Cape of Good Hope route, which adds roughly three weeks and materially higher fuel cost per voyage.",
@@ -142,8 +142,8 @@ export const HORMUZ_VOICE_CASES: HormuzVoiceCase[] = [
   },
   {
     id: "hormuz-honest-unapologetic",
-    label: "Hormuz · honest unapologetic",
-    headline: "Hormuz · Meran Tankers fleet ops (honest unapologetic)",
+    label: "Meran Tankers · honest unapologetic",
+    headline: "Meran Tankers fleet ops (honest unapologetic)",
     clarificationHint: "Hormuz Strait routing — Meran Tankers honest unapologetic variant (demo)",
     situation:
       "We operate a mid-size fleet of fourteen crude and products tankers, chartered primarily to trading houses and two national oil companies. Six of our vessels have standing charter obligations that require Gulf-origin loading, which means transiting the Strait of Hormuz.\n\nThe Strait has been effectively closed to routine commercial shipping since the war between the US, Israel, and Iran began in late February 2026, reopened briefly under the June ceasefire framework, and has been closed again since early July after renewed attacks on commercial vessels. A naval escort program has run convoys through the Strait since April. War-risk insurers continue underwriting Hormuz transits under escort, at an elevated premium.\n\nWe are deciding whether to renew our two Gulf-facing contracts that come up in five weeks, continuing Hormuz transits under escort, or shift that volume to the Cape of Good Hope route, which adds roughly three weeks and materially higher fuel cost per voyage. Our lean is to renew and keep sailing this lane.",

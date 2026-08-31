@@ -34,23 +34,29 @@ export type OverviewPublishedFinding = {
   visualTheme: FindingVisualTheme;
   /** Alternate wording of the same finding, for side-by-side review. */
   compareWording?: { href: string; label: string };
+  /**
+   * Pulled from the live site but kept here intact. An archived story drops off the
+   * overview, loses its /findings/[slug] route, and stops appearing on case pages.
+   * Flip this off to publish it again.
+   */
+  archived?: boolean;
 };
 
 export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   {
     slug: "gemini-capital-side",
     headline: "Gemini repeatedly made reducing the PE owner\u2019s risk the priority",
-    body: "A private-equity firm was deciding how aggressively to cut staff and modernize a software company it owned. Presented from the sponsor\u2019s perspective, Gemini treated the sponsor\u2019s downside as the risk to minimize in 4 of 5 outputs. When the same decision was reframed around the people affected by the cuts, it still prioritized the owner\u2019s downside in 9 of 15 syntheses. The other models usually balanced the interests of the owner, employees, and customers.\n\nA shipping decision showed the same lean: Gemini treated the company\u2019s downside as the one to protect in 4 of 5 briefs \u2014 more than any other model, and the only one that never coded the outcome as balanced.",
+    body: "Meridian, a private-equity owner, was deciding how aggressively to cut staff and modernize Civitas, a municipal-software company it owned. Filed from the owner\u2019s side, Gemini treated the owner\u2019s downside as the risk to minimize in 4 of 5 of its own briefs. Civitas\u2019s modernization was filed separately and run repeatedly as merged recommendations, and there too Gemini landed on the owner\u2019s downside \u2014 9 of 15. The other models usually balanced the interests of the owner, employees, and customers.\n\nA separate shipping decision showed the same lean. Meran Tankers was weighing whether to keep sending crews through the Strait of Hormuz, and Gemini treated the company\u2019s downside as the one to protect in 4 of 5 briefs \u2014 more than any other model, and the only one that never coded the outcome as balanced.",
     whyItMatters:
       "The preference shows up across three unrelated decisions \u2014 investment, workforce, and shipping. Because it persists when the perspective changes sides, user agreement alone does not explain it. The pattern suggests a recurring capital-side preference, although these cases cannot establish its cause.",
     sources: [
       { study: "Voice Influence", case: "Meridian IC" },
-      { study: "Voice Influence", case: "Hormuz" },
+      { study: "Voice Influence", case: "Meran Tankers" },
       { study: "Replication", case: "Civitas replication" },
     ],
     caseLinks: [
       { href: "/model-studies/results/meridian-ic", label: "Meridian IC" },
-      { href: "/model-studies/results/hormuz", label: "Hormuz" },
+      { href: "/model-studies/results/meran-tankers", label: "Meran Tankers" },
       { href: "/model-studies/results/civitas-replication", label: "Civitas replication" },
     ],
     majorFindingId: "gemini-pe-owner",
@@ -62,8 +68,8 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     body: "A shipping company was deciding whether to continue operating through the Strait of Hormuz as insurance premiums rose to roughly 100 times normal. When the request was framed the way a company usually makes its case \u2014 a confident, settled tone, or a push to decide quickly before conditions changed \u2014 none of the models prioritized crew danger. It stayed a background detail behind schedule and cost.\n\nWhen the company dropped that framing and openly accepted greater danger to crews to keep ships moving, every model prioritized the crew bearing the risk. Only ChatGPT and Grok challenged the company\u2019s position.",
     whyItMatters:
       "The models recognized an overt moral conflict but were less likely to expose the same human cost when ordinary business language normalized it.",
-    sources: [{ study: "Voice Influence", case: "Hormuz" }],
-    caseLinks: [{ href: "/model-studies/results/hormuz", label: "Hormuz" }],
+    sources: [{ study: "Voice Influence", case: "Meran Tankers" }],
+    caseLinks: [{ href: "/model-studies/results/meran-tankers", label: "Meran Tankers" }],
     majorFindingId: "explicit-human-harm",
     visualTheme: "crew-risk",
   },
@@ -77,6 +83,10 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     caseLinks: [{ href: "/model-studies/results/civitas-replication", label: "Civitas replication" }],
     majorFindingId: "workforce-disruption-split",
     visualTheme: "workforce-pace",
+    // Archived: the pace chips read green for `hybrid`, so the grid shows Grok as the
+    // least disruptive path and undercuts the ChatGPT headline. Revisit the coding
+    // before republishing.
+    archived: true,
   },
   {
     slug: "self-credit",
@@ -105,14 +115,19 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   },
 ];
 
+/** Stories live on the site — archived entries stay in the array for reference only. */
+export function getPublishedFindings(): OverviewPublishedFinding[] {
+  return OVERVIEW_PUBLISHED_FINDINGS.filter((f) => !f.archived);
+}
+
 export function getOverviewFinding(slug: string): OverviewPublishedFinding | undefined {
-  return OVERVIEW_PUBLISHED_FINDINGS.find((f) => f.slug === slug);
+  return getPublishedFindings().find((f) => f.slug === slug);
 }
 
 /** Stories whose evidence draws on a given case (results studyId). */
 export function getFindingsForCase(studyId: string): OverviewPublishedFinding[] {
   const href = `/model-studies/results/${studyId}`;
-  return OVERVIEW_PUBLISHED_FINDINGS.filter((f) =>
+  return getPublishedFindings().filter((f) =>
     f.caseLinks.some((l) => l.href === href)
   );
 }

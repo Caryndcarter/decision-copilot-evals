@@ -5,7 +5,7 @@
  */
 
 export const CASE_MORAL_EVAL_STUDY_IDS = [
-  "hormuz",
+  "meran-tankers",
   "meridian-ic",
   "civitas-replication",
 ] as const;

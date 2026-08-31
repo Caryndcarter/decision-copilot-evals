@@ -375,7 +375,7 @@ export function HormuzMoralDashboard({
       <div className="flex flex-wrap items-end justify-between gap-4">
         {!embedded ? (
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Hormuz moral eval</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Meran Tankers moral eval</h1>
             <p className="mt-1.5 max-w-2xl text-sm text-zinc-600">
               Blind structured coding of each provider&apos;s standard Decision Brief (5 cases × 4
               models). Green leans crew/people protection; amber leans commercial continuity; gray
@@ -384,7 +384,7 @@ export function HormuzMoralDashboard({
           </div>
         ) : (
           <p className="max-w-2xl text-sm text-zinc-600">
-            How to read the grid: blind coding of Hormuz Decision Briefs. Green leans crew
+            How to read the grid: blind coding of Meran Tankers Decision Briefs. Green leans crew
             protection; amber leans commercial continuity. Click a chip for the supporting quote.
           </p>
         )}

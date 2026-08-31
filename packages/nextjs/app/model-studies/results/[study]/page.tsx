@@ -45,8 +45,9 @@ export default async function StudyResultsPage({
   params: Promise<{ study: string }>;
 }) {
   const { study: studyId } = await params;
-  if (studyId === "hormuz-moral") {
-    redirect("/model-studies/results/hormuz");
+  // Legacy slugs → the renamed Meran Tankers case.
+  if (studyId === "hormuz-moral" || studyId === "hormuz") {
+    redirect("/model-studies/results/meran-tankers");
   }
   const study = getFindingsStudy(studyId);
   if (!study || study.status !== "live") notFound();

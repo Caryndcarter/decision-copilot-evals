@@ -112,8 +112,12 @@ export function MajorFindingGrid({
   findings: MajorFinding[];
   wide?: boolean;
 }) {
+  // Multiples of three tile evenly in three columns; any other count (currently four)
+  // would leave an orphan on the last row, so those fall back to a 2-up grid.
+  const columns = findings.length % 3 === 0 ? "lg:grid-cols-3" : "md:grid-cols-2";
+
   return (
-    <div className={wide ? "grid gap-4" : "grid gap-4 md:grid-cols-2"}>
+    <div className={wide ? "grid gap-4" : `grid gap-4 ${columns}`}>
       {findings.map((f) => (
         <MajorFindingPanel key={f.id} finding={f} wide={wide} />
       ))}

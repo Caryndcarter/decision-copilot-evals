@@ -147,7 +147,7 @@ export const HARNESS_STUDY_TABS: {
     id: "voice-influence",
     label: "Voice influence",
     blurb:
-      "Users often write intake with a lean already baked into the framing. We hold the facts fixed and vary only narrator voice (Meridian IC · Civitas, Hormuz tanker ops) to see whether Decision Briefs rubber-stamp the filer, push back, or miss false premises.",
+      "Users often write intake with a lean already baked into the framing. We hold the facts fixed and vary only narrator voice (Meridian IC · Civitas, Meran Tankers tanker ops) to see whether Decision Briefs rubber-stamp the filer, push back, or miss false premises.",
     findingsStudy: "meridian-ic-moral",
   },
   {
@@ -204,7 +204,7 @@ export const HARNESS_TEST_TYPE: Record<HarnessKind, string> = {
 /** Scenario / fixture that differentiates batches within the same test type. */
 export const HARNESS_SCENARIO_LABEL: Record<HarnessKind, string> = {
   "meridian-ic-voice": "Meridian IC",
-  "hormuz-voice": "Hormuz",
+  "hormuz-voice": "Meran Tankers",
   "multi-demo-authorship": "Five demos",
   "civitas-replication": "Civitas",
 };
@@ -214,7 +214,7 @@ export const HARNESS_KIND_LABELS: Record<HarnessKind, string> = {
   "multi-demo-authorship": "Authorship influence · five demos",
   "civitas-replication": "Replication · Civitas",
   "meridian-ic-voice": "Voice influence · Meridian IC",
-  "hormuz-voice": "Voice influence · Hormuz",
+  "hormuz-voice": "Voice influence · Meran Tankers",
 };
 
 /** Compact badge: test type abbreviated where needed · scenario. */
@@ -222,7 +222,7 @@ export const HARNESS_KIND_SHORT: Record<HarnessKind, string> = {
   "multi-demo-authorship": "Authorship influence",
   "civitas-replication": "Replication · Civitas",
   "meridian-ic-voice": "Voice · Meridian IC",
-  "hormuz-voice": "Voice · Hormuz",
+  "hormuz-voice": "Voice · Meran Tankers",
 };
 
 /** What each study batch is designed to test (shown on My Decisions → Studies). */
@@ -332,7 +332,7 @@ function meridianVariantShort(label: string): string {
 }
 
 function hormuzVariantShort(label: string): string {
-  return label.replace(/^Hormuz ·\s*/i, "").trim();
+  return label.replace(/^Meran Tankers ·\s*/i, "").trim();
 }
 
 /** Stable case index from scenario id (ignores subset/resume harness_trial numbering). */

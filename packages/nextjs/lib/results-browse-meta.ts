@@ -53,9 +53,9 @@ const CASE_BROWSE: Record<string, ResultsCaseBrowseMeta> = {
     keyResult: "Gemini 4/5 · sponsor downside",
     publicationStatus: "published",
   },
-  hormuz: {
+  "meran-tankers": {
     title: "Shipping and crew danger",
-    caseTag: "Hormuz",
+    caseTag: "Meran Tankers",
     keyResult: "4/4 crew recenter when harm named",
     publicationStatus: "published",
   },
