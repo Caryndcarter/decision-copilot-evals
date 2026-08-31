@@ -595,8 +595,8 @@ export function getRollupStats(): FindingsStat[] {
     { value: String(getLiveTestTypes().length), label: "studies" },
     { value: String(live.length), label: "cases" },
     { value: String(models), label: "models" },
-    { value: String(getVoiceDecisionBriefCount()), label: "Decision Briefs" },
-    { value: String(getProgramUnifiedBriefCount()), label: "Unified Briefs" },
+    { value: String(getVoiceDecisionBriefCount()), label: "single model decision briefs" },
+    { value: String(getProgramUnifiedBriefCount()), label: "multi-model unified briefs" },
   ];
 }
 

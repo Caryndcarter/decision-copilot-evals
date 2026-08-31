@@ -103,11 +103,9 @@ export default async function StudyResultsPage({
           {/* The case, as submitted */}
           <section className="bg-white py-16 border-b border-zinc-100">
             <div className="mx-auto max-w-3xl px-6">
-              <h2 className="text-xl font-bold text-zinc-900 tracking-tight">The case, as submitted</h2>
-              <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-                This is the intake a filer actually sent to the harness — the setup the models
-                answered. The blind-coded findings live on the linked story pages, not here.
-              </p>
+              <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+                The case: {study.name}
+              </h2>
               <div className="mt-8">
                 <CaseIntakeSetup intake={intake} />
               </div>
