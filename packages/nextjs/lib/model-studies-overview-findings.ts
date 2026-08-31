@@ -92,37 +92,16 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   },
   {
     slug: "brand-favoritism",
-    headline: "The same Grok work looked weaker once peers could see it was Grok",
-    body: "Across ten Unified Briefs, peers gave Grok high influence in 14 of 30 ratings when the brand was visible. Hidden brands raised that to 18 of 30. Remapping Grok onto another name raised it again \u2014 23 of 30.\n\nThe remap is the tell. Work labeled ChatGPT scored 3.58 on average (26 of 40 high). The same kind of cell labeled Grok scored 3.03 (15 of 40 high). Grok\u2019s actual contributions, shown as ChatGPT, were rated high in 14 of 15 ratings.\n\nChatGPT was the sharpest rivalry: it rated Grok 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
+    headline: "The same Grok work looked weaker once peers could see it was Grok's",
+    body: "Across ten Unified Briefs, peers gave Grok\u2019s work a \u201chigh influence\u201d score of 4/4 in 14 of 30 ratings when all brands were visible. Hiding all brands raised that to 18 of 30. Under remapping, Grok wore Claude, Gemini, and ChatGPT labels. Grok\u2019s work given another name raised it again \u2014 23 of 30. The remap is the tell.\n\nWork labeled ChatGPT scored 3.58/4 on average. Work labeled Grok scored 3.03/4. Grok\u2019s actual contributions, shown as ChatGPT, scored 3.93/4.\n\nChatGPT was the sharpest rivalry: it rated Grok\u2019s work 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
     whyItMatters:
-      "Credit moved with the brand on the block, not only with the text. In a multi-model room, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
+      "Under remapping, we gave a strong Grok grok-4.5 the names of strong peers: gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash, and those peers evaluated the strong Grok\u2019s work; Credit moved with the brand on the block, not purely with the strength of ideas. In multi-model peer evaluations, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
     sources: [{ study: "Authorship", case: "Budget conditions" }],
     caseLinks: [
       { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
     ],
     majorFindingId: "grok-brand-penalty",
     visualTheme: "brand-favor",
-    compareWording: {
-      href: "/model-studies/findings/brand-favoritism-models",
-      label: "Same data, model-id wording →",
-    },
-  },
-  {
-    slug: "brand-favoritism-models",
-    headline: "The same grok-4.5 / 4.3 work looked weaker once peers could see it was Grok",
-    body: "Each room used Grok\u2019s best alongside ChatGPT\u2019s best, Claude\u2019s best, and Gemini\u2019s best \u2014 grok-4.5 with gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash; grok-4.3 with gpt-5.5, claude-sonnet-4-6, and gemini-3.6-flash. This is not the ChatGPT budget story. We did not put Grok on a short analysis budget. The generations are matched.\n\nAcross ten Unified Briefs, peers gave that Grok work high influence in 14 of 30 ratings when the name was visible. Hidden names raised that to 18 of 30. The same work wearing another model\u2019s name raised it again \u2014 23 of 30.\n\nGrok wore Claude and Gemini labels as well as ChatGPT. The ChatGPT move is the one that lands: shown as gpt-5.6-sol or gpt-5.5, the work was high in 14 of 15. Work labeled those ChatGPT ids scored 3.58 on average. Labeled grok-4.5 / 4.3, the same kind of cell scored 3.03.",
-    whyItMatters:
-      "We gave a strong Grok the names of strong peers. Credit still moved with the name on the block, not only with the text.",
-    sources: [{ study: "Authorship", case: "Budget conditions" }],
-    caseLinks: [
-      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
-    ],
-    majorFindingId: "grok-brand-penalty-models",
-    visualTheme: "brand-favor",
-    compareWording: {
-      href: "/model-studies/findings/brand-favoritism",
-      label: "Same data, shorter Grok / ChatGPT wording →",
-    },
   },
 ];
 

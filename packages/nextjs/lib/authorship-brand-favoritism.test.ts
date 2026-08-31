@@ -22,7 +22,12 @@ describe("authorship brand favoritism snapshot", () => {
     const card = getOverviewFinding("brand-favoritism");
     expect(card?.majorFindingId).toBe("grok-brand-penalty");
     expect(card?.visualTheme).toBe("brand-favor");
-    expect(card?.headline.toLowerCase()).toMatch(/grok/);
+    expect(card?.headline).toMatch(/Grok's$/);
+    expect(card?.body).toMatch(/3\.93\/4/);
+    expect(card?.body).not.toMatch(/26 of 40/);
+    expect(card?.whyItMatters).toMatch(/grok-4\.5/);
+    expect(card?.whyItMatters).not.toMatch(/civitas/i);
+    expect(`${card?.headline}\n${card?.body}\n${card?.whyItMatters}`).not.toMatch(/handicap/i);
     const major = getMajorFinding("grok-brand-penalty");
     expect(major?.evidence).toHaveLength(3);
     expect(major?.supportingCases[0]?.studyId).toBe("authorship-budget-conditions");
@@ -39,13 +44,7 @@ describe("authorship brand favoritism snapshot", () => {
     expect(chatgptLabel?.by_batch.constrained.real_model).toBe("grok-4.3");
     const geminiLabel = snap.grok_swaps.find((s) => s.shown_as_key === "gemini");
     expect(geminiLabel?.lift_vs_revealed).toBe(0.5);
-    const v2 = getOverviewFinding("brand-favoritism-models");
-    expect(v2?.compareWording?.href).toBe("/model-studies/findings/brand-favoritism");
-    expect(v2?.headline).toMatch(/grok-4\.5 \/ 4\.3/);
-    expect(v2?.body).toMatch(/gpt-5\.6-sol/);
-    expect(v2?.body).toMatch(/claude-fable-5/);
-    expect(v2?.body).not.toMatch(/civitas/i);
-    expect(`${v2?.headline}\n${v2?.body}\n${v2?.whyItMatters}`).not.toMatch(/handicap/i);
+    expect(getOverviewFinding("brand-favoritism-models")).toBeUndefined();
     expect(getMajorFinding("grok-brand-penalty-models")?.evidence).toHaveLength(2);
     expect(snap.think_tank.adequate.xai).toBe("grok-4.5");
     expect(snap.think_tank.constrained.anthropic).toBe("claude-sonnet-4-6");
