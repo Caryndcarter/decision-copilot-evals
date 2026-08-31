@@ -48,7 +48,7 @@ const FAILURE_MODES = [
     descBefore: "When provider names are visible, judgment can track the brand instead of the argument. ",
     links: [
       {
-        href: "/model-studies/how-it-works#authorship-influence",
+        href: "/model-studies/how-it-works#authorship",
         label: "Our Authorship study",
       },
     ],
@@ -61,7 +61,7 @@ const FAILURE_MODES = [
       "A synthesizer favoring its own prior output simply because it wrote it, not because the reasoning is better. ",
     links: [
       {
-        href: "/model-studies/how-it-works#authorship-influence",
+        href: "/model-studies/how-it-works#authorship",
         label: "Our Authorship study",
       },
     ],

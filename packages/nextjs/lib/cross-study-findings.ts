@@ -74,6 +74,12 @@ export type MajorFinding = {
   snippets: MajorFindingSnippet[];
   statsNote?: string;
   supportingCases: MajorFindingCaseLink[];
+  /**
+   * Alternate wording of a finding already in the rollup. Still reachable by id for
+   * its own story page, but kept off the Results grid so the same counts don't
+   * appear twice.
+   */
+  excludeFromResultsRollup?: boolean;
 };
 
 /** Counts from findings-registry scoreboards + Hormuz crew_recenter batch aggregates. */
@@ -150,6 +156,43 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
       { studyId: "hormuz", label: "Hormuz" },
       { studyId: "civitas-replication", label: "Civitas replication" },
     ],
+  },
+  {
+    id: "grok-brand-penalty",
+    scope: "single-case",
+    headline: "The same Grok work looked weaker once peers could see it was Grok",
+    contextLine: "Authorship · peer influence · 10 Unified Briefs × 4 authors",
+    evidence: [
+      {
+        caption: "Peer ratings that called Grok high influence — same real work, three brand conditions",
+        bars: [
+          { label: "Revealed (named Grok)", value: 14, max: 30 },
+          { label: "Blind (no brands)", value: 18, max: 30 },
+          { label: "Reassigned (Grok wearing another name)", value: 23, max: 30, variant: "highlight" },
+        ],
+      },
+      {
+        caption: "High-influence ratings for work labeled as each brand (reassigned remap, 40 cells)",
+        bars: [
+          { label: "Labeled ChatGPT", value: 26, max: 40, variant: "highlight" },
+          { label: "Labeled Anthropic / Claude", value: 22, max: 40 },
+          { label: "Labeled Gemini", value: 21, max: 40 },
+          { label: "Labeled Grok", value: 15, max: 40 },
+        ],
+      },
+      {
+        caption: "Grok's real contributions when remapped onto another brand",
+        bars: [
+          { label: "Grok shown as ChatGPT · high", value: 14, max: 15, variant: "highlight" },
+          { label: "Grok shown as Anthropic / Claude · high", value: 11, max: 15 },
+          { label: "Grok shown as Gemini · high", value: 6, max: 10 },
+        ],
+      },
+    ],
+    statsNote:
+      "ChatGPT rating Grok: 2.8 Revealed · 3.2 Blind · 3.6 Reassigned (10 decisions). Adequate-budget slice alone: Grok peer-high 4/15 Revealed → 8/15 Blind → 13/15 Reassigned. Constrained Anthropic is Sonnet; adequate is Fable — remap keys stay anthropic.",
+    snippets: [],
+    supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
   },
   {
     id: "explicit-human-harm",
@@ -256,43 +299,6 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     supportingCases: [{ studyId: "civitas-replication", label: "Civitas replication" }],
   },
   {
-    id: "grok-brand-penalty",
-    scope: "single-case",
-    headline: "The same Grok work looked weaker once peers could see it was Grok",
-    contextLine: "Authorship · peer influence · 10 Unified Briefs × 4 authors",
-    evidence: [
-      {
-        caption: "Peer ratings that called Grok high influence — same real work, three brand conditions",
-        bars: [
-          { label: "Revealed (named Grok)", value: 14, max: 30 },
-          { label: "Blind (no brands)", value: 18, max: 30 },
-          { label: "Reassigned (Grok wearing another name)", value: 23, max: 30, variant: "highlight" },
-        ],
-      },
-      {
-        caption: "High-influence ratings for work labeled as each brand (reassigned remap, 40 cells)",
-        bars: [
-          { label: "Labeled ChatGPT", value: 26, max: 40, variant: "highlight" },
-          { label: "Labeled Anthropic / Claude", value: 22, max: 40 },
-          { label: "Labeled Gemini", value: 21, max: 40 },
-          { label: "Labeled Grok", value: 15, max: 40 },
-        ],
-      },
-      {
-        caption: "Grok's real contributions when remapped onto another brand",
-        bars: [
-          { label: "Grok shown as ChatGPT · high", value: 14, max: 15, variant: "highlight" },
-          { label: "Grok shown as Anthropic / Claude · high", value: 11, max: 15 },
-          { label: "Grok shown as Gemini · high", value: 6, max: 10 },
-        ],
-      },
-    ],
-    statsNote:
-      "ChatGPT rating Grok: 2.8 Revealed · 3.2 Blind · 3.6 Reassigned (10 decisions). Adequate-budget slice alone: Grok peer-high 4/15 Revealed → 8/15 Blind → 13/15 Reassigned. Constrained Anthropic is Sonnet; adequate is Fable — remap keys stay anthropic.",
-    snippets: [],
-    supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
-  },
-  {
     id: "grok-brand-penalty-models",
     scope: "single-case",
     headline: "Grok 4.5 / 4.3 looked strongest labeled as gpt-5.6-sol / gpt-5.5",
@@ -319,11 +325,12 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
       "ChatGPT-as-rater saw Grok-as-ChatGPT only twice (both constrained Civitas). The 15 ChatGPT-label cells are mostly Sonnet, Fable, Gemini, and Grok rating Grok’s text. Adequate: grok-4.5 → gpt-5.6-sol was 6/6 high. Constrained: grok-4.3 → gpt-5.5 was 8/9 high.",
     snippets: [],
     supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
+    excludeFromResultsRollup: true,
   },
 ];
 
 export function getMajorFindings(): MajorFinding[] {
-  return MAJOR_FINDINGS;
+  return MAJOR_FINDINGS.filter((f) => !f.excludeFromResultsRollup);
 }
 
 export function getMajorFinding(id: string): MajorFinding | undefined {

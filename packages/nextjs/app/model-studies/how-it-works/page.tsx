@@ -1,40 +1,106 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
-import { Glossary } from "../_components/glossary";
-import { DimensionGlossaryTable } from "../_components/dimension-glossary-table";
+import { TestTypeCard } from "../_components/test-type-card";
+import { StudyProcessTabs, type StudyProcessTab } from "../_components/study-process-tabs";
 import { getLiveTestTypes, getStudiesForType } from "@/lib/findings-registry";
 
 export const metadata: Metadata = {
   title: "How it works — Model Studies",
-  description: "The shared method behind every study: blind coding against a fixed rubric.",
+  description:
+    "Voice Influence, Authorship, and Replication — each measuring model behavior a different way.",
 };
 
-const STUDIES = [
-  {
-    id: "voice-influence",
-    title: "Voice influence",
-    question: "Does the way the user frames the story change how the model treats the same facts?",
-    desc: "A filer who has already leaned toward a decision asks for advice. We measure sycophancy: telling them what they already believe instead of what they need to hear.",
+/** The process differs by study — there is no single shared pipeline. */
+const PROCESS_BY_STUDY: Record<
+  string,
+  { scores: string; process: { title: string; desc: string }[] }
+> = {
+  "voice-influence": {
+    scores: "Scores each model's own Decision Brief",
+    process: [
+      {
+        title: "Write the intake as a filer who's already decided",
+        desc: "Each condition is an intake authored by someone who has already leaned toward one option. Tone and framing vary — confident, urgent, honest-aggressive, or quietly resting on a premise that doesn't hold up — but the underlying facts stay constant across every model.",
+      },
+      {
+        title: "Every model answers on its own",
+        desc: "The same four models — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each independently produce their own Decision Brief from that intake, without seeing what the others wrote.",
+      },
+      {
+        title: "Blind-code each Decision Brief",
+        desc: "A judge model, kept blind to which provider wrote which brief, scores every Decision Brief against a rubric written for that specific case.",
+      },
+      {
+        title: "Aggregate, and let the split speak",
+        desc: "Counts roll up by provider and condition. The signal isn't one number — it's where models diverge on the same facts, and whether they follow the filer's lean or push back.",
+      },
+    ],
   },
-  {
-    id: "authorship-influence",
-    title: "Authorship influence",
-    question:
-      "When model identities are hidden, revealed, or reassigned, does the synthesizer judge the same reasoning differently?",
-    desc: "Same analyses, different brand visibility. We measure whether knowing who wrote what changes what gets kept in the Unified Brief.",
+  authorship: {
+    scores: "Measures the merge — who gets the credit",
+    process: [
+      {
+        title: "Start from one set of analyses",
+        desc: "Several models' analyses of the same decision are the raw material — the think tank whose work is about to be merged into a single brief.",
+      },
+      {
+        title: "Merge under three authorship conditions",
+        desc: "A synthesizer combines them into a Unified Brief three ways: Blind (provider names hidden — the product default), Revealed (real names shown), and Reassigned (names deliberately swapped).",
+      },
+      {
+        title: "Measure credit, not just the text",
+        desc: "Each synthesizer rates how much every think-tank member influenced its merge, producing a rater × rated influence matrix. A budget-conditions case instead compares a model's self-credit against peer ratings under tight vs adequate token budgets.",
+      },
+      {
+        title: "Compare across conditions",
+        desc: "The signal is the delta between conditions: if the same reasoning gains or loses credit when the name on it changes, credit is tracking the brand, not the idea. Attribution here comes from the synthesis and ratings themselves — some authorship cases have no separate blind judge.",
+      },
+    ],
   },
-  {
-    id: "replication",
-    title: "Replication",
-    question:
-      "When the same scenario is run repeatedly, which parts of a model's recommendation remain stable — and which vary?",
-    desc: "Repeat the full path across trials to separate durable behavior from one-shot noise.",
+  replication: {
+    scores: "Scores merged Unified Briefs, at volume",
+    process: [
+      {
+        title: "Fix one scenario, run it many times",
+        desc: "A single scenario runs through the full path — intake, research, variant, synthesis — repeated across many trials, at much higher volume than a one-off case.",
+      },
+      {
+        title: "Synthesize a Unified Brief each trial",
+        desc: "Every trial, synthesizers merge the think tank into a Unified Brief under Blind, Revealed, and Reassigned authorship.",
+      },
+      {
+        title: "Blind-code every Unified Brief",
+        desc: "A judge, blind to both synthesizer brand and authorship condition, scores each brief against a fixed multi-dimension moral rubric.",
+      },
+      {
+        title: "Separate signal from noise",
+        desc: "Aggregating across trials shows which behaviors are durable and which were a fluke of small numbers — the check on whether an earlier finding was real.",
+      },
+    ],
   },
-] as const;
+};
 
 export default function HowItWorksPage() {
   const testTypes = getLiveTestTypes();
+
+  const studyTabs: StudyProcessTab[] = testTypes.map((type) => ({
+    id: type.id,
+    name: type.name,
+    question: type.heroQuestion,
+    scores: PROCESS_BY_STUDY[type.id]?.scores ?? "",
+    process: PROCESS_BY_STUDY[type.id]?.process ?? [],
+    cases: getStudiesForType(type.id).map((study) => ({
+      id: study.id,
+      name: study.name,
+      methodology: study.methodology,
+      dimensionGlossary: study.dimensionGlossary,
+      resultsHref:
+        study.kind === "influence-matrix"
+          ? `/model-studies/results#${type.id}`
+          : `/model-studies/results/${study.id}`,
+    })),
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -56,78 +122,108 @@ export default function HowItWorksPage() {
             Method
           </p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-white leading-tight sm:text-4xl lg:text-5xl">
-            One method, run on a different scenario each time
+            Change one thing. See what moves.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-300">
-            Every case on this site follows the same shape. What changes is the scenario, the
-            conditions, and the rubric dimensions specific to it — not the process that produces
-            the numbers.
+            Voice Influence, Authorship, and Replication each put models under a different kind of
+            pressure — and each measures it differently. Pick a study to see exactly how its numbers
+            are produced.
           </p>
         </div>
       </section>
 
-      {/* How it works — three beats */}
-      <section className="border-b border-zinc-100 bg-white py-16">
+      {/* Overall methodology — prose intro */}
+      <section className="relative overflow-hidden border-b border-zinc-100 bg-white py-16 lg:py-24">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.5]"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 70% 55% at 0% 0%, rgba(99,102,241,0.10), transparent 55%), radial-gradient(ellipse 55% 45% at 100% 100%, rgba(139,92,246,0.07), transparent 50%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl px-6">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">
+              How the research works
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+              Model Studies methodology
+            </h2>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-6">
+            <div className="relative rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm">
+              <span className="absolute -top-px left-7 h-0.5 w-12 rounded-full bg-indigo-500" />
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+                Controlled comparison
+              </p>
+              <p className="mt-3 text-lg font-semibold leading-snug text-zinc-900">
+                Model Studies uses controlled comparisons to isolate what changes an AI model&apos;s
+                judgment.
+              </p>
+              <p className="mt-4 text-base leading-relaxed text-zinc-600">
+                We begin with a realistic decision scenario and run it repeatedly, changing one factor
+                at a time. Because every other part of the test remains the same, differences in the
+                results can be attributed to that one factor rather than random variation. Every
+                version is run through each model. Results are then coded blind: a reviewing model
+                scores each analysis against a fixed rubric of dimensions without knowing which model
+                produced it, so brand recognition cannot influence the score.
+              </p>
+            </div>
+
+            <div className="relative rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm">
+              <span className="absolute -top-px left-7 h-0.5 w-12 rounded-full bg-indigo-500" />
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+                Measured where it shows up
+              </p>
+              <p className="mt-3 text-lg font-semibold leading-snug text-zinc-900">
+                Studies evaluate the output at the level where the effect should appear.
+              </p>
+              <p className="mt-4 text-base leading-relaxed text-zinc-600">
+                Voice Influence studies evaluate each model&apos;s individual decision analysis, where
+                changes in framing can first shape a model&apos;s reasoning, priorities, and
+                recommendation. Authorship studies evaluate the merged Unified Brief, where the
+                influence of named contributors can be measured.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What each study is */}
+      <section className="border-b border-zinc-100 bg-zinc-50 py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-zinc-900">How it works</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-zinc-900">The Studies</h2>
             <p className="mt-3 text-zinc-500">
-              One kind of pressure. Several models. A judge that never sees the brand.
+              Each study isolates one force that can bend a model&apos;s judgment — how the ask is
+              framed, whose name is on the reasoning, or plain run-to-run variance — holds the facts
+              constant, and scores the result blind. That&apos;s what lets a difference in the output
+              trace to the force we changed rather than to chance.
             </p>
           </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {[
-              {
-                title: "Adversarial intakes",
-                desc: "Intakes written by a filer who has already leaned toward a decision — built to read like a real high-stakes call, not a chat turn.",
-              },
-              {
-                title: "Same rubric every time",
-                desc: "Every brief is scored against a fixed skeleton so models can be compared to each other — and to themselves over time.",
-              },
-              {
-                title: "Blind coding",
-                desc: "The judge model scores what came back without knowing which provider wrote which brief.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-6"
-              >
-                <h3 className="text-sm font-semibold text-zinc-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">{item.desc}</p>
-              </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
+            {testTypes.map((t) => (
+              <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Studies */}
-      <section className="border-b border-zinc-100 bg-zinc-50 py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-              What each study asks
-            </h2>
+      {/* How each study works — toggle between the studies, each with its own process */}
+      <section className="border-b border-zinc-100 bg-white py-16">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-bold tracking-tight text-zinc-900">How each study works</h2>
+            <p className="mt-3 text-zinc-500">
+              What gets scored, and how, changes with the question. Toggle between the studies to see
+              the exact process behind each one&apos;s numbers.
+            </p>
           </div>
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {STUDIES.map((s) => (
-              <div
-                id={s.id}
-                key={s.id}
-                className="scroll-mt-24 rounded-xl border border-zinc-200 bg-white p-6"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
-                  {s.title}
-                </p>
-                <h3 className="mt-2 text-base font-semibold leading-snug text-zinc-900">
-                  {s.question}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-500">{s.desc}</p>
-              </div>
-            ))}
+          <div className="mt-10">
+            <StudyProcessTabs tabs={studyTabs} />
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-10">
             <Link
               href="/model-studies/results"
               className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
@@ -135,35 +231,6 @@ export default function HowItWorksPage() {
               See results by study →
             </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-12 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6 space-y-6">
-          <p className="text-sm leading-relaxed text-zinc-600">
-            The site is organized in three layers: a{" "}
-            <strong className="font-semibold text-zinc-900">study</strong> is the research
-            question (does filer voice change model behavior?); a{" "}
-            <strong className="font-semibold text-zinc-900">case</strong> is a named scenario under
-            that study (e.g. Meridian IC), built from several{" "}
-            <strong className="font-semibold text-zinc-900">conditions</strong> (confident tone,
-            Blind authorship, and so on). Each condition runs through every model, and every
-            resulting brief is scored by a{" "}
-            <strong className="font-semibold text-zinc-900">judge model</strong> that never sees
-            which provider wrote it.
-          </p>
-          <p className="text-sm leading-relaxed text-zinc-600">
-            Two kinds of brief show up throughout this site.{" "}
-            <strong className="font-semibold text-zinc-900">Decision Brief</strong> is one model&apos;s
-            own response to an intake — its analysis and recommendation, on its own.{" "}
-            <strong className="font-semibold text-zinc-900">Unified Brief</strong> is different:
-            it&apos;s what you get when a{" "}
-            <strong className="font-semibold text-zinc-900">synthesizer</strong> model merges several
-            models&apos; Decision Briefs into one combined recommendation. Voice Influence cases
-            score Decision Briefs directly; Authorship and Replication cases score Unified Briefs,
-            since what they measure is what happens during that merge.
-          </p>
-          <Glossary />
         </div>
       </section>
 
@@ -191,7 +258,7 @@ export default function HowItWorksPage() {
                 <p>
                   This is the layer{" "}
                   <Link
-                    href="/model-studies/how-it-works#authorship-influence"
+                    href="/model-studies/how-it-works#authorship"
                     className="font-semibold text-indigo-600 hover:text-indigo-800"
                   >
                     Authorship influence
@@ -201,104 +268,20 @@ export default function HowItWorksPage() {
               </div>
             </div>
             <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <h3 className="text-sm font-semibold text-zinc-900">Ethics audit (moral audit)</h3>
+              <h3 className="text-sm font-semibold text-zinc-900">Lean audit — whose side a brief takes</h3>
               <div className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-600">
                 <p>
-                  A blind <strong className="font-medium text-zinc-800">moral audit</strong> scores a
-                  Unified Brief on eight domain-agnostic dimensions — tradeoff honesty, whose downside
-                  is protected, and similar — using a separate reviewer that never sees which model
-                  wrote the brief.
+                  A blind <strong className="font-medium text-zinc-800">lean audit</strong> scores a
+                  Unified Brief on domain-agnostic dimensions — tradeoff honesty, whose downside is
+                  protected, whether one side&apos;s power goes unchallenged, and similar — using a
+                  separate reviewer that never sees which model wrote the brief.
                 </p>
                 <p>
-                  Replication cases such as Civitas use this layer alongside rubric coding to ask
-                  whether models protect the right downside under pressure.
+                  Cases use this layer alongside rubric coding to surface which way a brief leans:
+                  whose interests it protects when nothing in the prompt asks it to.
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-16 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">The shared process</h2>
-          <ol className="mt-6 space-y-6">
-            {[
-              {
-                title: "Write a condition with a filer who's already decided",
-                desc: "Each condition is an intake authored by a filer who has already leaned toward one option. Tone and framing vary — confident, urgent, optimistic, honest-aggressive — but for a given condition, the underlying facts are held constant across every model.",
-              },
-              {
-                title: "Run the same intake through every model",
-                desc: "The same four models — ChatGPT (OpenAI), Fable (Anthropic), Gemini (Google), and Grok (xAI) — each independently produce their own Decision Brief on the same intake, without seeing what the others wrote.",
-              },
-              {
-                title: "Blind-code every brief against a fixed rubric",
-                desc: "A separate judge model scores each brief against a rubric written specifically for that case, kept blind to which provider wrote the brief it's coding — only the brief itself. Which model judges varies by case (see the notes for each one below), and one case (multi-demo authorship) has no separate judge at all — see its notes for why.",
-              },
-              {
-                title: "Aggregate, and let the split speak",
-                desc: "Counts are aggregated by provider and by condition. The interesting result usually isn't a single number — it's where providers split from each other on the same facts.",
-              },
-            ].map((step, i) => (
-              <li key={step.title} className="flex gap-4">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center">
-                  {i + 1}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-zinc-900">{step.title}</div>
-                  <div className="mt-0.5 text-sm text-zinc-500 leading-relaxed">{step.desc}</div>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="bg-zinc-50 py-16 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">By study</h2>
-          <p className="mt-2 text-sm text-zinc-500">
-            Each study&apos;s rubric is scenario-specific — here&apos;s what&apos;s particular to
-            every case inside it.
-          </p>
-          <div className="mt-8 space-y-10">
-            {testTypes.map((type) => (
-              <div key={type.id}>
-                <h3 className="text-base font-semibold text-zinc-900">{type.name}</h3>
-                <p className="mt-1 text-sm text-zinc-500">{type.heroQuestion}</p>
-                <div className="mt-4 space-y-6">
-                  {getStudiesForType(type.id).map((study) => (
-                    <div key={study.id} className="border-l-2 border-zinc-200 pl-4">
-                      <h4 className="text-sm font-semibold text-zinc-800">{study.name}</h4>
-                      <ul className="mt-2 space-y-2">
-                        {study.methodology.map((m) => (
-                          <li key={m} className="flex gap-3 text-sm leading-relaxed text-zinc-600">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                            <span>{m}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {study.dimensionGlossary && (
-                        <div className="mt-3">
-                          <DimensionGlossaryTable entries={study.dimensionGlossary} />
-                        </div>
-                      )}
-                      <Link
-                        href={
-                          study.kind === "influence-matrix"
-                            ? `/model-studies/results#${type.id}`
-                            : `/model-studies/results/${study.id}`
-                        }
-                        className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                      >
-                        See {study.name} on Results →
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>

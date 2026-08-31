@@ -113,7 +113,7 @@ export function MajorFindingGrid({
   wide?: boolean;
 }) {
   return (
-    <div className={wide ? "grid gap-4" : "grid gap-4 lg:grid-cols-3"}>
+    <div className={wide ? "grid gap-4" : "grid gap-4 md:grid-cols-2"}>
       {findings.map((f) => (
         <MajorFindingPanel key={f.id} finding={f} wide={wide} />
       ))}
