@@ -29,10 +29,10 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
           ← Clarifying questions
         </Link>
         <Link
-          href="/request-access"
+          href="/demo/unified"
           className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
         >
-          Request access to run your own
+          Continue to Unified Brief →
         </Link>
       </div>
     </>
