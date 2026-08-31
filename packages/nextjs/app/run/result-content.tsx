@@ -442,6 +442,8 @@ export interface ResultContentProps {
   staticTitleBanner?: boolean;
   /** Demo/tour: do not scroll to `#rc-*` fragments on mount (keep viewport at page top). */
   disableDeepLinkScroll?: boolean;
+  /** Demo/tour: open the brief, mark jump-bar and lens sections for the on-page guide. */
+  demoTour?: boolean;
 }
 
 export interface ResultContentHandle {
@@ -463,6 +465,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     hideInlineBriefTitle = false,
     staticTitleBanner = false,
     disableDeepLinkScroll = false,
+    demoTour = false,
   },
   ref
 ) {
@@ -476,7 +479,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
     riskAnalysis: false,
     reversibility: false,
     stakeholders: false,
-    brief: false,
+    brief: demoTour,
     variantAdditions: false,
   });
   const toggleSection = (key: string, val: boolean) =>
@@ -921,7 +924,10 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
       </CollapsibleBlock>
 
       {showAnalysisSectionBar ? (
-        <div className="mb-6 overflow-hidden rounded-lg border border-zinc-200 bg-white text-xs shadow-sm">
+        <div
+          data-demo-spot="analysis-sections"
+          className="mb-6 overflow-hidden rounded-lg border border-zinc-200 bg-white text-xs shadow-sm"
+        >
           <div className="border-b border-zinc-200 bg-zinc-50 px-3 py-2.5">
             <h2 className="text-sm font-semibold text-zinc-800">Analysis sections</h2>
             <p className="mt-0.5 max-w-2xl text-[0.8125rem] font-normal normal-case leading-snug text-zinc-500">
@@ -984,6 +990,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
           id="rc-risk"
           title="Risk analysis"
           className="mt-0 border-rose-200 bg-rose-50/30"
+          dataSpot={demoTour ? "lens-section" : undefined}
           open={openSections.riskAnalysis}
           onOpenChange={(v) => toggleSection("riskAnalysis", v)}
           bodyClassName="space-y-4 px-3 pb-4 pt-1"
@@ -1158,6 +1165,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
           id="rc-reversibility"
           title="Reversibility"
           className="mt-6 border-amber-200 bg-amber-50/40"
+          dataSpot={demoTour ? "lens-section" : undefined}
           open={openSections.reversibility}
           onOpenChange={(v) => toggleSection("reversibility", v)}
           bodyClassName="space-y-4 px-3 pb-4 pt-1"
@@ -1227,6 +1235,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
           id="rc-stakeholders"
           title="Stakeholders"
           className="mt-6 border-violet-200 bg-violet-50/40"
+          dataSpot={demoTour ? "lens-section" : undefined}
           open={openSections.stakeholders}
           onOpenChange={(v) => toggleSection("stakeholders", v)}
           bodyClassName="space-y-4 px-3 pb-4 pt-1"
@@ -1336,6 +1345,7 @@ export const ResultContent = forwardRef<ResultContentHandle, ResultContentProps>
             ) : undefined
           }
           className="mt-6 scroll-mt-32 border-indigo-200 bg-indigo-50"
+          dataSpot={demoTour ? "lens-section" : undefined}
           open={openSections.brief}
           onOpenChange={(v) => toggleSection("brief", v)}
         >

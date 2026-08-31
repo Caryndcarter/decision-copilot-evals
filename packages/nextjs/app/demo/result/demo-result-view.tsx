@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { ResultContent } from "@/app/run/result-content";
+import { DemoBriefGuide } from "@/app/demo/_components/demo-brief-guide";
 import { DemoScrollToTop } from "@/app/demo/_components/demo-scroll-to-top";
 import { demoBriefBodyClass } from "@/app/demo/_components/demo-brief-title-banner";
 import { getDemoRun } from "@/app/demo/_data/demo-fixtures";
@@ -14,6 +15,7 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
 
   return (
     <>
+      <DemoBriefGuide />
       <DemoScrollToTop resetKey={provider} />
       <div className={`${demoBriefBodyClass} ${demoContentClass}`}>
         <ResultContent
@@ -21,6 +23,7 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
           hideInlineBriefTitle
           staticTitleBanner
           disableDeepLinkScroll
+          demoTour
         />
       </div>
 
@@ -30,6 +33,7 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
         </Link>
         <Link
           href="/demo/unified"
+          data-demo-spot="unified-cta"
           className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
         >
           Continue to Unified Brief →

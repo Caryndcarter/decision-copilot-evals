@@ -22,7 +22,7 @@ const STEPS = [
   {
     title: "Compare model briefs",
     description:
-      "Switch between OpenAI, Anthropic, Gemini, and xAI — each with its own risk, reversibility, and stakeholders lenses.",
+      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections to read each model's lenses.",
   },
   {
     title: "Read the Unified Brief",
