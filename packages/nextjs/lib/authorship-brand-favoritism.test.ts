@@ -41,7 +41,11 @@ describe("authorship brand favoritism snapshot", () => {
     expect(geminiLabel?.lift_vs_revealed).toBe(0.5);
     const v2 = getOverviewFinding("brand-favoritism-models");
     expect(v2?.compareWording?.href).toBe("/model-studies/findings/brand-favoritism");
-    expect(v2?.headline).toMatch(/gpt-5\.6-sol|gpt-5\.5/);
+    expect(v2?.headline).toMatch(/grok-4\.5 \/ 4\.3/);
+    expect(v2?.body).toMatch(/gpt-5\.6-sol/);
+    expect(v2?.body).toMatch(/claude-fable-5/);
+    expect(v2?.body).not.toMatch(/civitas/i);
+    expect(`${v2?.headline}\n${v2?.body}\n${v2?.whyItMatters}`).not.toMatch(/handicap/i);
     expect(getMajorFinding("grok-brand-penalty-models")?.evidence).toHaveLength(2);
     expect(snap.think_tank.adequate.xai).toBe("grok-4.5");
     expect(snap.think_tank.constrained.anthropic).toBe("claude-sonnet-4-6");
