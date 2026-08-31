@@ -303,38 +303,6 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Same bet */}
-      <section className="border-b border-zinc-100 bg-white py-16">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900">
-            Same bet as the product — two directions
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-zinc-500">
-            <Link href="/intake" className="font-semibold text-indigo-600 hover:text-indigo-500">
-              Decision Copilot
-            </Link>{" "}
-            runs every decision through Risk, Reversibility, and Stakeholders — not a menu of chat
-            styles. A fixed rubric is what makes these studies possible. Each case&apos;s own
-            codes are that same skeleton under specific decision pressure: catch the ignored risk,
-            keep the door open before committing, say who bears the downside.
-          </p>
-          <ul className="mx-auto mt-8 max-w-md space-y-3 text-left text-sm text-zinc-600">
-            <li className="flex gap-3">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
-              <span>
-                <span className="font-semibold text-zinc-900">Studies</span> — pointed at the models
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
-              <span>
-                <span className="font-semibold text-zinc-900">Product</span> — pointed at your decision
-              </span>
-            </li>
-          </ul>
-        </div>
-      </section>
-
       <section className="bg-zinc-950 py-16">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-white">

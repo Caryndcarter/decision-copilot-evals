@@ -13,7 +13,7 @@ const FAILURE_MODES = [
     question: "Is the information actually right?",
     descBefore:
       "Hallucinations, bad assumptions, and outdated or stale facts — the model reasons from something that isn\u2019t true. On Unified Briefs, an optional ",
-    links: [{ href: "/how-it-works#unified-brief", label: "fact-check judge" }],
+    links: [{ href: "/how-it-works#fact-check", label: "fact-check judge" }],
     descAfter:
       " with web search can flag public factual errors in the draft \u2014 without changing the recommendation.",
   },
@@ -74,7 +74,7 @@ const FAILURE_MODES = [
       "When models see each other's answers first, real disagreement can collapse before it forms. We run them independently first so important dissent survives — the same pattern ",
     links: [
       {
-        href: "#human-psychology",
+        href: "#literature",
         label: "human psychology research",
       },
     ],
@@ -316,7 +316,7 @@ export default function WhyPage() {
       </section>
 
       {/* Academic grounding */}
-      <section className="border-b border-zinc-100 bg-zinc-50 py-16">
+      <section id="literature" className="scroll-mt-24 border-b border-zinc-100 bg-zinc-50 py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">

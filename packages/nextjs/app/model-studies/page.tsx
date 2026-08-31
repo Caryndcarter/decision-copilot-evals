@@ -255,7 +255,7 @@ export default function Home() {
               href="/auth/signin?callbackUrl=/harness/findings"
               className="rounded-lg bg-indigo-600 px-8 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
             >
-              Sign in →
+              Sign in or request access →
             </Link>
             <Link
               href="/model-studies/results"

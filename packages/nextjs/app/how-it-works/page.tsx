@@ -263,7 +263,7 @@ export default function HowItWorksPage() {
               </ul>
             </SubBlock>
 
-            <SubBlock title="Fact-check pass (optional)">
+            <SubBlock id="fact-check" title="Fact-check pass (optional)">
               <p>
                 A separate judge with web search can flag public factual errors and rewrite the draft
                 — without changing the recommendation.
