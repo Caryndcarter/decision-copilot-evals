@@ -108,11 +108,11 @@ export default function Home() {
             Why this research exists
           </h2>
           <p className="mt-5 text-base leading-relaxed text-zinc-600">
-            AI decision support can waver without AI hallucinating a single fact. A model
+            AI decision support can shift without AI hallucinating a single fact. A model
             may follow the user&apos;s framing, favor familiar reasoning, suppress meaningful
             dissent, or produce a different recommendation than another model given the same
-            evidence. Because every answer is thoughtful and convincing, this wavering is unusually
-            difficult to see.
+            evidence. Because every answer is written to sound thoughtful and convincing, those
+            shifts are unusually difficult to see.
           </p>
           <p className="mt-4 text-base leading-relaxed text-zinc-600">
             Model Studies measures where those differences occur — so people can understand when model
