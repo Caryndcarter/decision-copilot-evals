@@ -22,6 +22,7 @@ export function CollapsibleBlock({
   className = "",
   bodyClassName = "",
   collapsible = true,
+  dataSpot,
   children,
 }: {
   id?: string;
@@ -39,6 +40,8 @@ export function CollapsibleBlock({
   bodyClassName?: string;
   /** When false, header is static and body is always visible (no toggle). */
   collapsible?: boolean;
+  /** Demo/tour highlight hook, e.g. `lens-section`. */
+  dataSpot?: string;
   children: ReactNode;
 }) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
@@ -75,7 +78,11 @@ export function CollapsibleBlock({
   );
 
   return (
-    <div id={id} className={`rounded-lg border border-zinc-200 shadow-sm ${className}`}>
+    <div
+      id={id}
+      data-demo-spot={dataSpot}
+      className={`rounded-lg border border-zinc-200 shadow-sm ${className}`}
+    >
       <div className="flex w-full items-stretch border-b border-zinc-200 bg-zinc-50">
         {collapsible ? (
           <button

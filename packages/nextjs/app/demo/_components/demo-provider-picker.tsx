@@ -17,7 +17,7 @@ export function DemoProviderPicker({ provider }: { provider: LLMProviderName }) 
   const label = runShortChromeLabel(result);
 
   return (
-    <div className="relative">
+    <div className="relative" data-demo-spot="provider-picker">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

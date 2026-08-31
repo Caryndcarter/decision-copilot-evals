@@ -210,7 +210,9 @@ export const TOUR_RUNS: TourProviderRun[] = [
       },
       reversibility: {
         hard_to_undo: ["Announcing AWS migration to enterprise before pilot validates latency."],
-        safe_first: ["Internal dogfood on AWS for two weeks before customer-visible cutover."],
+        safe_first: [
+          "Run the app on AWS with the team only for two weeks — no customer traffic — before any customer-facing cutover.",
+        ],
       },
       people: {
         impacts: [
