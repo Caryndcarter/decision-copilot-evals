@@ -108,6 +108,32 @@ export default async function FindingStoryPage({
               <p className="mt-2 text-sm leading-relaxed text-zinc-700">{finding.whyItMatters}</p>
             </div>
           ) : null}
+
+          <div className="mt-8">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              {finding.caseLinks.length > 1
+                ? "Read the full case setups"
+                : "Read the full case setup"}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500">
+              Each case page carries the scenario as submitted — the situation, constraints, and
+              framing behind this finding.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {finding.caseLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40"
+                >
+                  <span className="text-sm font-semibold text-zinc-900">{link.label}</span>
+                  <span className="text-sm font-semibold text-indigo-600 transition-transform group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -153,33 +179,6 @@ export default async function FindingStoryPage({
           </div>
         </section>
       ) : null}
-
-      {/* Cases behind this story */}
-      <section className="bg-white py-14 border-b border-zinc-100">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl font-bold tracking-tight text-zinc-900">
-            {finding.caseLinks.length > 1 ? "Cases behind this finding" : "The case behind this finding"}
-          </h2>
-          <p className="mt-2 text-sm text-zinc-500">
-            Each case page carries the full scoreboard, dimension grid, methodology, and source
-            notes for that batch.
-          </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {finding.caseLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40"
-              >
-                <span className="text-sm font-semibold text-zinc-900">{link.label}</span>
-                <span className="text-sm font-semibold text-indigo-600 transition-transform group-hover:translate-x-0.5">
-                  →
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="bg-zinc-950 py-14">
