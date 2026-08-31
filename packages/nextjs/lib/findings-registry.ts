@@ -49,7 +49,7 @@ export const TEST_TYPES: TestTypeMeta[] = [
   {
     id: "voice-influence",
     name: "Voice Influence",
-    eyebrow: "Study · filer framing",
+    eyebrow: "Study · user framing",
     heroQuestion:
       "Does the way the user frames the story change how the model treats the same facts?",
     dek: "Same underlying facts, different filer — the person asking, who has already leaned toward one option before asking for advice. Confident, urgent, honest, or quietly resting on a premise that doesn't hold up. Each condition holds the facts constant and varies only how they're told.",
@@ -57,17 +57,17 @@ export const TEST_TYPES: TestTypeMeta[] = [
   {
     id: "authorship",
     name: "Authorship",
-    eyebrow: "Study · Unified Brief attribution",
+    eyebrow: "Study · model identity",
     heroQuestion:
-      "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is revealed or swapped?",
+      "When model identities are hidden, revealed, or reassigned, does the synthesizer judge the same reasoning differently?",
     dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case asks whether token-starved contribution analysis produces unjustified self-credit when peers can see the work was weak.",
   },
   {
     id: "replication",
     name: "Replication",
-    eyebrow: "Study · repeat at volume",
+    eyebrow: "Study · run-to-run consistency",
     heroQuestion:
-      "Does a model's recommendations remain constant when you run the same scenario over and over?",
+      "When the same scenario is run repeatedly, which parts of a model's recommendation remain stable — and which vary?",
     dek: "The same scenario, repeated across many trials, at much higher volume than a single case — a check on whether earlier findings were real or a fluke of small numbers.",
   },
 ];
@@ -353,6 +353,7 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     ],
     caseCount: 5,
     modelCount: 4,
+    briefCount: 60,
     findings: [],
     methodology: [
       "Every demo is synthesized into a Unified Brief under three conditions: Revealed (synthesizer sees real provider brands), Blind (brands hidden), and Reassigned (brands swapped).",
@@ -381,6 +382,7 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     ],
     caseCount: 2,
     modelCount: 4,
+    briefCount: 120,
     findings: [
       {
         headline: "Under constraint, ChatGPT overrated itself while peers did not",
@@ -531,7 +533,9 @@ function statTag(f: FindingsCard, s: FindingsStudyMeta): RollupFinding {
 export function getRollupStats(): FindingsStat[] {
   const live = getLiveStudies();
   const conditions = live.reduce((sum, s) => sum + (s.caseCount ?? 0), 0);
-  const briefs = live.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+  const blindCodedBriefs = live
+    .filter((s) => s.kind === "dimension-coded")
+    .reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
   const models = live.reduce((max, s) => Math.max(max, s.modelCount ?? 0), 0);
 
   return [
@@ -539,8 +543,15 @@ export function getRollupStats(): FindingsStat[] {
     { value: String(live.length), label: "cases" },
     { value: String(conditions), label: "conditions" },
     { value: String(models), label: "models" },
-    { value: String(briefs), label: "blind-coded briefs" },
+    { value: String(blindCodedBriefs), label: "blind-coded briefs" },
   ];
+}
+
+function briefCountLabel(studies: FindingsStudyMeta[]): string {
+  const hasDimension = studies.some((s) => s.kind === "dimension-coded");
+  const hasInfluence = studies.some((s) => s.kind === "influence-matrix");
+  if (hasInfluence && !hasDimension) return "Unified Briefs";
+  return "blind-coded briefs";
 }
 
 /** Same shape as getRollupStats, scoped to the cases inside one study. */
@@ -555,7 +566,7 @@ export function getRollupStatsForType(typeId: string): FindingsStat[] {
   ];
   if (conditions > 0) stats.push({ value: String(conditions), label: "conditions" });
   if (models > 0) stats.push({ value: String(models), label: "models" });
-  if (briefs > 0) stats.push({ value: String(briefs), label: "blind-coded briefs" });
+  if (briefs > 0) stats.push({ value: String(briefs), label: briefCountLabel(cases) });
   return stats;
 }
 

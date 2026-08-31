@@ -21,13 +21,14 @@ const STUDIES = [
     id: "authorship-influence",
     title: "Authorship influence",
     question:
-      "When a Unified Brief credits an idea to a model, does the credit survive if the model's identity is revealed or swapped?",
+      "When model identities are hidden, revealed, or reassigned, does the synthesizer judge the same reasoning differently?",
     desc: "Same analyses, different brand visibility. We measure whether knowing who wrote what changes what gets kept in the Unified Brief.",
   },
   {
     id: "replication",
     title: "Replication",
-    question: "Does a model's recommendations remain constant when you run the same scenario over and over?",
+    question:
+      "When the same scenario is run repeatedly, which parts of a model's recommendation remain stable — and which vary?",
     desc: "Repeat the full path across trials to separate durable behavior from one-shot noise.",
   },
 ] as const;

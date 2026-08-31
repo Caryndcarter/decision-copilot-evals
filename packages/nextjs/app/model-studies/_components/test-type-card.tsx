@@ -14,6 +14,8 @@ export function TestTypeCard({
   studies: FindingsStudyMeta[];
 }) {
   const briefTotal = studies.reduce((sum, s) => sum + (s.briefCount ?? 0), 0);
+  const briefLabel =
+    studies.every((s) => s.kind === "influence-matrix") ? "Unified Briefs" : "briefs coded";
 
   return (
     <Link
@@ -30,7 +32,7 @@ export function TestTypeCard({
         <span className="text-lg font-bold tabular-nums text-zinc-900">{studies.length}</span>
         <span className="text-xs text-zinc-400">
           {studies.length === 1 ? "case" : "cases"}
-          {briefTotal > 0 ? ` · ${briefTotal} briefs coded` : ""}
+          {briefTotal > 0 ? ` · ${briefTotal} ${briefLabel}` : ""}
         </span>
       </div>
 

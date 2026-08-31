@@ -143,13 +143,19 @@ export default function Home() {
       {/* Studies */}
       <section id="studies" className="scroll-mt-20 bg-white py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">The Studies</h2>
-          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Each study is a research question, answered across one or more cases. New cases land
-            inside an existing study as a registry entry — the study is the story, not any single
-            case.
+          <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">What we study</h2>
+          <p className="mt-3 max-w-3xl text-base leading-relaxed text-zinc-600">
+            Each study investigates one question about how AI judgment changes under decision
+            pressure. We hold the underlying evidence constant while changing one condition — such as
+            user framing or visible authorship — or repeat the same scenario to test consistency.
           </p>
-          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-zinc-600">
+            Cases are the decision settings in which we test that question. Adding cases helps show
+            whether a finding belongs to one particular scenario or reflects a broader pattern in
+            model behavior.
+          </p>
+          <h3 className="mt-10 text-lg font-semibold text-zinc-900 tracking-tight">The Studies</h3>
+          <div className="mt-6 grid gap-5 sm:grid-cols-3">
             {testTypes.map((t) => (
               <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
             ))}
