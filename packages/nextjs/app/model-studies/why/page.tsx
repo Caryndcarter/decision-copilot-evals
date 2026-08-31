@@ -153,8 +153,51 @@ export default function WhyPage() {
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-zinc-300">
             Advice can fail in quieter ways than a wrong fact — sycophancy, favoritism, groupthink
-            suppressing dissent. We publish measured results on those failure modes and more.
+            suppressing dissent. We publish measured results on those failure modes and more — and
+            use what we find to shape the product.
           </p>
+        </div>
+      </section>
+
+      {/* Research → product */}
+      <section
+        id="research-to-product"
+        className="scroll-mt-24 border-b border-zinc-100 bg-white py-16"
+      >
+        <div className="mx-auto max-w-4xl px-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+            Research feeds product design
+          </p>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+            What we find changes how Decision Copilot is built
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-zinc-600">
+            Model Studies isn&apos;t observation for its own sake. The failure modes below are the
+            questions we investigate, and what we learn feeds directly back into how the product
+            works.
+          </p>
+          <div className="mt-6 rounded-xl border border-indigo-100 bg-indigo-50/60 p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+              Research → product
+            </p>
+            <p className="mt-2 text-base font-semibold text-zinc-900">
+              Authorship study findings → blind authorship is now the default
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+              Our{" "}
+              <Link
+                href="/model-studies/findings/brand-favoritism"
+                className="font-semibold text-indigo-600 hover:text-indigo-500"
+              >
+                Authorship study
+              </Link>{" "}
+              discovered that when several models&apos; analyses are merged into a Unified Brief and
+              provider names are visible, judgment can track the brand instead of the argument. After
+              measuring that brand bias, we adapted Decision Copilot to hide provider names from the
+              synthesizer by default, so the reasoning is weighed on its merits rather than its
+              brand.
+            </p>
+          </div>
         </div>
       </section>
 

@@ -145,6 +145,10 @@ export default function Home() {
             choice matters, when apparent consensus is trustworthy, and how decision systems should be
             designed to preserve independent judgment.
           </p>
+          <p className="mt-4 text-base leading-relaxed text-zinc-600">
+            We also use what we learn to shape the product — the research feeds directly back into how
+            Decision Copilot is built.
+          </p>
           <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-zinc-800">
             {[
               "Reveal when framing changes judgment",
@@ -187,6 +191,25 @@ export default function Home() {
             {testTypes.map((t) => (
               <TestTypeCard key={t.id} type={t} studies={getStudiesForType(t.id)} />
             ))}
+          </div>
+          <div className="mt-8 max-w-3xl rounded-xl border border-indigo-100 bg-white p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <p className="text-sm leading-relaxed text-zinc-600">
+              <span className="font-semibold text-zinc-900">Our findings shape the product.</span>{" "}
+              Because our Authorship study showed a synthesizer can over-credit its own draft and{" "}
+              <Link
+                href="#findings"
+                className="font-semibold text-indigo-600 transition-colors hover:text-indigo-800"
+              >
+                penalize another model
+              </Link>{" "}
+              on brand alone, Decision Copilot now blinds Unified Brief authorship by default.
+            </p>
+            <Link
+              href="/model-studies/why#research-to-product"
+              className="mt-3 inline-flex shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-800 sm:mt-0"
+            >
+              Why it matters →
+            </Link>
           </div>
         </div>
       </section>
