@@ -292,6 +292,34 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     snippets: [],
     supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
   },
+  {
+    id: "grok-brand-penalty-models",
+    scope: "single-case",
+    headline: "Grok 4.5 / 4.3 looked strongest labeled as gpt-5.6-sol / gpt-5.5",
+    contextLine: "Same 40 remapped Grok cells · model ids, not brand nicknames",
+    evidence: [
+      {
+        caption: "Real Grok work remapped — high ratings by the label peers saw",
+        bars: [
+          { label: "grok-4.5/4.3 → gpt-5.6-sol / gpt-5.5", value: 14, max: 15, variant: "highlight" },
+          { label: "grok-4.5/4.3 → claude-fable-5 / claude-sonnet-4-6", value: 11, max: 15 },
+          { label: "grok-4.5/4.3 → gemini-3.6-flash", value: 6, max: 10 },
+        ],
+      },
+      {
+        caption: "How often Grok was remapped to each brand (not a one-off ChatGPT slap)",
+        bars: [
+          { label: "Labeled gpt-5.6-sol / gpt-5.5 · 15 cells", value: 15, max: 15, variant: "highlight" },
+          { label: "Labeled claude-fable-5 / claude-sonnet-4-6 · 15 cells", value: 15, max: 15 },
+          { label: "Labeled gemini-3.6-flash · 10 cells", value: 10, max: 15 },
+        ],
+      },
+    ],
+    statsNote:
+      "ChatGPT-as-rater saw Grok-as-ChatGPT only twice (both constrained Civitas). The 15 ChatGPT-label cells are mostly Sonnet, Fable, Gemini, and Grok rating Grok’s text. Adequate: grok-4.5 → gpt-5.6-sol was 6/6 high. Constrained: grok-4.3 → gpt-5.5 was 8/9 high.",
+    snippets: [],
+    supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
+  },
 ];
 
 export function getMajorFindings(): MajorFinding[] {

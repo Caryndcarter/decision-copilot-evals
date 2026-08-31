@@ -47,6 +47,14 @@ export function OverviewPublishedFindings({ findings }: { findings: OverviewPubl
               >
                 Read the full finding →
               </Link>
+              {f.compareWording ? (
+                <Link
+                  href={f.compareWording.href}
+                  className="mt-2 block text-xs font-medium text-zinc-500 hover:text-indigo-700"
+                >
+                  {f.compareWording.label}
+                </Link>
+              ) : null}
             </div>
           </div>
         </article>

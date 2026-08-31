@@ -32,6 +32,8 @@ export type OverviewPublishedFinding = {
   /** Optional curated evidence entry (see MAJOR_FINDINGS in cross-study-findings). */
   majorFindingId?: string;
   visualTheme: FindingVisualTheme;
+  /** Alternate wording of the same finding, for side-by-side review. */
+  compareWording?: { href: string; label: string };
 };
 
 export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
@@ -100,6 +102,28 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     ],
     majorFindingId: "grok-brand-penalty",
     visualTheme: "brand-favor",
+    compareWording: {
+      href: "/model-studies/findings/brand-favoritism-models",
+      label: "Same data, model-id wording →",
+    },
+  },
+  {
+    slug: "brand-favoritism-models",
+    headline:
+      "Grok 4.5 / 4.3 scored highest when its work was labeled gpt-5.6-sol or gpt-5.5 — not only that swap",
+    body: "Two authorship batches, two Grok generations. Constrained Civitas used grok-4.3 with gpt-5.5, claude-sonnet-4-6, and gemini-3.6-flash. The adequate-budget (Sol) batch used grok-4.5 with gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash.\n\nGrok\u2019s work was remapped onto every other brand \u2014 not a one-off ChatGPT slap. Across 40 remapped ratings of real Grok work: 15 cells labeled ChatGPT (gpt-5.5 or gpt-5.6-sol), 15 labeled Anthropic (Sonnet or Fable), 10 labeled Gemini 3.6 Flash. Reassigned never left it labeled Grok.\n\nThe ChatGPT label finished highest: 14 of 15 high, mean 3.93 (those same cells were 3.60 under Revealed). On Sol, grok-4.5 shown as gpt-5.6-sol was high in 6 of 6. On Civitas, grok-4.3 shown as gpt-5.5 was high in 8 of 9. Most of those ChatGPT-label ratings were other models judging Grok\u2019s text; ChatGPT itself saw Grok-as-ChatGPT only twice.\n\nThe Gemini 3.6 Flash label moved the score farthest from Revealed (+0.50 overall, +0.75 on the constrained batch) because those cells started lower. The Claude label (Fable / Sonnet) was as common as ChatGPT and landed in between: 11 of 15 high, mean 3.73, only +0.13 versus Revealed.",
+    whyItMatters:
+      "The story is not \u201cGrok became ChatGPT once.\u201d It is that three different brand slaps all change how Grok 4.5 / 4.3 looks, the ChatGPT (Sol / gpt-5.5) slap finishes strongest, and the Gemini slap produces the biggest lift from a weak Revealed baseline.",
+    sources: [{ study: "Authorship", case: "Budget conditions" }],
+    caseLinks: [
+      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
+    ],
+    majorFindingId: "grok-brand-penalty-models",
+    visualTheme: "brand-favor",
+    compareWording: {
+      href: "/model-studies/findings/brand-favoritism",
+      label: "Same data, shorter Grok / ChatGPT wording →",
+    },
   },
 ];
 
