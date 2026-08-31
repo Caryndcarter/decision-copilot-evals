@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 import { StatStrip } from "../_components/stat-strip";
-import { CrossStudyFindingGrid } from "../_components/cross-study-finding-card";
-import { ResultsCaseCard } from "../_components/results-case-card";
-import { getCrossStudyFindings } from "@/lib/cross-study-findings";
+import { MajorFindingGrid } from "../_components/cross-study-finding-card";
+import { ResultsCaseTable } from "../_components/results-case-table";
+import { getMajorFindings } from "@/lib/cross-study-findings";
 import {
   RESULTS_STUDY_LABELS,
   getResultsStudyMetricsLine,
@@ -18,12 +18,12 @@ import {
 export const metadata: Metadata = {
   title: "Results — Model Studies",
   description:
-    "What changed when the facts stayed the same — cross-study findings and links to every case's blind-coded evidence.",
+    "Blind-coded counts and case index — headline patterns and numeric rollups across Model Studies.",
 };
 
 export default function ResultsPage() {
   const stats = getRollupStats();
-  const crossStudyFindings = getCrossStudyFindings();
+  const majorFindings = getMajorFindings();
   const testTypes = getLiveTestTypes();
   const upcoming = getUpcomingStudies();
 
@@ -31,43 +31,54 @@ export default function ResultsPage() {
     <div className="min-h-screen bg-white">
       <SiteNav />
 
-      <section className="bg-zinc-950 pt-16 pb-10 lg:pt-20">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="relative overflow-hidden bg-zinc-950 pt-20 pb-16 lg:pt-24 lg:pb-20">
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#818cf8 1px, transparent 1px), linear-gradient(90deg, #818cf8 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="absolute top-0 left-1/4 h-96 w-96 rounded-full bg-logo/20 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" />
+
+        <div className="relative mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">Results</p>
-            <h1 className="mt-3 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-white leading-tight sm:text-4xl lg:text-5xl">
               What changed when the facts stayed the same
             </h1>
-            <p className="mt-5 text-base text-zinc-300 leading-relaxed">
-              Browse the strongest findings across Model Studies, then open any study or case to examine
-              the conditions, coded dimensions, and model-level results behind it.
+            <p className="mt-5 text-lg leading-relaxed text-zinc-300">
+              Aggregate counts and headline patterns from blind-coded briefs — open any case row for
+              full scoreboards, dimensions, and methodology.
             </p>
           </div>
         </div>
-        <div className="mx-auto max-w-6xl px-6 mt-10">
+        <div className="relative mx-auto max-w-6xl px-6 mt-14">
           <StatStrip stats={stats} />
         </div>
       </section>
 
-      <section className="bg-white py-16 border-b border-zinc-100">
+      <section className="bg-white py-14 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Cross-study findings</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Major findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Patterns that show up across cases — blind-coded evidence, not case names. Open any
-            supporting case for full scoreboards and methodology.
+            Top blind-coded patterns with curated scoreboard slices — one cross-case result and two
+            major single-case results. Full rubric on linked case pages.
           </p>
           <div className="mt-8">
-            <CrossStudyFindingGrid findings={crossStudyFindings} />
+            <MajorFindingGrid findings={majorFindings} />
           </div>
         </div>
       </section>
 
       <section className="bg-zinc-50 py-16 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Browse by study</h2>
+          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Case index</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Three research questions, each with one or more cases. Scoreboards and condition definitions
-            live on the case pages — not here.
+            Every published case by study — conditions, model count, coded outputs, and one headline
+            result per row. Scoreboards live on the case pages.
           </p>
 
           <div className="mt-10 space-y-14">
@@ -87,42 +98,11 @@ export default function ResultsPage() {
                   <p className="mt-2 max-w-2xl text-sm font-medium text-zinc-700 leading-relaxed">
                     {browse?.heroQuestion ?? type.heroQuestion}
                   </p>
-                  <p className="mt-2 text-xs text-zinc-500">{metricsLine}</p>
+                  <p className="mt-2 text-xs tabular-nums text-zinc-500">{metricsLine}</p>
 
-                  {type.id === "authorship" ? (
-                    <div className="mt-6 space-y-6">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                          Published
-                        </p>
-                        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                          {studies
-                            .filter((s) => s.id === "authorship-budget-conditions")
-                            .map((study) => (
-                              <ResultsCaseCard key={study.id} study={study} />
-                            ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                          Ongoing
-                        </p>
-                        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                          {studies
-                            .filter((s) => s.id === "multi-demo-authorship")
-                            .map((study) => (
-                              <ResultsCaseCard key={study.id} study={study} />
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      {studies.map((study) => (
-                        <ResultsCaseCard key={study.id} study={study} />
-                      ))}
-                    </div>
-                  )}
+                  <div className="mt-4">
+                    <ResultsCaseTable studies={studies} />
+                  </div>
                 </div>
               );
             })}

@@ -1,81 +1,120 @@
 import Link from "next/link";
-import type { CrossStudyFinding } from "@/lib/cross-study-findings";
+import type {
+  MajorFinding,
+  MajorFindingEvidenceBar,
+  MajorFindingEvidenceBlock,
+} from "@/lib/cross-study-findings";
 
-function EvidenceBars({ finding }: { finding: CrossStudyFinding }) {
+function scopeLabel(scope: MajorFinding["scope"]): string {
+  return scope === "cross-case" ? "Cross-case finding" : "Case finding";
+}
+
+function barFillClass(variant: MajorFindingEvidenceBar["variant"] | undefined): string {
+  switch (variant) {
+    case "highlight":
+      return "h-full rounded-full bg-indigo-500";
+    case "phased":
+      return "h-full rounded-full bg-indigo-500";
+    case "rebuild":
+      return "h-full rounded-full bg-indigo-300";
+    default:
+      return "h-full rounded-full bg-indigo-300";
+  }
+}
+
+function barLabelClass(variant: MajorFindingEvidenceBar["variant"] | undefined): string {
+  switch (variant) {
+    case "highlight":
+      return "text-indigo-900 font-medium";
+    case "phased":
+      return "text-indigo-900 font-medium";
+    case "rebuild":
+      return "text-indigo-800";
+    default:
+      return "text-indigo-800";
+  }
+}
+
+function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
   return (
-    <figure className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <figcaption className="text-xs font-medium text-zinc-700">{finding.evidenceCaption}</figcaption>
-      <ul className="mt-3 space-y-2.5" aria-label={finding.evidenceCaption}>
-        {finding.bars.map((bar) => {
+    <div>
+      <p className="text-[11px] font-medium leading-snug text-zinc-600">{block.caption}</p>
+      <ul className="mt-2 space-y-2" aria-label={block.caption}>
+        {block.bars.map((bar) => {
           const pct = bar.max > 0 ? Math.round((bar.value / bar.max) * 100) : 0;
           return (
             <li key={bar.label}>
               <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className={bar.highlight ? "font-medium text-indigo-900" : "text-zinc-600"}>
-                  {bar.label}
-                </span>
-                <span className="tabular-nums text-zinc-500">
+                <span className={barLabelClass(bar.variant)}>{bar.label}</span>
+                <span className="shrink-0 tabular-nums text-zinc-500">
                   {bar.value}/{bar.max}
                 </span>
               </div>
               <div className="mt-1 h-2 overflow-hidden rounded-full bg-zinc-200">
-                <div
-                  className={`h-full rounded-full ${bar.highlight ? "bg-indigo-500" : "bg-zinc-400"}`}
-                  style={{ width: `${pct}%` }}
-                />
+                <div className={barFillClass(bar.variant)} style={{ width: `${pct}%` }} />
               </div>
             </li>
           );
         })}
       </ul>
-      <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">{finding.evidenceSummary}</p>
-    </figure>
+    </div>
   );
 }
 
-export function CrossStudyFindingCard({ finding }: { finding: CrossStudyFinding }) {
+function MajorFindingPanel({ finding }: { finding: MajorFinding }) {
   return (
-    <article className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <h3 className="text-lg font-semibold leading-snug text-zinc-900">{finding.headline}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-zinc-700">{finding.conclusion}</p>
+    <article className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600">
+        {scopeLabel(finding.scope)}
+      </p>
+      <h3 className="mt-2 text-base font-bold leading-snug tracking-tight text-zinc-900">
+        {finding.headline}
+      </h3>
+      <p className="mt-1.5 text-xs text-zinc-500">{finding.contextLine}</p>
 
-      <div className="mt-5">
-        <EvidenceBars finding={finding} />
-      </div>
-
-      <dl className="mt-5 space-y-3 text-sm">
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Decision contexts</dt>
-          <dd className="mt-1 leading-relaxed text-zinc-600">{finding.contexts}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Why it matters</dt>
-          <dd className="mt-1 leading-relaxed text-zinc-600">{finding.whyItMatters}</dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
-        <span className="self-center text-xs font-medium text-zinc-500">Supporting cases:</span>
-        {finding.supportingCases.map((c) => (
-          <Link
-            key={c.studyId}
-            href={`/model-studies/results/${c.studyId}`}
-            className="rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:border-indigo-200 hover:bg-indigo-50"
-          >
-            {c.label}
-          </Link>
+      <div className="mt-4 flex-1 space-y-4 rounded-lg bg-zinc-50 p-3">
+        {finding.evidence.map((block, i) => (
+          <EvidenceBars key={i} block={block} />
         ))}
       </div>
+
+      {finding.statsNote ? (
+        <p className="mt-3 text-xs font-medium text-zinc-500">{finding.statsNote}</p>
+      ) : null}
+
+      <p className="mt-4 text-xs text-zinc-500">
+        {finding.supportingCases.map((c, i) => (
+          <span key={c.studyId}>
+            {i > 0 ? " · " : null}
+            <Link
+              href={`/model-studies/results/${c.studyId}`}
+              className="text-zinc-600 underline decoration-zinc-300 underline-offset-2 hover:text-indigo-700 hover:decoration-indigo-300"
+            >
+              {c.label}
+            </Link>
+          </span>
+        ))}
+      </p>
     </article>
   );
 }
 
-export function CrossStudyFindingGrid({ findings }: { findings: CrossStudyFinding[] }) {
+export function MajorFindingGrid({ findings }: { findings: MajorFinding[] }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-1">
+    <div className="grid gap-4 lg:grid-cols-3">
       {findings.map((f) => (
-        <CrossStudyFindingCard key={f.id} finding={f} />
+        <MajorFindingPanel key={f.id} finding={f} />
       ))}
     </div>
   );
+}
+
+/** @deprecated Use MajorFindingGrid */
+export function MajorFindingList({ findings }: { findings: MajorFinding[] }) {
+  return <MajorFindingGrid findings={findings} />;
+}
+
+/** @deprecated Use MajorFindingGrid */
+export function CrossStudyFindingGrid({ findings }: { findings: MajorFinding[] }) {
+  return <MajorFindingGrid findings={findings} />;
 }

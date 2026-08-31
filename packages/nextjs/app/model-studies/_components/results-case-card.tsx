@@ -22,7 +22,7 @@ export function ResultsCaseCard({ study }: { study: FindingsStudyMeta }) {
         </span>
       </div>
       <h3 className="mt-2 text-base font-semibold text-zinc-900">{meta.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{meta.blurb}</p>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600">{meta.keyResult}</p>
       {isPublished ? (
         <Link
           href={href}
