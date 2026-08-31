@@ -19,7 +19,7 @@ export type OverviewPublishedFinding = {
 export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   {
     headline: "Gemini repeatedly made reducing the PE owner\u2019s risk the priority",
-    body: "In an investment decision presented from the PE sponsor\u2019s perspective, Gemini treated the sponsor\u2019s downside as the risk to minimize in 4 of 5 outputs.\n\nIn a workforce-restructuring case centered on people affected by the cuts, Gemini still prioritized the same PE owner\u2019s downside in 9 of 15 syntheses. The other models were usually balanced.",
+    body: "In an investment decision presented from the PE sponsor\u2019s perspective, Gemini treated the sponsor\u2019s downside as the risk to minimize in 4 of 5 outputs.\n\nIn a workforce-restructuring case focused on people affected by the cuts, Gemini still prioritized the same PE owner\u2019s downside in 9 of 15 syntheses. The other models usually balanced the interests of the owner, employees, and customers.",
     whyItMatters:
       "Because Gemini\u2019s preference persisted when the perspective changed sides, user agreement alone does not explain it. The result suggests a recurring capital-side preference, although these cases cannot establish its cause.",
     sources: [
@@ -30,7 +30,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   },
   {
     headline: "Models responded more strongly when the company named the human harm explicitly",
-    body: "A shipping company was deciding whether to continue operating through the Strait of Hormuz as insurance premiums rose to roughly 100 times normal. Under confident or urgent framing, none of the models made crew danger central.\n\nWhen the company openly accepted greater danger to crews to keep ships moving, every model centered the people bearing the risk. Only ChatGPT and Grok challenged the company\u2019s position.",
+    body: "A shipping company was deciding whether to continue operating through the Strait of Hormuz as insurance premiums rose to roughly 100 times normal. Under confident or urgent framing, none of the models prioritized crew danger.\n\nWhen the company openly accepted greater danger to crews to keep ships moving, every model prioritized the people bearing the risk. Only ChatGPT and Grok challenged the company\u2019s position.",
     whyItMatters:
       "The models recognized an overt moral conflict but were less likely to expose the same human cost when ordinary business language normalized it.",
     sources: [{ study: "Voice Influence", case: "Hormuz" }],
@@ -38,7 +38,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   },
   {
     headline: "ChatGPT consistently recommended the less disruptive path for workers",
-    body: "A PE-owned software company needed to modernize while reducing headcount. ChatGPT recommended phasing the cuts over 18\u201324 months in 13 of 15 syntheses, giving employees and the organization more time to transition.\n\nFable and Grok usually recommended a more aggressive rebuild centered on retaining a permanent senior core\u201413 of 15 and 11 of 15 times, respectively.",
+    body: "A PE-owned software company needed to modernize while reducing headcount. ChatGPT recommended phasing the cuts over 18\u201324 months in 13 of 15 syntheses, giving employees and the organization more time to transition.\n\nFable and Grok usually recommended reducing overall headcount dramatically while retaining only a smaller permanent core of senior leaders\u201413 of 15 and 11 of 15 times, respectively.",
     whyItMatters:
       "The models were not merely describing the same strategy differently. Model choice affected how abruptly workers would experience the restructuring, and those differences persisted across repeated trials and authorship conditions.",
     sources: [{ study: "Replication", case: "Civitas replication" }],
@@ -55,4 +55,4 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
 ];
 
 export const OVERVIEW_FINDINGS_DEK =
-  "Across investment, workforce, and shipping decisions, models diverged in which risks they centered, when they challenged the user, and what course of action they recommended\u2014even when the underlying facts stayed the same.";
+  "Across investment, workforce, and shipping decisions, models diverged in whose risks they prioritized, when they challenged the user, and what course of action they recommended\u2014even when the underlying facts stayed the same.";
