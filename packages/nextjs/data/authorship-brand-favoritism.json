@@ -1,0 +1,46 @@
+{
+  "id": "authorship-brand-favoritism",
+  "title": "Authorship influence · brand favoritism",
+  "rater_note": "Four Unified Brief authors rating four think-tank members. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
+  "batches": [
+    {
+      "id": "db9445cf-ef02-5740-b69f-d34a1194e04a",
+      "label": "Civitas (constrained tokens)",
+      "decisions": 5
+    },
+    {
+      "id": "bc243273-6103-470c-9f11-94943925ca95",
+      "label": "adequate budget (Sol)",
+      "decisions": 5
+    }
+  ],
+  "decisions": 10,
+  "peer_ratings_per_mode": 30,
+  "remap_cells": 40,
+  "grok_peer_high": {
+    "revealed": { "high": 14, "n": 30, "mean": 3.3 },
+    "blind": { "high": 18, "n": 30, "mean": 3.53 },
+    "reassigned": { "high": 23, "n": 30, "mean": 3.77 }
+  },
+  "credit_when_labeled": {
+    "openai": { "label": "ChatGPT", "high": 26, "n": 40, "mean": 3.58 },
+    "anthropic": { "label": "Anthropic", "high": 22, "n": 40, "mean": 3.43 },
+    "gemini": { "label": "Gemini", "high": 21, "n": 40, "mean": 3.28 },
+    "xai": { "label": "Grok", "high": 15, "n": 40, "mean": 3.03 }
+  },
+  "grok_work_shown_as": {
+    "openai": { "label": "ChatGPT", "high": 14, "n": 15, "mean": 3.93 },
+    "anthropic": { "label": "Anthropic / Claude", "high": 11, "n": 15, "mean": 3.73 },
+    "gemini": { "label": "Gemini", "high": 6, "n": 10, "mean": 3.6 }
+  },
+  "chatgpt_rates_grok": {
+    "revealed": { "high": 2, "n": 10, "mean": 2.8 },
+    "blind": { "high": 4, "n": 10, "mean": 3.2 },
+    "reassigned": { "high": 6, "n": 10, "mean": 3.6 }
+  },
+  "adequate_grok_peer_high": {
+    "revealed": { "high": 4, "n": 15, "mean": 3.2 },
+    "blind": { "high": 8, "n": 15, "mean": 3.53 },
+    "reassigned": { "high": 13, "n": 15, "mean": 3.87 }
+  }
+}

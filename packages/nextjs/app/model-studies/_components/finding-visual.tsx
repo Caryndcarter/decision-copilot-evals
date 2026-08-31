@@ -124,6 +124,30 @@ const themes: Record<
       </>
     ),
   },
+  "brand-favor": {
+    gradient: "from-zinc-950 via-rose-950 to-indigo-950",
+    caption: "Brand remap · Grok credit under Revealed vs Reassigned",
+    svg: (
+      <>
+        <rect x="40" y="64" width="88" height="120" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" />
+        <rect x="152" y="64" width="88" height="120" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" />
+        <rect x="56" y="132" width="56" height="32" rx="4" fill="rgba(244,63,94,0.5)" />
+        <text x="84" y="154" textAnchor="middle" fill="white" fontSize="13" fontWeight="700">
+          3.03
+        </text>
+        <text x="84" y="172" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="9">
+          labeled Grok
+        </text>
+        <rect x="168" y="88" width="56" height="76" rx="4" fill="rgba(129,140,248,0.6)" />
+        <text x="196" y="130" textAnchor="middle" fill="white" fontSize="13" fontWeight="700">
+          3.58
+        </text>
+        <text x="196" y="172" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="9">
+          labeled ChatGPT
+        </text>
+      </>
+    ),
+  },
 };
 
 export function FindingVisual({

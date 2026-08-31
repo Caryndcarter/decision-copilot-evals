@@ -65,8 +65,8 @@ export default function ResultsPage() {
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Major findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Top blind-coded patterns with curated scoreboard slices — one cross-case result and two
-            major single-case results. Full rubric on linked case pages.
+            Top blind-coded patterns with curated scoreboard slices. Full rubric on linked case
+            pages.
           </p>
           <div className="mt-8">
             <MajorFindingGrid findings={majorFindings} />
