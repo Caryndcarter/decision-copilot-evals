@@ -61,7 +61,7 @@ function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
   );
 }
 
-function MajorFindingPanel({ finding }: { finding: MajorFinding }) {
+function MajorFindingPanel({ finding, wide = false }: { finding: MajorFinding; wide?: boolean }) {
   return (
     <article className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600">
@@ -72,7 +72,13 @@ function MajorFindingPanel({ finding }: { finding: MajorFinding }) {
       </h3>
       <p className="mt-1.5 text-xs text-zinc-500">{finding.contextLine}</p>
 
-      <div className="mt-4 flex-1 space-y-4 rounded-lg bg-zinc-50 p-3">
+      <div
+        className={`mt-4 flex-1 rounded-lg bg-zinc-50 p-3 ${
+          wide && finding.evidence.length > 1
+            ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            : "space-y-4"
+        }`}
+      >
         {finding.evidence.map((block, i) => (
           <EvidenceBars key={i} block={block} />
         ))}
@@ -99,11 +105,17 @@ function MajorFindingPanel({ finding }: { finding: MajorFinding }) {
   );
 }
 
-export function MajorFindingGrid({ findings }: { findings: MajorFinding[] }) {
+export function MajorFindingGrid({
+  findings,
+  wide = false,
+}: {
+  findings: MajorFinding[];
+  wide?: boolean;
+}) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className={wide ? "grid gap-4" : "grid gap-4 lg:grid-cols-3"}>
       {findings.map((f) => (
-        <MajorFindingPanel key={f.id} finding={f} />
+        <MajorFindingPanel key={f.id} finding={f} wide={wide} />
       ))}
     </div>
   );

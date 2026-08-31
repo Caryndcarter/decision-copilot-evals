@@ -93,5 +93,13 @@ export function getOverviewFinding(slug: string): OverviewPublishedFinding | und
   return OVERVIEW_PUBLISHED_FINDINGS.find((f) => f.slug === slug);
 }
 
+/** Stories whose evidence draws on a given case (results studyId). */
+export function getFindingsForCase(studyId: string): OverviewPublishedFinding[] {
+  const href = `/model-studies/results/${studyId}`;
+  return OVERVIEW_PUBLISHED_FINDINGS.filter((f) =>
+    f.caseLinks.some((l) => l.href === href)
+  );
+}
+
 export const OVERVIEW_FINDINGS_DEK =
   "Across investment, workforce, and shipping decisions, models diverged in whose risks they prioritized, when they challenged the user, and what course of action they recommended\u2014even when the underlying facts stayed the same.";

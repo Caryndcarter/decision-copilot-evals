@@ -45,7 +45,10 @@ function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
     return (
       <>
         {snippet.intro ? <ChartIntro intro={snippet.intro} /> : null}
-        <div className={snippet.intro ? "mt-6" : undefined}>
+        {!snippet.intro && snippet.caption ? (
+          <p className="text-[11px] leading-snug text-zinc-600">{snippet.caption}</p>
+        ) : null}
+        <div className={snippet.intro || snippet.caption ? "mt-4" : undefined}>
           <HormuzMoralDashboard
             gridOnly
             dimensions={
@@ -66,8 +69,6 @@ function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
 function FindingEvidenceSection({ finding }: { finding: MajorFinding }) {
   if (finding.snippets.length === 0) return null;
 
-  const hasFullChart = finding.snippets.some((s) => s.kind === "full-chart");
-
   return (
     <div className="border-b border-zinc-200 py-8 first:border-t first:border-zinc-200 last:border-b-0">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -86,9 +87,9 @@ function FindingEvidenceSection({ finding }: { finding: MajorFinding }) {
           ))}
         </p>
       </div>
-      <div className={hasFullChart ? "mt-4" : "mt-4 flex flex-col gap-4 lg:flex-row lg:items-stretch"}>
+      <div className="mt-4 flex flex-col gap-6">
         {finding.snippets.map((snippet, i) => (
-          <div key={i} className={hasFullChart ? "min-w-0" : "min-w-0 flex-1"}>
+          <div key={i} className="min-w-0">
             <SnippetContent snippet={snippet} />
           </div>
         ))}

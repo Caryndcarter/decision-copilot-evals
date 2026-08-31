@@ -110,7 +110,7 @@ export default async function FindingStoryPage({
 
             {majorFinding ? (
               <div className="mt-8">
-                <MajorFindingGrid findings={[majorFinding]} />
+                <MajorFindingGrid findings={[majorFinding]} wide />
               </div>
             ) : null}
 

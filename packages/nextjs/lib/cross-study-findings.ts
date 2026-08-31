@@ -57,6 +57,8 @@ export type MajorFindingFullChart = {
   dimensions?: string[];
   cases?: number[];
   intro?: MajorFindingChartIntro;
+  /** Short line above the grid when there's no full intro block. */
+  caption?: string;
 };
 
 export type MajorFindingSnippet = MajorFindingMoralSlice | MajorFindingFullChart;
@@ -92,6 +94,15 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
         ],
       },
       {
+        caption: "Hormuz — Decision Briefs per provider (5 conditions each)",
+        bars: [
+          { label: "ChatGPT · company", value: 2, max: 5 },
+          { label: "Fable · company", value: 3, max: 5 },
+          { label: "Gemini · company", value: 4, max: 5, variant: "highlight" },
+          { label: "Grok · company", value: 2, max: 5 },
+        ],
+      },
+      {
         caption: "Civitas replication — Unified Briefs per synthesizer (15 each)",
         bars: [
           { label: "ChatGPT · sponsor", value: 2, max: 15 },
@@ -101,10 +112,42 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
         ],
       },
     ],
-    statsNote: "Other three models usually coded balanced or low sponsor counts in the same batches.",
-    snippets: [],
+    statsNote:
+      "Gemini was the only model that never coded the outcome as balanced in the Hormuz batch. The other three usually coded balanced or low sponsor counts across all three cases.",
+    snippets: [
+      {
+        kind: "moral-slice",
+        studyId: "meridian-ic",
+        caption:
+          "Meridian IC · Decision Briefs — where Gemini parts from the rest: whose downside it minimized, whether it treated the IC's thesis as fixed, and how squarely it protected a dignified exit (amber). The last two rows show it staying silent on honesty to leavers and on richer severance where peers spoke up (gray, not amber). Five filer conditions × four models.",
+        dimensions: [
+          "risk_bearer",
+          "power_asymmetry",
+          "dignity_of_exit",
+          "truthfulness_to_leavers",
+          "severance_richness",
+        ],
+      },
+      {
+        kind: "moral-slice",
+        studyId: "civitas-replication",
+        caption:
+          "Civitas replication · Unified Briefs — whose downside is minimized and whether the IC's power goes unchallenged, across five trials × four synthesizers (Blind authorship). Gemini carries the owner's-side (lp) calls on risk here; on power the grid honestly shows ChatGPT leaning that way too.",
+        dimensions: ["risk_bearer", "power_asymmetry"],
+        compareSynthesizers: true,
+      },
+      {
+        kind: "full-chart",
+        studyId: "hormuz",
+        cases: [1, 2, 3, 4, 5],
+        dimensions: ["risk_bearer", "commercial_over_crew", "power_asymmetry"],
+        caption:
+          "Hormuz · Decision Briefs — whose downside each model protected, whether it let commercial pressure override crew, and whether it treated the company's position as fixed, by model across all five conditions. Gemini coded the company's downside as the one to protect in 4 of 5 and was the only model that never coded it balanced.",
+      },
+    ],
     supportingCases: [
       { studyId: "meridian-ic", label: "Meridian IC" },
+      { studyId: "hormuz", label: "Hormuz" },
       { studyId: "civitas-replication", label: "Civitas replication" },
     ],
   },
@@ -200,7 +243,16 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     ],
     statsNote:
       "Gemini split: 6 phased · 8 senior-core rebuild · 1 unclear — no single dominant path.",
-    snippets: [],
+    snippets: [
+      {
+        kind: "moral-slice",
+        studyId: "civitas-replication",
+        caption:
+          "Civitas replication · Unified Briefs — how fast each synthesizer cut (pace), whether it held the intake's phased lean or softened toward faster cuts, and the senior-retention tier it kept, across five trials and four synthesizers (Blind authorship).",
+        dimensions: ["pace", "leaning_pushback", "senior_tier"],
+        compareSynthesizers: true,
+      },
+    ],
     supportingCases: [{ studyId: "civitas-replication", label: "Civitas replication" }],
   },
 ];

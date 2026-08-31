@@ -9,6 +9,9 @@ import { DimensionScoreboard } from "@/app/model-studies/_components/scoreboard-
 import { CaseMoralEval } from "@/app/model-studies/_components/moral-eval/case-moral-eval";
 import { hasCaseMoralEval } from "@/lib/case-moral-eval-studies";
 import { InfluenceMatrixPlaceholder } from "@/app/model-studies/_components/scoreboard-influence-matrix";
+import { CaseIntakeSetup } from "@/app/model-studies/_components/case-intake-setup";
+import { getCaseIntake } from "@/lib/case-intake-display";
+import { getFindingsForCase } from "@/lib/model-studies-overview-findings";
 import { FINDINGS_STUDIES, getFindingsStudy, getTestType } from "@/lib/findings-registry";
 
 export function generateStaticParams() {
@@ -54,6 +57,8 @@ export default async function StudyResultsPage({
   }
 
   const type = getTestType(study.testTypeId);
+  const intake = getCaseIntake(study.id);
+  const relatedStories = getFindingsForCase(study.id);
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,46 +97,99 @@ export default async function StudyResultsPage({
         </div>
       </section>
 
-      {/* Findings */}
-      {study.findings.length > 0 && (
-        <section className="bg-white py-16 border-b border-zinc-100">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-xl font-bold text-zinc-900 tracking-tight">What this batch found</h2>
-            <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-              Every claim below is drawn from a blind-coded batch — the judge never saw which
-              provider wrote which brief.
-            </p>
-            <div className="mt-8">
-              <FindingCardGrid findings={study.findings} />
+      {intake ? (
+        <>
+          {/* The case, as submitted */}
+          <section className="bg-white py-16 border-b border-zinc-100">
+            <div className="mx-auto max-w-3xl px-6">
+              <h2 className="text-xl font-bold text-zinc-900 tracking-tight">The case, as submitted</h2>
+              <p className="mt-2 max-w-2xl text-sm text-zinc-500">
+                This is the intake a filer actually sent to the harness — the setup the models
+                answered. The blind-coded findings live on the linked story pages, not here.
+              </p>
+              <div className="mt-8">
+                <CaseIntakeSetup intake={intake} />
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
 
-      {/* Scoreboard */}
-      <section className="bg-zinc-50 py-16 border-b border-zinc-100">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
-            {hasCaseMoralEval(study.id) ? "Moral eval" : "Scoreboard"}
-          </h2>
-          <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            {hasCaseMoralEval(study.id)
-              ? "Directional lean by model and blind-coded dimension grid — same chips as the signed-in harness Findings, read-only here."
-              : "A curated slice of the coded dimensions, by provider. This is aggregate counts only — no model quotes."}
-          </p>
-          <div className="mt-8">
-            {study.id === "authorship-budget-conditions" ? (
-              <AuthorshipBudgetConditionsPanel />
-            ) : hasCaseMoralEval(study.id) ? (
-              <CaseMoralEval studyId={study.id} />
-            ) : study.kind === "dimension-coded" ? (
-              <DimensionScoreboard rows={study.scoreboard ?? []} />
-            ) : (
-              <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />
-            )}
-          </div>
-        </div>
-      </section>
+          {/* Findings that draw on this case */}
+          {relatedStories.length > 0 && (
+            <section className="bg-zinc-50 py-16 border-b border-zinc-100">
+              <div className="mx-auto max-w-3xl px-6">
+                <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+                  Findings that draw on this case
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-zinc-500">
+                  What the models did with this setup — the coded evidence, pulled together into the
+                  story it belongs to.
+                </p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {relatedStories.map((story) => (
+                    <Link
+                      key={story.slug}
+                      href={`/model-studies/findings/${story.slug}`}
+                      className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40"
+                    >
+                      <span className="text-sm font-semibold leading-snug text-zinc-900">
+                        {story.headline}
+                      </span>
+                      <span className="mt-2 text-sm font-semibold text-indigo-600 transition-transform group-hover:translate-x-0.5">
+                        Read the finding →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Findings (fallback for cases without a submitted-intake mapping) */}
+          {study.findings.length > 0 && (
+            <section className="bg-white py-16 border-b border-zinc-100">
+              <div className="mx-auto max-w-6xl px-6">
+                <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+                  What this batch found
+                </h2>
+                <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
+                  Every claim below is drawn from a blind-coded batch — the judge never saw which
+                  provider wrote which brief.
+                </p>
+                <div className="mt-8">
+                  <FindingCardGrid findings={study.findings} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Scoreboard */}
+          <section className="bg-zinc-50 py-16 border-b border-zinc-100">
+            <div className="mx-auto max-w-6xl px-6">
+              <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
+                {hasCaseMoralEval(study.id) ? "Moral eval" : "Scoreboard"}
+              </h2>
+              <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
+                {hasCaseMoralEval(study.id)
+                  ? "Directional lean by model and blind-coded dimension grid — same chips as the signed-in harness Findings, read-only here."
+                  : "A curated slice of the coded dimensions, by provider. This is aggregate counts only — no model quotes."}
+              </p>
+              <div className="mt-8">
+                {study.id === "authorship-budget-conditions" ? (
+                  <AuthorshipBudgetConditionsPanel />
+                ) : hasCaseMoralEval(study.id) ? (
+                  <CaseMoralEval studyId={study.id} />
+                ) : study.kind === "dimension-coded" ? (
+                  <DimensionScoreboard rows={study.scoreboard ?? []} />
+                ) : (
+                  <InfluenceMatrixPlaceholder deepDiveHref={study.deepDiveHref} />
+                )}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Methodology */}
       <section className="bg-white py-16 border-b border-zinc-100">
