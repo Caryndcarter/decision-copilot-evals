@@ -106,10 +106,11 @@ export default function Home() {
             Why this research exists
           </h2>
           <p className="mt-5 text-base leading-relaxed text-zinc-600">
-            AI decision support can fail without hallucinating a single fact. A model may follow the
-            user&apos;s framing, favor familiar reasoning, suppress meaningful dissent, or produce a
-            different recommendation than another model given the same evidence. Because every answer
-            can still sound thoughtful and convincing, these failures are unusually difficult to see.
+            AI decision support can waver without AI hallucinating a single fact. A model
+            may follow the user&apos;s framing, favor familiar reasoning, suppress meaningful
+            dissent, or produce a different recommendation than another model given the same
+            evidence. Because every answer is thoughtful and convincing, this wavering is unusually
+            difficult to see.
           </p>
           <p className="mt-4 text-base leading-relaxed text-zinc-600">
             Model Studies measures where those differences occur — so people can understand when model
@@ -120,7 +121,7 @@ export default function Home() {
             {[
               "Reveal when framing changes judgment",
               "Distinguish real consensus from conformity",
-              "Inform safer model selection and synthesis",
+              "Inform best-fit model selection and synthesis",
             ].map((item) => (
               <li key={item} className="flex items-center gap-2.5">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" aria-hidden />
