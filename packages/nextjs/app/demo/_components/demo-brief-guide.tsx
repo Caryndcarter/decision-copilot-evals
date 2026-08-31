@@ -15,7 +15,7 @@ export const DEMO_BRIEF_GUIDE_STEPS = [
     spot: "analysis-sections",
     extraSpots: ["lens-section"],
     title: "Then open the collapsed sections",
-    body: "Risk, reversibility, stakeholders, and the decision brief start closed. Use the jump links, click a section header, or Expand all.",
+    body: "Risk, reversibility, and stakeholders start closed. The decision brief is open so you have something to read. Use the jump links, click a header, or Expand all.",
   },
   {
     spot: "unified-cta",
