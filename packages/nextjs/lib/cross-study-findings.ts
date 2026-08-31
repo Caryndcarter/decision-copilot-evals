@@ -255,6 +255,43 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
     ],
     supportingCases: [{ studyId: "civitas-replication", label: "Civitas replication" }],
   },
+  {
+    id: "grok-brand-penalty",
+    scope: "single-case",
+    headline: "The same Grok work looked weaker once peers could see it was Grok",
+    contextLine: "Authorship · peer influence · 10 Unified Briefs × 4 authors",
+    evidence: [
+      {
+        caption: "Peer ratings that called Grok high influence — same real work, three brand conditions",
+        bars: [
+          { label: "Revealed (named Grok)", value: 14, max: 30 },
+          { label: "Blind (no brands)", value: 18, max: 30 },
+          { label: "Reassigned (Grok wearing another name)", value: 23, max: 30, variant: "highlight" },
+        ],
+      },
+      {
+        caption: "High-influence ratings for work labeled as each brand (reassigned remap, 40 cells)",
+        bars: [
+          { label: "Labeled ChatGPT", value: 26, max: 40, variant: "highlight" },
+          { label: "Labeled Anthropic / Claude", value: 22, max: 40 },
+          { label: "Labeled Gemini", value: 21, max: 40 },
+          { label: "Labeled Grok", value: 15, max: 40 },
+        ],
+      },
+      {
+        caption: "Grok's real contributions when remapped onto another brand",
+        bars: [
+          { label: "Grok shown as ChatGPT · high", value: 14, max: 15, variant: "highlight" },
+          { label: "Grok shown as Anthropic / Claude · high", value: 11, max: 15 },
+          { label: "Grok shown as Gemini · high", value: 6, max: 10 },
+        ],
+      },
+    ],
+    statsNote:
+      "ChatGPT rating Grok: 2.8 Revealed · 3.2 Blind · 3.6 Reassigned (10 decisions). Adequate-budget slice alone: Grok peer-high 4/15 Revealed → 8/15 Blind → 13/15 Reassigned. Constrained Anthropic is Sonnet; adequate is Fable — remap keys stay anthropic.",
+    snippets: [],
+    supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
+  },
 ];
 
 export function getMajorFindings(): MajorFinding[] {

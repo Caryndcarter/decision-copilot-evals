@@ -7,7 +7,8 @@ export type FindingVisualTheme =
   | "capital-risk"
   | "crew-risk"
   | "workforce-pace"
-  | "self-credit";
+  | "self-credit"
+  | "brand-favor";
 
 export type OverviewFindingSource = {
   study: string;
@@ -86,6 +87,19 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
       { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
     ],
     visualTheme: "self-credit",
+  },
+  {
+    slug: "brand-favoritism",
+    headline: "The same Grok work looked weaker once peers could see it was Grok",
+    body: "Across ten Unified Briefs, peers gave Grok high influence in 14 of 30 ratings when the brand was visible. Hidden brands raised that to 18 of 30. Remapping Grok onto another name raised it again \u2014 23 of 30.\n\nThe remap is the tell. Work labeled ChatGPT scored 3.58 on average (26 of 40 high). The same kind of cell labeled Grok scored 3.03 (15 of 40 high). Grok\u2019s actual contributions, shown as ChatGPT, were rated high in 14 of 15 ratings.\n\nChatGPT was the sharpest rivalry: it rated Grok 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
+    whyItMatters:
+      "Credit moved with the brand on the block, not only with the text. In a multi-model room, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
+    sources: [{ study: "Authorship", case: "Budget conditions" }],
+    caseLinks: [
+      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
+    ],
+    majorFindingId: "grok-brand-penalty",
+    visualTheme: "brand-favor",
   },
 ];
 

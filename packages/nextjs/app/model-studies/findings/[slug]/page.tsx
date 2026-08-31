@@ -5,6 +5,7 @@ import { SiteNav } from "@/app/model-studies/_components/site-nav";
 import { MajorFindingGrid } from "@/app/model-studies/_components/cross-study-finding-card";
 import { MajorFindingEvidenceSections } from "@/app/model-studies/_components/major-finding-snippet";
 import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
+import { AuthorshipBrandFavoritismPanel } from "@/app/harness/findings/authorship-brand-favoritism-panel";
 import {
   OVERVIEW_PUBLISHED_FINDINGS,
   getOverviewFinding,
@@ -44,7 +45,8 @@ export default async function FindingStoryPage({
     : undefined;
   const hasSnippets = (majorFinding?.snippets.length ?? 0) > 0;
   const hasAuthorshipPanel = finding.slug === "self-credit";
-  const hasEvidence = Boolean(majorFinding) || hasAuthorshipPanel;
+  const hasBrandFavorPanel = finding.slug === "brand-favoritism";
+  const hasEvidence = Boolean(majorFinding) || hasAuthorshipPanel || hasBrandFavorPanel;
 
   return (
     <div className="min-h-screen bg-white">
@@ -123,6 +125,12 @@ export default async function FindingStoryPage({
             {hasAuthorshipPanel ? (
               <div className="mt-8">
                 <AuthorshipBudgetConditionsPanel />
+              </div>
+            ) : null}
+
+            {hasBrandFavorPanel ? (
+              <div className="mt-8">
+                <AuthorshipBrandFavoritismPanel />
               </div>
             ) : null}
           </div>
