@@ -2,14 +2,17 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "./_components/site-nav";
 import { StatStrip } from "./_components/stat-strip";
-import { RollupFindingGrid } from "./_components/rollup-finding-card";
+import { OverviewPublishedFindings } from "./_components/overview-published-findings";
 import { TestTypeCard } from "./_components/test-type-card";
 import {
   getLiveTestTypes,
   getRollupStats,
-  getStandoutFindings,
   getStudiesForType,
 } from "@/lib/findings-registry";
+import {
+  OVERVIEW_FINDINGS_DEK,
+  OVERVIEW_PUBLISHED_FINDINGS,
+} from "@/lib/model-studies-overview-findings";
 
 export const metadata: Metadata = {
   title: "Model Studies — a Decision Copilot research program",
@@ -19,7 +22,6 @@ export const metadata: Metadata = {
 
 export default function Home() {
   const stats = getRollupStats();
-  const findings = getStandoutFindings();
   const testTypes = getLiveTestTypes();
 
   return (
@@ -163,19 +165,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Rollup findings */}
+      {/* Latest findings — overview narrative; full rollup lives on /results */}
       <section className="bg-zinc-50 py-20 border-b border-zinc-100">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
-              What the studies found
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-              Where models split under the same facts — blind-coded, on a fixed rubric. The full
-              scoreboards live on Results and on each case page.
-            </p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">
+            Latest findings
+          </p>
+          <h2 className="mt-3 text-2xl font-bold text-zinc-900 tracking-tight">
+            What the research is showing
+          </h2>
+          <p className="mt-3 max-w-3xl text-base leading-relaxed text-zinc-600">
+            {OVERVIEW_FINDINGS_DEK}
+          </p>
+          <div className="mt-10">
+            <OverviewPublishedFindings findings={OVERVIEW_PUBLISHED_FINDINGS} />
           </div>
-          <RollupFindingGrid findings={findings} />
           <div className="mt-8">
             <Link
               href="/model-studies/results"
