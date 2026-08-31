@@ -72,7 +72,7 @@ const PAGE_NAV = [
   { href: "#flow", label: "The flow" },
   { href: "#unified-brief", label: "Unified Brief" },
   { href: "#postures", label: "Postures" },
-  { href: "#discuss", label: "Discuss & edit" },
+  { href: "#discuss", label: "Chat" },
 ] as const;
 
 export default function HowItWorksPage() {
@@ -180,11 +180,24 @@ export default function HowItWorksPage() {
                 </BriefItem>
                 <BriefItem title="Recommendation">One clear call from the think tank&apos;s best ideas.</BriefItem>
                 <BriefItem title="Key considerations & next steps">
-                  Tradeoffs to keep visible and actions for this week.
+                  Tradeoffs to keep visible and concrete next steps you can act on.
                 </BriefItem>
-                <BriefItem title="Research & variants">
-                  Live web lookups and saved what-if branches — folded into the merge, not added
-                  afterward.
+              </div>
+
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+                From chat
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                Spun off from your conversation with the models and folded into the same document.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <BriefItem title="Research">
+                  An optional &ldquo;show your work&rdquo; addendum. Ask a model to justify its
+                  reasoning and the supporting lookups and evidence it surfaces are saved here.
+                </BriefItem>
+                <BriefItem title="Variants">
+                  Alternate framings or what-if branches you spin off from chat and keep, so the
+                  brief can weigh them too.
                 </BriefItem>
               </div>
             </div>
@@ -225,11 +238,17 @@ export default function HowItWorksPage() {
               </p>
             </div>
 
-            <SubBlock id="discuss" title="Discuss, don't just download">
-              <ul className="list-disc space-y-3 pl-5">
+            <SubBlock id="discuss" title="Chat is where the work happens">
+              <p>
+                A brief isn&apos;t a static document — it&apos;s a conversation. Chat with any model,
+                or the synthesizer, to press on the reasoning, challenge a call, and reshape the
+                brief in place. It&apos;s also where you spin off the research and variants that fold
+                back into the document.
+              </p>
+              <ul className="mt-3 list-disc space-y-3 pl-5">
                 <li>
                   <strong className="font-medium text-zinc-800">Decision Briefs</strong> — chat in
-                  Discuss &amp; clarify; edit sections in place; ask for new views and save variants.
+                  Discuss &amp; clarify; edit sections in place; ask for new views.
                 </li>
                 <li>
                   <strong className="font-medium text-zinc-800">Unified Brief</strong> — discuss with
@@ -260,16 +279,10 @@ export default function HowItWorksPage() {
               Start a decision →
             </Link>
             <Link
-              href="/intake"
-              className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
-            >
-              Try a demo →
-            </Link>
-            <Link
               href="/tour"
               className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
             >
-              Take the product tour
+              Try a demo →
             </Link>
           </div>
         </div>

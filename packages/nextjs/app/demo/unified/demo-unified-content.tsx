@@ -90,17 +90,68 @@ export function DemoUnifiedContent() {
         </div>
       </div>
 
+      {/* End of tour — how to get access */}
+      <div className={`py-8 ${demoContentClass}`}>
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-6 sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+            End of the tour
+          </p>
+          <h2 className="mt-2 text-xl font-bold tracking-tight text-zinc-900">
+            That&apos;s the full flow — here&apos;s how to run your own
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-600">
+            You just walked through a real decision end to end: intake, clarifying questions,
+            individual model briefs, and the Unified Brief. Decision Copilot is invite-only while
+            we&apos;re in early access, so running your own takes three steps:
+          </p>
+          <ol className="mt-6 space-y-4">
+            {[
+              {
+                title: "Request access",
+                body: "Tell us your email and a sentence about what you'd use it for.",
+              },
+              {
+                title: "We review and send an invite",
+                body: "If it's a fit, you'll get an invitation link at that email from Finlayson Studio.",
+              },
+              {
+                title: "Sign in and start a real decision",
+                body: "Follow the invite to create your account, then brief your own think tank on the real intake form.",
+              },
+            ].map((step, i) => (
+              <li key={step.title} className="flex gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-semibold text-zinc-900">{step.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-600">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link
+              href="/request-access"
+              className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+            >
+              Request access →
+            </Link>
+            <Link
+              href="/auth/signin"
+              className="rounded-lg border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-50"
+            >
+              Already have an invite? Sign in
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <div
         className={`flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 py-6 ${demoContentClass}`}
       >
         <Link href="/demo/result?provider=openai" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
           ← Individual model results
-        </Link>
-        <Link
-          href="/request-access"
-          className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          Request access
         </Link>
       </div>
     </>

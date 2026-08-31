@@ -315,10 +315,10 @@ export default function Home() {
                   Describe your decision →
                 </Link>
                 <Link
-                  href="/intake?demo=gen-ai-product-compliance"
+                  href="/tour"
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
-                  Try a demo scenario
+                  Try a demo
                 </Link>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-500">
@@ -615,16 +615,10 @@ export default function Home() {
               Start a decision →
             </Link>
             <Link
-              href="/intake?demo=vp-sales-underperforming"
+              href="/tour"
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-8 py-3 text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
               Try a demo
-            </Link>
-            <Link
-              href="/tour"
-              className="rounded-lg border border-zinc-700/60 px-8 py-3 text-sm font-semibold text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 transition-colors"
-            >
-              Take the product tour
             </Link>
           </div>
         </div>

@@ -41,10 +41,12 @@ export const authConfig: NextAuthConfig = {
         return true;
       }
 
+      // /intake is publicly viewable so visitors can see how a decision starts;
+      // the underlying /api/decision calls still require a session (401), so a
+      // logged-out visitor can explore the form but cannot start a real run.
       const isProtectedPage =
         path.startsWith("/admin") ||
         path.startsWith("/harness") ||
-        path.startsWith("/intake") ||
         path.startsWith("/run") ||
         path.startsWith("/runs");
 

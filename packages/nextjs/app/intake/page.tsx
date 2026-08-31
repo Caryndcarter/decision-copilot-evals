@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -189,6 +190,8 @@ function FieldHelp({ children }: { children: React.ReactNode }) {
 }
 
 export default function IntakePage() {
+  const { status } = useSession();
+  const [showAccessModal, setShowAccessModal] = useState(false);
   const [situation, setSituation] = useState("");
   const [constraints, setConstraints] = useState("");
   const [posture, setPosture] = useState<(typeof POSTURE_OPTIONS)[number]["value"]>("explore");
@@ -294,6 +297,10 @@ export default function IntakePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (status === "unauthenticated") {
+      setShowAccessModal(true);
+      return;
+    }
     setError(null);
     setPartialWarning(null);
     if (!situation.trim() || !constraints.trim()) {
@@ -396,6 +403,10 @@ export default function IntakePage() {
   }
 
   async function handleFreeformSubmit() {
+    if (status === "unauthenticated") {
+      setShowAccessModal(true);
+      return;
+    }
     if (!situation.trim() || !constraints.trim()) {
       setError("Decision context and constraints are required.");
       return;
@@ -529,6 +540,37 @@ export default function IntakePage() {
           <SessionNav />
         </div>
       </nav>
+
+      {/* Access explainer — shown to logged-out visitors exploring the form */}
+      {status === "unauthenticated" && (
+        <div className="border-b border-indigo-100 bg-indigo-50">
+          <div className="mx-auto max-w-3xl px-6 py-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+              How a decision starts
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-700">
+              This is the real intake form — where you brief your think tank before any model runs.
+              Decision Copilot is invite-only right now, so starting a live decision needs an
+              account. You&apos;re welcome to explore the form below to see how it works, then
+              request access when you&apos;re ready.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/request-access"
+                className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+              >
+                Request access
+              </Link>
+              <Link
+                href="/tour"
+                className="rounded-lg border border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-50"
+              >
+                Take the tour
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Page header */}
       <div className="border-b border-zinc-200 bg-white">
@@ -849,6 +891,53 @@ export default function IntakePage() {
           </div>
         </form>
       </div>
+
+      {showAccessModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-950/50 px-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="access-modal-title"
+          onClick={() => setShowAccessModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-7 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
+              Invite-only
+            </p>
+            <h2 id="access-modal-title" className="mt-2 text-xl font-bold tracking-tight text-zinc-900">
+              Request access to run this
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-600">
+              Decision Copilot is invite-only while we&apos;re in early access, so live runs need an
+              account. Tell us a little about yourself and we&apos;ll follow up with an invitation.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href="/request-access"
+                className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+              >
+                Request access →
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowAccessModal(false)}
+                className="rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+              >
+                Keep exploring
+              </button>
+            </div>
+            <p className="mt-5 text-center text-sm text-zinc-500">
+              Already have an invite?{" "}
+              <Link href="/auth/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
