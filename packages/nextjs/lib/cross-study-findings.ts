@@ -209,6 +209,10 @@ export function getMajorFindings(): MajorFinding[] {
   return MAJOR_FINDINGS;
 }
 
+export function getMajorFinding(id: string): MajorFinding | undefined {
+  return MAJOR_FINDINGS.find((f) => f.id === id);
+}
+
 export function getRegistryScoreboardRow(
   studyId: string,
   dimension: string
