@@ -92,38 +92,16 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   },
   {
     slug: "brand-favoritism",
-    headline: "The same Grok work looked weaker once peers could see it was Grok",
-    body: "Across ten Unified Briefs, peers gave Grok high influence in 14 of 30 ratings when the brand was visible. Hidden brands raised that to 18 of 30. Remapping Grok onto another name raised it again \u2014 23 of 30.\n\nThe remap is the tell. Work labeled ChatGPT scored 3.58 on average (26 of 40 high). The same kind of cell labeled Grok scored 3.03 (15 of 40 high). Grok\u2019s actual contributions, shown as ChatGPT, were rated high in 14 of 15 ratings.\n\nChatGPT was the sharpest rivalry: it rated Grok 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
+    headline: "The same Grok work looked weaker once peers could see it was Grok's",
+    body: "Across ten Unified Briefs, peers gave Grok\u2019s work a \u201chigh influence\u201d score of 4/4 in 14 of 30 ratings when all brands were visible. Hiding all brands raised that to 18 of 30. Under remapping, Grok wore Claude, Gemini, and ChatGPT labels. Grok\u2019s work given another name raised it again \u2014 23 of 30. The remap is the tell.\n\nWork labeled ChatGPT scored 3.58/4 on average. Work labeled Grok scored 3.03/4. Grok\u2019s actual contributions, shown as ChatGPT, scored 3.93/4.\n\nChatGPT was the sharpest rivalry: it rated Grok\u2019s work 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
     whyItMatters:
-      "Credit moved with the brand on the block, not only with the text. In a multi-model room, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
+      "Under remapping, we gave a strong Grok grok-4.5 the names of strong peers: gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash, and those peers evaluated the strong Grok\u2019s work; Credit moved with the brand on the block, not purely with the strength of ideas. In multi-model peer evaluations, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
     sources: [{ study: "Authorship", case: "Budget conditions" }],
     caseLinks: [
       { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
     ],
     majorFindingId: "grok-brand-penalty",
     visualTheme: "brand-favor",
-    compareWording: {
-      href: "/model-studies/findings/brand-favoritism-models",
-      label: "Same data, model-id wording →",
-    },
-  },
-  {
-    slug: "brand-favoritism-models",
-    headline:
-      "Grok 4.5 / 4.3 scored highest when its work was labeled gpt-5.6-sol or gpt-5.5 — not only that swap",
-    body: "Two authorship batches, two Grok generations. Constrained Civitas used grok-4.3 with gpt-5.5, claude-sonnet-4-6, and gemini-3.6-flash. The adequate-budget (Sol) batch used grok-4.5 with gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash.\n\nGrok\u2019s work was remapped onto every other brand \u2014 not a one-off ChatGPT slap. Across 40 remapped ratings of real Grok work: 15 cells labeled ChatGPT (gpt-5.5 or gpt-5.6-sol), 15 labeled Anthropic (Sonnet or Fable), 10 labeled Gemini 3.6 Flash. Reassigned never left it labeled Grok.\n\nThe ChatGPT label finished highest: 14 of 15 high, mean 3.93 (those same cells were 3.60 under Revealed). On Sol, grok-4.5 shown as gpt-5.6-sol was high in 6 of 6. On Civitas, grok-4.3 shown as gpt-5.5 was high in 8 of 9. Most of those ChatGPT-label ratings were other models judging Grok\u2019s text; ChatGPT itself saw Grok-as-ChatGPT only twice.\n\nThe Gemini 3.6 Flash label moved the score farthest from Revealed (+0.50 overall, +0.75 on the constrained batch) because those cells started lower. The Claude label (Fable / Sonnet) was as common as ChatGPT and landed in between: 11 of 15 high, mean 3.73, only +0.13 versus Revealed.",
-    whyItMatters:
-      "The story is not \u201cGrok became ChatGPT once.\u201d It is that three different brand slaps all change how Grok 4.5 / 4.3 looks, the ChatGPT (Sol / gpt-5.5) slap finishes strongest, and the Gemini slap produces the biggest lift from a weak Revealed baseline.",
-    sources: [{ study: "Authorship", case: "Budget conditions" }],
-    caseLinks: [
-      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
-    ],
-    majorFindingId: "grok-brand-penalty-models",
-    visualTheme: "brand-favor",
-    compareWording: {
-      href: "/model-studies/findings/brand-favoritism",
-      label: "Same data, shorter Grok / ChatGPT wording →",
-    },
   },
 ];
 
