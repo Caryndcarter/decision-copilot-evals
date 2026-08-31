@@ -96,7 +96,7 @@ export default async function FindingStoryPage({
       <section className="bg-white py-14 border-b border-zinc-100">
         <div className="mx-auto max-w-3xl px-6">
           <div className="space-y-4 text-base leading-relaxed text-zinc-700">
-            {finding.body.split("\n\n").map((paragraph, i) => (
+            {(finding.storyBody ?? finding.body).split("\n\n").map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
           </div>

@@ -24,7 +24,10 @@ export type OverviewPublishedFinding = {
   /** Drives the dedicated story URL: /model-studies/findings/[slug]. */
   slug: string;
   headline: string;
+  /** Short overview-card copy. */
   body: string;
+  /** Longer copy for the dedicated story page; falls back to `body` when absent. */
+  storyBody?: string;
   whyItMatters?: string;
   sources: OverviewFindingSource[];
   /** Cases that back this story — surfaced on the story page, not the card. */
@@ -46,7 +49,8 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   {
     slug: "gemini-capital-side",
     headline: "Gemini repeatedly made reducing the PE owner\u2019s risk the priority",
-    body: "Meridian, a private-equity owner, was deciding how aggressively to cut staff and modernize Civitas, a municipal-software company it owned. Filed from the owner\u2019s side, Gemini treated the owner\u2019s downside as the risk to minimize in 4 of 5 of its own briefs. Civitas\u2019s modernization was filed separately and run repeatedly as merged recommendations, and there too Gemini landed on the owner\u2019s downside \u2014 9 of 15. The other models usually balanced the interests of the owner, employees, and customers.\n\nA separate shipping decision showed the same lean. Meran Tankers was weighing whether to keep sending crews through the Strait of Hormuz, and Gemini treated the company\u2019s downside as the one to protect in 4 of 5 briefs \u2014 more than any other model, and the only one that never coded the outcome as balanced.",
+    body: "A private-equity firm was deciding how aggressively to cut staff and modernize a software company it owned. Presented from the sponsor\u2019s perspective, Gemini treated the sponsor\u2019s downside as the risk to minimize in 4 of 5 outputs. When the same decision was reframed around the people affected by the cuts, it still prioritized the owner\u2019s downside in 9 of 15 syntheses. The other models usually balanced the interests of the owner, employees, and customers.\n\nA shipping decision showed the same lean: Gemini treated the company\u2019s downside as the one to protect in 4 of 5 briefs \u2014 more than any other model, and the only one that never coded the outcome as balanced.",
+    storyBody: "Meridian, a private-equity owner, was deciding how aggressively to cut staff and modernize Civitas, a municipal-software company it owned. Filed from the owner\u2019s side, Gemini treated the owner\u2019s downside as the risk to minimize in 4 of 5 of its own briefs. Filed instead from Civitas\u2019s side \u2014 its employees and customers, who wanted the cuts limited \u2014 Gemini still favored Meridian, the owner, in 9 of 15 of its briefs. The other models usually balanced the interests of the owner, employees, and customers.\n\nA separate shipping decision showed the same lean. Meran Tankers was weighing whether to keep sending crews through the Strait of Hormuz, and Gemini treated the company\u2019s downside, not the crews\u2019, as the one to protect in 4 of 5 briefs \u2014 more than any other model, and the only one that never coded the outcome as balanced.",
     whyItMatters:
       "The preference shows up across three unrelated decisions \u2014 investment, workforce, and shipping. Because it persists when the perspective changes sides, user agreement alone does not explain it. The pattern suggests a recurring capital-side preference, although these cases cannot establish its cause.",
     sources: [
