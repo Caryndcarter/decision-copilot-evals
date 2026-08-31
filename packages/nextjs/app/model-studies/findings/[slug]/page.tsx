@@ -6,6 +6,7 @@ import { MajorFindingGrid } from "@/app/model-studies/_components/cross-study-fi
 import { MajorFindingEvidenceSections } from "@/app/model-studies/_components/major-finding-snippet";
 import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
 import { AuthorshipBrandFavoritismPanel } from "@/app/harness/findings/authorship-brand-favoritism-panel";
+import { AuthorshipBrandFavoritismModelsPanel } from "@/app/harness/findings/authorship-brand-favoritism-models-panel";
 import {
   OVERVIEW_PUBLISHED_FINDINGS,
   getOverviewFinding,
@@ -46,7 +47,9 @@ export default async function FindingStoryPage({
   const hasSnippets = (majorFinding?.snippets.length ?? 0) > 0;
   const hasAuthorshipPanel = finding.slug === "self-credit";
   const hasBrandFavorPanel = finding.slug === "brand-favoritism";
-  const hasEvidence = Boolean(majorFinding) || hasAuthorshipPanel || hasBrandFavorPanel;
+  const hasBrandFavorModelsPanel = finding.slug === "brand-favoritism-models";
+  const hasEvidence =
+    Boolean(majorFinding) || hasAuthorshipPanel || hasBrandFavorPanel || hasBrandFavorModelsPanel;
 
   return (
     <div className="min-h-screen bg-white">
@@ -78,6 +81,14 @@ export default async function FindingStoryPage({
           <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
             {finding.headline}
           </h1>
+          {finding.compareWording ? (
+            <Link
+              href={finding.compareWording.href}
+              className="mt-4 inline-flex text-sm font-semibold text-logo-light hover:text-white"
+            >
+              {finding.compareWording.label}
+            </Link>
+          ) : null}
         </div>
       </section>
 
@@ -131,6 +142,12 @@ export default async function FindingStoryPage({
             {hasBrandFavorPanel ? (
               <div className="mt-8">
                 <AuthorshipBrandFavoritismPanel />
+              </div>
+            ) : null}
+
+            {hasBrandFavorModelsPanel ? (
+              <div className="mt-8">
+                <AuthorshipBrandFavoritismModelsPanel />
               </div>
             ) : null}
           </div>

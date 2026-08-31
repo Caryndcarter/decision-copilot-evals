@@ -19,3 +19,10 @@ Machine-readable table: `packages/nextjs/data/authorship-brand-favoritism.json`.
 - ChatGPT rating Grok: **2.8 Revealed · 3.2 Blind · 3.6 Reassigned**.
 
 Constrained Anthropic is Sonnet; adequate is Fable. Remap keys stay `anthropic`.
+
+Two public wordings of this snapshot:
+
+- `/model-studies/findings/brand-favoritism` — short Grok / ChatGPT labels (v1).
+- `/model-studies/findings/brand-favoritism-models` — model ids and remap frequencies (v2).
+
+Grok remaps (40 cells of real Grok work): 15 ChatGPT (gpt-5.5 / gpt-5.6-sol), 15 Anthropic (Sonnet / Fable), 10 Gemini 3.6 Flash. Never left labeled Grok. ChatGPT label finishes highest (14/15 high, mean 3.93). Gemini label has the largest lift vs Revealed (+0.50). ChatGPT-as-rater saw Grok-as-ChatGPT only twice.
