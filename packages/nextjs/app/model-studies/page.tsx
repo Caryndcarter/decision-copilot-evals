@@ -197,7 +197,7 @@ export default function Home() {
               <span className="font-semibold text-zinc-900">Our findings shape the product.</span>{" "}
               Because our Authorship study showed a synthesizer can over-credit its own draft and{" "}
               <Link
-                href="#findings"
+                href="/model-studies/findings/brand-favoritism"
                 className="font-semibold text-indigo-600 transition-colors hover:text-indigo-800"
               >
                 penalize another model

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getTestTypeCardMetrics, type FindingsStudyMeta, type TestTypeMeta } from "@/lib/findings-registry";
 
 /**
@@ -22,10 +21,7 @@ export function TestTypeCard({
   ].filter(Boolean);
 
   return (
-    <Link
-      href={`/model-studies/results#${type.id}`}
-      className="group block h-full rounded-xl border border-zinc-200 bg-white p-5 transition-all duration-200 hover:border-indigo-300 hover:shadow-md"
-    >
+    <div className="block h-full rounded-xl border border-zinc-200 bg-white p-5">
       <span className="text-[10px] uppercase tracking-wider font-semibold text-indigo-500">
         {type.eyebrow}
       </span>
@@ -40,12 +36,12 @@ export function TestTypeCard({
         {studies.map((s) => (
           <li
             key={s.id}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600 group-hover:bg-indigo-50 group-hover:text-indigo-700"
+            className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-600"
           >
             {s.name}
           </li>
         ))}
       </ul>
-    </Link>
+    </div>
   );
 }
