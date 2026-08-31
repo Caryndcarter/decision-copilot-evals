@@ -18,7 +18,7 @@ export type OverviewPublishedFinding = {
 
 export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   {
-    headline: "Gemini repeatedly prioritized the PE owner\u2019s downside",
+    headline: "Gemini repeatedly made reducing the PE owner\u2019s risk the priority",
     body: "In an investment decision presented from the PE sponsor\u2019s perspective, Gemini treated the sponsor\u2019s downside as the risk to minimize in 4 of 5 outputs.\n\nIn a workforce-restructuring case centered on people affected by the cuts, Gemini still prioritized the same PE owner\u2019s downside in 9 of 15 syntheses. The other models were usually balanced.",
     whyItMatters:
       "Because Gemini\u2019s preference persisted when the perspective changed sides, user agreement alone does not explain it. The result suggests a recurring capital-side preference, although these cases cannot establish its cause.",
@@ -34,7 +34,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     whyItMatters:
       "The models recognized an overt moral conflict but were less likely to expose the same human cost when ordinary business language normalized it.",
     sources: [{ study: "Voice Influence", case: "Hormuz" }],
-    href: "/model-studies/results/hormuz-moral",
+    href: "/model-studies/results/hormuz",
   },
   {
     headline: "ChatGPT consistently recommended the less disruptive path for workers",

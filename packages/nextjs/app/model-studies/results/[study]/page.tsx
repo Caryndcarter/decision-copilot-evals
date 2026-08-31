@@ -40,6 +40,9 @@ export default async function StudyResultsPage({
   params: Promise<{ study: string }>;
 }) {
   const { study: studyId } = await params;
+  if (studyId === "hormuz-moral") {
+    redirect("/model-studies/results/hormuz");
+  }
   const study = getFindingsStudy(studyId);
   if (!study || study.status !== "live") notFound();
 
