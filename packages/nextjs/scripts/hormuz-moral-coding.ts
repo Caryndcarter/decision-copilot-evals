@@ -10,7 +10,7 @@
  * From repo root:
  *   npm run harness:hormuz:moral -- --report=packages/nextjs/scripts/output/hormuz-harness-….json
  *   npm run harness:hormuz:moral -- --decision-id=<uuid>
- *   npm run harness:hormuz:moral -- --user-email=caryn1@gmail.com
+ *   npm run harness:hormuz:moral -- --user-email=you@example.com
  *   npm run harness:hormuz:moral -- --from-json=packages/nextjs/scripts/output/hormuz-moral-….json
  *
  * Env:

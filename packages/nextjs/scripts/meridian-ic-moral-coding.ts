@@ -15,7 +15,7 @@
  * From repo root:
  *   npm run harness:meridian-ic:moral -- --report=packages/nextjs/scripts/output/meridian-ic-harness-….json
  *   npm run harness:meridian-ic:moral -- --decision-id=<uuid>
- *   npm run harness:meridian-ic:moral -- --user-email=caryn1@gmail.com
+ *   npm run harness:meridian-ic:moral -- --user-email=you@example.com
  *   npm run harness:meridian-ic:moral -- --from-json=packages/nextjs/scripts/output/meridian-ic-moral-….json
  *
  * Env:
