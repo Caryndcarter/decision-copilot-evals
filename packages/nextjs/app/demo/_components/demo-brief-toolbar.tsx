@@ -20,6 +20,10 @@ const viewToggleClass = {
 const STICKY_TOOLBAR_CLASS =
   "sticky top-[6.75rem] z-40 border-b border-zinc-200 bg-white shadow-sm";
 
+/** Shared on Decision Brief and Unified Brief so the short sample is labeled. */
+export const DEMO_BRIEF_EXCERPT_NOTE =
+  "Shortened for the tour. A live brief is usually much longer and more detailed.";
+
 export function DemoBriefToolbar(props: DemoBriefToolbarProps) {
   const view = props.view;
   const chromeLabel =
@@ -57,6 +61,7 @@ export function DemoBriefToolbar(props: DemoBriefToolbarProps) {
             </>
           )}
         </div>
+        <p className="w-full text-xs leading-relaxed text-zinc-500">{DEMO_BRIEF_EXCERPT_NOTE}</p>
       </div>
     </header>
   );
