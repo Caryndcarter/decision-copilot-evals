@@ -50,7 +50,7 @@ const PROCESS_BY_STUDY: Record<
       },
       {
         title: "Measure credit, not just the text",
-        desc: "Each synthesizer rates how much every think-tank member influenced its merge, producing a rater × rated influence matrix. A budget-conditions case instead compares a model's self-credit against peer ratings under tight vs adequate token budgets.",
+        desc: "Each synthesizer rates how much every think-tank member influenced its merge, producing a rater × rated influence matrix. The Synthesizer Behavior case looks at two patterns in that credit: a model that claims full self-credit when peers rate the work weak, and a brand penalty that follows the Grok name rather than the work.",
       },
       {
         title: "Compare across conditions",

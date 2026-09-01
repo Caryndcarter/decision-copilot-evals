@@ -15,6 +15,9 @@ export function MoralSlicePanel({ slice }: { slice: MajorFindingMoralSlice }) {
             }
             cases={slice.cases}
             caption={slice.caption}
+            highlight={
+              slice.highlight as Parameters<typeof MeridianMoralPanel>[0]["highlight"]
+            }
           />
         );
       case "civitas-replication":
@@ -27,6 +30,9 @@ export function MoralSlicePanel({ slice }: { slice: MajorFindingMoralSlice }) {
             authorshipMode="blind"
             compareSynthesizers={slice.compareSynthesizers}
             synthesizerOrder={slice.synthesizerOrder}
+            highlight={
+              slice.highlight as Parameters<typeof CivitasMoralPanel>[0]["highlight"]
+            }
             caption={slice.caption}
           />
         );
@@ -37,9 +43,5 @@ export function MoralSlicePanel({ slice }: { slice: MajorFindingMoralSlice }) {
 
   if (!panel) return null;
 
-  return (
-    <figure className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white p-4">
-      {panel}
-    </figure>
-  );
+  return <div className="min-w-0">{panel}</div>;
 }

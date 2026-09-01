@@ -40,7 +40,7 @@ function ChartIntro({ intro }: { intro: MajorFindingChartIntro }) {
   );
 }
 
-function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
+function SnippetChart({ snippet }: { snippet: MajorFindingSnippet }) {
   if (snippet.kind === "full-chart" && snippet.studyId === "meran-tankers") {
     return (
       <>
@@ -48,13 +48,16 @@ function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
         {!snippet.intro && snippet.caption ? (
           <p className="text-[11px] leading-snug text-zinc-600">{snippet.caption}</p>
         ) : null}
-        <div className={snippet.intro || snippet.caption ? "mt-4" : undefined}>
+        <div className={snippet.intro || snippet.caption ? "mt-3" : undefined}>
           <HormuzMoralDashboard
             gridOnly
             dimensions={
               snippet.dimensions as Parameters<typeof HormuzMoralDashboard>[0]["dimensions"]
             }
             cases={snippet.cases}
+            highlight={
+              snippet.highlight as Parameters<typeof HormuzMoralDashboard>[0]["highlight"]
+            }
           />
         </div>
       </>
@@ -66,34 +69,64 @@ function SnippetContent({ snippet }: { snippet: MajorFindingSnippet }) {
   return null;
 }
 
+function EvidenceCaseBlock({ snippet }: { snippet: MajorFindingSnippet }) {
+  const hasHeader =
+    Boolean(snippet.caseLabel) ||
+    Boolean(snippet.testType) ||
+    Boolean(snippet.testExplainer) ||
+    Boolean(snippet.briefsCoded);
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+      {hasHeader ? (
+        <div className="mb-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
+            {snippet.caseLabel ? (
+              snippet.caseHref ? (
+                <Link
+                  href={snippet.caseHref}
+                  className="group inline-flex items-center gap-1.5 text-lg font-bold tracking-tight text-zinc-900 transition-colors hover:text-indigo-700"
+                >
+                  {snippet.caseLabel}
+                  <span className="text-indigo-600 transition-transform group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </Link>
+              ) : (
+                <span className="text-lg font-bold tracking-tight text-zinc-900">
+                  {snippet.caseLabel}
+                </span>
+              )
+            ) : (
+              <span />
+            )}
+            {snippet.briefsCoded ? (
+              <span className="text-xs font-medium text-zinc-500">{snippet.briefsCoded}</span>
+            ) : null}
+          </div>
+          {snippet.testType ? (
+            <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
+              {snippet.testType}
+            </p>
+          ) : null}
+          {snippet.testExplainer ? (
+            <p className="mt-2.5 text-sm leading-relaxed text-zinc-600">{snippet.testExplainer}</p>
+          ) : null}
+        </div>
+      ) : null}
+      <SnippetChart snippet={snippet} />
+    </div>
+  );
+}
+
 function FindingEvidenceSection({ finding }: { finding: MajorFinding }) {
   if (finding.snippets.length === 0) return null;
 
   return (
-    <div className="border-b border-zinc-200 py-8 first:border-t first:border-zinc-200 last:border-b-0">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-zinc-900">{finding.headline}</h3>
-        <p className="text-xs text-zinc-500">
-          {finding.supportingCases.map((c, i) => (
-            <span key={c.studyId}>
-              {i > 0 ? " · " : null}
-              <Link
-                href={`/model-studies/results/${c.studyId}`}
-                className="text-zinc-600 underline decoration-zinc-300 underline-offset-2 hover:text-indigo-700"
-              >
-                {c.label}
-              </Link>
-            </span>
-          ))}
-        </p>
-      </div>
-      <div className="mt-4 flex flex-col gap-6">
-        {finding.snippets.map((snippet, i) => (
-          <div key={i} className="min-w-0">
-            <SnippetContent snippet={snippet} />
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col gap-6">
+      {finding.snippets.map((snippet, i) => (
+        <EvidenceCaseBlock key={i} snippet={snippet} />
+      ))}
     </div>
   );
 }

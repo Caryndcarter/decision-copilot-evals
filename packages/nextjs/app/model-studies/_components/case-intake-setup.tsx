@@ -71,9 +71,19 @@ export function CaseIntakeSetup({ intake }: { intake: CaseIntake }) {
 
   return (
     <div>
-      <p className="text-sm font-semibold text-zinc-900">{intake.scenarioTitle}</p>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-700">{intake.summary}</p>
-      <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">{intake.intro}</p>
+      <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">{intake.intro}</p>
+
+      <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
+          What was submitted
+        </p>
+        <p className="mt-2 text-sm font-semibold text-zinc-900">{intake.scenarioTitle}</p>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-700">{intake.summary}</p>
+        <p className="mt-4 border-t border-zinc-200 pt-4 text-sm leading-relaxed text-zinc-700">
+          <span className="font-semibold text-zinc-900">What was coded from it. </span>
+          {intake.codedFrom}
+        </p>
+      </div>
 
       {multiple ? (
         <div className="mt-5">

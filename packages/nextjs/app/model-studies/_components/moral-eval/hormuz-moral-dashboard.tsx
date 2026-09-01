@@ -16,6 +16,7 @@ import {
   type HormuzMoralBatch,
   type HormuzMoralDimension,
   type HormuzMoralItem,
+  type HormuzMoralProvider,
 } from "@/lib/hormuz-moral-display";
 
 const LEAN_CHIP: Record<"crew" | "commercial" | "neutral", string> = {
@@ -222,12 +223,15 @@ export function HormuzMoralDashboard({
   gridOnly = false,
   dimensions,
   cases: caseFilter,
+  highlight,
 }: {
   embedded?: boolean;
   /** Dimension × cases grid only — no lean bars, counts, or chrome. */
   gridOnly?: boolean;
   dimensions?: HormuzMoralDimension[];
   cases?: number[];
+  /** Draw a red box around this model's column in every case block. */
+  highlight?: HormuzMoralProvider;
 }) {
   const hasBatches = HORMUZ_MORAL_BATCHES.length > 0;
   const [batchId, setBatchId] = useState(HORMUZ_MORAL_BATCHES[0]?.id ?? "");
@@ -256,6 +260,7 @@ export function HormuzMoralDashboard({
     return null;
   }
 
+  const lastDim = dims[dims.length - 1];
   const equalCaseWidths = caseFilter !== undefined && caseFilter.length > 0;
   const dimColRem = 14;
   const providerColRem = 8;
@@ -315,16 +320,25 @@ export function HormuzMoralDashboard({
               style={stickyDimStyle}
             />
             {cases.flatMap((c) =>
-              HORMUZ_MORAL_PROVIDERS.map((p, pi) => (
-                <th
-                  key={`${c}-${p}`}
-                  className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
-                    pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
-                  } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
-                >
-                  {HORMUZ_PROVIDER_LABELS[p]}
-                </th>
-              ))
+              HORMUZ_MORAL_PROVIDERS.map((p, pi) =>
+                p === highlight ? (
+                  <th
+                    key={`${c}-${p}`}
+                    className="border-t-2 border-x-2 border-red-500 bg-red-50 px-1 py-1 text-center text-[10px] font-semibold text-red-800"
+                  >
+                    {HORMUZ_PROVIDER_LABELS[p]}
+                  </th>
+                ) : (
+                  <th
+                    key={`${c}-${p}`}
+                    className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
+                      pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
+                    } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
+                  >
+                    {HORMUZ_PROVIDER_LABELS[p]}
+                  </th>
+                )
+              )
             )}
           </tr>
         </thead>
@@ -340,13 +354,16 @@ export function HormuzMoralDashboard({
               {cases.flatMap((c) =>
                 HORMUZ_MORAL_PROVIDERS.map((p, pi) => {
                   const item = itemFor(report, c, p);
-                  return (
-                    <td
-                      key={`${c}-${p}-${dim}`}
-                      className={`px-1 py-1 text-center ${
+                  const isHi = p === highlight;
+                  const className = isHi
+                    ? `px-1 py-1 text-center border-x-2 border-red-500 bg-red-50/60 ${
+                        dim === lastDim ? "border-b-2 border-red-500" : ""
+                      }`
+                    : `px-1 py-1 text-center ${
                         pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
-                      } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`}
-                    >
+                      } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`;
+                  return (
+                    <td key={`${c}-${p}-${dim}`} className={className}>
                       <Chip
                         dimension={dim}
                         value={item?.codes?.[dim]}

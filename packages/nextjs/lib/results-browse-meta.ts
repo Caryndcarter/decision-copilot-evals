@@ -34,8 +34,8 @@ const CASE_BROWSE: Record<string, ResultsCaseBrowseMeta> = {
     publicationStatus: "published",
   },
   "authorship-budget-conditions": {
-    title: "Civitas under two contribution-analysis budgets",
-    caseTag: "Budget conditions",
+    title: "How synthesizers assign influence credit",
+    caseTag: "Synthesizer Behavior",
     keyResult: "Constrained +2.1 self−peer gap",
     publicationStatus: "published",
   },
@@ -76,7 +76,7 @@ export function getResultsCaseRowMetrics(study: FindingsStudyMeta): ResultsCaseR
     study.testTypeId === "replication"
       ? `${study.caseCount ?? "—"} trials`
       : study.testTypeId === "authorship" && study.id === "authorship-budget-conditions"
-        ? "2 budgets"
+        ? "2 runs"
         : study.testTypeId === "authorship"
           ? `${study.caseCount ?? "—"} demos`
           : `${study.caseCount ?? "—"} conditions`;

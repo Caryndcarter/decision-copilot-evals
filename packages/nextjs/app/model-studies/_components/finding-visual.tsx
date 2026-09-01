@@ -91,7 +91,7 @@ const themes: Record<
   },
   "self-credit": {
     gradient: "from-zinc-950 via-indigo-950 to-rose-950",
-    caption: "Self vs peer influence · authorship budget conditions",
+    caption: "Self vs peer influence · synthesizer behavior",
     svg: (
       <>
         <rect x="52" y="72" width="72" height="112" rx="8" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" />

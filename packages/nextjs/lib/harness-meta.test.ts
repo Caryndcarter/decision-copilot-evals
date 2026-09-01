@@ -71,7 +71,7 @@ describe("authorship budget-conditions inclusion", () => {
       batchId: CIVITAS_REPLICATION_DYNAMO_JULY27_BATCH_ID,
       studyTab: "authorship-influence",
     });
-    expect(purpose).toContain("budget conditions");
+    expect(purpose).toContain("synthesizer behavior");
     expect(purpose).toMatch(/GPT-5\.5.*reasoning_effort "low"/);
     expect(purpose).toContain("4,096");
     expect(purpose).toContain("8,192 floor");

@@ -13,6 +13,7 @@ import {
   leanSharesByProvider,
   type MeridianLeanShare,
   type MeridianMoralDimension,
+  type MeridianMoralProvider,
 } from "@/lib/meridian-ic-moral-display";
 
 const LEAN_CHIP: Record<"people" | "lp" | "neutral", string> = {
@@ -107,6 +108,8 @@ export type MeridianMoralPanelProps = {
   cases?: number[];
   showLeanBars?: boolean;
   caption?: string;
+  /** Draw a red box around this model's column in every case block. */
+  highlight?: MeridianMoralProvider;
 };
 
 export function MeridianMoralPanel({
@@ -114,6 +117,7 @@ export function MeridianMoralPanel({
   cases: caseFilter,
   showLeanBars = false,
   caption,
+  highlight,
 }: MeridianMoralPanelProps) {
   const batch = MERIDIAN_MORAL_BATCHES[0];
   const report = batch?.report;
@@ -127,6 +131,8 @@ export function MeridianMoralPanel({
   const leanShares = useMemo(() => (report ? leanSharesByProvider(report) : []), [report]);
 
   if (!report || dims.length === 0) return null;
+
+  const lastDim = dims[dims.length - 1];
 
   return (
     <div className="space-y-4">
@@ -161,16 +167,25 @@ export function MeridianMoralPanel({
             <tr className="border-b border-zinc-200 bg-zinc-50">
               <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
               {cases.flatMap((c) =>
-                MERIDIAN_MORAL_PROVIDERS.map((p, pi) => (
-                  <th
-                    key={`${c}-${p}`}
-                    className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
-                      pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
-                    } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
-                  >
-                    {MERIDIAN_PROVIDER_LABELS[p]}
-                  </th>
-                ))
+                MERIDIAN_MORAL_PROVIDERS.map((p, pi) =>
+                  p === highlight ? (
+                    <th
+                      key={`${c}-${p}`}
+                      className="border-t-2 border-x-2 border-red-500 bg-red-50 px-1 py-1 text-center text-[10px] font-semibold text-red-800"
+                    >
+                      {MERIDIAN_PROVIDER_LABELS[p]}
+                    </th>
+                  ) : (
+                    <th
+                      key={`${c}-${p}`}
+                      className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
+                        pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
+                      } ${c % 2 === 0 ? "bg-slate-100/90" : "bg-zinc-50"}`}
+                    >
+                      {MERIDIAN_PROVIDER_LABELS[p]}
+                    </th>
+                  )
+                )
               )}
             </tr>
           </thead>
@@ -183,13 +198,16 @@ export function MeridianMoralPanel({
                 {cases.flatMap((c) =>
                   MERIDIAN_MORAL_PROVIDERS.map((p, pi) => {
                     const item = itemFor(report, c, p);
-                    return (
-                      <td
-                        key={`${c}-${p}-${dim}`}
-                        className={`px-1 py-1 text-center ${
+                    const isHi = p === highlight;
+                    const className = isHi
+                      ? `px-1 py-1 text-center border-x-2 border-red-500 bg-red-50/60 ${
+                          dim === lastDim ? "border-b-2 border-red-500" : ""
+                        }`
+                      : `px-1 py-1 text-center ${
                           pi === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
-                        } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`}
-                      >
+                        } ${c % 2 === 0 ? "bg-slate-50/90" : "bg-white"}`;
+                    return (
+                      <td key={`${c}-${p}-${dim}`} className={className}>
                         <Chip dimension={dim} value={item?.codes?.[dim]} />
                       </td>
                     );

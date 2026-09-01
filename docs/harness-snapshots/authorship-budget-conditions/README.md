@@ -1,6 +1,6 @@
-# Authorship influence · budget conditions
+# Authorship influence · synthesizer behavior
 
-Committed self vs peers→ChatGPT credit snapshot. Primary product title is **budget conditions**, not a vendor or model name. The comparison covers two operating conditions, not a clean token-only experiment. Stored mode keys stay `open` / `blind` / `reassigned`; `open` displays as Revealed. Blind is the default product path.
+Committed self vs peers→ChatGPT credit snapshot. Primary product title is **Synthesizer Behavior**, not a vendor or model name. The comparison covers two operating conditions, not a clean token-only experiment. Stored mode keys stay `open` / `blind` / `reassigned`; `open` displays as Revealed. Blind is the default product path. The route and snapshot id stay `authorship-budget-conditions`.
 
 | Role | Batch | Stored `harness_kind` | Contribution-analysis configuration | Think-tank |
 | --- | --- | --- | --- | --- |

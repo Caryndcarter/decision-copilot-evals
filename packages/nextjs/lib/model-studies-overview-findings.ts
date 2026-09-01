@@ -98,9 +98,9 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     body: "In the first run, GPT-5.5 got one API setting the other three models never got: reasoning_effort = \u201clow\u201d on every structured call, with its contribution analysis capped at 4,096 output tokens. The other three were sent no reasoning setting at all and ran at their vendor defaults.\n\nUnder that setting ChatGPT\u2019s contribution was weak\u2014but it rated its own influence 4.0 out of 4. Peer models rated it just 1.9.\n\nIn a later run on gpt-5.6-sol, where reasoning_effort = \u201clow\u201d went to every model and ChatGPT\u2019s cap was raised to 8,192 tokens, its work was stronger. It again rated itself 4.0, while peer ratings rose to 3.9.\n\nChatGPT could read and judge completed work, but its self-rating did not register the difference in the quality of its own contribution.",
     whyItMatters:
       "Self-assessment can be less calibrated than judging work already in front of the model. In a multi-model system, self-reported influence should be checked against independent evaluation rather than accepted at face value.",
-    sources: [{ study: "Authorship", case: "Budget conditions" }],
+    sources: [{ study: "Authorship", case: "Synthesizer Behavior" }],
     caseLinks: [
-      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
+      { href: "/model-studies/results/authorship-budget-conditions", label: "Synthesizer Behavior" },
     ],
     majorFindingId: "chatgpt-self-credit",
     visualTheme: "self-credit",
@@ -111,9 +111,9 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     body: "Across ten Unified Briefs, peers gave Grok\u2019s work a \u201chigh influence\u201d score of 4/4 in 14 of 30 ratings when all brands were visible. Hiding all brands raised that to 18 of 30. Under remapping, Grok wore Claude, Gemini, and ChatGPT labels. Grok\u2019s work given another name raised it again \u2014 23 of 30. The remap is the tell.\n\nWork labeled ChatGPT scored 3.58/4 on average. Work labeled Grok scored 3.03/4. Grok\u2019s actual contributions, shown as ChatGPT, scored 3.93/4.\n\nChatGPT was the sharpest rivalry: it rated Grok\u2019s work 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
     whyItMatters:
       "Under remapping, we relabeled Grok\u2019s work with the names of peer models of equivalent thinking power, and those peers evaluated it. Credit moved with the brand on the block, not purely with the strength of ideas. In multi-model peer evaluations, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
-    sources: [{ study: "Authorship", case: "Budget conditions" }],
+    sources: [{ study: "Authorship", case: "Synthesizer Behavior" }],
     caseLinks: [
-      { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
+      { href: "/model-studies/results/authorship-budget-conditions", label: "Synthesizer Behavior" },
     ],
     majorFindingId: "grok-brand-penalty",
     visualTheme: "brand-favor",

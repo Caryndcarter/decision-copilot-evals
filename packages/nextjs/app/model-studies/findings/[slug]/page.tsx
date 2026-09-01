@@ -112,12 +112,13 @@ export default async function FindingStoryPage({
           <div className="mt-8">
             <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500">
               {finding.caseLinks.length > 1
-                ? "Read the full case setups"
-                : "Read the full case setup"}
+                ? "The cases we ran to collect this data"
+                : "The case we ran to collect this data"}
             </h2>
             <p className="mt-2 text-sm text-zinc-500">
-              Each case page carries the scenario as submitted — the situation, constraints, and
-              framing behind this finding.
+              {finding.caseLinks.length > 1
+                ? "These are the scenarios behind this finding. Each link opens the case exactly as it was submitted — the situation, constraints, and framing."
+                : "This is the scenario behind this finding. The link opens the case exactly as it was submitted — the situation, constraints, and framing."}
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {finding.caseLinks.map((link) => (
@@ -144,7 +145,10 @@ export default async function FindingStoryPage({
             <h2 className="text-xl font-bold tracking-tight text-zinc-900">The evidence</h2>
             <p className="mt-2 max-w-2xl text-sm text-zinc-500">
               Blind-coded counts behind this finding — the judge never saw which provider wrote which
-              brief. Open a case below for the full scoreboard and methodology.
+              brief.{" "}
+              {hasSnippets
+                ? "Each chart names the case it came from and links to it; Gemini\u2019s column is boxed in red."
+                : "Open a case for the full scoreboard and methodology."}
             </p>
 
             {majorFinding ? (

@@ -114,13 +114,47 @@ function CompareSynthesizersGrid({
   trials,
   authorshipMode,
   synthesizers,
+  highlight,
 }: {
   report: NonNullable<(typeof CIVITAS_MORAL_BATCHES)[0]["report"]>;
   dims: readonly CivitasMoralDimension[];
   trials: number[];
   authorshipMode: CivitasAuthorshipMode;
   synthesizers: readonly CivitasMoralSynthesizer[];
+  highlight?: CivitasMoralSynthesizer;
 }) {
+  const lastTi = trials.length - 1;
+  const lastDim = dims[dims.length - 1];
+
+  // Red box around a contiguous synthesizer block: outer edges only.
+  const groupHeaderClass = (s: CivitasMoralSynthesizer) =>
+    s === highlight
+      ? "border-t-2 border-x-2 border-red-500 bg-red-50 px-2 py-2 text-center"
+      : "border-l-[3px] border-zinc-400 px-2 py-2 text-center bg-zinc-50";
+
+  const subHeaderClass = (s: CivitasMoralSynthesizer, ti: number) => {
+    if (s === highlight) {
+      const left = ti === 0 ? "border-l-2 border-red-500" : "border-l border-red-200";
+      const right = ti === lastTi ? "border-r-2 border-red-500" : "";
+      return `px-1 py-1 text-center text-[10px] font-medium text-zinc-500 bg-red-50 ${left} ${right}`;
+    }
+    return `px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
+      ti === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
+    }`;
+  };
+
+  const cellClass = (s: CivitasMoralSynthesizer, ti: number, isLastRow: boolean) => {
+    if (s === highlight) {
+      const left = ti === 0 ? "border-l-2 border-red-500" : "border-l border-red-100";
+      const right = ti === lastTi ? "border-r-2 border-red-500" : "";
+      const bottom = isLastRow ? "border-b-2 border-red-500" : "";
+      return `px-1 py-1 text-center bg-red-50/50 ${left} ${right} ${bottom}`;
+    }
+    return `px-1 py-1 text-center ${
+      ti === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
+    } bg-white`;
+  };
+
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
       <table className="min-w-full border-collapse text-left">
@@ -130,12 +164,12 @@ function CompareSynthesizersGrid({
               Dimension
             </th>
             {synthesizers.map((s) => (
-              <th
-                key={s}
-                colSpan={trials.length}
-                className="border-l-[3px] border-zinc-400 px-2 py-2 text-center bg-zinc-50"
-              >
-                <div className="text-xs font-semibold text-zinc-900">
+              <th key={s} colSpan={trials.length} className={groupHeaderClass(s)}>
+                <div
+                  className={`text-xs font-semibold ${
+                    s === highlight ? "text-red-800" : "text-zinc-900"
+                  }`}
+                >
                   {CIVITAS_SYNTHESIZER_LABELS[s]}
                 </div>
               </th>
@@ -145,12 +179,7 @@ function CompareSynthesizersGrid({
             <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
             {synthesizers.flatMap((s) =>
               trials.map((t, ti) => (
-                <th
-                  key={`${s}-${t}`}
-                  className={`px-1 py-1 text-center text-[10px] font-medium text-zinc-500 ${
-                    ti === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-200"
-                  }`}
-                >
+                <th key={`${s}-${t}`} className={subHeaderClass(s, ti)}>
                   {CIVITAS_TRIAL_LABELS[t]?.short ?? `T${t}`}
                 </th>
               ))
@@ -167,12 +196,7 @@ function CompareSynthesizersGrid({
                 trials.map((t, ti) => {
                   const item = itemFor(report, t, s, authorshipMode);
                   return (
-                    <td
-                      key={`${s}-${t}-${dim}`}
-                      className={`px-1 py-1 text-center ${
-                        ti === 0 ? "border-l-[3px] border-zinc-400" : "border-l border-zinc-100"
-                      } bg-white`}
-                    >
+                    <td key={`${s}-${t}-${dim}`} className={cellClass(s, ti, dim === lastDim)}>
                       <Chip dimension={dim} value={item?.codes?.[dim]} />
                     </td>
                   );
@@ -256,6 +280,8 @@ export type CivitasMoralPanelProps = {
   compareSynthesizers?: boolean;
   /** Override left-to-right synthesizer column order (compare grid only). */
   synthesizerOrder?: CivitasMoralSynthesizer[];
+  /** Draw a red box around this synthesizer's columns (compare grid only). */
+  highlight?: CivitasMoralSynthesizer;
   showLeanBars?: boolean;
   caption?: string;
 };
@@ -266,6 +292,7 @@ export function CivitasMoralPanel({
   authorshipMode = "blind",
   compareSynthesizers = false,
   synthesizerOrder,
+  highlight,
   showLeanBars = false,
   caption,
 }: CivitasMoralPanelProps) {
@@ -311,6 +338,7 @@ export function CivitasMoralPanel({
           trials={trials}
           authorshipMode={authorshipMode}
           synthesizers={synthesizers}
+          highlight={highlight}
         />
       ) : (
         <SingleSynthesizerGrid

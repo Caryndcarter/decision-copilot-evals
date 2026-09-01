@@ -81,7 +81,7 @@ export default async function HarnessFindingsPage({
           <p className="mt-1.5 max-w-2xl text-sm text-zinc-500">
             Choose a test type, then a scenario when the type has more than one. Each study explains
             why we ran it, then shows the coded results. Voice and replication use committed moral
-            snapshots; authorship five-demos pulls live batches; budget conditions uses a committed
+            snapshots; authorship five-demos pulls live batches; synthesizer behavior uses a committed
             self vs peers→ChatGPT snapshot.
           </p>
         </div>

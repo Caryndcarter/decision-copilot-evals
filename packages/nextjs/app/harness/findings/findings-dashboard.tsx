@@ -60,7 +60,7 @@ const STUDIES: {
     id: "authorship-budget-conditions",
     family: "authorship-influence",
     scenarioLabel: AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL,
-    blurb: "When contribution analysis is token-constrained, does the synthesizer still rate itself highly while peers do not?",
+    blurb: "When synthesizer models grade each other’s work, does credit follow the work — or the rater and the name on it?",
     purpose: AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE,
   },
   {

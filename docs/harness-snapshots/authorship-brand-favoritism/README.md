@@ -1,7 +1,7 @@
 # Authorship influence · brand favoritism
 
 Committed remapped-credit snapshot for the public story
-`/model-studies/findings/brand-favoritism`. Same two batches as budget conditions.
+`/model-studies/findings/brand-favoritism`. Same two batches as synthesizer behavior.
 Do not retag July 27.
 
 | Batch | Decisions |

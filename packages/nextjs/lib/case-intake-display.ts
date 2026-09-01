@@ -27,7 +27,14 @@ export type CaseIntake = {
   scenarioTitle: string;
   /** Plain-language gist of the decision, so readers get it without expanding. */
   summary: string;
+  /**
+   * Bridge from the case name to the scenario below. Several cases are named for
+   * the condition being tested rather than the scenario they ran on, so this has
+   * to say which intake was submitted and why it is the one shown.
+   */
   intro: string;
+  /** How many coded briefs this intake produced, and how that number is reached. */
+  codedFrom: string;
   /** Noun for the switcher, e.g. "filer condition". */
   conditionNoun: string;
   conditions: CaseIntakeCondition[];
@@ -115,6 +122,8 @@ const MERIDIAN_INTAKE: CaseIntake = {
   summary: MERIDIAN_IC_SUMMARY,
   intro:
     "The same Civitas decision, filed five ways. Every condition below is a real intake submitted to the harness; the facts are held constant and only the framing changes.",
+  codedFrom:
+    "40 Decision Briefs were blind-coded from these intakes \u2014 five conditions \u00d7 four models, run as two coding batches (v1 and v2) as the conditions were tightened. The findings summarize the 20 briefs in the v2 batch.",
   conditionNoun: "filer condition",
   conditions: MERIDIAN_IC_VOICE_CASES.map((c, i) =>
     fromVoice(c, MERIDIAN_CONDITION_LABELS[i]?.label ?? `C${i + 1}`, MERIDIAN_CONDITION_LABELS[i]?.sub)
@@ -126,6 +135,8 @@ const HORMUZ_INTAKE: CaseIntake = {
   summary: HORMUZ_SUMMARY,
   intro:
     "One shipping decision, filed five ways. The casualty figures, premium, and fleet facts stay identical throughout; only how the company frames the ask changes.",
+  codedFrom:
+    "20 Decision Briefs were blind-coded from these intakes \u2014 five conditions, each answered independently by four models.",
   conditionNoun: "filer condition",
   conditions: HORMUZ_VOICE_CASES.map((c, i) =>
     fromVoice(c, HORMUZ_CONDITION_LABELS[i]?.label ?? `C${i + 1}`, HORMUZ_CONDITION_LABELS[i]?.sub)
@@ -136,7 +147,9 @@ const CIVITAS_REPLICATION_INTAKE: CaseIntake = {
   scenarioTitle: "Civitas roll-up \u2014 operating-side intake",
   summary: CIVITAS_ROLLUP_SUMMARY,
   intro:
-    "The single intake that was run repeatedly, end to end, for the replication study \u2014 intake, research, variant, and Unified Brief synthesis on every trial.",
+    "This is the single intake that was submitted, then run repeatedly end to end for the replication study \u2014 intake, research, variant, and Unified Brief synthesis on every trial. Nothing about the filing changes between trials; repetition is the whole test.",
+  codedFrom:
+    "60 Unified Briefs were blind-coded from this one intake \u2014 five trials, each producing twelve briefs as four models synthesize under three authorship modes (Blind, Revealed, Reassigned).",
   conditionNoun: "scenario",
   conditions: [fromVoice(CIVITAS_ROLLUP_INTAKE, "The scenario, as submitted")],
 };
@@ -145,7 +158,9 @@ const AUTHORSHIP_BUDGET_INTAKE: CaseIntake = {
   scenarioTitle: "Civitas roll-up \u2014 operating-side intake",
   summary: CIVITAS_ROLLUP_SUMMARY,
   intro:
-    "The Civitas intake whose synthesized Unified Briefs were re-analyzed for contribution credit under different token budgets.",
+    "\u201cSynthesizer Behavior\u201d names what we measured \u2014 how models assign influence credit \u2014 not a scenario. Both runs in this case were synthesized from the Civitas roll-up filing below \u2014 the same intake used by the replication study. Holding the filing constant is what makes the two runs comparable, since the only things deliberately changed between them were the models and the reasoning settings they were sent.",
+  codedFrom:
+    "72 of this case\u2019s 120 Unified Briefs were synthesized from this one intake: 60 from the five July 27 trials, plus 12 more when the later run reused it as one of its five scenarios. Every trial produces twelve briefs \u2014 four models synthesizing under three authorship modes each (Blind, Revealed, Reassigned).",
   conditionNoun: "scenario",
   conditions: [fromVoice(CIVITAS_ROLLUP_INTAKE, "The scenario, as submitted")],
 };

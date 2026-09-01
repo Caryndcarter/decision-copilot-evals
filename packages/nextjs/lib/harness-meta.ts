@@ -46,16 +46,16 @@ export const AUTHORSHIP_INFLUENCE_INCLUDE_BATCH_IDS = [
   ...AUTHORSHIP_BUDGET_CONDITIONS_CONSTRAINED_BATCH_IDS,
 ] as const;
 
-/** Primary product title for the budget-conditions cut (not a model name). */
+/** Primary product title for the synthesizer-behavior cut (not a model name). */
 export const AUTHORSHIP_BUDGET_CONDITIONS_TITLE =
-  "Authorship influence · budget conditions";
+  "Authorship influence · synthesizer behavior";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL = "Civitas (constrained tokens)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL = "adequate budget (Sol)";
 
 export const AUTHORSHIP_BUDGET_CONDITIONS_PURPOSE =
-  "Authorship influence · budget conditions — a descriptive comparison of self-credit across two runs with different settings. On 2026-07-27, GPT-5.5 was the only model sent a reasoning setting: reasoning_effort \"low\" on every structured call, with a 4,096-token contribution-analysis cap. Anthropic and xAI got 4,096 caps and no reasoning setting; Gemini's structured-output client applied an 8,192 floor. The Sol-era control used newer models, sent reasoning_effort \"low\" to every provider, and used reasoning-adjusted 8,192 (ChatGPT) / 16,384 (others) caps. Measures whether ChatGPT's self-assessment tracks the contribution quality peers observe. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
+  "Authorship influence · synthesizer behavior — a descriptive comparison of how synthesizers assign influence credit. On 2026-07-27, GPT-5.5 was the only model sent a reasoning setting: reasoning_effort \"low\" on every structured call, with a 4,096-token contribution-analysis cap. Anthropic and xAI got 4,096 caps and no reasoning setting; Gemini's structured-output client applied an 8,192 floor. The Sol-era control used newer models, sent reasoning_effort \"low\" to every provider, and used reasoning-adjusted 8,192 (ChatGPT) / 16,384 (others) caps. Covers both ChatGPT self-credit and the Grok-label penalty. July 27 remains a civitas-replication batch; it is listed here by id, not retagged.";
 
 function normalizeHarnessBatchId(batchId?: string): string | undefined {
   const raw = batchId?.trim();
@@ -154,7 +154,7 @@ export const HARNESS_STUDY_TABS: {
     id: "authorship-influence",
     label: "Authorship influence",
     blurb:
-      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Blind (default), Revealed, and Reassigned authorship. A budget-conditions cut (Civitas constrained tokens vs adequate budget) checks whether Blind vs Revealed credit shifts when contribution analysis is token-constrained.",
+      "Unified Briefs credit think-tank members by brand — and logos may bias the synthesizer. Across five high-conflict demos we compare Blind (default), Revealed, and Reassigned authorship. A synthesizer-behavior cut looks at two patterns: ChatGPT self-credit when peers rate the work weak, and a Grok-label penalty that follows the name rather than the work.",
     findingsStudy: "multi-demo-authorship",
   },
   {
