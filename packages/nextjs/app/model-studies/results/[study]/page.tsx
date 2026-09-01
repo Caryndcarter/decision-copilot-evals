@@ -127,7 +127,7 @@ export default async function StudyResultsPage({
                   {relatedStories.map((story) => (
                     <Link
                       key={story.slug}
-                      href={`/model-studies/findings/${story.slug}`}
+                      href={`/model-studies/findings/${story.slug}?from=${study.id}`}
                       className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40"
                     >
                       <span className="text-sm font-semibold leading-snug text-zinc-900">

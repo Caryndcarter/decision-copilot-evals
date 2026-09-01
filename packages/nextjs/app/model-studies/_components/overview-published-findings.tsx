@@ -42,7 +42,7 @@ export function OverviewPublishedFindings({ findings }: { findings: OverviewPubl
                 Case: <span className="text-zinc-700">{caseLabel(f.sources)}</span>
               </p>
               <Link
-                href={`/model-studies/findings/${f.slug}`}
+                href={`/model-studies/findings/${f.slug}?from=overview`}
                 className="mt-3 inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
               >
                 Read the full finding →

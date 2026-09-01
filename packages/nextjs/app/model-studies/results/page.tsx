@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SiteNav } from "../_components/site-nav";
 import { StatStrip } from "../_components/stat-strip";
-import { MajorFindingGrid } from "../_components/cross-study-finding-card";
+import { MajorFindingDeck } from "../_components/major-finding-deck";
 import { MajorFindingEvidenceSections } from "../_components/major-finding-snippet";
 import { ResultsCaseTable } from "../_components/results-case-table";
 import { getMajorFindings } from "@/lib/cross-study-findings";
@@ -64,11 +64,11 @@ export default function ResultsPage() {
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Major findings</h2>
           <p className="mt-2 text-sm text-zinc-500 max-w-2xl">
-            Top blind-coded patterns with curated scoreboard slices. Full rubric on linked case
-            pages.
+            Four headline patterns. Each pairs the story with the coded counts — step through them
+            rather than reading four charts at once.
           </p>
           <div className="mt-8">
-            <MajorFindingGrid findings={majorFindings} />
+            <MajorFindingDeck findings={majorFindings} />
           </div>
         </div>
       </section>

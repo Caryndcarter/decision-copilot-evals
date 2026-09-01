@@ -63,7 +63,7 @@ export default function Home() {
               A Decision Copilot research program
             </p>
             <h1 className="mt-4 text-3xl font-bold text-white tracking-tight leading-tight sm:text-4xl lg:text-5xl">
-              Same facts. Different answers.
+              Same facts. Different judgments.
             </h1>
             <p className="mt-5 text-lg text-zinc-300 leading-relaxed">
               Model Studies is a research program that puts frontier AI models through real decision
@@ -197,7 +197,7 @@ export default function Home() {
               <span className="font-semibold text-zinc-900">Our findings shape the product.</span>{" "}
               Because our Authorship study showed a synthesizer can over-credit its own draft and{" "}
               <Link
-                href="/model-studies/findings/brand-favoritism"
+                href="/model-studies/findings/brand-favoritism?from=overview"
                 className="font-semibold text-indigo-600 transition-colors hover:text-indigo-800"
               >
                 penalize another model

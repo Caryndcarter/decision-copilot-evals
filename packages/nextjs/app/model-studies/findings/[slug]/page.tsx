@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@/app/model-studies/_components/site-nav";
+import { FindingStoryBackLink } from "@/app/model-studies/_components/finding-story-back-link";
 import { MajorFindingGrid } from "@/app/model-studies/_components/cross-study-finding-card";
 import { MajorFindingEvidenceSections } from "@/app/model-studies/_components/major-finding-snippet";
 import { AuthorshipBudgetConditionsPanel } from "@/app/harness/findings/authorship-budget-conditions-panel";
@@ -33,10 +34,13 @@ export async function generateMetadata({
 
 export default async function FindingStoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const finding = getOverviewFinding(slug);
   if (!finding) notFound();
 
@@ -69,12 +73,7 @@ export default async function FindingStoryPage({
         <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" />
 
         <div className="relative mx-auto max-w-3xl px-6">
-          <Link
-            href="/model-studies#findings"
-            className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
-          >
-            ← Latest findings
-          </Link>
+          <FindingStoryBackLink fromParam={from} resultsHash={majorFinding?.id} />
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-logo-light">
             {studyLabel}
           </p>

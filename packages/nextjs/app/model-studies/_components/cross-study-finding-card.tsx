@@ -36,7 +36,7 @@ function barLabelClass(variant: MajorFindingEvidenceBar["variant"] | undefined):
   }
 }
 
-function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
+export function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
   return (
     <div>
       <p className="text-[11px] font-medium leading-snug text-zinc-600">{block.caption}</p>
@@ -70,7 +70,7 @@ function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
 function MajorFindingPanel({ finding, wide = false }: { finding: MajorFinding; wide?: boolean }) {
   // The wide card is the story page's own evidence, so it has nowhere to link back to.
   const storySlug = wide ? undefined : getStorySlugForMajorFinding(finding.id);
-  const storyHref = storySlug ? `/model-studies/findings/${storySlug}` : undefined;
+  const storyHref = storySlug ? `/model-studies/findings/${storySlug}?from=results` : undefined;
 
   return (
     <article className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
