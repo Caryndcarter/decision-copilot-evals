@@ -37,9 +37,9 @@ export default function DemoClarifyPage() {
             <p className="mt-1 text-sm font-medium text-zinc-900">{q.question_text}</p>
             <textarea
               readOnly
-              rows={3}
+              rows={5}
               value={TOUR_CLARIFICATIONS[i]?.answer ?? ""}
-              className="mt-3 w-full resize-none rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-800"
+              className="mt-3 w-full resize-none rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm leading-relaxed text-zinc-800"
             />
           </div>
         ))}

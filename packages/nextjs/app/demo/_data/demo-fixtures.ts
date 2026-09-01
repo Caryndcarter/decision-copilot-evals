@@ -15,12 +15,13 @@ import {
   TOUR_CLARIFICATIONS,
   TOUR_INTAKE,
   TOUR_RUNS,
+  TOUR_SCENARIO,
   TOUR_UNIFIED_BRIEF,
   type TourProvider,
 } from "@/app/tour/_data/tour-demo-data";
 
-export const DEMO_DECISION_ID = "demo-vercel-aws-migration";
-export const DEMO_SCENARIO_LABEL = "Vercel vs self-hosted AWS";
+export const DEMO_DECISION_ID = TOUR_SCENARIO.decisionId;
+export const DEMO_SCENARIO_LABEL = TOUR_SCENARIO.label;
 export const DEMO_PROVIDERS: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
 
 const GENERATED_AT = "2026-08-15T14:30:00.000Z";
@@ -131,7 +132,7 @@ function buildBrief(provider: TourProvider): DecisionBrief {
 }
 
 export function demoRunId(provider: LLMProviderName): string {
-  return `demo-vercel-aws-migration-${provider}`;
+  return `${DEMO_DECISION_ID}-${provider}`;
 }
 
 export function buildDemoRun(provider: LLMProviderName): DecisionRunResult {
@@ -168,11 +169,7 @@ export const DEMO_UNIFIED_BRIEF: DecisionBrief = {
   summary: TOUR_UNIFIED_BRIEF.summary,
   recommendation: TOUR_UNIFIED_BRIEF.recommendation,
   key_considerations: TOUR_UNIFIED_BRIEF.key_considerations,
-  next_steps: [
-    "Load-test export routes on Fargate at campaign spike levels.",
-    "Build traffic-split rollback runbook before DNS cutover.",
-    "Model 12-month TCO including platform eng time for CFO payback.",
-  ],
+  next_steps: TOUR_UNIFIED_BRIEF.next_steps,
 };
 
 /** Frozen Unified Brief metadata — mirrors live `/run/best-of-worlds` attribution. */

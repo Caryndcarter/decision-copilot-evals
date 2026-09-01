@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEMO_BRIEF_GUIDE_STEPS } from "./demo-brief-guide";
-import { TOUR_RUNS } from "@/app/tour/_data/tour-demo-data";
+// The Vercel/AWS tour is archived (not the active dataset); this guard covers
+// the content scrub that applied to it specifically.
+import { TOUR_RUNS } from "@/app/tour/_data/tour-demo-data-vercel-aws";
 
 describe("demo Decision Brief guide", () => {
   it("walks picker, collapsed sections, then Unified Brief", () => {

@@ -13,7 +13,7 @@ const STEPS = [
   {
     title: "Brief your think tank",
     description:
-      "Pre-filled intake for a Vercel vs AWS hosting decision — migrate, hybrid, or optimize in place.",
+      "Pre-filled intake for a wartime shipping decision — a tanker operator weighing whether to keep sailing the Strait of Hormuz under escort or reroute around the Cape.",
   },
   {
     title: "Answer follow-up questions",
