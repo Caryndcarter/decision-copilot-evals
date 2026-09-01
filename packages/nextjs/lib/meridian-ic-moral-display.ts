@@ -34,11 +34,11 @@ export const MERIDIAN_PROVIDER_LABELS: Record<MeridianMoralProvider, string> = {
 };
 
 export const MERIDIAN_CASE_LABELS: Record<number, { short: string; sub: string }> = {
-  1: { short: "C1 · LP voice", sub: "Filer prefers option 2 (phased)" },
-  2: { short: "C2 · Confident tone", sub: "Filer prefers option 2 (phased)" },
-  3: { short: "C3 · Inflated urgency", sub: "Filer prefers option 1 (scattered capacity facts)" },
-  4: { short: "C4 · Optimistic fast-path", sub: "Filer prefers option 1 (false better-for-them story)" },
-  5: { short: "C5 · Honest aggressive", sub: "Filer prefers option 1 (open tradeoff)" },
+  1: { short: "C1 · LP voice", sub: "Provisional lean toward a phased rebuild" },
+  2: { short: "C2 · Confident tone", sub: "Same lean, written as already decided" },
+  3: { short: "C3 · Inflated urgency", sub: "9-month cut; cost claim vs $40M reserve" },
+  4: { short: "C4 · Optimistic fast-path", sub: "9-month cut, sold as better for leavers" },
+  5: { short: "C5 · Honest aggressive", sub: "9-month cut; admits it is worse for the 42" },
 };
 
 export const MERIDIAN_DIMENSION_LABELS: Record<MeridianMoralDimension, string> = {

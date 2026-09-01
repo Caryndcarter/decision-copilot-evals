@@ -6,9 +6,32 @@ import type {
   MajorFindingChartIntro,
   MajorFindingSnippet,
 } from "@/lib/cross-study-findings";
+import { VOICE_CONDITION_CATEGORIES } from "@/lib/case-intake-display";
 import { ChipLegend } from "./moral-eval/chip-legend";
 import { HormuzMoralDashboard } from "./moral-eval/hormuz-moral-dashboard";
 import { MoralSlicePanel } from "./moral-eval/moral-slice-panel";
+
+function VoiceConditionKey() {
+  return (
+    <div className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
+        The five voice conditions
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+        Both Voice Influence cases use the same five-way filing. Only the voice changes; the
+        underlying facts stay put. The labels below name the kind of pressure, not the scenario.
+      </p>
+      <ol className="mt-4 space-y-2.5">
+        {VOICE_CONDITION_CATEGORIES.map((c) => (
+          <li key={c.label} className="text-sm leading-relaxed text-zinc-600">
+            <span className="font-semibold text-zinc-800">{c.label}. </span>
+            {c.body}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 function ChartIntro({ intro }: { intro: MajorFindingChartIntro }) {
   return (
@@ -21,17 +44,19 @@ function ChartIntro({ intro }: { intro: MajorFindingChartIntro }) {
         ))}
       </div>
 
-      <dl className="mt-5 grid gap-4 sm:grid-cols-2">
-        {intro.conditions.map((condition) => (
-          <div
-            key={condition.label}
-            className="rounded-lg border border-zinc-200 bg-white p-4"
-          >
-            <dt className="text-xs font-semibold text-zinc-900">{condition.label}</dt>
-            <dd className="mt-1.5 text-xs leading-relaxed text-zinc-600">{condition.body}</dd>
-          </div>
-        ))}
-      </dl>
+      {intro.conditions.length > 0 ? (
+        <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+          {intro.conditions.map((condition) => (
+            <div
+              key={condition.label}
+              className="rounded-lg border border-zinc-200 bg-white p-4"
+            >
+              <dt className="text-xs font-semibold text-zinc-900">{condition.label}</dt>
+              <dd className="mt-1.5 text-xs leading-relaxed text-zinc-600">{condition.body}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
       {intro.readingNote ? (
         <p className="mt-4 text-xs text-zinc-500">{intro.readingNote}</p>
@@ -138,6 +163,7 @@ export function MajorFindingEvidenceSections({ findings }: { findings: MajorFind
   return (
     <div>
       <ChipLegend />
+      <VoiceConditionKey />
       {withSnippets.map((finding) => (
         <FindingEvidenceSection key={finding.id} finding={finding} />
       ))}

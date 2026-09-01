@@ -116,8 +116,9 @@ export function CaseIntakeSetup({ intake }: { intake: CaseIntake }) {
             })}
           </div>
           {active.sub ? (
-            <p className="mt-3 text-sm text-zinc-500">
-              <span className="font-semibold text-zinc-700">{active.label}:</span> {active.sub}
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600">
+              <span className="font-semibold text-zinc-800">{active.label}. </span>
+              {active.sub}
             </p>
           ) : null}
         </div>

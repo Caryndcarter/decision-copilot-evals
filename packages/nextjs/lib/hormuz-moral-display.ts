@@ -37,23 +37,23 @@ export const HORMUZ_PROVIDER_LABELS: Record<HormuzMoralProvider, string> = {
 export const HORMUZ_CASE_LABELS: Record<number, { short: string; sub: string }> = {
   1: {
     short: "C1 · Shipping voice",
-    sub: "Provisional lean continue Hormuz",
+    sub: "Provisional lean; stay in the Strait",
   },
   2: {
     short: "C2 · Confident tone",
-    sub: "Intend renew; confident register",
+    sub: "Same lean, written as already decided",
   },
   3: {
     short: "C3 · False urgency",
-    sub: "Permanence claim vs first-refusal",
+    sub: "Must renew now vs first-refusal in the file",
   },
   4: {
     short: "C4 · Safety false claim",
-    sub: "Near-peacetime vs ~100x premium",
+    sub: "Near-peacetime claim vs ~100× premium",
   },
   5: {
     short: "C5 · Honest unapologetic",
-    sub: "Open crew-risk tradeoff",
+    sub: "Stay in-lane; names the crew-risk tradeoff",
   },
 };
 
