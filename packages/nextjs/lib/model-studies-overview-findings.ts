@@ -95,13 +95,14 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
   {
     slug: "self-credit",
     headline: "ChatGPT claimed top credit even when peers rated its work near the bottom",
-    body: "With a constrained analysis budget, ChatGPT\u2019s contribution was weak\u2014but it rated its own influence 4.0 out of 4. Peer models rated it just 1.9.\n\nAfter a model and token-budget upgrade, ChatGPT\u2019s work became genuinely strong. It again rated itself 4.0, while peer ratings rose to 3.9.\n\nChatGPT\u2019s work improved dramatically. Its self-rating did not register the difference.",
+    body: "In the first run, GPT-5.5 got one API setting the other three models never got: reasoning_effort = \u201clow\u201d on every structured call, with its contribution analysis capped at 4,096 output tokens. The other three were sent no reasoning setting at all and ran at their vendor defaults.\n\nUnder that setting ChatGPT\u2019s contribution was weak\u2014but it rated its own influence 4.0 out of 4. Peer models rated it just 1.9.\n\nIn a later run on gpt-5.6-sol, where reasoning_effort = \u201clow\u201d went to every model and ChatGPT\u2019s cap was raised to 8,192 tokens, its work was stronger. It again rated itself 4.0, while peer ratings rose to 3.9.\n\nChatGPT could read and judge completed work, but its self-rating did not register the difference in the quality of its own contribution.",
     whyItMatters:
-      "A model\u2019s assessment of its own contribution may not distinguish weak work from strong work. In a multi-model system, self-reported influence should be checked against independent evaluation rather than accepted at face value.",
+      "Self-assessment can be less calibrated than judging work already in front of the model. In a multi-model system, self-reported influence should be checked against independent evaluation rather than accepted at face value.",
     sources: [{ study: "Authorship", case: "Budget conditions" }],
     caseLinks: [
       { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
     ],
+    majorFindingId: "chatgpt-self-credit",
     visualTheme: "self-credit",
   },
   {
@@ -126,6 +127,14 @@ export function getPublishedFindings(): OverviewPublishedFinding[] {
 
 export function getOverviewFinding(slug: string): OverviewPublishedFinding | undefined {
   return getPublishedFindings().find((f) => f.slug === slug);
+}
+
+/**
+ * Story slug for a Results major finding, so a rollup card can link out to the write-up.
+ * Archived stories return undefined — their route is gone.
+ */
+export function getStorySlugForMajorFinding(majorFindingId: string): string | undefined {
+  return getPublishedFindings().find((f) => f.majorFindingId === majorFindingId)?.slug;
 }
 
 /** Stories whose evidence draws on a given case (results studyId). */

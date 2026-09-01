@@ -62,6 +62,7 @@ function ConditionBody({ condition }: { condition: CaseIntakeCondition }) {
 
 export function CaseIntakeSetup({ intake }: { intake: CaseIntake }) {
   const [activeId, setActiveId] = useState(intake.conditions[0]?.id);
+  const [showBody, setShowBody] = useState(false);
   const active =
     intake.conditions.find((c) => c.id === activeId) ?? intake.conditions[0];
   const multiple = intake.conditions.length > 1;
@@ -71,7 +72,8 @@ export function CaseIntakeSetup({ intake }: { intake: CaseIntake }) {
   return (
     <div>
       <p className="text-sm font-semibold text-zinc-900">{intake.scenarioTitle}</p>
-      <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-zinc-500">{intake.intro}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-700">{intake.summary}</p>
+      <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">{intake.intro}</p>
 
       {multiple ? (
         <div className="mt-5">
@@ -112,7 +114,43 @@ export function CaseIntakeSetup({ intake }: { intake: CaseIntake }) {
       ) : null}
 
       <div className="mt-6">
-        <ConditionBody condition={active} />
+        <button
+          type="button"
+          onClick={() => setShowBody((s) => !s)}
+          aria-expanded={showBody}
+          aria-controls="case-submission-body"
+          className="flex w-full items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-5 py-4 text-left shadow-sm transition-colors hover:border-indigo-300"
+        >
+          <span>
+            <span className="block text-sm font-semibold text-zinc-900">
+              {showBody ? "Hide the full submission" : "Read the full submission"}
+              {multiple ? <span className="font-normal text-zinc-500"> · {active.label}</span> : null}
+            </span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-zinc-500">
+              The intake exactly as the filer sent it — situation, constraints, the lean, what they
+              treat as known vs assumed, and open questions.
+            </span>
+          </span>
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden
+            className={`h-5 w-5 shrink-0 text-zinc-400 transition-transform ${showBody ? "rotate-180" : ""}`}
+          >
+            <path
+              d="M6 8l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        {showBody ? (
+          <div id="case-submission-body" className="mt-4">
+            <ConditionBody condition={active} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

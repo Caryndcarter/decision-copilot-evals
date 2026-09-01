@@ -64,7 +64,7 @@ describe("authorship budget-conditions inclusion", () => {
     ).toContain(AUTHORSHIP_BUDGET_CONDITIONS_CONTROL_LABEL);
   });
 
-  it("keeps model names out of the primary title and in purpose footnotes only", () => {
+  it("keeps model names out of the primary title and records the effort condition", () => {
     expect(AUTHORSHIP_BUDGET_CONDITIONS_TITLE.toLowerCase()).not.toMatch(/openai|gpt/);
     expect(AUTHORSHIP_BUDGET_CONDITIONS_SCENARIO_LABEL).toBe("Civitas (constrained tokens)");
     const purpose = harnessBatchPurpose("civitas-replication", {
@@ -72,7 +72,9 @@ describe("authorship budget-conditions inclusion", () => {
       studyTab: "authorship-influence",
     });
     expect(purpose).toContain("budget conditions");
-    expect(purpose.toLowerCase()).not.toMatch(/gpt-5|maxTokens|4096/);
+    expect(purpose).toMatch(/GPT-5\.5.*reasoning_effort "low"/);
+    expect(purpose).toContain("4,096");
+    expect(purpose).toContain("8,192 floor");
   });
 
   it("expands the authorship Mongo clause beyond multi-demo-authorship", () => {
@@ -91,7 +93,7 @@ describe("authorship budget-conditions inclusion", () => {
     );
   });
 
-  it("uses constrained-tokens labels in findings copy", () => {
+  it("names the reasoning setting that was sent, in findings copy", () => {
     const study = FINDINGS_STUDIES.find((s) => s.id === "authorship-budget-conditions");
     expect(study).toBeDefined();
     expect(study!.name.toLowerCase()).not.toMatch(/openai/);
@@ -104,7 +106,9 @@ describe("authorship budget-conditions inclusion", () => {
       ...study!.methodology,
       ...study!.stats.map((s) => s.label),
     ].join(" ");
+    expect(blob).toMatch(/reasoning_effort/);
     expect(blob.toLowerCase()).not.toMatch(/starv/);
+    expect(blob.toLowerCase()).toMatch(/descriptive.*not a clean token-only experiment/);
     expect(blob).toContain("constrained tokens");
     expect(blob).toContain("4,096");
     expect(blob).toContain("Sonnet");

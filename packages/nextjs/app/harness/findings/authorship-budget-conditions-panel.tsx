@@ -1,48 +1,73 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT as SNAP,
-  BUDGET_CONDITION_PEER_PROVIDERS,
-  meanPeerCredit,
   scoreForInfluence,
-  selfCredit,
-  selfMinusPeers,
-  type BudgetConditionAggregateMode,
-  type BudgetConditionBatchBlock,
-  type BudgetConditionPeerCredit,
-  type BudgetConditionRow,
-  type BudgetConditionTokenBudget,
 } from "@/lib/authorship-budget-conditions";
-import type { ContributionInfluence, UnifiedBriefAuthorshipMode } from "@/types/decision";
+import type {
+  ContributionInfluence,
+  LLMProviderName,
+  UnifiedBriefAuthorshipMode,
+} from "@/types/decision";
 
-const MODES: UnifiedBriefAuthorshipMode[] = ["blind", "open", "reassigned"];
-const MODE_LABEL: Record<UnifiedBriefAuthorshipMode, string> = {
-  blind: "Blind",
-  open: "Revealed",
-  reassigned: "Reassigned",
-};
+type ConditionKey = "constrained" | "control";
 
-const HEAT: Record<ContributionInfluence, string> = {
+const CONDITIONS: { key: ConditionKey; label: string }[] = [
+  { key: "constrained", label: SNAP.constrained.scenario_label },
+  { key: "control", label: SNAP.control.control_label },
+];
+
+/** Columns of the heatmap — the three authorship modes, in product order. */
+const MODE_COLUMNS: { key: UnifiedBriefAuthorshipMode; label: string; note?: string }[] = [
+  { key: "blind", label: "Blind", note: "default" },
+  { key: "open", label: "Revealed" },
+  { key: "reassigned", label: "Reassigned" },
+];
+
+/** Rows — the rated model first (highlighted), then its three peers. */
+const RATERS: LLMProviderName[] = ["openai", "anthropic", "gemini", "xai"];
+
+/** Same indigo scale as the Unified Brief influence charts. */
+const HEATMAP_CELL: Record<ContributionInfluence, string> = {
   high: "bg-indigo-600 text-white",
   medium: "bg-indigo-400 text-white",
   low: "bg-indigo-200 text-indigo-950",
   minimal: "bg-zinc-100 text-zinc-600 border border-zinc-200",
 };
 
-function Chip({ value }: { value: ContributionInfluence }) {
-  return (
-    <span
-      className={`inline-flex min-w-[3.15rem] items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize ${HEAT[value]}`}
-    >
-      {value}
-    </span>
-  );
+const INFLUENCE_LABEL: Record<ContributionInfluence, string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+  minimal: "Minimal",
+};
+
+const MAX_SCORE = 4;
+
+function conditionBlock(key: ConditionKey) {
+  return key === "constrained" ? SNAP.constrained : SNAP.control;
+}
+function aggregateModes(key: ConditionKey) {
+  return key === "constrained" ? SNAP.aggregate.constrained.modes : SNAP.aggregate.control.modes;
+}
+
+/** Numeric self-mean → the influence bucket that colors the cell. */
+function levelFromScore(score: number): ContributionInfluence {
+  if (score >= 3.5) return "high";
+  if (score >= 2.5) return "medium";
+  if (score >= 1.5) return "low";
+  return "minimal";
 }
 
 function GapBadge({ gap }: { gap: number }) {
   const wide = gap >= 1.5;
   return (
     <span
-      className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
-        wide ? "bg-amber-100 text-amber-900 ring-1 ring-amber-200" : "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200"
+      className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ${
+        wide
+          ? "bg-amber-100 text-amber-900 ring-1 ring-amber-200"
+          : "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200"
       }`}
     >
       {gap >= 0 ? "+" : ""}
@@ -51,152 +76,112 @@ function GapBadge({ gap }: { gap: number }) {
   );
 }
 
-function AggregateCard({
-  label,
-  budget,
-  agg,
-  tone,
+function HeatCell({
+  influence,
+  score,
+  decimals,
 }: {
-  label: string;
-  budget: BudgetConditionTokenBudget;
-  agg: BudgetConditionAggregateMode;
-  tone: "amber" | "emerald";
+  influence: ContributionInfluence;
+  score: number;
+  decimals: number;
 }) {
-  const border = tone === "amber" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-  const title = tone === "amber" ? "text-amber-800" : "text-emerald-800";
-  const num = tone === "amber" ? "text-amber-950" : "text-emerald-950";
   return (
-    <div className={`rounded-xl border px-4 py-3 ${border}`}>
-      <p className={`text-[10px] font-semibold uppercase tracking-wide ${title}`}>{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums tracking-tight ${num}`}>
-        {budget.headline}
-      </p>
-      <p className={`text-sm ${tone === "amber" ? "text-amber-900" : "text-emerald-900"}`}>
-        {budget.subhead}
-      </p>
-      <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <div>
-          <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Self</dt>
-          <dd className="text-lg font-semibold tabular-nums text-zinc-900">{agg.mean_self.toFixed(1)}</dd>
-        </div>
-        <div>
-          <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Peers</dt>
-          <dd className="text-lg font-semibold tabular-nums text-zinc-900">
-            {agg.mean_peers_to_openai.toFixed(1)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[10px] uppercase tracking-wide text-zinc-500">Gap</dt>
-          <dd className="mt-0.5 flex justify-center">
-            <GapBadge gap={agg.self_minus_peers} />
-          </dd>
-        </div>
-      </dl>
-      <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">{budget.note}</p>
+    <div
+      className={`flex min-h-[3.25rem] min-w-[5.25rem] flex-col items-center justify-center rounded-md px-2 py-2 text-center transition-colors duration-500 ${HEATMAP_CELL[influence]}`}
+    >
+      <span className="text-xs font-semibold leading-tight">{INFLUENCE_LABEL[influence]}</span>
+      <span className="mt-0.5 text-[10px] opacity-90">
+        {score.toFixed(decimals)}/{MAX_SCORE}
+      </span>
     </div>
   );
 }
 
-function PeerChips({ peers, labels }: { peers: BudgetConditionPeerCredit; labels: Record<string, string> }) {
+function SegmentedControl({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  options: { key: ConditionKey; label: string }[];
+  value: ConditionKey;
+  onChange: (key: ConditionKey) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-0.5"
+    >
+      {options.map((opt) => {
+        const active = opt.key === value;
+        return (
+          <button
+            key={opt.key}
+            role="tab"
+            aria-selected={active}
+            type="button"
+            onClick={() => onChange(opt.key)}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+              active ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Legend() {
+  const levels: ContributionInfluence[] = ["high", "medium", "low", "minimal"];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {BUDGET_CONDITION_PEER_PROVIDERS.map((p) => (
-        <span key={p} className="inline-flex items-center gap-1">
-          <span className="text-[10px] text-zinc-500">{labels[p]}</span>
-          <Chip value={peers[p]} />
+      <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">Scale</span>
+      {levels.map((level) => (
+        <span
+          key={level}
+          className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold ${HEATMAP_CELL[level]}`}
+        >
+          {INFLUENCE_LABEL[level]} ({scoreForInfluence(level)})
         </span>
       ))}
     </div>
   );
 }
 
-function SelfPeerTable({
-  title,
-  subtitle,
-  budget,
-  block,
-  rows,
-}: {
-  title: string;
-  subtitle: string;
-  budget: BudgetConditionTokenBudget;
-  block: BudgetConditionBatchBlock;
-  rows: BudgetConditionRow[];
-}) {
-  const models = block.think_tank_models;
-  const labels = block.provider_labels;
-  const modelLine = `${labels.openai} ${models.openai} · ${labels.anthropic} ${models.anthropic} · ${labels.gemini} ${models.gemini} · ${labels.xai} ${models.xai}`;
-
-  return (
-    <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 px-4 py-3">
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
-          <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>
-          <p className="mt-1 text-[11px] text-zinc-500">{modelLine}</p>
-        </div>
-        <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-right">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
-            Token budget
-          </p>
-          <p className="text-sm font-semibold tabular-nums text-indigo-950">{budget.headline}</p>
-          <p className="text-[11px] text-indigo-800">{budget.subhead}</p>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
-            <tr>
-              <th className="w-20 px-3 py-2 font-medium">Case</th>
-              {MODES.map((mode) => (
-                <th key={mode} className="px-3 py-2 font-medium">
-                  {MODE_LABEL[mode]}
-                  {mode === "blind" ? " (default)" : ""}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100">
-            {rows.map((row) => (
-              <tr key={row.decision_id}>
-                <td className="whitespace-nowrap px-3 py-3 text-xs font-semibold text-zinc-800">
-                  {row.case_label}
-                </td>
-                {MODES.map((mode) => {
-                  const self = selfCredit(row.self, mode);
-                  const peers = row.peers_to_openai[mode];
-                  const gap = selfMinusPeers(self, peers);
-                  return (
-                    <td key={mode} className="px-3 py-3 align-top">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-medium text-zinc-500">Self</span>
-                          <Chip value={self} />
-                          <GapBadge gap={gap} />
-                        </div>
-                        <div>
-                          <p className="mb-1 text-[10px] font-medium text-zinc-500">Peers → {SNAP.rated_label}</p>
-                          <PeerChips peers={peers} labels={labels} />
-                        </div>
-                        <p className="text-[10px] tabular-nums text-zinc-400">
-                          mean peers {meanPeerCredit(peers).toFixed(1)} · self {scoreForInfluence(self)}
-                        </p>
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
 export function AuthorshipBudgetConditionsPanel() {
-  const aggOpen = SNAP.aggregate.constrained.modes.open;
-  const controlOpen = SNAP.aggregate.control.modes.open;
+  const [condition, setCondition] = useState<ConditionKey>("constrained");
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setCondition((c) => (c === "constrained" ? "control" : "constrained"));
+    }, 1900);
+    return () => clearInterval(id);
+  }, [playing]);
+
+  const block = conditionBlock(condition);
+  const modes = aggregateModes(condition);
+  const labels = block.provider_labels;
+  const models = block.think_tank_models;
+  const budget = block.token_budget;
+  const selfLabel = labels[SNAP.rated];
+
+  // How many Unified Briefs each run scored for influence — 4 synthesizers ×
+  // 3 authorship modes × the run's repetitions. Stated for continuity with the
+  // other findings (which each cite their N).
+  const runUnitCount =
+    condition === "constrained" ? SNAP.constrained.trials.length : SNAP.control.demos.length;
+  const runUnitNoun = condition === "constrained" ? "replication trials" : "demos";
+  const briefsScored = RATERS.length * MODE_COLUMNS.length * runUnitCount;
+
+  // Representative gap (Revealed) drives the caption tone.
+  const headlineGap = modes.open.self_minus_peers;
+  const wideGap = headlineGap >= 1.5;
 
   return (
     <div className="space-y-6">
@@ -211,44 +196,153 @@ export function AuthorshipBudgetConditionsPanel() {
           <span className="font-semibold text-zinc-900">Takeaway. </span>
           {SNAP.takeaway.meaning}
         </p>
-
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <AggregateCard
-            label={SNAP.constrained.scenario_label}
-            budget={SNAP.constrained.token_budget}
-            agg={aggOpen}
-            tone="amber"
-          />
-          <AggregateCard
-            label={SNAP.control.control_label}
-            budget={SNAP.control.token_budget}
-            agg={controlOpen}
-            tone="emerald"
-          />
-        </div>
-
-        <p className="mt-3 text-xs leading-relaxed text-zinc-500">
-          Summary uses Revealed authorship (brands visible). Self = what {SNAP.rated_label} assigned
-          itself. Peers = mean of Sonnet/Fable, Gemini, and Grok rating {SNAP.rated_label}. Gap =
-          self minus peers (on the 1–4 scale).
-        </p>
       </div>
 
-      <SelfPeerTable
-        title={SNAP.constrained.scenario_label}
-        subtitle={`${SNAP.constrained.demo_label} · five replication trials · self vs peers→${SNAP.rated_label}`}
-        budget={SNAP.constrained.token_budget}
-        block={SNAP.constrained}
-        rows={SNAP.constrained.trials}
-      />
+      {/* Flip-through influence heatmap */}
+      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-zinc-900">
+              How the room rated {selfLabel}&apos;s contribution
+            </h3>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Each cell is that model&apos;s influence rating of {selfLabel}, on the 1–4 scale. Flip the
+              condition and watch the peer rows move — {selfLabel} rating itself barely does.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPlaying((p) => !p)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+          >
+            {playing ? "❚❚ Pause" : "▶ Watch peers catch up"}
+          </button>
+        </div>
 
-      <SelfPeerTable
-        title={SNAP.control.control_label}
-        subtitle={`Five-demo authorship batch · self and peers align once budget is adequate`}
-        budget={SNAP.control.token_budget}
-        block={SNAP.control}
-        rows={SNAP.control.demos}
-      />
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+              Condition
+            </span>
+            <SegmentedControl
+              options={CONDITIONS}
+              value={condition}
+              onChange={(k) => {
+                setPlaying(false);
+                setCondition(k);
+              }}
+              ariaLabel="Run condition"
+            />
+          </div>
+          <Legend />
+        </div>
+
+        <div className="border-t border-zinc-100 px-4 py-2 text-[11px] text-zinc-500">
+          <span className="font-semibold tabular-nums text-zinc-700">{budget.headline}</span>
+          {" · "}
+          {budget.subhead}
+          <span className="mx-1.5 text-zinc-300">|</span>
+          <span className="tabular-nums">{briefsScored}</span> Unified Briefs scored for influence
+          <span className="text-zinc-400">
+            {" "}
+            ({RATERS.length} synthesizers × {MODE_COLUMNS.length} modes × {runUnitCount} {runUnitNoun})
+          </span>
+        </div>
+
+        {/* Heatmap */}
+        <div className="overflow-x-auto px-4 pt-4 pb-2">
+          <table className="w-full border-separate border-spacing-1.5">
+            <thead>
+              <tr>
+                <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                  Rating {selfLabel} ↓
+                </th>
+                {MODE_COLUMNS.map((mode) => (
+                  <th
+                    key={mode.key}
+                    className="px-2 py-1 text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+                  >
+                    {mode.label}
+                    {mode.note ? (
+                      <span className="block font-normal normal-case tracking-normal text-zinc-400">
+                        {mode.note}
+                      </span>
+                    ) : null}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {RATERS.map((p) => {
+                const isSelf = p === SNAP.rated;
+                return (
+                  <tr key={p}>
+                    <td className="whitespace-nowrap px-2 py-1 align-middle">
+                      <div
+                        className={`text-sm ${
+                          isSelf ? "font-bold text-zinc-900" : "font-medium text-zinc-700"
+                        }`}
+                      >
+                        {labels[p]}
+                        {isSelf ? (
+                          <span className="ml-1.5 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
+                            self
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="text-[10px] font-normal tabular-nums text-zinc-400">
+                        {models[p]}
+                      </div>
+                    </td>
+                    {MODE_COLUMNS.map((mode) => {
+                      const agg = modes[mode.key];
+                      if (isSelf) {
+                        const score = agg.mean_self;
+                        return (
+                          <td key={mode.key}>
+                            <HeatCell influence={levelFromScore(score)} score={score} decimals={1} />
+                          </td>
+                        );
+                      }
+                      const influence = agg.peers_to_openai[p as Exclude<LLMProviderName, "openai">];
+                      return (
+                        <td key={mode.key}>
+                          <HeatCell
+                            influence={influence}
+                            score={scoreForInfluence(influence)}
+                            decimals={0}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+              {/* Gap row */}
+              <tr>
+                <td className="whitespace-nowrap px-2 pt-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                  Self − peers
+                </td>
+                {MODE_COLUMNS.map((mode) => (
+                  <td key={mode.key} className="pt-2 text-center">
+                    <GapBadge gap={modes[mode.key].self_minus_peers} />
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          className={`border-t px-4 py-3 text-[11px] leading-relaxed ${
+            wideGap ? "border-amber-100 bg-amber-50/60 text-zinc-700" : "border-emerald-100 bg-emerald-50/60 text-zinc-700"
+          }`}
+        >
+          {wideGap
+            ? `${selfLabel} rates its own contribution near the top while its peers, reading the same work, rate it far lower — the gap is widest in Revealed and narrows only when its own brand is stripped off in Reassigned.`
+            : `${selfLabel}'s self-rating and its peers' ratings land in the same place across every mode — once the work is strong, the room agrees.`}
+        </div>
+      </section>
 
       <aside className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">

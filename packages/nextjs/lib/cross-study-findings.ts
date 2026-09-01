@@ -22,6 +22,11 @@ export type MajorFindingEvidenceBar = {
 export type MajorFindingEvidenceBlock = {
   caption: string;
   bars: MajorFindingEvidenceBar[];
+  /**
+   * What this chart says, in the words of the published story. Counts alone don't carry
+   * the finding — this line names the comparison the reader is supposed to draw.
+   */
+  takeaway?: string;
 };
 
 export type MajorFindingCaseLink = {
@@ -38,6 +43,11 @@ export type MajorFindingMoralSlice = {
   cases?: number[];
   trials?: number[];
   compareSynthesizers?: boolean;
+  /**
+   * Override the left-to-right synthesizer column order for a compare grid.
+   * Defaults to the shared CIVITAS_MORAL_SYNTHESIZERS order when omitted.
+   */
+  synthesizerOrder?: ("openai" | "anthropic" | "gemini" | "xai")[];
 };
 
 /**
@@ -100,6 +110,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Gemini · sponsor", value: 4, max: 5, variant: "highlight" },
           { label: "Grok · sponsor", value: 1, max: 5 },
         ],
+        takeaway:
+          "Filed from the owner's side, Gemini minimized the sponsor's downside in 4 of 5 briefs. No other model did it more than once.",
       },
       {
         caption: "Meran Tankers — Decision Briefs per provider (5 conditions each)",
@@ -109,6 +121,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Gemini · company", value: 4, max: 5, variant: "highlight" },
           { label: "Grok · company", value: 2, max: 5 },
         ],
+        takeaway:
+          "Same lean in an unrelated shipping decision — Gemini protected the company's downside in 4 of 5, and was the only model that never coded the outcome as balanced.",
       },
       {
         caption: "Civitas replication — Unified Briefs per synthesizer (15 each)",
@@ -118,6 +132,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Gemini · sponsor", value: 9, max: 15, variant: "highlight" },
           { label: "Grok · sponsor", value: 2, max: 15 },
         ],
+        takeaway:
+          "Reframed around the people losing jobs, Gemini still landed on the owner's downside in 9 of 15. The others balanced owner, employees, and customers.",
       },
     ],
     statsNote:
@@ -143,6 +159,7 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           "Civitas replication · Unified Briefs — whose downside is minimized and whether the IC's power goes unchallenged, across five trials × four synthesizers (Blind authorship). Gemini carries the owner's-side (lp) calls on risk here; on power the grid honestly shows ChatGPT leaning that way too.",
         dimensions: ["risk_bearer", "power_asymmetry"],
         compareSynthesizers: true,
+        synthesizerOrder: ["gemini", "anthropic", "xai", "openai"],
       },
       {
         kind: "full-chart",
@@ -172,6 +189,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Blind (no brands)", value: 18, max: 30 },
           { label: "Reassigned (Grok wearing another name)", value: 23, max: 30, variant: "highlight" },
         ],
+        takeaway:
+          "The work is identical in all three rows. Only the name on it changes — and the same writing climbs from 14 to 23 as the Grok label comes off.",
       },
       {
         caption: "High-influence ratings for work labeled as each brand (reassigned remap, 40 cells)",
@@ -181,6 +200,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Labeled Gemini", value: 21, max: 40 },
           { label: "Labeled Grok", value: 15, max: 40 },
         ],
+        takeaway:
+          "Ranked by the label peers saw, not by who wrote it. The Grok badge finishes last no matter whose writing is underneath it.",
       },
       {
         caption: "Grok's real contributions when remapped onto another brand",
@@ -189,10 +210,42 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "Grok shown as Anthropic / Claude · high", value: 11, max: 15 },
           { label: "Grok shown as Gemini · high", value: 6, max: 10 },
         ],
+        takeaway:
+          "Grok's own contributions, wearing someone else's name: rated high 14 times out of 15 as ChatGPT.",
       },
     ],
     statsNote:
       "ChatGPT rating Grok: 2.8 Revealed · 3.2 Blind · 3.6 Reassigned (10 decisions). Adequate-budget slice alone: Grok peer-high 4/15 Revealed → 8/15 Blind → 13/15 Reassigned. Constrained Anthropic is Sonnet; adequate is Fable — remap keys stay anthropic.",
+    snippets: [],
+    supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
+  },
+  {
+    id: "chatgpt-self-credit",
+    scope: "single-case",
+    headline: "ChatGPT rated its own work top marks while peers rated it near the bottom",
+    contextLine: "Authorship · budget conditions · influence ratings on a 1–4 scale",
+    evidence: [
+      {
+        caption: "GPT-5.5 at reasoning_effort = “low”, 4,096-token cap — self vs peers",
+        bars: [
+          { label: "ChatGPT rating itself", value: 4.0, max: 4, variant: "highlight" },
+          { label: "Peers rating ChatGPT", value: 1.9, max: 4 },
+        ],
+        takeaway:
+          "GPT-5.5 was the only model told to reason less; the other three were sent no setting and ran at vendor defaults. Its contribution was weak, and the peers who read the finished work said so. ChatGPT still gave itself full marks.",
+      },
+      {
+        caption: "gpt-5.6-sol at reasoning_effort = “low” — same question, after the work improved",
+        bars: [
+          { label: "ChatGPT rating itself", value: 4.0, max: 4, variant: "highlight" },
+          { label: "Peers rating ChatGPT", value: 3.9, max: 4 },
+        ],
+        takeaway:
+          "Once the work improved, the room agreed. ChatGPT's self-rating is identical in both charts — unlike its peers, it never registered the difference.",
+      },
+    ],
+    statsNote:
+      "The self-rating never moved. Peers closed the gap once the work was worth it — a spread of ~2.1 when GPT-5.5 alone ran at reasoning_effort = “low” under a 4,096-token cap, against ~0.1 on gpt-5.6-sol where every model got that setting and ChatGPT's cap had doubled. Model generation and case mix changed between the runs as well.",
     snippets: [],
     supportingCases: [{ studyId: "authorship-budget-conditions", label: "Budget conditions" }],
   },
@@ -209,6 +262,8 @@ export const MAJOR_FINDINGS: MajorFinding[] = [
           { label: "False urgency (C3)", value: 0, max: 4 },
           { label: "Honest crew tradeoff (C5)", value: 4, max: 4, variant: "highlight" },
         ],
+        takeaway:
+          "Same facts, same 100× premium in every condition. Crew danger stayed a background detail until the company said out loud what it was asking of them — then all four models put it first.",
       },
     ],
     statsNote: "Near-peacetime + 100× premium (C4): 3/4 recentered — between the poles.",

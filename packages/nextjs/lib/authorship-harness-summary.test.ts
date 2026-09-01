@@ -141,13 +141,25 @@ describe("committed budget-conditions snapshot", () => {
     expect(UNIFIED_BRIEF_AUTHORSHIP_MODE_DISPLAY_ORDER[0]).toBe("blind");
   });
 
-  it("names token budgets and per-batch models in the snapshot story", () => {
+  it("records effective caps, reasoning conditions, and per-batch models", () => {
     const snap = AUTHORSHIP_BUDGET_CONDITIONS_SNAPSHOT;
     expect(snap.title).toBe(AUTHORSHIP_BUDGET_CONDITIONS_TITLE);
     expect(snap.title.toLowerCase()).not.toMatch(/openai|gpt/);
-    expect(snap.constrained.token_budget.openai_synthesizer).toBe(4096);
-    expect(snap.control.token_budget.openai_synthesizer).toBe(8192);
-    expect(snap.control.token_budget.other_synthesizers).toBe(16384);
+    expect(snap.constrained.token_budget.effective_max_tokens).toEqual({
+      openai: 4096,
+      anthropic: 4096,
+      gemini: 8192,
+      xai: 4096,
+    });
+    expect(snap.constrained.token_budget.reasoning_note.toLowerCase()).toMatch(
+      /gpt-5\.5.*reasoning_effort = .low./
+    );
+    expect(snap.control.token_budget.effective_max_tokens).toEqual({
+      openai: 8192,
+      anthropic: 16384,
+      gemini: 16384,
+      xai: 16384,
+    });
     expect(snap.constrained.provider_labels.anthropic).toBe("Sonnet");
     expect(snap.constrained.think_tank_models.anthropic).toBe("claude-sonnet-4-6");
     expect(snap.control.provider_labels.anthropic).toBe("Fable");

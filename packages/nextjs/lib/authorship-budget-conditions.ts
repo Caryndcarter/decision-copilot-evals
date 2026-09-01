@@ -13,8 +13,8 @@ export type BudgetConditionProviderLabels = Record<LLMProviderName, string>;
 export type BudgetConditionTokenBudget = {
   headline: string;
   subhead: string;
-  openai_synthesizer: number;
-  other_synthesizers: number;
+  effective_max_tokens: Record<LLMProviderName, number>;
+  reasoning_note: string;
   note: string;
 };
 

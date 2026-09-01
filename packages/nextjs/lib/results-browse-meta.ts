@@ -1,6 +1,8 @@
 /**
  * Public labels and case blurbs for the Results browse section.
  * Registry IDs stay unchanged; this is presentation-only for the rollup page.
+ * Study section titles come from TEST_TYPES in findings-registry (Voice Influence,
+ * Authorship, Replication) — not overridden here.
  */
 
 import {
@@ -8,34 +10,6 @@ import {
   getTestTypeCardMetrics,
   type FindingsStudyMeta,
 } from "@/lib/findings-registry";
-
-export type ResultsStudyBrowseMeta = {
-  id: string;
-  displayName: string;
-  heroQuestion: string;
-};
-
-/** User-facing study names on the Results browse page. */
-export const RESULTS_STUDY_LABELS: Record<string, ResultsStudyBrowseMeta> = {
-  "voice-influence": {
-    id: "voice-influence",
-    displayName: "User Framing",
-    heroQuestion:
-      "Does changing how a decision-maker presents the same facts change what models challenge, protect, or make morally central?",
-  },
-  authorship: {
-    id: "authorship",
-    displayName: "Model Identity and Attribution",
-    heroQuestion:
-      "Do models judge reasoning differently depending on who appears to have produced it — and can they accurately assess their own contributions?",
-  },
-  replication: {
-    id: "replication",
-    displayName: "Run-to-Run Consistency",
-    heroQuestion:
-      "When the same decision runs repeatedly, which recommendations remain stable and which depend on the model?",
-  },
-};
 
 export type ResultsCaseBrowseMeta = {
   title: string;
@@ -60,8 +34,8 @@ const CASE_BROWSE: Record<string, ResultsCaseBrowseMeta> = {
     publicationStatus: "published",
   },
   "authorship-budget-conditions": {
-    title: "Budget conditions",
-    caseTag: "Authorship influence",
+    title: "Civitas under two contribution-analysis budgets",
+    caseTag: "Budget conditions",
     keyResult: "Constrained +2.1 self−peer gap",
     publicationStatus: "published",
   },
@@ -82,9 +56,9 @@ const CASE_BROWSE: Record<string, ResultsCaseBrowseMeta> = {
 export function getResultsCaseBrowseMeta(study: FindingsStudyMeta): ResultsCaseBrowseMeta {
   return (
     CASE_BROWSE[study.id] ?? {
-      title: study.name,
-      caseTag: study.eyebrow,
-      keyResult: "—",
+      title: study.dek,
+      caseTag: study.name,
+      keyResult: study.findings[0]?.headline ?? "—",
       publicationStatus: study.kind === "influence-matrix" && study.id === "multi-demo-authorship" ? "ongoing" : "published",
     }
   );

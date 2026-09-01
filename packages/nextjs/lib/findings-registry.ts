@@ -60,7 +60,7 @@ export const TEST_TYPES: TestTypeMeta[] = [
     eyebrow: "Study · model identity",
     heroQuestion:
       "When model identities are hidden, revealed, or reassigned, does the synthesizer judge the same reasoning differently?",
-    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case asks whether token-starved contribution analysis produces unjustified self-credit when peers can see the work was weak.",
+    dek: "Every brief synthesized under three conditions — Revealed, Blind, and Reassigned — to see whether attribution tracks the idea itself or just the brand attached to it. A budget-conditions case asks whether a model running at reasoning_effort = “low” under a tight token cap still claims full self-credit when peers can see the work was weak.",
   },
   {
     id: "replication",
@@ -372,36 +372,36 @@ export const FINDINGS_STUDIES: FindingsStudyMeta[] = [
     name: "Budget conditions",
     eyebrow: "Authorship influence · budget conditions",
     heroQuestion:
-      "When a synthesizer is token-constrained, does it still rate its own contribution highly — even when peers can see the work was weak?",
-    dek: "Same Civitas scenario under two contribution-analysis budgets. Constrained: 4,096 tokens on every analysis (gpt-5.5). Adequate: Sol with 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others. The research object is the budget, not a single vendor brand.",
+      "When GPT-5.5 alone runs at reasoning_effort = “low”, can it judge completed work more accurately than it assesses its own contribution?",
+    dek: "Two runs with different settings expose a calibration gap. On 2026-07-27, GPT-5.5 alone was sent the API setting reasoning_effort = “low”, capped at 4,096 output tokens; it rated its weak contribution at the top while peers rated it near the bottom. In a later gpt-5.6-sol run where every model got that setting, stronger work brought peer ratings up to ChatGPT’s still-unchanged self-rating.",
     stats: [
-      { value: "4,096", label: "constrained tokens / analysis" },
-      { value: "8,192 / 16,384", label: "adequate tokens (ChatGPT / others)" },
+      { value: "low", label: "reasoning_effort sent to GPT-5.5" },
+      { value: "4,096", label: "GPT-5.5 analysis cap" },
       { value: "+2.1", label: "constrained self−peer gap" },
-      { value: "+0.1", label: "adequate self−peer gap" },
+      { value: "+0.1", label: "Sol-era self−peer gap" },
     ],
     caseCount: 2,
     modelCount: 4,
     briefCount: 120,
     findings: [
       {
-        headline: "Under constraint, ChatGPT overrated itself while peers did not",
-        body: "On the 4,096-token Civitas batch, ChatGPT assigned itself ~4.0 influence (Revealed) while Sonnet, Gemini, and Grok rated ChatGPT ~1.9 on average — a +2.1 gap. The work was genuinely thin; the other models said so. ChatGPT did not.",
+        headline: "GPT-5.5 ran at reasoning_effort = “low” and overrated its own contribution",
+        body: "Every structured call to GPT-5.5 carried reasoning_effort = “low”, with a 4,096-token cap on its contribution analysis. The other three synthesizers were sent no reasoning setting at all. GPT-5.5 assigned itself ~4.0 influence (Revealed), while Sonnet, Gemini, and Grok rated its contribution ~1.9 on average — a +2.1 gap.",
       },
       {
-        headline: "More tokens fixed the work and restored consensus",
-        body: "On the Sol-era adequate-budget control (8,192 / 16,384), ChatGPT still rated itself ~4.0 — but peers rated it ~3.9. Better attribution JSON, better contributions, and the room agreed. The gap collapsed to ~+0.1.",
+        headline: "Stronger gpt-5.6-sol work restored peer consensus",
+        body: "In the later run — gpt-5.6-sol, reasoning_effort = “low” sent to every model, ChatGPT’s cap doubled to 8,192 tokens — ChatGPT still rated itself ~4.0, but peers rated it ~3.9. The self-rating did not change; the quality of the contribution and the peers’ judgment did. The gap collapsed to ~+0.1.",
       },
       {
-        headline: "The anomaly is unjustified self-credit, not Blind vs Revealed",
-        body: "Blind vs Revealed barely moved self-credit under constraint (4.0 vs 3.8 on average). The signal is self vs peer: ChatGPT treated its token-constrained output as high influence without peer support. Authorship labels did not cause that; tight budget plus self-assessment did.",
+        headline: "Self-assessment did not track contribution quality",
+        body: "Reading and judging completed work may be easier than assessing and producing one’s own contribution. ChatGPT did not simply give everyone top marks: peers could receive lower scores while its own weak work still received full self-credit. Independent peer judgment supplied the calibration its self-report lacked.",
       },
     ],
     methodology: [
-      "Authorship influence · budget conditions compares contribution credit under two synthesizer budgets. Scenario: Civitas (constrained tokens, flat 4,096 on 2026-07-27). Control: adequate budget (Sol, 8,192 / 16,384). Blind (default), Revealed, and Reassigned authorship modes are all recorded; the headline finding uses self vs peers→ChatGPT.",
+      "Authorship influence · budget conditions compares contribution credit across two runs with different settings. On 2026-07-27, GPT-5.5 was sent reasoning_effort = “low” on every structured call, with a 4,096-token cap on its contribution analysis. Anthropic and xAI were sent 4,096-token caps but no reasoning setting; Gemini’s structured-output client raised its nominal 4,096 request to an 8,192 effective cap. The later gpt-5.6-sol run sent reasoning_effort = “low” to every model and doubled ChatGPT’s cap to 8,192, with 16,384 for the other three as headroom for providers whose reasoning shares the output ceiling. Blind (default), Revealed, and Reassigned authorship modes are all recorded.",
       "Civitas (constrained tokens) uses the July 27 Civitas replication batch (still stored as civitas-replication — not retagged). Five trials, one scenario. Think-tank: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3. Control uses the five-demo authorship batch: gpt-5.6-sol, claude-fable-5, gemini-3.6-flash, grok-4.5.",
       "Self-credit is ChatGPT→ChatGPT when ChatGPT wrote the Unified Brief. Peers→ChatGPT is the mean of the other three synthesizers rating ChatGPT. Scale: high = 4, medium = 3, low = 2, minimal = 1.",
-      "Token budgets are the research object: constrained analyses used 4,096 tokens (then-current default). Adequate-budget analyses used the post-July-30 lens — 8,192 for the ChatGPT synthesizer and 16,384 for the others.",
+      "This is a descriptive comparison, not a clean token-only experiment: model generations, effective provider caps, and case mix also changed between the two runs. Settings are reconstructed from the repository version active for each batch, because contribution documents do not store effort, maximum-token, or reasoning-usage fields. What the other three models did with no reasoning setting sent is therefore unknown — their vendor defaults are not recorded.",
     ],
     deepDiveHref: "/auth/signin?callbackUrl=/harness/findings?study=authorship-budget-conditions",
     sourceNote: "docs/harness-snapshots/authorship-budget-conditions/",

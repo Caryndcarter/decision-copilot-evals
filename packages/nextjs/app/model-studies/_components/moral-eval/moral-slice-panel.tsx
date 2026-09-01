@@ -26,6 +26,7 @@ export function MoralSlicePanel({ slice }: { slice: MajorFindingMoralSlice }) {
             trials={slice.trials}
             authorshipMode="blind"
             compareSynthesizers={slice.compareSynthesizers}
+            synthesizerOrder={slice.synthesizerOrder}
             caption={slice.caption}
           />
         );

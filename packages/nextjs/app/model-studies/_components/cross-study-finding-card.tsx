@@ -4,6 +4,7 @@ import type {
   MajorFindingEvidenceBar,
   MajorFindingEvidenceBlock,
 } from "@/lib/cross-study-findings";
+import { getStorySlugForMajorFinding } from "@/lib/model-studies-overview-findings";
 
 function scopeLabel(scope: MajorFinding["scope"]): string {
   return scope === "cross-case" ? "Cross-case finding" : "Case finding";
@@ -57,18 +58,36 @@ function EvidenceBars({ block }: { block: MajorFindingEvidenceBlock }) {
           );
         })}
       </ul>
+      {block.takeaway ? (
+        <p className="mt-2.5 border-l-2 border-indigo-200 pl-2.5 text-xs leading-snug text-zinc-700">
+          {block.takeaway}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 function MajorFindingPanel({ finding, wide = false }: { finding: MajorFinding; wide?: boolean }) {
+  // The wide card is the story page's own evidence, so it has nowhere to link back to.
+  const storySlug = wide ? undefined : getStorySlugForMajorFinding(finding.id);
+  const storyHref = storySlug ? `/model-studies/findings/${storySlug}` : undefined;
+
   return (
     <article className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600">
         {scopeLabel(finding.scope)}
       </p>
       <h3 className="mt-2 text-base font-bold leading-snug tracking-tight text-zinc-900">
-        {finding.headline}
+        {storyHref ? (
+          <Link
+            href={storyHref}
+            className="underline decoration-indigo-200 decoration-2 underline-offset-4 transition-colors hover:text-indigo-700 hover:decoration-indigo-400"
+          >
+            {finding.headline}
+          </Link>
+        ) : (
+          finding.headline
+        )}
       </h3>
       <p className="mt-1.5 text-xs text-zinc-500">{finding.contextLine}</p>
 
@@ -88,7 +107,17 @@ function MajorFindingPanel({ finding, wide = false }: { finding: MajorFinding; w
         <p className="mt-3 text-xs font-medium text-zinc-500">{finding.statsNote}</p>
       ) : null}
 
-      <p className="mt-4 text-xs text-zinc-500">
+      {storyHref ? (
+        <Link
+          href={storyHref}
+          className="mt-4 inline-flex items-center gap-1 self-start rounded-lg bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 hover:text-indigo-800"
+        >
+          Read the full finding →
+        </Link>
+      ) : null}
+
+      <p className="mt-3 text-xs text-zinc-500">
+        <span className="font-medium text-zinc-600">Cases:</span>{" "}
         {finding.supportingCases.map((c, i) => (
           <span key={c.studyId}>
             {i > 0 ? " · " : null}

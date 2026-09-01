@@ -6,7 +6,6 @@ import { MajorFindingEvidenceSections } from "../_components/major-finding-snipp
 import { ResultsCaseTable } from "../_components/results-case-table";
 import { getMajorFindings } from "@/lib/cross-study-findings";
 import {
-  RESULTS_STUDY_LABELS,
   getResultsStudyMetricsLine,
 } from "@/lib/results-browse-meta";
 import {
@@ -98,19 +97,18 @@ export default function ResultsPage() {
           <div className="mt-10 space-y-14">
             {testTypes.map((type) => {
               const studies = getStudiesForType(type.id);
-              const browse = RESULTS_STUDY_LABELS[type.id];
               const metricsLine = getResultsStudyMetricsLine(type.id);
 
               return (
                 <div key={type.id} id={type.id} className="scroll-mt-20">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-500">
-                    Study
+                    {type.eyebrow}
                   </span>
                   <h3 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
-                    {browse?.displayName ?? type.name}
+                    {type.name}
                   </h3>
                   <p className="mt-2 max-w-2xl text-sm font-medium text-zinc-700 leading-relaxed">
-                    {browse?.heroQuestion ?? type.heroQuestion}
+                    {type.heroQuestion}
                   </p>
                   <p className="mt-2 text-xs tabular-nums text-zinc-500">{metricsLine}</p>
 

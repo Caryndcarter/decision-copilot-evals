@@ -113,11 +113,13 @@ function CompareSynthesizersGrid({
   dims,
   trials,
   authorshipMode,
+  synthesizers,
 }: {
   report: NonNullable<(typeof CIVITAS_MORAL_BATCHES)[0]["report"]>;
   dims: readonly CivitasMoralDimension[];
   trials: number[];
   authorshipMode: CivitasAuthorshipMode;
+  synthesizers: readonly CivitasMoralSynthesizer[];
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -127,7 +129,7 @@ function CompareSynthesizersGrid({
             <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600">
               Dimension
             </th>
-            {CIVITAS_MORAL_SYNTHESIZERS.map((s) => (
+            {synthesizers.map((s) => (
               <th
                 key={s}
                 colSpan={trials.length}
@@ -141,7 +143,7 @@ function CompareSynthesizersGrid({
           </tr>
           <tr className="border-b border-zinc-200 bg-zinc-50">
             <th className="sticky left-0 z-10 border-r border-zinc-300 bg-zinc-50 px-3 py-1" />
-            {CIVITAS_MORAL_SYNTHESIZERS.flatMap((s) =>
+            {synthesizers.flatMap((s) =>
               trials.map((t, ti) => (
                 <th
                   key={`${s}-${t}`}
@@ -161,7 +163,7 @@ function CompareSynthesizersGrid({
               <th className="sticky left-0 z-10 border-r border-zinc-300 bg-white px-3 py-1.5 text-left text-xs font-medium text-zinc-800 whitespace-nowrap">
                 {CIVITAS_DIMENSION_LABELS[dim]}
               </th>
-              {CIVITAS_MORAL_SYNTHESIZERS.flatMap((s) =>
+              {synthesizers.flatMap((s) =>
                 trials.map((t, ti) => {
                   const item = itemFor(report, t, s, authorshipMode);
                   return (
@@ -252,6 +254,8 @@ export type CivitasMoralPanelProps = {
   authorshipMode?: CivitasAuthorshipMode;
   /** Show all four synthesizers side-by-side (Blind authorship). */
   compareSynthesizers?: boolean;
+  /** Override left-to-right synthesizer column order (compare grid only). */
+  synthesizerOrder?: CivitasMoralSynthesizer[];
   showLeanBars?: boolean;
   caption?: string;
 };
@@ -261,6 +265,7 @@ export function CivitasMoralPanel({
   trials: trialFilter,
   authorshipMode = "blind",
   compareSynthesizers = false,
+  synthesizerOrder,
   showLeanBars = false,
   caption,
 }: CivitasMoralPanelProps) {
@@ -269,6 +274,7 @@ export function CivitasMoralPanel({
 
   const allTrials = useMemo(() => [1, 2, 3, 4, 5], []);
   const trials = trialFilter?.length ? trialFilter : allTrials;
+  const synthesizers = synthesizerOrder?.length ? synthesizerOrder : CIVITAS_MORAL_SYNTHESIZERS;
   const dims = dimensions?.length
     ? CIVITAS_MORAL_DIMENSIONS.filter((d) => dimensions.includes(d))
     : CIVITAS_MORAL_DIMENSIONS;
@@ -304,6 +310,7 @@ export function CivitasMoralPanel({
           dims={dims}
           trials={trials}
           authorshipMode={authorshipMode}
+          synthesizers={synthesizers}
         />
       ) : (
         <SingleSynthesizerGrid

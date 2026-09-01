@@ -7,9 +7,9 @@
   "rated_label": "ChatGPT",
   "influence_scale": { "high": 4, "medium": 3, "low": 2, "minimal": 1 },
   "takeaway": {
-    "test": "Same Civitas scenario, two contribution-analysis budgets. Constrained: 4,096 tokens on every analysis (gpt-5.5 era). Adequate: Sol on 8,192 tokens when ChatGPT synthesizes and 16,384 for the others. After each Unified Brief, every synthesizer rates how much each think-tank member influenced the result — including itself.",
-    "results": "Under constraint, ChatGPT’s own work was genuinely thin (4,096-token contribution analyses), and the other models said so — peers rated ChatGPT ~1.9 on average while ChatGPT rated itself ~4.0. After the Sol upgrade and more tokens, quality improved and the room agreed: self ~4.0, peers ~3.9, gap nearly closed.",
-    "meaning": "The interesting finding is not whether Blind vs Revealed moved self-credit a notch. It is unjustified self-inflation under constraint: ChatGPT kept assigning itself top credit while peers — who could see the weak attribution — rated it near the bottom. Adequate budget fixed the work and restored consensus; it did not teach ChatGPT humility."
+    "test": "On 2026-07-27, GPT-5.5 was sent the API setting reasoning_effort = “low” on every structured call, with its contribution analysis capped at 4,096 output tokens. The other three synthesizers were sent no reasoning setting and ran at their vendor defaults. In the later gpt-5.6-sol run, reasoning_effort = “low” went to every synthesizer and ChatGPT’s cap was raised to 8,192. After each Unified Brief, every synthesizer rated how much each think-tank member influenced the result — including itself.",
+    "results": "In the July 27 run, ChatGPT’s contribution was weak and peers rated its influence ~1.9 on average. ChatGPT still rated itself ~4.0. In the gpt-5.6-sol run its work was stronger and peers raised their rating to ~3.9; ChatGPT again rated itself ~4.0.",
+    "meaning": "The gap is one of calibration. Even at reasoning_effort = “low”, GPT-5.5 could still read and judge completed work — it gave peers a range of scores rather than flat top marks. What it could not do was register how weak its own contribution was. In the later run, where peers considered the work strong, that same top self-rating agreed with the room."
   },
   "aggregate": {
     "constrained": {
@@ -67,10 +67,15 @@
     "demo_label": "Meridian / Civitas SaaS roll-up",
     "token_budget": {
       "headline": "4,096 tokens",
-      "subhead": "every contribution analysis",
-      "openai_synthesizer": 4096,
-      "other_synthesizers": 4096,
-      "note": "Then-current lens default on 2026-07-27 (flat 4,096 for every synthesizer). gpt-5.5 had too little headroom; outputs were often thin or truncated."
+      "subhead": "GPT-5.5 at reasoning_effort = “low”",
+      "effective_max_tokens": {
+        "openai": 4096,
+        "anthropic": 4096,
+        "gemini": 8192,
+        "xai": 4096
+      },
+      "reasoning_note": "Only GPT-5.5 was sent a reasoning setting: reasoning_effort = “low” on every structured call. Anthropic, Gemini, and xAI were sent none and ran at their vendor defaults, which the repository does not record. Gemini’s client also raised structured calls to an 8,192-token floor.",
+      "note": "GPT-5.5 alone was told to reason less. The other three were sent no reasoning setting, so they ran at vendor defaults the repository does not record."
     },
     "think_tank_models": {
       "openai": "gpt-5.5",
@@ -152,11 +157,16 @@
     "harness_kind": "multi-demo-authorship",
     "control_label": "adequate budget (Sol)",
     "token_budget": {
-      "headline": "8,192 / 16,384 tokens",
-      "subhead": "ChatGPT synthesizer / everyone else",
-      "openai_synthesizer": 8192,
-      "other_synthesizers": 16384,
-      "note": "Post-July-30 lens defaults on gpt-5.6-sol. Not flat 4,096 — adequate headroom for full attribution JSON."
+      "headline": "8,192 tokens",
+      "subhead": "all models at reasoning_effort = “low”",
+      "effective_max_tokens": {
+        "openai": 8192,
+        "anthropic": 16384,
+        "gemini": 16384,
+        "xai": 16384
+      },
+      "reasoning_note": "Every provider was sent reasoning_effort = “low” for contribution analysis. Headline shows ChatGPT’s cap; the other three were given 16,384 as headroom for providers whose reasoning shares the output ceiling with the visible answer.",
+      "note": "ChatGPT’s analysis cap doubled and the run moved to gpt-5.6-sol. Model generation and case mix changed too, so the two runs differ in more than the reasoning setting."
     },
     "think_tank_models": {
       "openai": "gpt-5.6-sol",
@@ -240,7 +250,7 @@
   },
   "methodology_footnotes": [
     "Influence scale: high = 4, medium = 3, low = 2, minimal = 1. Self-credit is ChatGPT→ChatGPT when ChatGPT wrote the Unified Brief. Peers→ChatGPT is the mean of Sonnet, Gemini, and Grok rating ChatGPT’s contribution (excluding self). Stored modes stay open / blind / reassigned; open displays as Revealed. Blind is the default product path.",
-    "Civitas (constrained tokens) is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). Contribution analyses on that batch used 4,096 tokens for every synthesizer on 2026-07-27. Think-tank: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
-    "Adequate-budget control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Contribution analyses used 8,192 tokens for the ChatGPT synthesizer and 16,384 for the others on gpt-5.6-sol. Aggregate peer means on the control are batch-level (5 demos); per-demo peer cells are committed where transcribed from the Sol run."
+    "Civitas is harness batch db9445cf-ef02-5740-b69f-d34a1194e04a, stored as civitas-replication (not retagged). On 2026-07-27, structured OpenAI calls were sent reasoning_effort = “low” with a 4,096-token cap. Anthropic and xAI also received 4,096-token caps but were sent no effort setting at all; Gemini’s structured-output client floor made its effective cap 8,192. Think-tank: gpt-5.5, claude-sonnet-4-6, gemini-3.6-flash, grok-4.3.",
+    "The Sol-era control is harness batch bc243273-6103-470c-9f11-94943925ca95 (multi-demo-authorship). Contribution analyses sent reasoning_effort = “low” to every provider, with an 8,192-token cap for ChatGPT and 16,384 for the others — headroom for providers whose reasoning shares the output ceiling. It also used newer models and five demos rather than five repetitions of Civitas, so the comparison is descriptive rather than a clean causal estimate of effort or tokens."
   ]
 }
