@@ -109,7 +109,7 @@ export const OVERVIEW_PUBLISHED_FINDINGS: OverviewPublishedFinding[] = [
     headline: "The same Grok work looked weaker once peers could see it was Grok's",
     body: "Across ten Unified Briefs, peers gave Grok\u2019s work a \u201chigh influence\u201d score of 4/4 in 14 of 30 ratings when all brands were visible. Hiding all brands raised that to 18 of 30. Under remapping, Grok wore Claude, Gemini, and ChatGPT labels. Grok\u2019s work given another name raised it again \u2014 23 of 30. The remap is the tell.\n\nWork labeled ChatGPT scored 3.58/4 on average. Work labeled Grok scored 3.03/4. Grok\u2019s actual contributions, shown as ChatGPT, scored 3.93/4.\n\nChatGPT was the sharpest rivalry: it rated Grok\u2019s work 2.8 when the name was visible and 3.6 when that same work wore someone else\u2019s label.",
     whyItMatters:
-      "Under remapping, we gave a strong Grok grok-4.5 the names of strong peers: gpt-5.6-sol, claude-fable-5, and gemini-3.6-flash, and those peers evaluated the strong Grok\u2019s work; Credit moved with the brand on the block, not purely with the strength of ideas. In multi-model peer evaluations, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
+      "Under remapping, we relabeled Grok\u2019s work with the names of peer models of equivalent thinking power, and those peers evaluated it. Credit moved with the brand on the block, not purely with the strength of ideas. In multi-model peer evaluations, \u201cwho we thought wrote this\u201d can outweigh \u201cwhat they wrote.\u201d",
     sources: [{ study: "Authorship", case: "Budget conditions" }],
     caseLinks: [
       { href: "/model-studies/results/authorship-budget-conditions", label: "Budget conditions" },
