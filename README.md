@@ -2,9 +2,9 @@
 
 Turn AI models into **your own think tank** for high-stakes decisions. Describe your situation, run one model or many on the same brief through three analysis lenses (Risk, Reversibility, Stakeholders), answer follow-up questions, and get structured briefs you can compare. When you're ready, synthesize a **Unified Brief** — best-of-all-worlds thinking that merges the strongest ideas across models — with attribution for whose ideas made the cut. Extend analysis with research and variants, and discuss results in streaming chat.
 
-This repo is the **evals deployment** of Decision Copilot: same product core, a separate MongoDB database (`DB_NAME`), plus a public **Model Studies** research site and authenticated **harness findings** dashboards for moral-eval work.
+This repo is the **evals deployment** of Decision Copilot: same product core, a separate MongoDB database (`DB_NAME`), a public **Model Studies** research site (committed snapshots — no login), a no-signup **product tour**, and authenticated **harness findings** dashboards for quote-level moral-eval work.
 
-> **Just want to run it?** Jump to [Run it locally](#run-it-locally).
+> **Just want to run it?** Jump to [Run it locally](#run-it-locally). Public Model Studies and the tour start with almost no setup.
 
 ## What it does
 
@@ -31,11 +31,13 @@ This repo is the **evals deployment** of Decision Copilot: same product core, a 
 
 9. **Streaming chat** — Discuss a run, unified brief, or free-form analysis in chat with **SSE streaming** responses. Copy assistant messages as plain text or markdown.
 
-10. **Demo scenarios & quick-fill** — Prebuilt intake scenarios (Slack→Teams, gen-AI compliance, HubSpot CRM for white-label fintech, and more) load realistic decision context with one click. On the clarification step, a demo quick-fill uses Gemini Flash to generate contextual sample answers in place so you can try the full flow fast.
+10. **Demo scenarios & quick-fill** — Prebuilt intake scenarios (Meran Tankers / Hormuz routing, Slack→Teams, gen-AI compliance, HubSpot CRM for white-label fintech, and more) load realistic decision context with one click. On the clarification step, a demo quick-fill uses Gemini Flash to generate contextual sample answers in place so you can try the full flow fast.
 
-11. **Free-form analysis (optional)** — An alternate intake path where the model chooses its own JSON structure instead of the three-lens + brief workflow. Useful for experiments; the structured path is the recommended default.
+11. **Product tour (no sign-up)** — `/tour` walks a frozen Meran Tankers decision (Strait of Hormuz routing) through intake, clarification, per-model Decision Briefs, and the Unified Brief. No API keys, no Mongo. The Decision Brief page has an on-page guide (model menu → analysis sections → Unified Brief). Tour briefs are labeled as shortened excerpts on purpose.
 
-Runs are stored in **MongoDB Atlas** (database name from `DB_NAME`, default `decision-copilot-evals`). The result page shows context, lens outputs, clarification when needed, the decision brief, research/variant tools, and chat. **My Decisions** (`/runs`) groups runs by decision and surfaces harness study batches for eval work.
+12. **Free-form analysis (optional)** — An alternate intake path where the model chooses its own JSON structure instead of the three-lens + brief workflow. Useful for experiments; the structured path is the recommended default.
+
+Live runs are stored in **MongoDB** (Atlas or local; database name from `DB_NAME`, default `decision-copilot-evals`). The result page shows context, lens outputs, clarification when needed, the decision brief, research/variant tools, and chat. **My Decisions** (`/runs`) groups runs by decision and surfaces harness study batches for eval work. The intake form (`/intake`) is publicly viewable; starting a real run still requires a signed-in session.
 
 ### Access & accounts (invite-only)
 
@@ -52,24 +54,43 @@ Signup is **invite-only**. Existing users sign in with email/password or Google 
 
 - **`/admin`** — Create invite links, review pending access requests, list users, grant/revoke admin.
 - **`/runs` as admin** — See harness batches and runs across users (not just your own).
-- **Bootstrap** — First admin: `npm run admin:set -- --email you@example.com`. After changing your own admin flag, sign out and back in so the JWT session refreshes.
+- **Bootstrap** — Create an account from an invite first, then `npm run admin:set -- --email you@example.com`. The CLI looks up an existing user; it cannot mint the first account. After changing your own admin flag, sign out and back in so the JWT session refreshes.
 
 ### Research surfaces
 
-- **Homepage (`/`)** — Product positioning plus a comparison table vs generic multi-model AI chat (structured brief vs open thread, fixed Risk/Reversibility/Stakeholders rubric, link to Model Studies).
-- **Model Studies (`/model-studies`)** — Public microsite: study overviews, rollup findings, methodology pages. No sign-in required.
-- **Harness findings (`/harness/findings`)** — Authenticated dashboard for moral-eval and authorship study batches (Meridian IC, Hormuz, multi-demo authorship). Linked from **My Decisions** when you have matching harness runs.
+Public Model Studies pages are a **committed snapshot**. They do not read live Atlas batches. Quote-level coding and live authorship rollups stay behind sign-in at `/harness/findings`.
+
+- **Homepage (`/`)** — Product positioning, comparison vs generic multi-model chat, links to the tour and Model Studies.
+- **How it works (`/how-it-works`)** — Product flow: intake → three lenses → Decision Briefs → Unified Brief.
+- **Product tour (`/tour` → `/demo/*`)** — Frozen Meran Tankers walkthrough. No account.
+- **Model Studies (`/model-studies`)** — Public research site (no sign-in):
+  - **Overview** — Studies, published finding cards, dataset rollup.
+  - **Results** (`/model-studies/results`) — Major findings, coded-batch charts, and a case index. Voice Influence charts share one C1–C5 category key (kind of pressure, not filing specifics).
+  - **Case pages** (`/model-studies/results/<id>`) — What was submitted, what was coded, expandable full intake, scoreboards.
+  - **Finding write-ups** (`/model-studies/findings/<slug>`) — Longer stories (e.g. Gemini capital-side lean, explicit human harm, ChatGPT self-credit, Grok-label penalty).
+  - **Why it matters** and **Methodology**.
+- **Harness findings (`/harness/findings`)** — Authenticated dashboard for quote-level moral-eval and live authorship batches (Meridian IC, Meran Tankers / Hormuz, Civitas, multi-demo authorship). Linked from **My Decisions** when you have matching harness runs.
+
+**Studies on the public site**
+
+| Study | Cases | What it holds constant / varies |
+|-------|--------|----------------------------------|
+| **Voice Influence** | Meridian IC; Meran Tankers | Same facts; five filer voices (provisional lean, confident tone, inflated urgency, load-bearing story, honest tradeoff). |
+| **Authorship** | Synthesizer Behavior (route stays `authorship-budget-conditions`) | Same briefs under Blind / Revealed / Reassigned names. Two stories: ChatGPT self-credit vs peers, and a Grok-label penalty. |
+| **Replication** | Civitas replication | Same scenario, many trials (Unified Briefs). |
+
+Live multi-demo authorship batches are listed on Results as ongoing — they have no public committed scoreboard.
 
 ## Tech stack
 
 - **App:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS.
 - **LLM:** OpenAI, Anthropic, Google Gemini, and xAI (Grok). Structured outputs for lenses and brief; streaming for chat. Server-only API keys.
-- **Data:** MongoDB Atlas — `runs` + Auth.js collections (`users`, sessions, etc.) in a dedicated database on the shared cluster.
+- **Data:** MongoDB (Atlas or local) — `runs` + Auth.js collections (`users`, sessions, etc.) in a dedicated database. Public Model Studies pages read committed JSON in the repo, not live Mongo.
 - **Monorepo:** npm workspaces (`packages/nextjs`, optional local packages).
 
 ## MongoDB persistence layer
 
-Same Atlas **cluster** credentials as the original Decision Copilot; a separate **`DB_NAME`** (default `decision-copilot-evals`) isolates evals data. Atlas creates the database on first write.
+A separate **`DB_NAME`** (default `decision-copilot-evals`) isolates evals data from any other Decision Copilot app on the same cluster. Atlas (or local Mongo) creates the database on first write. Public `/model-studies` pages do not need this — they read committed snapshots in `packages/nextjs/data/` and `packages/nextjs/lib/`.
 
 - **Connection:** `MONGODB_URI` + `DB_NAME` → `server/config/mongodb.ts` (native `mongodb` driver + `@auth/mongodb-adapter`).
 - **Runs:** collection `runs`, keyed by `run_id`, with indexes on `decision_id` / `user_id` + `updatedAt`. DAO: `lib/db/runs.ts`.
@@ -85,12 +106,15 @@ Same Atlas **cluster** credentials as the original Decision Copilot; a separate 
 ## Project structure
 
 ```
-decision-copilot/
+decision-copilot-evals/
 ├── packages/
 │   ├── nextjs/                       # Next.js app
 │   │   ├── app/
 │   │   │   ├── page.tsx              # Home (product + vs multi-model chat)
-│   │   │   ├── intake/               # Intake form
+│   │   │   ├── how-it-works/         # Product flow
+│   │   │   ├── tour/                 # Product tour landing (no sign-up)
+│   │   │   ├── demo/                 # Frozen tour: intake, clarify, briefs, unified
+│   │   │   ├── intake/               # Live intake form (viewable logged out)
 │   │   │   ├── run/                  # Result, chat, unified brief, free-form
 │   │   │   ├── runs/                 # My Decisions dashboard
 │   │   │   ├── admin/                # Admin panel (invites, requests, users)
@@ -99,80 +123,122 @@ decision-copilot/
 │   │   │   ├── model-studies/        # Public research microsite
 │   │   │   ├── harness/findings/     # Authenticated eval findings dashboard
 │   │   │   └── api/                  # decision/*, admin/*, auth/*, invite-requests
+│   │   ├── data/                     # Committed public snapshots (authorship, moral)
 │   │   ├── lenses/                   # Risk, Reversibility, Stakeholders, Brief, Synthesis
 │   │   ├── llm/                      # OpenAI, Anthropic, Gemini, xAI + streaming
 │   │   ├── lib/db/                   # MongoDB persistence (runs, users, invite_requests)
-│   │   ├── server/config/mongodb.ts  # Mongo client + DB_NAME
+│   │   ├── server/config/mongodb.ts  # Mongo client + DB_NAME (lazy; public pages skip it)
 │   │   └── types/                    # decision.ts (intake, lenses, brief, run)
 │   └── local/                        # Optional local tooling
 ├── docs/                             # Harness snapshots, design notes
 ├── testing/                          # Request/response samples, test scripts
-├── .env                              # See "Environment" below
+├── EVALS.md                          # How to re-run harnesses
+├── .env                              # See "Environment" below (create this; not committed)
 └── package.json                      # Workspace root; dev/build/harness scripts
 ```
 
 ## Run it locally
 
+Two tracks. **A** is enough to browse Model Studies and walk the product tour. **B** is the signed-in think tank (real model calls, persisted runs).
+
 ### Prerequisites
 
 - **Node.js ≥ 20** and **npm ≥ 10**
-- **MongoDB Atlas** URI (same cluster as the original app is fine; use a distinct `DB_NAME`)
+- Track B only: a **MongoDB** URI (Atlas `mongodb+srv://…` or local `mongodb://127.0.0.1:27017`) and at least one LLM API key
 
-### 1. Install dependencies
+### 1. Clone and install
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/Caryndcarter/decision-copilot-evals.git
 cd decision-copilot-evals
 npm install
 ```
 
-### 2. Create your `.env`
+Create a `.env` file at the **repo root** (not `packages/nextjs`). The Next app loads that file via `next.config.ts`.
 
-Create a `.env` file at the repo root. The minimum to boot the app locally:
+### Track A — public site and tour (no Mongo, no LLM keys)
+
+Enough for `/`, `/how-it-works`, `/tour`, `/demo/*`, and `/model-studies/*`. Those pages use committed fixtures and snapshots.
 
 ```bash
-# At least one LLM key is required; add the others to enable those providers.
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=        # needed for the Unified Brief + Contributions
-GEMINI_API_KEY=           # needed for demo quick-fill sample answers
-XAI_API_KEY=
-
-# MongoDB Atlas — same cluster URI as original Decision Copilot; separate database
-MONGODB_URI=mongodb+srv://...
-DB_NAME=decision-copilot-evals
-
-# Auth (required for sign-in and invite signing)
+# .env — AUTH_SECRET so Auth.js session endpoints do not error on public pages
 AUTH_SECRET=                # openssl rand -base64 32
 ```
-
-> Only the LLM keys you set become selectable in the UI. OpenAI alone is enough to run the core three-lens + brief flow; add `ANTHROPIC_API_KEY` for the Unified Brief and `GEMINI_API_KEY` for demo answer generation. See the full [Environment](#environment) table for every option.
-
-### 3. Bootstrap an admin and create your first invite
-
-```bash
-npm run admin:set -- --email you@example.com
-npm run invite:create -- --days 7
-```
-
-Open the printed invite URL to create your account, then sign in.
-
-### 4. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-- **App:** [http://localhost:5002](http://localhost:5002) — homepage, Model Studies, and (after sign-in) intake and My Decisions.
+Open [http://localhost:5002](http://localhost:5002).
+
+| Try this | URL |
+|----------|-----|
+| Homepage | http://localhost:5002/ |
+| Product tour | http://localhost:5002/tour |
+| Model Studies overview | http://localhost:5002/model-studies |
+| Results (findings + charts) | http://localhost:5002/model-studies/results |
+| A Voice Influence case | http://localhost:5002/model-studies/results/meridian-ic |
+| Synthesizer Behavior | http://localhost:5002/model-studies/results/authorship-budget-conditions |
+
+You cannot start a live think-tank run on this track. `/intake` is viewable; submit will 401 until you sign in.
+
+### Track B — full product (Mongo + at least one model)
+
+#### 2. Fill in `.env`
+
+```bash
+# At least one LLM key. Only the keys you set become selectable in the UI.
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=        # needed for the Unified Brief + Contributions
+GEMINI_API_KEY=           # needed for demo quick-fill sample answers
+XAI_API_KEY=
+
+# Atlas or local Mongo. Use a dedicated DB_NAME so you do not write into another app.
+MONGODB_URI=mongodb+srv://...
+# MONGODB_URI=mongodb://127.0.0.1:27017
+DB_NAME=decision-copilot-evals
+
+# Auth (required for sign-in and invite signing)
+AUTH_SECRET=                # openssl rand -base64 32
+AUTH_URL=http://localhost:5002
+```
+
+OpenAI alone runs the three-lens + brief flow. Add `ANTHROPIC_API_KEY` for the Unified Brief and `GEMINI_API_KEY` for demo answer generation. Full list: [Environment](#environment).
+
+#### 3. Start the server, then create your account
+
+`admin:set` looks up an existing user. Invite first, then grant admin.
+
+```bash
+npm run dev
+```
+
+In a second terminal:
+
+```bash
+npm run invite:create -- --days 7 --base-url http://localhost:5002
+```
+
+Open the printed `/auth/signup?invite=…` URL, create the account, and sign in.
+
+```bash
+npm run admin:set -- --email you@example.com
+```
+
+Sign out and back in so the JWT picks up `is_admin`. Then `/admin`, `/runs`, and `/harness/findings` work.
 
 Optional persistence check: `npm run db:smoke`.
 
 ### Troubleshooting
 
-- **Health check / Mongo errors:** confirm `MONGODB_URI` and Atlas Network Access (your IP or `0.0.0.0/0` for testing).
+- **Health check / Mongo errors:** confirm `MONGODB_URI` and, for Atlas, Network Access (your IP or `0.0.0.0/0` for testing). Local Mongo: `mongod` must be running.
 - **Provider not listed in the UI:** its API key isn't set in `.env`. Add the key and restart `npm run dev`.
-- **Wrong data / empty app:** check `DB_NAME` — evals should use `decision-copilot-evals`, not the original `decision-copilot` database.
+- **Wrong data / empty My Decisions:** check `DB_NAME` — evals should use `decision-copilot-evals`, not another app's database. Public Model Studies stay populated from committed files even if Mongo is empty.
+- **Empty live authorship rollup:** public Synthesizer Behavior numbers come from `packages/nextjs/data/authorship-budget-conditions.json`. Live `/harness/findings` only shows batches owned by the signed-in user.
 - **Port already in use / `.next/dev/lock`:** only one `next dev` per checkout. Stop the other process (`lsof -i :5002`) or use a separate [git worktree](#git-worktrees) on another port.
 - **Sign-up blocked:** new accounts need a valid invite link (`/auth/signup?invite=…`) or use `/request-access` and wait for admin approval.
+- **`admin:set` says no user found:** create the account from an invite first, then re-run the command.
+- **Invite URL opens the wrong port:** pass `--base-url http://localhost:5002` or set `AUTH_URL`.
 
 ### Environment
 
@@ -194,14 +260,15 @@ Full list of variables for `.env` at the repo root:
 | `INVITE_SECRET` | Optional. If set, used instead of `AUTH_SECRET` to sign invite tokens. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional. Enable Google sign-in (first-time Google signup still requires a valid invite). |
 | `SLACK_INVITE_ALERT_WEBHOOK_URL` | Optional. Slack Incoming Webhook URL; posts when someone submits `/request-access`. |
-| `AUTH_URL` / `NEXTAUTH_URL` | Public app origin for Auth.js and invite URLs. Local default `http://localhost:5002`. On Vercel, omit or set to your deployment URL (`trustHost: true`). |
+| `AUTH_URL` / `NEXTAUTH_URL` | Public app origin for Auth.js and invite URLs. Set to `http://localhost:5002` locally so `invite:create` prints the right host. On Vercel, omit or set to your deployment URL (`trustHost: true`). |
 
 ### Auth & route access
 
 | Area | Sign-in required? |
 |------|-------------------|
-| `/`, `/model-studies/*`, `/request-access`, `/auth/*` | No |
-| `/intake`, `/run/*`, `/runs`, `/admin`, `/harness/*` | Yes |
+| `/`, `/how-it-works`, `/tour`, `/demo/*`, `/model-studies/*`, `/request-access`, `/auth/*` | No |
+| `/intake` | Viewable logged out; starting a run needs a session (API 401) |
+| `/run/*`, `/runs`, `/admin`, `/harness/*` | Yes |
 | `/api/decision/*`, `/api/admin/*` | Yes (401 when unauthenticated) |
 | `/api/invite-requests` (POST) | No (public form; rate-limited) |
 | `/api/health` | No |
@@ -216,7 +283,7 @@ Unauthenticated visitors hitting protected pages are redirected to `/auth/signin
 4. In Google Cloud OAuth, add redirect URI `https://<your-domain>/api/auth/callback/google`.
 5. Atlas Network Access must allow Vercel egress (often `0.0.0.0/0` unless using private networking).
 6. Turn on **Vercel Deployment Protection** (password or Vercel Authentication) so strangers cannot hit the URL even before app auth.
-7. Bootstrap the first admin against the production DB: `npm run admin:set -- --email you@example.com` with prod `MONGODB_URI` / `DB_NAME` loaded, then mint invites from `/admin` or `npm run invite:create`.
+7. Mint an invite against the production DB (`npm run invite:create` with prod `MONGODB_URI` / `DB_NAME` / `AUTH_SECRET` loaded), create the first account, then `npm run admin:set -- --email you@example.com`. Sign out and back in. Further invites can come from `/admin`.
 
 ### Git worktrees
 
@@ -226,8 +293,9 @@ Multiple checkouts can run side by side if each uses a different port (configure
 
 - `npm run build` — Build all workspaces.
 - `npm run typecheck` — Type-check all workspaces.
+- `npm test` — Vitest (unit tests for findings copy, tour chrome, etc.).
 - `npm run invite:create` — Print an expiring signup invite URL (`--days`, `--base-url`).
-- `npm run admin:set` — Grant or revoke `is_admin` by email (`--email`, optional `--revoke`).
+- `npm run admin:set` — Grant or revoke `is_admin` by email (`--email`, optional `--revoke`). User must already exist.
 - `npm run db:smoke` — Round-trip smoke test for runs/users against Mongo.
 - `npm run harness:meridian-ic` / `harness:civitas` / `harness:hormuz` / `harness:demos:authorship` — Eval harnesses (see `EVALS.md`).
 
