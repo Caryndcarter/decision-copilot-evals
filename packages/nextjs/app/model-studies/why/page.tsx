@@ -186,7 +186,7 @@ export default function WhyPage() {
             <p className="mt-2 text-sm leading-relaxed text-zinc-600">
               Our{" "}
               <Link
-                href="/model-studies/findings/brand-favoritism"
+                href="/model-studies/findings/brand-favoritism?from=why"
                 className="font-semibold text-indigo-600 hover:text-indigo-500"
               >
                 Authorship study

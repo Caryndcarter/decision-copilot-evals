@@ -4,6 +4,7 @@ import { SiteNav } from "../_components/site-nav";
 import { TestTypeCard } from "../_components/test-type-card";
 import { StudyProcessTabs, type StudyProcessTab } from "../_components/study-process-tabs";
 import { getLiveTestTypes, getStudiesForType } from "@/lib/findings-registry";
+import { getResultsCaseBrowseMeta } from "@/lib/results-browse-meta";
 
 export const metadata: Metadata = {
   title: "How it works — Model Studies",
@@ -96,9 +97,9 @@ export default function HowItWorksPage() {
       methodology: study.methodology,
       dimensionGlossary: study.dimensionGlossary,
       resultsHref:
-        study.kind === "influence-matrix"
-          ? `/model-studies/results#${type.id}`
-          : `/model-studies/results/${study.id}`,
+        getResultsCaseBrowseMeta(study).publicationStatus === "published"
+          ? `/model-studies/results/${study.id}`
+          : `/model-studies/results#${type.id}`,
     })),
   }));
 

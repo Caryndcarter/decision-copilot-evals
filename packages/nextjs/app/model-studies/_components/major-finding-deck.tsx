@@ -31,12 +31,15 @@ function storyFor(finding: MajorFinding) {
 export function MajorFindingDeck({ findings }: { findings: MajorFinding[] }) {
   const labelId = useId();
   const [index, setIndex] = useState(0);
+  /** Only write a finding hash after the user is on a finding — never steal #authorship etc. */
+  const [ownsHash, setOwnsHash] = useState(false);
   const count = findings.length;
   const finding = findings[index];
 
   const goTo = useCallback(
     (next: number) => {
       if (count === 0) return;
+      setOwnsHash(true);
       setIndex(((next % count) + count) % count);
     },
     [count]
@@ -46,15 +49,18 @@ export function MajorFindingDeck({ findings }: { findings: MajorFinding[] }) {
     const raw = window.location.hash.replace(/^#/, "");
     if (!raw) return;
     const i = findings.findIndex((f) => f.id === raw);
-    if (i >= 0) setIndex(i);
+    if (i >= 0) {
+      setIndex(i);
+      setOwnsHash(true);
+    }
   }, [findings]);
 
   useEffect(() => {
-    if (!finding) return;
+    if (!finding || !ownsHash) return;
     const url = new URL(window.location.href);
     url.hash = finding.id;
     window.history.replaceState(null, "", url);
-  }, [finding]);
+  }, [finding, ownsHash]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -81,7 +87,10 @@ export function MajorFindingDeck({ findings }: { findings: MajorFinding[] }) {
     .filter(Boolean);
 
   return (
-    <div>
+    <div className="relative">
+      {findings.map((f) => (
+        <span key={f.id} id={f.id} className="absolute -top-28" aria-hidden />
+      ))}
       <div
         className="flex flex-wrap items-center gap-2"
         role="tablist"

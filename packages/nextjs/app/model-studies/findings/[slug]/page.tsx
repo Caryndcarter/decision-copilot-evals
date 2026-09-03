@@ -197,12 +197,12 @@ export default async function FindingStoryPage({
             >
               See all results →
             </Link>
-            <Link
-              href="/model-studies#findings"
+            <FindingStoryBackLink
+              fromParam={from}
+              resultsHash={majorFinding?.id}
+              placement="footer"
               className="rounded-lg border border-zinc-700 bg-zinc-900 px-6 py-3 text-sm font-semibold text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-            >
-              Back to findings
-            </Link>
+            />
           </div>
         </div>
       </section>
