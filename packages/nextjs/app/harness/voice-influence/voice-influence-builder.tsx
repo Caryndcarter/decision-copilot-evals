@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { POSTURES, postureRequiresLeaning, type Posture } from "@/types/decision";
 import {
   COMING_LATER_STUDY_TYPES,
+  HORMUZ_CANNED_DEMO,
   VOICE_INFLUENCE_INTAKE_FIELDS,
   VOICE_INFLUENCE_SLOTS,
   VOICE_INFLUENCE_STUDY_TYPE,
@@ -14,6 +15,7 @@ import {
   slotByKey,
   type VoiceInfluenceCase,
   type VoiceInfluenceCaseSetDraft,
+  type VoiceInfluenceDraftInput,
   type VoiceInfluenceIntakeField,
 } from "@/lib/voice-influence-case-set";
 
@@ -95,7 +97,9 @@ export function VoiceInfluenceBuilder({ draft }: { draft: VoiceInfluenceCaseSetD
   const [conditions, setConditions] = useState<VoiceInfluenceCase[]>(draft.conditions);
   const [view, setView] = useState<"edit" | "compare">("edit");
   const [activeSlot, setActiveSlot] = useState(conditions[0]?.id ?? "c1");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "loading-hormuz" | "error">(
+    "idle"
+  );
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState(draft.updatedAt);
 
@@ -106,6 +110,35 @@ export function VoiceInfluenceBuilder({ draft }: { draft: VoiceInfluenceCaseSetD
   function updateCondition(id: string, patch: Partial<VoiceInfluenceCase>) {
     setConditions((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
     setStatus("idle");
+  }
+
+  async function loadHormuzTemplate() {
+    const dirty = conditions.some((c) => c.situation.trim().length > 0);
+    if (dirty && !window.confirm("Replace this draft’s C1–C5 with the canned Hormuz battery?")) {
+      return;
+    }
+    setStatus("loading-hormuz");
+    setError(null);
+    try {
+      const res = await fetch("/api/harness/voice-influence-drafts/templates/hormuz");
+      const json = (await res.json()) as {
+        ok?: boolean;
+        draft?: VoiceInfluenceDraftInput;
+        error?: string;
+      };
+      if (!res.ok || !json.draft) {
+        throw new Error(json.error || "Could not load Hormuz template");
+      }
+      setName(json.draft.name);
+      setDecision(json.draft.decision);
+      setDomain(json.draft.domain);
+      setConditions(json.draft.conditions);
+      setActiveSlot("c1");
+      setStatus("idle");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Could not load Hormuz template");
+    }
   }
 
   async function saveDraft() {
@@ -152,12 +185,20 @@ export function VoiceInfluenceBuilder({ draft }: { draft: VoiceInfluenceCaseSetD
             start harness runs.
           </p>
         </div>
-        <Link
-          href="/harness/voice-influence"
-          className="text-sm font-medium text-zinc-500 hover:text-zinc-800"
-        >
-          ← All drafts
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href="/harness/voice-influence"
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-800"
+          >
+            ← All drafts
+          </Link>
+          <Link
+            href={HORMUZ_CANNED_DEMO.findingsHref}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            View Hormuz findings
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -220,6 +261,20 @@ export function VoiceInfluenceBuilder({ draft }: { draft: VoiceInfluenceCaseSetD
               placeholder="e.g. tanker ops, PE roll-up"
             />
           </label>
+        </div>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => void loadHormuzTemplate()}
+            disabled={status === "loading-hormuz" || status === "saving"}
+            className="text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:opacity-60"
+          >
+            {status === "loading-hormuz" ? "Loading Hormuz…" : "Load Hormuz (Meran Tankers)"}
+          </button>
+          <p className="mt-1 text-xs text-zinc-500">
+            Fills C1–C5 from the committed battery. Does not call models. Use View Hormuz
+            findings for the already-coded study.
+          </p>
         </div>
       </section>
 
@@ -490,7 +545,7 @@ export function VoiceInfluenceBuilder({ draft }: { draft: VoiceInfluenceCaseSetD
         <button
           type="button"
           onClick={() => void saveDraft()}
-          disabled={status === "saving"}
+          disabled={status === "saving" || status === "loading-hormuz"}
           className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
         >
           {status === "saving" ? "Saving…" : "Save draft"}

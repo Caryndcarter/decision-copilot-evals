@@ -3,25 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { VoiceInfluenceDraftSummary } from "@/lib/voice-influence-case-set";
+import {
+  HORMUZ_CANNED_DEMO,
+  type VoiceInfluenceDraftSummary,
+} from "@/lib/voice-influence-case-set";
 
 export function VoiceInfluenceDraftList({ drafts }: { drafts: VoiceInfluenceDraftSummary[] }) {
   const router = useRouter();
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<"blank" | "hormuz" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function createDraft() {
-    setCreating(true);
+  async function createDraft(template?: "hormuz") {
+    setCreating(template ?? "blank");
     setError(null);
     try {
-      const res = await fetch("/api/harness/voice-influence-drafts", { method: "POST" });
+      const res = await fetch("/api/harness/voice-influence-drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(template === "hormuz" ? { template: "hormuz" } : {}),
+      });
       const json = (await res.json()) as { ok?: boolean; draft?: { id: string }; error?: string };
       if (!res.ok || !json.draft?.id) {
         throw new Error(json.error || "Could not create draft");
       }
       router.push(`/harness/voice-influence/${json.draft.id}`);
     } catch (err) {
-      setCreating(false);
+      setCreating(null);
       setError(err instanceof Error ? err.message : "Could not create draft");
     }
   }
@@ -35,12 +42,40 @@ export function VoiceInfluenceDraftList({ drafts }: { drafts: VoiceInfluenceDraf
         <button
           type="button"
           onClick={() => void createDraft()}
-          disabled={creating}
+          disabled={creating !== null}
           className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
         >
-          {creating ? "Creating…" : "New Voice Influence case set"}
+          {creating === "blank" ? "Creating…" : "New Voice Influence case set"}
         </button>
       </div>
+
+      <section className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-5 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-700">
+          Canned demo
+        </p>
+        <h2 className="mt-1 text-base font-semibold text-zinc-900">{HORMUZ_CANNED_DEMO.name}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-zinc-600">
+          Opens the existing Meran Tankers C1–C5 battery in the builder (same Hormuz intake
+          fields). Findings are the committed Hormuz study — this does not start new model runs.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void createDraft("hormuz")}
+            disabled={creating !== null}
+            className="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-indigo-800 ring-1 ring-indigo-200 hover:bg-indigo-50 disabled:opacity-60"
+          >
+            {creating === "hormuz" ? "Opening…" : "Open Hormuz in the builder"}
+          </button>
+          <Link
+            href={HORMUZ_CANNED_DEMO.findingsHref}
+            className="inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-semibold text-indigo-800 hover:bg-white/80"
+          >
+            View Hormuz findings
+          </Link>
+        </div>
+      </section>
+
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
       {drafts.length === 0 ? (
         <p className="rounded-xl border border-dashed border-zinc-300 bg-white px-5 py-10 text-center text-sm text-zinc-500">

@@ -3,6 +3,7 @@ import { HORMUZ_VOICE_CASES } from "./hormuz-voice-cases";
 import { MERIDIAN_IC_VOICE_CASES } from "./meridian-ic-voice-cases";
 import {
   COMING_LATER_STUDY_TYPES,
+  HORMUZ_CANNED_DEMO,
   VOICE_INFLUENCE_INTAKE_FIELDS,
   VOICE_INFLUENCE_SLOTS,
   VOICE_INFLUENCE_STUDY_TYPE,
@@ -11,6 +12,7 @@ import {
   parseVoiceInfluenceCase,
   parseVoiceInfluenceDraftInput,
 } from "./voice-influence-case-set";
+import { hormuzTemplateDraftInput } from "./voice-influence-hormuz-template";
 
 const INTAKE_KEYS = [
   "situation",
@@ -88,6 +90,18 @@ describe("Voice Influence case-set schema", () => {
     expect(removed).toContain("hedged");
     expect(added).toContain("locked");
     expect(tokens.some((t) => t.kind === "same" && t.text === "same")).toBe(true);
+  });
+
+  it("maps the Hormuz battery onto C1–C5 without new runs", () => {
+    const template = hormuzTemplateDraftInput();
+    expect(template.name).toBe(HORMUZ_CANNED_DEMO.name);
+    expect(template.conditions).toHaveLength(5);
+    expect(template.conditions.map((c) => c.id)).toEqual(["c1", "c2", "c3", "c4", "c5"]);
+    expect(template.conditions[0]!.situation).toBe(HORMUZ_VOICE_CASES[0]!.situation);
+    expect(template.conditions[2]!.situation).toBe(HORMUZ_VOICE_CASES[2]!.situation);
+    expect(HORMUZ_CANNED_DEMO.findingsHref).toBe("/harness/findings?study=hormuz-moral");
+    const parsed = parseVoiceInfluenceDraftInput(template);
+    expect(parsed.ok).toBe(true);
   });
 
   it("keeps other study types disabled / coming later", () => {

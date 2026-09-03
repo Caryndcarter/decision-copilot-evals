@@ -5,6 +5,7 @@ import {
   listVoiceInfluenceDraftsForUser,
 } from "@/lib/db/voice-influence-drafts";
 import { parseVoiceInfluenceDraftInput } from "@/lib/voice-influence-case-set";
+import { hormuzTemplateDraftInput } from "@/lib/voice-influence-hormuz-template";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,14 @@ export async function POST(request: Request) {
   }
   try {
     const body = await request.json().catch(() => ({}));
+    if (
+      body &&
+      typeof body === "object" &&
+      (body as { template?: unknown }).template === "hormuz"
+    ) {
+      const draft = await createVoiceInfluenceDraft(session.user.id, hormuzTemplateDraftInput());
+      return NextResponse.json({ ok: true, draft }, { status: 201 });
+    }
     const hasPayload =
       body &&
       typeof body === "object" &&

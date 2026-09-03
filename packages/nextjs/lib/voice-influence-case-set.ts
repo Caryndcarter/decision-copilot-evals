@@ -143,6 +143,16 @@ export const COMING_LATER_STUDY_TYPES: readonly {
 
 const EMPTY_RESEARCH = { label: "", group_title: "", prompt: "" };
 
+/** Track A canned demo — existing Hormuz battery + committed findings. No new runs. */
+export const HORMUZ_CANNED_DEMO = {
+  template: "hormuz",
+  name: "Hormuz · Meran Tankers (canned demo)",
+  decision:
+    "Keep fulfilling Hormuz-transiting charters under escort, or shift Gulf-facing contracts to the Cape of Good Hope?",
+  domain: "tanker ops",
+  findingsHref: "/harness/findings?study=hormuz-moral",
+} as const;
+
 export function slotByKey(key: string): VoiceInfluenceSlot | undefined {
   return VOICE_INFLUENCE_SLOTS.find((s) => s.key === key);
 }
