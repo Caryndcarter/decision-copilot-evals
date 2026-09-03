@@ -31,8 +31,12 @@ export const authConfig: NextAuthConfig = {
         return true;
       }
 
-      // Decision + admin APIs require a session (401 when unauthenticated).
-      if (path.startsWith("/api/decision") || path.startsWith("/api/admin")) {
+      // Decision + admin + researcher harness APIs require a session (401 when unauthenticated).
+      if (
+        path.startsWith("/api/decision") ||
+        path.startsWith("/api/admin") ||
+        path.startsWith("/api/harness")
+      ) {
         return isLoggedIn;
       }
 

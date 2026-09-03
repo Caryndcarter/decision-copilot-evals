@@ -33,6 +33,8 @@ Production Dynamo app lives in [`decision-copilot-dynamodb`](https://github.com/
 
 Open **`/harness/findings`** (linked from My Decisions → Harness). Legacy routes `/harness/meridian-ic/moral` and `/harness/demos/authorship` redirect here.
 
+Researcher authoring (signed-in, not public Model Studies): **`/harness/voice-influence`** drafts a new C1–C5 Voice Influence case set using the Hormuz / Meridian IC intake fields. Launch study is disabled — drafts do not start harness runs.
+
 Study switcher:
 
 1. **Meridian IC moral** — committed snapshot batches (provider Decision Briefs, Civitas-specific 14 dims)
