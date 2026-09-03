@@ -145,9 +145,11 @@ export default async function FindingStoryPage({
             <p className="mt-2 max-w-2xl text-sm text-zinc-500">
               Blind-coded counts behind this finding — the judge never saw which provider wrote which
               brief.{" "}
-              {hasSnippets
+              {finding.slug === "gemini-capital-side"
                 ? "Each chart names the case it came from and links to it; Gemini\u2019s column is boxed in red."
-                : "Open a case for the full scoreboard and methodology."}
+                : hasSnippets
+                  ? "Each chart names the case it came from and links to it."
+                  : "Open a case for the full scoreboard and methodology."}
             </p>
 
             {majorFinding ? (
