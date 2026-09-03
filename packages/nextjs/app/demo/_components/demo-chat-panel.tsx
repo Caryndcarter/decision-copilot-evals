@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DEMO_CHAT_RAIL_STICKY_CLASS } from "@/app/demo/_components/demo-brief-toolbar";
 import { runProviderLabel } from "@/lib/run-display-name";
 import { ResearchMarkdown } from "@/app/run/research-markdown";
 import type { DemoChatScript, DemoChatTurn } from "@/app/demo/_data/demo-chat-script";
@@ -27,7 +28,7 @@ function DemoChatBubbles({
   return (
     <div
       ref={listRef}
-      className="max-h-[min(360px,46vh)] min-h-[200px] space-y-4 overflow-y-auto p-4"
+      className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4"
       aria-label="Demo chat messages"
     >
       {messages.length === 0 && !thinking ? (
@@ -78,13 +79,28 @@ export function DemoChatPanel({
   const [thinking, setThinking] = useState(false);
   const [sendingGlow, setSendingGlow] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [running, setRunning] = useState(false);
   const [replayNonce, setReplayNonce] = useState(0);
+  const playRef = useRef(play);
+
+  useEffect(() => {
+    const leftGuideStep = playRef.current && !play;
+    playRef.current = play;
+    if (!leftGuideStep) return;
+    setRunning(false);
+    setInput("");
+    setThinking(false);
+    setSendingGlow(false);
+    setMessages(script.turns);
+    setComplete(true);
+  }, [play, script]);
 
   useEffect(() => {
     if (!play && replayNonce === 0) return;
     let cancelled = false;
 
     const run = async () => {
+      setRunning(true);
       setComplete(false);
       setMessages([]);
       setInput("");
@@ -131,7 +147,10 @@ export function DemoChatPanel({
           });
         }
       }
-      if (!cancelled) setComplete(true);
+      if (!cancelled) {
+        setComplete(true);
+        setRunning(false);
+      }
     };
 
     void run();
@@ -140,23 +159,10 @@ export function DemoChatPanel({
     };
   }, [play, replayNonce, script]);
 
-  useEffect(() => {
-    if (play) return;
-    const user = script.turns.find((t) => t.role === "user");
-    const assistant = script.turns.find((t) => t.role === "assistant");
-    if (complete || (user && assistant && messages.length > 0)) {
-      setInput("");
-      setThinking(false);
-      setSendingGlow(false);
-      setMessages(script.turns);
-      setComplete(true);
-    }
-  }, [play, complete, messages.length, script]);
-
   return (
     <aside
       data-demo-spot="demo-chat"
-      className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm lg:sticky lg:top-28"
+      className={`flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm ${DEMO_CHAT_RAIL_STICKY_CLASS}`}
     >
       {variant === "decision" ? (
         <div className="border-b border-zinc-200 px-4 py-3">
@@ -216,7 +222,7 @@ export function DemoChatPanel({
         <div className="mt-3 flex w-full flex-wrap items-center justify-between gap-2">
           <p className="text-[11px] leading-snug text-zinc-400">Demo replay — not a live chat.</p>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {complete || messages.length === 0 ? (
+            {!running ? (
               <button
                 type="button"
                 onClick={() => setReplayNonce((n) => n + 1)}

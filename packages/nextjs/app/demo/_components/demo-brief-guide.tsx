@@ -75,9 +75,12 @@ function applyHighlight(spots: readonly string[], on: boolean) {
 function cardStyle(box: Box): { top: number; left: number; arrow: "up" | "down" | "right" } {
   const cardW = 320;
   const gap = 16;
-  if (box.left > cardW + 40 && box.left + box.width / 2 > window.innerWidth * 0.52) {
+  const roomLeft = box.left > cardW + 40;
+  const rightHalf = box.left + box.width / 2 > window.innerWidth * 0.52;
+  // Tall right-rail spots (the discuss panel) should sit beside the card, not under it.
+  if (roomLeft && (rightHalf || box.height > 280)) {
     return {
-      top: Math.min(Math.max(16, box.top), window.innerHeight - 200),
+      top: Math.min(Math.max(16, box.top + 8), window.innerHeight - 200),
       left: box.left - cardW - gap,
       arrow: "right",
     };

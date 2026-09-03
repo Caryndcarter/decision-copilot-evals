@@ -20,6 +20,10 @@ const viewToggleClass = {
 const STICKY_TOOLBAR_CLASS =
   "sticky top-[6.75rem] z-40 border-b border-zinc-200 bg-white shadow-sm";
 
+/** Sit below the toolbar (title + excerpt note) so the discuss rail is not covered. */
+export const DEMO_CHAT_RAIL_STICKY_CLASS =
+  "lg:sticky lg:top-[12.5rem] lg:max-h-[calc(100vh-13.25rem)]";
+
 /** Shared on Decision Brief and Unified Brief so the short sample is labeled. */
 export const DEMO_BRIEF_EXCERPT_NOTE =
   "Shortened for the tour. A live brief is usually much longer and more detailed.";

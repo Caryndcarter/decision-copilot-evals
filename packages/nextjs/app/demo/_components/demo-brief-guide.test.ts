@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_BRIEF_GUIDE_STEPS } from "./demo-brief-guide";
+import { DEMO_BRIEF_GUIDE_STEPS, DEMO_UNIFIED_GUIDE_STEPS } from "./demo-brief-guide";
 // The Vercel/AWS tour is archived (not the active dataset); this guard covers
 // the content scrub that applied to it specifically.
 import { TOUR_RUNS } from "@/app/tour/_data/tour-demo-data-vercel-aws";
@@ -19,6 +19,12 @@ describe("demo Decision Brief guide", () => {
     expect(copy).toMatch(/collapsed/i);
     expect(copy).toMatch(/chat/i);
     expect(copy).toMatch(/API/i);
+  });
+
+  it("pauses the Unified Brief guide on the canned discuss rail", () => {
+    expect(DEMO_UNIFIED_GUIDE_STEPS.map((s) => s.spot)).toEqual(["demo-chat"]);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[0].pauseAuto).toBe(true);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[0].body).toMatch(/no live model/i);
   });
 
   it("replaces the xAI dogfood line with a plain-language trial", () => {
