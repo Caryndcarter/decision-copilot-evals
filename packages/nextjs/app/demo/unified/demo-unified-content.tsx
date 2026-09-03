@@ -1,11 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useState } from "react";
 import { BriefGeneratedDateLine } from "@/app/components/brief-generated-date";
 import { CollapsibleBlock } from "@/app/run/collapsible-block";
+import {
+  DemoBriefGuide,
+  DEMO_UNIFIED_GUIDE_STEPS,
+  DEMO_UNIFIED_GUIDE_STORAGE_KEY,
+} from "@/app/demo/_components/demo-brief-guide";
+import { DemoChatPanel } from "@/app/demo/_components/demo-chat-panel";
 import { DemoScrollToTop } from "@/app/demo/_components/demo-scroll-to-top";
 import { DemoBriefTitleBanner, demoBriefBodyClass } from "@/app/demo/_components/demo-brief-title-banner";
 import { demoContentClass } from "@/app/demo/_components/demo-shell";
+import { DEMO_UNIFIED_BRIEF_CHAT } from "@/app/demo/_data/demo-chat-script";
 import {
   DEMO_UNIFIED_AUTHORSHIP_MODE,
   DEMO_UNIFIED_BRIEF,
@@ -20,11 +28,24 @@ import {
 } from "@/lib/unified-briefs";
 
 export function DemoUnifiedContent() {
+  const [chatPlay, setChatPlay] = useState(false);
+  const onSpotChange = useCallback((spot: string | null) => {
+    setChatPlay(spot === "demo-chat");
+  }, []);
+
   return (
     <>
+      <DemoBriefGuide
+        steps={DEMO_UNIFIED_GUIDE_STEPS}
+        storageKey={DEMO_UNIFIED_GUIDE_STORAGE_KEY}
+        restartLabel="Show how chat works"
+        onSpotChange={onSpotChange}
+      />
       <DemoScrollToTop resetKey="unified" />
 
-      <div className={`${demoBriefBodyClass} ${demoContentClass}`}>
+      <div className={`${demoBriefBodyClass} mx-auto max-w-[1400px] px-6`}>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div>
         <DemoBriefTitleBanner title={DEMO_UNIFIED_BRIEF.title}>
           <p className="mt-1 text-xs text-zinc-500">
             Synthesized by {unifiedBriefSynthesizerLabel(DEMO_UNIFIED_SYNTHESIZER)} ·{" "}
@@ -87,6 +108,9 @@ export function DemoUnifiedContent() {
               ))}
             </ul>
           </CollapsibleBlock>
+        </div>
+          </div>
+          <DemoChatPanel script={DEMO_UNIFIED_BRIEF_CHAT} play={chatPlay} variant="unified" />
         </div>
       </div>
 

@@ -3,11 +3,21 @@
 import { useCallback, useEffect, useState } from "react";
 
 export const DEMO_BRIEF_GUIDE_STORAGE_KEY = "dc-demo-brief-guide";
+export const DEMO_UNIFIED_GUIDE_STORAGE_KEY = "dc-demo-unified-guide";
 
-export const DEMO_BRIEF_GUIDE_STEPS = [
+export type DemoGuideStep = {
+  spot: string;
+  extraSpots: readonly string[];
+  title: string;
+  body: string;
+  /** Stay on this step until Next — used for the chat replay. */
+  pauseAuto?: boolean;
+};
+
+export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
   {
     spot: "provider-picker",
-    extraSpots: [] as string[],
+    extraSpots: [],
     title: "Switch models here",
     body: "This menu is how you compare Decision Briefs. Each model — OpenAI, Anthropic, Gemini, and xAI — wrote its own brief on the same intake. Open it and pick another name.",
   },
@@ -18,12 +28,29 @@ export const DEMO_BRIEF_GUIDE_STEPS = [
     body: "Risk, reversibility, and stakeholders start closed. The decision brief is open so you have something to read. Use the jump links, click a header, or Expand all.",
   },
   {
+    spot: "demo-chat",
+    extraSpots: [],
+    title: "Then ask about the brief",
+    body: "On a live run this sidebar is chat. Watch a canned question type in and the model reply — nothing is sent to an API.",
+    pauseAuto: true,
+  },
+  {
     spot: "unified-cta",
     extraSpots: [],
     title: "When you have compared a couple",
     body: "Continue to the Unified Brief to see where the models disagreed and how Decision Copilot combines them.",
   },
-] as const;
+];
+
+export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
+  {
+    spot: "demo-chat",
+    extraSpots: [],
+    title: "Chat works here too",
+    body: "The Unified Brief has the same discuss rail. This replay asks why not lock the twelve-month NOC — again, no live model call.",
+    pauseAuto: true,
+  },
+];
 
 const AUTO_MS = 7000;
 
@@ -37,7 +64,7 @@ function measure(spot: string): Box | null {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
-function applyHighlight(spots: string[], on: boolean) {
+function applyHighlight(spots: readonly string[], on: boolean) {
   for (const spot of spots) {
     document.querySelectorAll<HTMLElement>(`[data-demo-spot="${spot}"]`).forEach((el) => {
       el.classList.toggle("demo-spot-active", on);
@@ -45,9 +72,16 @@ function applyHighlight(spots: string[], on: boolean) {
   }
 }
 
-function cardStyle(box: Box): { top: number; left: number; arrow: "up" | "down" } {
+function cardStyle(box: Box): { top: number; left: number; arrow: "up" | "down" | "right" } {
   const cardW = 320;
   const gap = 16;
+  if (box.left > cardW + 40 && box.left + box.width / 2 > window.innerWidth * 0.52) {
+    return {
+      top: Math.min(Math.max(16, box.top), window.innerHeight - 200),
+      left: box.left - cardW - gap,
+      arrow: "right",
+    };
+  }
   const left = Math.min(Math.max(16, box.left + box.width / 2 - cardW / 2), window.innerWidth - cardW - 16);
   const below = box.top + box.height + gap;
   if (below + 200 < window.innerHeight || box.top < 180) {
@@ -56,7 +90,17 @@ function cardStyle(box: Box): { top: number; left: number; arrow: "up" | "down" 
   return { top: Math.max(16, box.top - gap - 168), left, arrow: "down" };
 }
 
-export function DemoBriefGuide() {
+export function DemoBriefGuide({
+  steps = DEMO_BRIEF_GUIDE_STEPS,
+  storageKey = DEMO_BRIEF_GUIDE_STORAGE_KEY,
+  restartLabel = "Show how to compare models",
+  onSpotChange,
+}: {
+  steps?: readonly DemoGuideStep[];
+  storageKey?: string;
+  restartLabel?: string;
+  onSpotChange?: (spot: string | null) => void;
+}) {
   const [ready, setReady] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(0);
@@ -65,33 +109,38 @@ export function DemoBriefGuide() {
 
   const persistDismiss = useCallback(() => {
     try {
-      sessionStorage.setItem(DEMO_BRIEF_GUIDE_STORAGE_KEY, "dismissed");
+      sessionStorage.setItem(storageKey, "dismissed");
     } catch {
       /* ignore */
     }
     setDismissed(true);
-  }, []);
+    onSpotChange?.(null);
+  }, [onSpotChange, storageKey]);
 
   const restart = useCallback(() => {
     try {
-      sessionStorage.removeItem(DEMO_BRIEF_GUIDE_STORAGE_KEY);
+      sessionStorage.removeItem(storageKey);
     } catch {
       /* ignore */
     }
     setStep(0);
     setDismissed(false);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     try {
-      setDismissed(sessionStorage.getItem(DEMO_BRIEF_GUIDE_STORAGE_KEY) === "dismissed");
+      setDismissed(sessionStorage.getItem(storageKey) === "dismissed");
     } catch {
       setDismissed(false);
     }
     setReady(true);
-  }, []);
+  }, [storageKey]);
 
-  const current = DEMO_BRIEF_GUIDE_STEPS[step];
+  const current = steps[step];
+
+  useEffect(() => {
+    onSpotChange?.(dismissed || !current ? null : current.spot);
+  }, [current, dismissed, onSpotChange]);
 
   useEffect(() => {
     if (!ready || dismissed || !current) return;
@@ -115,13 +164,13 @@ export function DemoBriefGuide() {
   }, [ready, dismissed, step, current]);
 
   useEffect(() => {
-    if (!ready || dismissed || paused) return;
+    if (!ready || dismissed || paused || current?.pauseAuto) return;
     const id = window.setTimeout(() => {
-      if (step >= DEMO_BRIEF_GUIDE_STEPS.length - 1) persistDismiss();
+      if (step >= steps.length - 1) persistDismiss();
       else setStep((s) => s + 1);
     }, AUTO_MS);
     return () => window.clearTimeout(id);
-  }, [ready, dismissed, paused, step, persistDismiss]);
+  }, [ready, dismissed, paused, step, persistDismiss, current, steps.length]);
 
   if (!ready) return null;
 
@@ -133,7 +182,7 @@ export function DemoBriefGuide() {
           onClick={restart}
           className="pointer-events-auto rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-md hover:bg-indigo-50"
         >
-          Show how to compare models
+          {restartLabel}
         </button>
       </div>
     );
@@ -170,14 +219,19 @@ export function DemoBriefGuide() {
             aria-hidden
             className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-indigo-200 bg-white"
           />
-        ) : (
+        ) : pos.arrow === "down" ? (
           <span
             aria-hidden
             className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b border-r border-indigo-200 bg-white"
           />
+        ) : (
+          <span
+            aria-hidden
+            className="absolute top-6 -right-2 h-4 w-4 rotate-45 border-r border-t border-indigo-200 bg-white"
+          />
         )}
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-indigo-600">
-          Step {step + 1} of {DEMO_BRIEF_GUIDE_STEPS.length}
+          Step {step + 1} of {steps.length}
         </p>
         <h3 className="mt-1 text-sm font-semibold text-zinc-900">{current.title}</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{current.body}</p>
@@ -202,12 +256,12 @@ export function DemoBriefGuide() {
             <button
               type="button"
               onClick={() => {
-                if (step >= DEMO_BRIEF_GUIDE_STEPS.length - 1) persistDismiss();
+                if (step >= steps.length - 1) persistDismiss();
                 else setStep((s) => s + 1);
               }}
               className="rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
             >
-              {step >= DEMO_BRIEF_GUIDE_STEPS.length - 1 ? "Done" : "Next"}
+              {step >= steps.length - 1 ? "Done" : "Next"}
             </button>
           </div>
         </div>

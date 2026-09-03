@@ -22,11 +22,12 @@ const STEPS = [
   {
     title: "Compare model briefs",
     description:
-      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections to read each model's lenses.",
+      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections, then watch the discuss rail replay a canned chat — no live model call.",
   },
   {
     title: "Read the Unified Brief",
-    description: "See where models disagreed and how Decision Copilot synthesizes a single recommendation.",
+    description:
+      "See where models disagreed, how Decision Copilot synthesizes a single recommendation, and the same discuss rail on the Unified Brief.",
   },
 ] as const;
 

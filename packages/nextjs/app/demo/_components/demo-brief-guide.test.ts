@@ -5,16 +5,20 @@ import { DEMO_BRIEF_GUIDE_STEPS } from "./demo-brief-guide";
 import { TOUR_RUNS } from "@/app/tour/_data/tour-demo-data-vercel-aws";
 
 describe("demo Decision Brief guide", () => {
-  it("walks picker, collapsed sections, then Unified Brief", () => {
+  it("walks picker, collapsed sections, canned chat, then Unified Brief", () => {
     expect(DEMO_BRIEF_GUIDE_STEPS.map((s) => s.spot)).toEqual([
       "provider-picker",
       "analysis-sections",
+      "demo-chat",
       "unified-cta",
     ]);
     expect(DEMO_BRIEF_GUIDE_STEPS[1].extraSpots).toContain("lens-section");
+    expect(DEMO_BRIEF_GUIDE_STEPS[2].pauseAuto).toBe(true);
     const copy = DEMO_BRIEF_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
     expect(copy).not.toMatch(/dogfood/i);
     expect(copy).toMatch(/collapsed/i);
+    expect(copy).toMatch(/chat/i);
+    expect(copy).toMatch(/API/i);
   });
 
   it("replaces the xAI dogfood line with a plain-language trial", () => {
