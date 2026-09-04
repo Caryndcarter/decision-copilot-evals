@@ -174,7 +174,7 @@ export function DemoUnifiedContent() {
               },
               {
                 title: "We review and send an invite",
-                body: "If it's a fit, you'll get an invitation link at that email from Finlayson Studio.",
+                body: "You'll get an invitation link at that email from Finlayson Studio.",
               },
               {
                 title: "Sign in and start a real decision",
