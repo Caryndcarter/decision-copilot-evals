@@ -46,6 +46,8 @@ describe("demo Decision Brief guide", () => {
     expect(copy).toMatch(/type in a question/i);
     expect(copy).not.toMatch(/canned/i);
     expect(copy).not.toMatch(/no live model/i);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[2].title).toBe(DEMO_BRIEF_GUIDE_STEPS[2].title);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[2].body).toBe(DEMO_BRIEF_GUIDE_STEPS[2].body);
   });
 
   it("replaces the xAI dogfood line with a plain-language trial", () => {

@@ -65,7 +65,7 @@ export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "demo-chat",
     extraSpots: [],
     title: "Then ask about the brief",
-    body: "Chat works here too. Watch how to type in a question and see the model reply.",
+    body: "This sidebar is chat. Watch how to type in a question and see the model reply.",
     pauseAuto: true,
   },
   {
