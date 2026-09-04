@@ -66,12 +66,12 @@ function DemoChatBubbles({
 
 export function DemoChatPanel({
   script,
-  play,
+  playKey,
   variant,
 }: {
   script: DemoChatScript;
-  /** When true, replay the canned exchange. */
-  play: boolean;
+  /** Increment to start or restart the canned exchange. 0 waits. */
+  playKey: number;
   variant: "decision" | "unified";
 }) {
   const [input, setInput] = useState("");
@@ -81,22 +81,9 @@ export function DemoChatPanel({
   const [complete, setComplete] = useState(false);
   const [running, setRunning] = useState(false);
   const [replayNonce, setReplayNonce] = useState(0);
-  const playRef = useRef(play);
 
   useEffect(() => {
-    const leftGuideStep = playRef.current && !play;
-    playRef.current = play;
-    if (!leftGuideStep) return;
-    setRunning(false);
-    setInput("");
-    setThinking(false);
-    setSendingGlow(false);
-    setMessages(script.turns);
-    setComplete(true);
-  }, [play, script]);
-
-  useEffect(() => {
-    if (!play && replayNonce === 0) return;
+    if (playKey === 0 && replayNonce === 0) return;
     let cancelled = false;
 
     const run = async () => {
@@ -157,7 +144,7 @@ export function DemoChatPanel({
     return () => {
       cancelled = true;
     };
-  }, [play, replayNonce, script]);
+  }, [playKey, replayNonce, script]);
 
   return (
     <aside

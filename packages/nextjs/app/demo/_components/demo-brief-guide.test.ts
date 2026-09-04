@@ -19,12 +19,22 @@ describe("demo Decision Brief guide", () => {
     expect(copy).toMatch(/collapsed/i);
     expect(copy).toMatch(/chat/i);
     expect(copy).toMatch(/API/i);
+    expect(copy).toMatch(/multiple outputs/i);
+    expect(copy).not.toMatch(/compared a couple/i);
   });
 
-  it("pauses the Unified Brief guide on the canned discuss rail", () => {
-    expect(DEMO_UNIFIED_GUIDE_STEPS.map((s) => s.spot)).toEqual(["demo-chat"]);
+  it("walks synthesizer pick, author disclosure, then canned chat on the Unified Brief", () => {
+    expect(DEMO_UNIFIED_GUIDE_STEPS.map((s) => s.spot)).toEqual([
+      "unified-synthesizer",
+      "unified-attribution",
+      "demo-chat",
+    ]);
     expect(DEMO_UNIFIED_GUIDE_STEPS[0].pauseAuto).toBe(true);
-    expect(DEMO_UNIFIED_GUIDE_STEPS[0].body).toMatch(/no live model/i);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[2].pauseAuto).toBe(true);
+    const copy = DEMO_UNIFIED_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
+    expect(copy).toMatch(/ChatGPT/i);
+    expect(copy).toMatch(/Blind/i);
+    expect(copy).toMatch(/no live model/i);
   });
 
   it("replaces the xAI dogfood line with a plain-language trial", () => {

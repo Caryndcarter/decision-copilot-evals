@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { DemoGuideState } from "@/app/demo/_components/demo-replay";
 
 export const DEMO_BRIEF_GUIDE_STORAGE_KEY = "dc-demo-brief-guide";
 export const DEMO_UNIFIED_GUIDE_STORAGE_KEY = "dc-demo-unified-guide";
@@ -37,17 +38,30 @@ export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
   {
     spot: "unified-cta",
     extraSpots: [],
-    title: "When you have compared a couple",
+    title: "When you have compared multiple outputs",
     body: "Continue to the Unified Brief to see where the models disagreed and how Decision Copilot combines them.",
   },
 ];
 
 export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
   {
+    spot: "unified-synthesizer",
+    extraSpots: [],
+    title: "Choose who writes the Unified Brief",
+    body: "On a live run you pick the synthesizer and authorship mode. This tour selects ChatGPT under Blind — the product default — then generates the brief. You cannot change the pick here.",
+    pauseAuto: true,
+  },
+  {
+    spot: "unified-attribution",
+    extraSpots: [],
+    title: "The brief names its author",
+    body: "Synthesized by ChatGPT · Blind authorship. A separate judge (Gemini here) fact-checks public claims. That disclosure is how you see who created it.",
+  },
+  {
     spot: "demo-chat",
     extraSpots: [],
-    title: "Chat works here too",
-    body: "The Unified Brief has the same discuss rail. This replay asks why not lock the twelve-month NOC — again, no live model call.",
+    title: "Then ask about the brief",
+    body: "The discuss rail works here too. This replay asks why not lock the twelve-month NOC — again, no live model call.",
     pauseAuto: true,
   },
 ];
@@ -98,15 +112,18 @@ export function DemoBriefGuide({
   storageKey = DEMO_BRIEF_GUIDE_STORAGE_KEY,
   restartLabel = "Show how to compare models",
   onSpotChange,
+  onGuideState,
 }: {
   steps?: readonly DemoGuideStep[];
   storageKey?: string;
   restartLabel?: string;
   onSpotChange?: (spot: string | null) => void;
+  onGuideState?: (state: DemoGuideState) => void;
 }) {
   const [ready, setReady] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(0);
+  const [generation, setGeneration] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [paused, setPaused] = useState(false);
 
@@ -128,6 +145,7 @@ export function DemoBriefGuide({
     }
     setStep(0);
     setDismissed(false);
+    setGeneration((g) => g + 1);
   }, [storageKey]);
 
   useEffect(() => {
@@ -142,8 +160,10 @@ export function DemoBriefGuide({
   const current = steps[step];
 
   useEffect(() => {
-    onSpotChange?.(dismissed || !current ? null : current.spot);
-  }, [current, dismissed, onSpotChange]);
+    const spot = dismissed || !current ? null : current.spot;
+    onSpotChange?.(spot);
+    onGuideState?.({ ready, dismissed, spot, generation });
+  }, [current, dismissed, generation, onGuideState, onSpotChange, ready]);
 
   useEffect(() => {
     if (!ready || dismissed || !current) return;
