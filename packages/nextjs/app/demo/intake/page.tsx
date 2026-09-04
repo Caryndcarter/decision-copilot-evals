@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEMO_INTAKE, DEMO_SCENARIO_LABEL } from "@/app/demo/_data/demo-fixtures";
+import { DemoContinueBar } from "@/app/demo/_components/demo-continue-bar";
+import { DemoTourResetOnMount } from "@/app/demo/_components/demo-tour-reset";
 import { demoContentClass } from "@/app/demo/_components/demo-shell";
 
 const SUBMITTING_STEPS = [
@@ -55,8 +57,18 @@ export default function DemoIntakePage() {
     );
   }
 
+  const continueBar = (
+    <DemoContinueBar
+      className="border-t bg-white"
+      back={{ href: "/tour", label: "← Tour overview" }}
+      forward={{ form: "demo-intake-form", label: "Run think tank →" }}
+    />
+  );
+
   return (
     <>
+      <DemoTourResetOnMount />
+      {continueBar}
       <div className="border-b border-zinc-200 bg-white">
         <div className={`py-8 ${demoContentClass}`}>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Brief your think tank</h1>
@@ -75,6 +87,7 @@ export default function DemoIntakePage() {
         </div>
 
         <form
+          id="demo-intake-form"
           onSubmit={handleSubmit}
           className="space-y-7 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
         >
@@ -145,16 +158,12 @@ export default function DemoIntakePage() {
           <div className="border-t border-zinc-100 pt-4">
             <p className="mb-4 text-sm text-zinc-600">
               Think tank: OpenAI, Anthropic, Google Gemini, xAI — all four models run in parallel.
+              Use Run think tank at the top or bottom of this page.
             </p>
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 sm:w-auto"
-            >
-              Run think tank
-            </button>
           </div>
         </form>
       </div>
+      {continueBar}
     </>
   );
 }

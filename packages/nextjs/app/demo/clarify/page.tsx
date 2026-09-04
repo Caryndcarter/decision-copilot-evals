@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   DEMO_CLARIFICATION_QUESTIONS,
@@ -8,6 +7,7 @@ import {
   getDemoRun,
 } from "@/app/demo/_data/demo-fixtures";
 import { TOUR_CLARIFICATIONS } from "@/app/tour/_data/tour-demo-data";
+import { DemoContinueBar } from "@/app/demo/_components/demo-continue-bar";
 import { demoContentClass } from "@/app/demo/_components/demo-shell";
 import { LENS_THEME_LABELS } from "@/lib/merge-clarification-questions";
 import { runHeadline } from "@/lib/run-display-name";
@@ -16,7 +16,20 @@ export default function DemoClarifyPage() {
   const router = useRouter();
   const headline = runHeadline(getDemoRun("openai"));
 
+  const continueBar = (
+    <DemoContinueBar
+      className="border-t bg-white"
+      back={{ href: "/demo/intake", label: "← Back to intake" }}
+      forward={{
+        onClick: () => router.push("/demo/result?provider=openai", { scroll: true }),
+        label: "Submit answers & view results →",
+      }}
+    />
+  );
+
   return (
+    <>
+      {continueBar}
     <div className={`py-8 ${demoContentClass}`}>
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">Your think tank</p>
@@ -44,19 +57,9 @@ export default function DemoClarifyPage() {
           </div>
         ))}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-4">
-          <Link href="/demo/intake" className="text-sm font-medium text-zinc-600 hover:text-zinc-900">
-            ← Back to intake
-          </Link>
-          <button
-            type="button"
-            onClick={() => router.push("/demo/result?provider=openai", { scroll: true })}
-            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-          >
-            Submit answers & view results
-          </button>
-        </div>
       </div>
     </div>
+      {continueBar}
+    </>
   );
 }

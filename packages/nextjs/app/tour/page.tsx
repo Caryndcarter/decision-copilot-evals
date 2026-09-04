@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppNavBrand } from "@/app/components/app-nav-brand";
 import { PublicSessionNav } from "@/app/components/public-session-nav";
+import { DemoTourResetOnMount } from "@/app/demo/_components/demo-tour-reset";
 
 export const metadata: Metadata = {
   title: "Product tour — Decision Copilot",
@@ -22,17 +23,24 @@ const STEPS = [
   {
     title: "Compare model briefs",
     description:
-      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections to read each model's lenses.",
+      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections, then watch how to type in a question and see the model reply.",
+  },
+  {
+    title: "Choose who writes the Unified Brief",
+    description:
+      "The tour shows the live synthesizer picker and authorship modes, then selects ChatGPT under Blind and generates the brief. The page discloses who wrote it.",
   },
   {
     title: "Read the Unified Brief",
-    description: "See where models disagreed and how Decision Copilot synthesizes a single recommendation.",
+    description:
+      "See where models disagreed, the synthesized recommendation, and the same discuss rail on the Unified Brief.",
   },
 ] as const;
 
 export default function TourPage() {
   return (
     <div className="min-h-screen bg-zinc-50">
+      <DemoTourResetOnMount />
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <AppNavBrand />
