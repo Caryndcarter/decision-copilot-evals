@@ -41,6 +41,8 @@ describe("demo Decision Brief guide", () => {
     const copy = DEMO_UNIFIED_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
     expect(copy).toMatch(/ChatGPT/i);
     expect(copy).toMatch(/Blind/i);
+    expect(copy).not.toMatch(/product default/i);
+    expect(copy).not.toMatch(/cannot change/i);
     expect(copy).toMatch(/type in a question/i);
     expect(copy).not.toMatch(/canned/i);
     expect(copy).not.toMatch(/no live model/i);

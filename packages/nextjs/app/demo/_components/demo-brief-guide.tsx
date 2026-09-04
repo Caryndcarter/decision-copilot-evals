@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseGuideStorage, type DemoGuideState } from "@/app/demo/_components/demo-replay";
 
 export const DEMO_BRIEF_GUIDE_STORAGE_KEY = "dc-demo-brief-guide";
@@ -41,7 +41,7 @@ export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "unified-cta",
     extraSpots: [],
     title: "When you have compared multiple outputs",
-    body: "Next is the Unified Brief — where the models disagreed and how Decision Copilot combines them. The continue button is at the bottom of this page.",
+    body: "Next is the Unified Brief — where the models disagreed and how Decision Copilot combines them.",
     pauseAuto: true,
     scroll: "center",
   },
@@ -52,7 +52,7 @@ export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "unified-synthesizer",
     extraSpots: [],
     title: "Choose who writes the Unified Brief",
-    body: "Pick the synthesizer and authorship mode. This walkthrough uses ChatGPT under Blind — the product default — then generates the brief.",
+    body: "Pick the synthesizer and authorship mode. This walkthrough uses ChatGPT under Blind, then generates the brief.",
     pauseAuto: true,
   },
   {
@@ -98,25 +98,42 @@ function applyHighlight(spots: readonly string[], on: boolean) {
   }
 }
 
-function cardStyle(box: Box): { top: number; left: number; arrow: "up" | "down" | "right" } {
-  const cardW = 320;
+export function placeGuideCard(
+  box: Box,
+  viewport: { width: number; height: number },
+  card: { width: number; height: number }
+): { top: number; left: number; arrow: "up" | "down" | "right" } {
   const gap = 16;
-  const roomLeft = box.left > cardW + 40;
-  const rightHalf = box.left + box.width / 2 > window.innerWidth * 0.52;
-  // Tall right-rail spots (the discuss panel) should sit beside the card, not under it.
+  const margin = 16;
+  const maxTop = Math.max(margin, viewport.height - card.height - margin);
+  const clampTop = (top: number) => Math.min(Math.max(margin, top), maxTop);
+  const clampLeft = (left: number) =>
+    Math.min(Math.max(margin, left), Math.max(margin, viewport.width - card.width - margin));
+
+  const roomLeft = box.left > card.width + 40;
+  const rightHalf = box.left + box.width / 2 > viewport.width * 0.52;
   if (roomLeft && (rightHalf || box.height > 280)) {
     return {
-      top: Math.min(Math.max(16, box.top + 8), window.innerHeight - 200),
-      left: box.left - cardW - gap,
+      top: clampTop(box.top + 8),
+      left: clampLeft(box.left - card.width - gap),
       arrow: "right",
     };
   }
-  const left = Math.min(Math.max(16, box.left + box.width / 2 - cardW / 2), window.innerWidth - cardW - 16);
+
+  const left = clampLeft(box.left + box.width / 2 - card.width / 2);
   const below = box.top + box.height + gap;
-  if (below + 200 < window.innerHeight || box.top < 180) {
-    return { top: below, left, arrow: "up" };
+  if (below + card.height <= viewport.height - margin) {
+    return { top: clampTop(below), left, arrow: "up" };
   }
-  return { top: Math.max(16, box.top - gap - 168), left, arrow: "down" };
+  return { top: clampTop(box.top - gap - card.height), left, arrow: "down" };
+}
+
+function cardStyle(box: Box, cardHeight: number): { top: number; left: number; arrow: "up" | "down" | "right" } {
+  return placeGuideCard(
+    box,
+    { width: window.innerWidth, height: window.innerHeight },
+    { width: 320, height: cardHeight }
+  );
 }
 
 export function DemoBriefGuide({
@@ -137,7 +154,9 @@ export function DemoBriefGuide({
   const [step, setStep] = useState(0);
   const [generation, setGeneration] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
+  const [cardHeight, setCardHeight] = useState(240);
   const [paused, setPaused] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const persistDismiss = useCallback(() => {
     try {
@@ -226,6 +245,13 @@ export function DemoBriefGuide({
     return () => window.clearTimeout(id);
   }, [ready, dismissed, paused, step, persistDismiss, current, steps.length]);
 
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const height = Math.ceil(el.getBoundingClientRect().height);
+    if (height > 8 && height !== cardHeight) setCardHeight(height);
+  }, [current, box, cardHeight]);
+
   if (!ready) return null;
 
   if (dismissed) {
@@ -243,7 +269,7 @@ export function DemoBriefGuide({
   }
 
   if (!current || !box) return null;
-  const pos = cardStyle(box);
+  const pos = cardStyle(box, cardHeight);
 
   return (
     <div
@@ -263,6 +289,7 @@ export function DemoBriefGuide({
         }
       `}</style>
       <div
+        ref={cardRef}
         role="dialog"
         aria-label={current.title}
         className="pointer-events-auto absolute w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-indigo-200 bg-white p-4 shadow-xl"

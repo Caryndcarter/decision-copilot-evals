@@ -28,7 +28,7 @@ const STEPS = [
   {
     title: "Choose who writes the Unified Brief",
     description:
-      "The tour shows the live synthesizer picker and authorship modes, then selects ChatGPT under Blind — the product default — and generates the brief. The page discloses who wrote it.",
+      "The tour shows the live synthesizer picker and authorship modes, then selects ChatGPT under Blind and generates the brief. The page discloses who wrote it.",
   },
   {
     title: "Read the Unified Brief",

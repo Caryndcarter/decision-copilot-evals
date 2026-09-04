@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { placeGuideCard } from "../_components/demo-brief-guide";
 import {
   parseGuideStorage,
   shouldPlayOnGuideChange,
@@ -11,6 +12,25 @@ const ready = {
   spot: "provider-picker" as string | null,
   generation: 0,
 };
+
+describe("guide card placement", () => {
+  it("keeps a tall last-step card fully on screen when the target is at the bottom", () => {
+    const pos = placeGuideCard(
+      { top: 920, left: 560, width: 220, height: 40 },
+      { width: 1440, height: 980 },
+      { width: 320, height: 260 }
+    );
+    expect(pos.top).toBeGreaterThanOrEqual(16);
+    expect(pos.top + 260).toBeLessThanOrEqual(980 - 16);
+    expect(pos.arrow).toBe("down");
+    const beside = placeGuideCard(
+      { top: 920, left: 1100, width: 180, height: 40 },
+      { width: 1440, height: 980 },
+      { width: 320, height: 260 }
+    );
+    expect(beside.top + 260).toBeLessThanOrEqual(980 - 16);
+  });
+});
 
 describe("guide storage", () => {
   it("restores the in-progress step so refresh can replay the same animation", () => {
