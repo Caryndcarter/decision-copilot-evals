@@ -69,8 +69,7 @@ export function RequestAccessForm() {
         <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm text-center">
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Request sent</h1>
           <p className="mt-3 text-sm text-zinc-500">
-            If it&apos;s approved, you&apos;ll get an invitation link at that email address from
-            Finlayson Studio.
+            You&apos;ll get an invitation link at that email address from Finlayson Studio.
           </p>
           <Link
             href="/"

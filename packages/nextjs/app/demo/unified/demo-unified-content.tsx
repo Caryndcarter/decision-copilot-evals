@@ -173,7 +173,7 @@ export function DemoUnifiedContent() {
                 body: "Tell us your email and a sentence about what you'd use it for.",
               },
               {
-                title: "We review and send an invite",
+                title: "We send an invite",
                 body: "You'll get an invitation link at that email from Finlayson Studio.",
               },
               {
