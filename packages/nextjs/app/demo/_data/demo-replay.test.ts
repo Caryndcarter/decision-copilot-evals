@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseGuideStorage,
   shouldPlayOnGuideChange,
   shouldPlayOnGuideReady,
 } from "../_components/demo-replay";
@@ -10,6 +11,15 @@ const ready = {
   spot: "provider-picker" as string | null,
   generation: 0,
 };
+
+describe("guide storage", () => {
+  it("restores the in-progress step so refresh can replay the same animation", () => {
+    expect(parseGuideStorage(null, 3)).toEqual({ dismissed: false, step: 0 });
+    expect(parseGuideStorage("dismissed", 3)).toEqual({ dismissed: true, step: 0 });
+    expect(parseGuideStorage("2", 3)).toEqual({ dismissed: false, step: 2 });
+    expect(parseGuideStorage("9", 3)).toEqual({ dismissed: false, step: 0 });
+  });
+});
 
 describe("demo replay triggers", () => {
   it("plays on first ready when the guide is already dismissed (refresh / return)", () => {

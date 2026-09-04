@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { DemoGuideState } from "@/app/demo/_components/demo-replay";
+import { parseGuideStorage, type DemoGuideState } from "@/app/demo/_components/demo-replay";
 
 export const DEMO_BRIEF_GUIDE_STORAGE_KEY = "dc-demo-brief-guide";
 export const DEMO_UNIFIED_GUIDE_STORAGE_KEY = "dc-demo-unified-guide";
@@ -150,12 +150,24 @@ export function DemoBriefGuide({
 
   useEffect(() => {
     try {
-      setDismissed(sessionStorage.getItem(storageKey) === "dismissed");
+      const parsed = parseGuideStorage(sessionStorage.getItem(storageKey), steps.length);
+      setDismissed(parsed.dismissed);
+      setStep(parsed.step);
     } catch {
       setDismissed(false);
+      setStep(0);
     }
     setReady(true);
-  }, [storageKey]);
+  }, [storageKey, steps.length]);
+
+  useEffect(() => {
+    if (!ready || dismissed) return;
+    try {
+      sessionStorage.setItem(storageKey, String(step));
+    } catch {
+      /* ignore */
+    }
+  }, [ready, dismissed, step, storageKey]);
 
   const current = steps[step];
 

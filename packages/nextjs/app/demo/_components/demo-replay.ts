@@ -30,6 +30,17 @@ export function shouldPlayOnGuideReady(state: DemoGuideState, targetSpot: string
 }
 
 /** Later transitions: landing on the target spot, or restarting while already there. */
+export function parseGuideStorage(
+  raw: string | null,
+  stepCount: number
+): { dismissed: boolean; step: number } {
+  if (raw === "dismissed") return { dismissed: true, step: 0 };
+  if (raw == null || raw === "") return { dismissed: false, step: 0 };
+  const n = Number(raw);
+  if (Number.isInteger(n) && n >= 0 && n < stepCount) return { dismissed: false, step: n };
+  return { dismissed: false, step: 0 };
+}
+
 export function shouldPlayOnGuideChange(
   prev: DemoGuideState,
   next: DemoGuideState,
