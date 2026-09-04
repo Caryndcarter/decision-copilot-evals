@@ -163,8 +163,7 @@ export function DemoChatPanel({
         <div className="border-b border-indigo-100 bg-indigo-50/80 px-4 py-3">
           <h2 className="text-sm font-semibold text-indigo-950">Chat about this brief</h2>
           <p className="mt-1 text-xs leading-snug text-indigo-950/85">
-            Pick a model below. On a live run each one discusses the Unified Brief. This tour replays a
-            canned exchange — nothing is sent to a model.
+            Pick a model below. Each one can discuss the Unified Brief.
           </p>
         </div>
       )}
@@ -204,39 +203,36 @@ export function DemoChatPanel({
           placeholder={script.composerPlaceholder}
           rows={variant === "decision" ? 4 : 3}
           className="min-h-[5.5rem] w-full resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 disabled:opacity-60"
-          aria-label="Demo chat composer (not live)"
+          aria-label="Chat composer"
         />
-        <div className="mt-3 flex w-full flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] leading-snug text-zinc-400">Demo replay — not a live chat.</p>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {!running ? (
-              <button
-                type="button"
-                onClick={() => setReplayNonce((n) => n + 1)}
-                className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-              >
-                {complete ? "Play again" : "Play demo chat"}
-              </button>
-            ) : null}
+        <div className="mt-3 flex w-full flex-wrap items-center justify-end gap-2">
+          {!running ? (
+            <button
+              type="button"
+              onClick={() => setReplayNonce((n) => n + 1)}
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              {complete ? "Play again" : "Play demo chat"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled
+            className={`min-w-[5.5rem] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50 ${
+              sendingGlow ? "ring-2 ring-indigo-300" : ""
+            }`}
+          >
+            Send
+          </button>
+          {script.showResearch ? (
             <button
               type="button"
               disabled
-              className={`min-w-[5.5rem] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-50 ${
-                sendingGlow ? "ring-2 ring-indigo-300" : ""
-              }`}
+              className="min-w-[5.5rem] rounded-lg border-2 border-indigo-400 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-900 opacity-50"
             >
-              Send
+              Research
             </button>
-            {script.showResearch ? (
-              <button
-                type="button"
-                disabled
-                className="min-w-[5.5rem] rounded-lg border-2 border-indigo-400 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-900 opacity-50"
-              >
-                Research
-              </button>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
     </aside>

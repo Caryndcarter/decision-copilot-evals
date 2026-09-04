@@ -23,7 +23,7 @@ const STEPS = [
   {
     title: "Compare model briefs",
     description:
-      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections, then watch the discuss rail replay a canned chat — no live model call.",
+      "On the Decision Brief, open the model menu to switch between OpenAI, Anthropic, Gemini, and xAI. Expand the collapsed sections, then watch how to type in a question and see the model reply.",
   },
   {
     title: "Choose who writes the Unified Brief",

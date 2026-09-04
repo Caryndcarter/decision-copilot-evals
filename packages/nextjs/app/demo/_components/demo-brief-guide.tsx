@@ -34,7 +34,7 @@ export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "demo-chat",
     extraSpots: [],
     title: "Then ask about the brief",
-    body: "On a live run this sidebar is chat. Watch a canned question type in and the model reply — nothing is sent to an API.",
+    body: "This sidebar is chat. Watch how to type in a question and see the model reply.",
     pauseAuto: true,
   },
   {
@@ -52,7 +52,7 @@ export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "unified-synthesizer",
     extraSpots: [],
     title: "Choose who writes the Unified Brief",
-    body: "On a live run you pick the synthesizer and authorship mode. This tour selects ChatGPT under Blind — the product default — then generates the brief. You cannot change the pick here.",
+    body: "Pick the synthesizer and authorship mode. This walkthrough uses ChatGPT under Blind — the product default — then generates the brief.",
     pauseAuto: true,
   },
   {
@@ -65,7 +65,7 @@ export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "demo-chat",
     extraSpots: [],
     title: "Then ask about the brief",
-    body: "The discuss rail works here too. This replay asks why not lock the twelve-month NOC — again, no live model call.",
+    body: "Chat works here too. Watch how to type in a question and see the model reply.",
     pauseAuto: true,
   },
   {

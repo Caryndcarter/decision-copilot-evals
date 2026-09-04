@@ -187,8 +187,8 @@ export function DemoUnifiedCreatePanel({
           </fieldset>
 
           <p className="text-xs leading-relaxed text-zinc-500">
-            Demo replay — {unifiedBriefSynthesizerLabel(DEMO_UNIFIED_SYNTHESIZER)} writes this Unified Brief
-            under {authorshipLabel} authorship. Nothing is sent to a model.
+            {unifiedBriefSynthesizerLabel(DEMO_UNIFIED_SYNTHESIZER)} writes this Unified Brief under{" "}
+            {authorshipLabel} authorship.
           </p>
         </div>
       </div>

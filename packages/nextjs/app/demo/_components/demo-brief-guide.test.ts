@@ -20,7 +20,9 @@ describe("demo Decision Brief guide", () => {
     expect(copy).not.toMatch(/dogfood/i);
     expect(copy).toMatch(/collapsed/i);
     expect(copy).toMatch(/chat/i);
-    expect(copy).toMatch(/API/i);
+    expect(copy).toMatch(/type in a question/i);
+    expect(copy).not.toMatch(/canned/i);
+    expect(copy).not.toMatch(/API/i);
     expect(copy).toMatch(/multiple outputs/i);
     expect(copy).not.toMatch(/compared a couple/i);
   });
@@ -39,7 +41,9 @@ describe("demo Decision Brief guide", () => {
     const copy = DEMO_UNIFIED_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
     expect(copy).toMatch(/ChatGPT/i);
     expect(copy).toMatch(/Blind/i);
-    expect(copy).toMatch(/no live model/i);
+    expect(copy).toMatch(/type in a question/i);
+    expect(copy).not.toMatch(/canned/i);
+    expect(copy).not.toMatch(/no live model/i);
   });
 
   it("replaces the xAI dogfood line with a plain-language trial", () => {
