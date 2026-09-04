@@ -13,6 +13,8 @@ export type DemoGuideStep = {
   body: string;
   /** Stay on this step until Next — used for the chat replay. */
   pauseAuto?: boolean;
+  /** How to scroll the target into view. Last CTAs use center so the bottom bar is on screen. */
+  scroll?: ScrollLogicalPosition;
 };
 
 export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
@@ -39,7 +41,9 @@ export const DEMO_BRIEF_GUIDE_STEPS: readonly DemoGuideStep[] = [
     spot: "unified-cta",
     extraSpots: [],
     title: "When you have compared multiple outputs",
-    body: "Continue to the Unified Brief to see where the models disagreed and how Decision Copilot combines them.",
+    body: "Next is the Unified Brief — where the models disagreed and how Decision Copilot combines them. The continue button is at the bottom of this page.",
+    pauseAuto: true,
+    scroll: "center",
   },
 ];
 
@@ -63,6 +67,14 @@ export const DEMO_UNIFIED_GUIDE_STEPS: readonly DemoGuideStep[] = [
     title: "Then ask about the brief",
     body: "The discuss rail works here too. This replay asks why not lock the twelve-month NOC — again, no live model call.",
     pauseAuto: true,
+  },
+  {
+    spot: "tour-end",
+    extraSpots: [],
+    title: "When you are ready to run your own",
+    body: "That is the end of the tour. Request access at the bottom — or go back to the Decision Briefs.",
+    pauseAuto: true,
+    scroll: "center",
   },
 ];
 
@@ -185,13 +197,20 @@ export function DemoBriefGuide({
     update();
     const retry = window.setInterval(update, 200);
     const target = document.querySelector<HTMLElement>(`[data-demo-spot="${current.spot}"]`);
-    target?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const block = current.scroll ?? "nearest";
+    target?.scrollIntoView({ block, behavior: "smooth" });
+    const retryScroll = window.setTimeout(() => {
+      document
+        .querySelector<HTMLElement>(`[data-demo-spot="${current.spot}"]`)
+        ?.scrollIntoView({ block, behavior: "smooth" });
+    }, 280);
 
     applyHighlight(spots, true);
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
     return () => {
       window.clearInterval(retry);
+      window.clearTimeout(retryScroll);
       applyHighlight(spots, false);
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);

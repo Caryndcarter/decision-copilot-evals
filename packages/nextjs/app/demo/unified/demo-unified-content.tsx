@@ -56,13 +56,7 @@ export function DemoUnifiedContent() {
 
   const showBrief = briefReady || (guide.ready && guide.dismissed);
 
-  const continueBar = (
-    <DemoContinueBar
-      className="border-t"
-      back={{ href: "/demo/result?provider=openai", label: "← Individual model results" }}
-      forward={{ href: "/request-access", label: "Request access →" }}
-    />
-  );
+  const continueBack = { href: "/demo/result?provider=openai", label: "← Individual model results" };
 
   return (
     <>
@@ -73,7 +67,11 @@ export function DemoUnifiedContent() {
         onGuideState={onGuideState}
       />
       <DemoScrollToTop resetKey="unified" />
-      {continueBar}
+      <DemoContinueBar
+        className="border-t"
+        back={continueBack}
+        forward={{ href: "/request-access", label: "Request access →" }}
+      />
 
       <div className={`${demoBriefBodyClass} mx-auto max-w-[1400px] px-6`}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -153,7 +151,10 @@ export function DemoUnifiedContent() {
       </div>
 
       <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-6 sm:p-8">
+        <div
+          data-demo-spot="tour-end"
+          className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-6 sm:p-8"
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-600">
             End of the tour
           </p>
@@ -194,7 +195,11 @@ export function DemoUnifiedContent() {
         </div>
       </div>
 
-      {continueBar}
+      <DemoContinueBar
+        className="border-t"
+        back={continueBack}
+        forward={{ href: "/request-access", label: "Request access →", spot: "tour-end" }}
+      />
     </>
   );
 }

@@ -27,19 +27,17 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
     "demo-chat"
   );
 
-  const continueBar = (
-    <DemoContinueBar
-      className="border-t"
-      back={{ href: "/demo/clarify", label: "← Clarifying questions" }}
-      forward={{ href: "/demo/unified", label: "Continue to Unified Brief →", spot: "unified-cta" }}
-    />
-  );
+  const continueBack = { href: "/demo/clarify", label: "← Clarifying questions" };
 
   return (
     <>
       <DemoBriefGuide onGuideState={onGuideState} />
       <DemoScrollToTop resetKey={provider} />
-      {continueBar}
+      <DemoContinueBar
+        className="border-t"
+        back={continueBack}
+        forward={{ href: "/demo/unified", label: "Continue to Unified Brief →" }}
+      />
       <div className={`${demoBriefBodyClass} mx-auto max-w-[1400px] px-6`}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div>
@@ -54,7 +52,11 @@ export function DemoResultView({ provider }: { provider: LLMProviderName }) {
           <DemoChatPanel script={DEMO_DECISION_BRIEF_CHAT} playKey={chatPlayKey} variant="decision" />
         </div>
       </div>
-      {continueBar}
+      <DemoContinueBar
+        className="border-t"
+        back={continueBack}
+        forward={{ href: "/demo/unified", label: "Continue to Unified Brief →", spot: "unified-cta" }}
+      />
     </>
   );
 }

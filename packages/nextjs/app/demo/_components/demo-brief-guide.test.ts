@@ -14,6 +14,8 @@ describe("demo Decision Brief guide", () => {
     ]);
     expect(DEMO_BRIEF_GUIDE_STEPS[1].extraSpots).toContain("lens-section");
     expect(DEMO_BRIEF_GUIDE_STEPS[2].pauseAuto).toBe(true);
+    expect(DEMO_BRIEF_GUIDE_STEPS[3].pauseAuto).toBe(true);
+    expect(DEMO_BRIEF_GUIDE_STEPS[3].scroll).toBe("center");
     const copy = DEMO_BRIEF_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
     expect(copy).not.toMatch(/dogfood/i);
     expect(copy).toMatch(/collapsed/i);
@@ -28,9 +30,12 @@ describe("demo Decision Brief guide", () => {
       "unified-synthesizer",
       "unified-attribution",
       "demo-chat",
+      "tour-end",
     ]);
     expect(DEMO_UNIFIED_GUIDE_STEPS[0].pauseAuto).toBe(true);
     expect(DEMO_UNIFIED_GUIDE_STEPS[2].pauseAuto).toBe(true);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[3].pauseAuto).toBe(true);
+    expect(DEMO_UNIFIED_GUIDE_STEPS[3].scroll).toBe("center");
     const copy = DEMO_UNIFIED_GUIDE_STEPS.map((s) => `${s.title} ${s.body}`).join("\n");
     expect(copy).toMatch(/ChatGPT/i);
     expect(copy).toMatch(/Blind/i);
