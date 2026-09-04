@@ -14,6 +14,7 @@ export const DB_NAME = process.env.DB_NAME?.trim() || "decision-copilot-evals";
 const RUNS_COLLECTION = "runs";
 const USERS_COLLECTION = "users";
 const INVITE_REQUESTS_COLLECTION = "invite_requests";
+const VOICE_INFLUENCE_DRAFTS_COLLECTION = "voice_influence_case_set_drafts";
 
 type GlobalMongo = typeof globalThis & {
   _mongoClientPromise?: Promise<MongoClient>;
@@ -82,6 +83,11 @@ export async function getInviteRequestsCollection() {
   return db.collection(INVITE_REQUESTS_COLLECTION);
 }
 
+export async function getVoiceInfluenceDraftsCollection() {
+  const db = await getDb();
+  return db.collection(VOICE_INFLUENCE_DRAFTS_COLLECTION);
+}
+
 /** Idempotent indexes for run lookups used by the dashboard and harness. */
 export async function ensureMongoIndexes(): Promise<void> {
   if (!g._mongoIndexesEnsured) {
@@ -103,6 +109,11 @@ export async function ensureMongoIndexes(): Promise<void> {
         ),
         inviteRequests.createIndex({ ip: 1, created_at: -1 }, { name: "by_ip_created" }),
       ]);
+      const voiceDrafts = await getVoiceInfluenceDraftsCollection();
+      await voiceDrafts.createIndex(
+        { user_id: 1, updatedAt: -1 },
+        { name: "by_user_updated" }
+      );
     })();
   }
   await g._mongoIndexesEnsured;

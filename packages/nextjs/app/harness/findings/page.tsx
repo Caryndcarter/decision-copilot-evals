@@ -84,6 +84,14 @@ export default async function HarnessFindingsPage({
             snapshots; authorship five-demos pulls live batches; synthesizer behavior uses a committed
             self vs peers→ChatGPT snapshot.
           </p>
+          <p className="mt-4">
+            <Link
+              href="/harness/voice-influence"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+            >
+              Author a Voice Influence case set
+            </Link>
+          </p>
         </div>
       </div>
 
